@@ -1,0 +1,226 @@
+import 'dart:convert';
+// ignore: depend_on_referenced_packages
+import 'package:http/http.dart' as http;
+
+class ApiService {
+  // 🔥 CHANGE THIS
+  static const String baseUrl = "http://127.0.0.1:8001/api";
+
+  static String? token;
+
+  // ==========================
+  // 🔐 HEADERS
+  // ==========================
+  static Map<String, String> get headers {
+    return {
+      "Content-Type": "application/json",
+      if (token != null) "Authorization": "Bearer $token",
+    };
+  }
+
+  // ==========================
+  // 🧍 REGISTER
+  // ==========================
+  static Future<Map<String, dynamic>> register({
+    required String email,
+    required String username,
+    required String password,
+    required String role,
+  }) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/register/"),
+      headers: headers,
+      body: jsonEncode({
+        "email": email,
+        "username": username,
+        "password": password,
+        "role": role,
+      }),
+    );
+
+    return jsonDecode(response.body);
+  }
+
+  // ==========================
+  // 🔑 LOGIN
+  // ==========================
+  static Future<bool> login(String email, String password) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/login/"),
+      headers: headers,
+      body: jsonEncode({
+        "email": email,
+        "password": password,
+      }),
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200) {
+      token = data['access'];
+      return true;
+    }
+    return false;
+  }
+
+  // ==========================
+  // 📦 CREATE PACKAGE (Customer)
+  // ==========================
+  static Future<dynamic> createPackage(Map<String, dynamic> data) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/create-package/"),
+      headers: headers,
+      body: jsonEncode(data),
+    );
+
+    return jsonDecode(response.body);
+  }
+
+  // ==========================
+  // 💳 INITIALIZE PAYMENT
+  // ==========================
+  static Future<String?> initializePayment(int packageId) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/packages/$packageId/pay/"),
+      headers: headers,
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200) {
+      return data['payment_url'];
+    }
+    return null;
+  }
+
+  // ==========================
+  // 📦 CUSTOMER PACKAGES
+  // ==========================
+  static Future<List<dynamic>> getCustomerPackages() async {
+    final response = await http.get(
+      Uri.parse("$baseUrl/customer/packages/"),
+      headers: headers,
+    );
+
+    return jsonDecode(response.body);
+  }
+
+  // ==========================
+  // 📍 TRACK PACKAGE
+  // ==========================
+  static Future<Map<String, dynamic>?> trackPackage(int packageId) async {
+    final response = await http.get(
+      Uri.parse("$baseUrl/packages/$packageId/track/"),
+      headers: headers,
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    return null;
+  }
+
+  // ==========================
+  // 🚚 AVAILABLE PACKAGES (RIDER)
+  // ==========================
+  static Future<List<dynamic>> getAvailablePackages() async {
+    final response = await http.get(
+      Uri.parse("$baseUrl/packages/"),
+      headers: headers,
+    );
+
+    return jsonDecode(response.body);
+  }
+
+  // ==========================
+  // ✅ ACCEPT PACKAGE
+  // ==========================
+  static Future<bool> acceptPackage(int packageId) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/packages/$packageId/accept/"),
+      headers: headers,
+    );
+
+    return response.statusCode == 200;
+  }
+
+  // ==========================
+  // 🔄 UPDATE DELIVERY STATUS
+  // ==========================
+  static Future<bool> updateStatus(int packageId, String status) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/packages/$packageId/update-status/"),
+      headers: headers,
+      body: jsonEncode({"status": status}),
+    );
+
+    return response.statusCode == 200;
+  }
+
+  // ==========================
+  // 📍 UPDATE LOCATION (RIDER)
+  // ==========================
+  static Future<bool> updateLocation(
+      int packageId, double lat, double lng) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/packages/$packageId/update-location/"),
+      headers: headers,
+      body: jsonEncode({
+        "lat": lat,
+        "lng": lng,
+      }),
+    );
+
+    return response.statusCode == 200;
+  }
+
+  // ==========================
+  // ⭐ RATE RIDER
+  // ==========================
+  static Future<bool> rateRider(
+      int packageId, int rating, String comment) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/packages/$packageId/rate/"),
+      headers: headers,
+      body: jsonEncode({
+        "rating": rating,
+        "comment": comment,
+      }),
+    );
+
+    return response.statusCode == 200;
+  }
+
+  // ==========================
+  // 💰 WALLET
+  // ==========================
+  static Future<Map<String, dynamic>> getWallet() async {
+    final response = await http.get(
+      Uri.parse("$baseUrl/rider/wallet/"),
+      headers: headers,
+    );
+
+    return jsonDecode(response.body);
+  }
+
+  // ==========================
+  // 💸 WITHDRAW
+  // ==========================
+  static Future<dynamic> withdraw({
+    required double amount,
+    required String accountNumber,
+    required String bankCode,
+  }) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/rider/wallet/withdraw/"),
+      headers: headers,
+      body: jsonEncode({
+        "amount": amount,
+        "bank_account": accountNumber,
+        "bank_code": bankCode,
+      }),
+    );
+
+    return jsonDecode(response.body);
+  }
+}
