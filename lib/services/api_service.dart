@@ -195,32 +195,58 @@ class ApiService {
   // 💰 WALLET
   // ==========================
   static Future<Map<String, dynamic>> getWallet() async {
-    final response = await http.get(
-      Uri.parse("$baseUrl/rider/wallet/"),
-      headers: headers,
-    );
+  final response = await http.get(
+    Uri.parse("$baseUrl/rider/wallet/"),
+    headers: headers,
+  );
 
-    return jsonDecode(response.body);
-  }
+  final data = jsonDecode(response.body);
+
+  return {
+    "balance": (data['balance'] ?? 0).toDouble(),
+    "total_earned": (data['total_earned'] ?? 0).toDouble(),
+  };
+}
+
 
   // ==========================
   // 💸 WITHDRAW
   // ==========================
-  static Future<dynamic> withdraw({
-    required double amount,
-    required String accountNumber,
-    required String bankCode,
-  }) async {
-    final response = await http.post(
-      Uri.parse("$baseUrl/rider/wallet/withdraw/"),
-      headers: headers,
-      body: jsonEncode({
-        "amount": amount,
-        "bank_account": accountNumber,
-        "bank_code": bankCode,
-      }),
-    );
 
-    return jsonDecode(response.body);
+static Future<dynamic> withdraw({
+  required double amount,
+  required String accountNumber,
+  required String bankCode,
+}) async {
+  if (amount <= 0) {
+    throw Exception("Amount must be greater than zero");
   }
+
+  final response = await http.post(
+    Uri.parse("$baseUrl/rider/wallet/withdraw/"),
+    headers: headers,
+    body: jsonEncode({
+      "amount": amount,
+      "bank_account": accountNumber,
+      "bank_code": bankCode,
+    }),
+  );
+
+  return jsonDecode(response.body);
 }
+
+// 📊 GET TRANSACTIONS (safe implementation)
+static Future<List<dynamic>> getTransactions() async {
+  final response = await http.get(
+    Uri.parse("$baseUrl/rider/wallet/transactions/"),
+    headers: headers,
+  );
+
+  if (response.statusCode == 200) {
+    final data = jsonDecode(response.body);
+    return data is List ? data : [];
+  }
+
+  return [];
+} 
+} 

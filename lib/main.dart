@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:senmi/registration/auth/login.dart';
 
 void main() {
   runApp(const MyApp());
@@ -8,19 +8,15 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
- 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,  
+      debugShowCheckedModeBanner: false,
       title: 'SenMi',
-       theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
       theme: ThemeData.dark().copyWith(
-  scaffoldBackgroundColor: Colors.black,
-  cardColor: Colors.grey[900],
-),
+        scaffoldBackgroundColor: Colors.black,
+        cardColor: Colors.grey[900],
+      ),
 
       //home: const Homepage( ),
       home: const LoginScreen(),
@@ -33,9 +29,5 @@ class MyApp extends StatelessWidget {
       //home: const OnboardingScreen()
     );
   }
-}
-
-class LoginScreen {
-  const LoginScreen();
 }
 

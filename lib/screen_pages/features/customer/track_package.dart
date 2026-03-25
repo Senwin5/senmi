@@ -1,14 +1,16 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import '../services/api_service.dart';
+import 'package:senmi/services/api_service.dart';
+
 
 class TrackingScreen extends StatefulWidget {
   final int packageId;
 
-  const TrackingScreen({required this.packageId});
+  const TrackingScreen({required this.packageId, super.key}); 
 
   @override
+  // ignore: library_private_types_in_public_api
   _TrackingScreenState createState() => _TrackingScreenState();
 }
 
@@ -35,7 +37,7 @@ class _TrackingScreenState extends State<TrackingScreen> {
     super.dispose();
   }
 
-  fetchTracking() async {
+  Future<void> fetchTracking() async {
     var data = await ApiService.trackPackage(widget.packageId);
 
     if (data != null) {

@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:senmi/widgets/custom_buttom.dart';
-import '../../services/api_service.dart';
-import '../../screen_pages/features/customer/customer_home.dart';
-import '../auth/signup.dart'; // ✅ added import
+import '../services/api_service.dart';
+import '../screen_pages/features/customer/customer_home.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -48,13 +47,11 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(20),
+
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text(
-              "Senmi 🚚",
-              style: TextStyle(fontSize: 28),
-            ),
+            const Text("Senmi 🚚", style: TextStyle(fontSize: 28)),
 
             const SizedBox(height: 30),
 
@@ -77,21 +74,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     text: "Login",
                     onPressed: login,
                   ),
-
-            const SizedBox(height: 10),
-
-            // ✅ moved inside Column
-            TextButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const RegisterScreen(),
-                  ),
-                );
-              },
-              child: const Text("Create Account"),
-            ),
           ],
         ),
       ),

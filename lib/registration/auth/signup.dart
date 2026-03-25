@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:senmi/widgets/custom_buttom.dart';
 import '../../services/api_service.dart';
-import '../../widgets/custom_button.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -31,13 +31,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => loading = false);
 
     if (res.containsKey("message")) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text("Registered!")));
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Registered!")),
+      );
 
+      // ignore: use_build_context_synchronously
       Navigator.pop(context);
     } else {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(res.toString())));
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(res.toString())),
+      );
     }
   }
 
@@ -45,31 +50,56 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Register")),
-
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            TextField(controller: email, decoration: const InputDecoration(labelText: "Email")),
-            TextField(controller: username, decoration: const InputDecoration(labelText: "Username")),
-            TextField(controller: password, obscureText: true, decoration: const InputDecoration(labelText: "Password")),
+            TextField(
+              controller: email,
+              decoration: const InputDecoration(labelText: "Email"),
+            ),
 
             const SizedBox(height: 10),
 
+            TextField(
+              controller: username,
+              decoration: const InputDecoration(labelText: "Username"),
+            ),
+
+            const SizedBox(height: 10),
+
+            TextField(
+              controller: password,
+              obscureText: true,
+              decoration: const InputDecoration(labelText: "Password"),
+            ),
+
+            const SizedBox(height: 15),
+
             DropdownButton<String>(
               value: role,
+              isExpanded: true,
               items: const [
-                DropdownMenuItem(value: "customer", child: Text("Customer")),
-                DropdownMenuItem(value: "rider", child: Text("Rider")),
+                DropdownMenuItem(
+                  value: "customer",
+                  child: Text("Customer"),
+                ),
+                DropdownMenuItem(
+                  value: "rider",
+                  child: Text("Rider"),
+                ),
               ],
               onChanged: (val) => setState(() => role = val!),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 25),
 
             loading
                 ? const CircularProgressIndicator()
-                : CustomButton(text: "Register", onPressed: register)
+                : CustomButton(
+                    text: "Register",
+                    onPressed: register,
+                  ),
           ],
         ),
       ),

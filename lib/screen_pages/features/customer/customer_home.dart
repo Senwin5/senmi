@@ -1,6 +1,7 @@
-// TODO Implement this library.
 import 'package:flutter/material.dart';
-import '../../services/api_service.dart';
+import 'package:senmi/screen_pages/features/customer/track_package.dart';
+import '../../../services/api_service.dart';
+import 'create_package_screen.dart';
 
 class CustomerHome extends StatefulWidget {
   const CustomerHome({super.key});
@@ -41,31 +42,35 @@ class _CustomerHomeState extends State<CustomerHome> {
               title: Text(p['description']),
               subtitle: Text("Status: ${p['status']}"),
               trailing: Text("₦${p['price']}"),
+
+              // ✅ MOVED onTap INSIDE ListTile
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        TrackingScreen(packageId: p['id']),
+                  ),
+                );
+              },
             ),
           );
         },
       ),
 
-      // ➕ CREATE PACKAGE BUTTON
-      ffloatingActionButton: FloatingActionButton(
-  child: const Icon(Icons.add),
-  onPressed: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const CreatePackageScreen()),
-    ).then((_) => loadPackages());
-  },
-),
-
-
-onTap: () {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (_) => TrackPackageScreen(packageId: p['id']),
-    ),
-  );
-},
+      // ✅ FIXED TYPO + CORRECT POSITION
+      floatingActionButton: FloatingActionButton(
+        child: const Icon(Icons.add),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const CreatePackageScreen(),
+            ),
+          ).then((_) => loadPackages());
+        },
+      ),
     );
   }
 }
+
