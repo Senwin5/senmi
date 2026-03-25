@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:senmi/screen_pages/features/customer/create_package_screen.dart';
 import 'package:senmi/screen_pages/features/customer/customer_home.dart';
-import 'package:senmi/screen_pages/features/customer/track_package.dart';
 import 'package:senmi/screen_pages/features/rider/rider_home.dart';
 import 'package:senmi/screen_pages/features/rider/wallet_screen.dart';
 
@@ -46,9 +45,9 @@ class _CustomerBottomNavState extends State<CustomerBottomNav> {
 
   final List<Widget> _screens = [
     CustomerHome(),
-    const CreatePackageScreen("Orders"),
+    const CreatePackageScreen(),
     const PlaceholderScreen("Wallet"),
-    const TrackingScreen("Track"),
+    const PlaceholderScreen("Track"),
     const PlaceholderScreen("Profile"),
   ];
 

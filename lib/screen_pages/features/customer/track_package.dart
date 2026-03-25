@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:senmi/services/api_service.dart';
 
-
 class TrackingScreen extends StatefulWidget {
   final int packageId;
 
-  const TrackingScreen({required this.packageId, super.key}); 
+  // ✅ FIXED: removed the extra String s
+  const TrackingScreen({required this.packageId, super.key});
 
   @override
   // ignore: library_private_types_in_public_api
@@ -81,9 +81,13 @@ class _TrackingScreenState extends State<TrackingScreen> {
               child: Column(
                 children: const [
                   SizedBox(height: 10),
-                  Text("🚚 Rider is on the way",
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  Text(
+                    "🚚 Rider is on the way",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ],
               ),
             ),
