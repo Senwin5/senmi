@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 // ignore: depend_on_referenced_packages
 import 'package:http/http.dart' as http;
@@ -24,7 +25,8 @@ class ApiService {
     };
   }
 
-  static bool get isAdmin => null;
+
+  static bool get isAdmin => userRole == "admin";
 
   // ==========================
   // 🔐 SAVE TOKEN
@@ -52,55 +54,53 @@ class ApiService {
   // ==========================
   // 🧍 REGISTER
   // ==========================
-static Future<Map<String, dynamic>> register({
-  required String email,
-  required String username,
-  required String password,
-  required String role,
-}) async {
-  try {
-    final response = await http
-        .post(
-          Uri.parse("$baseUrl/register/"),
-          headers: {
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-          },
-          body: jsonEncode({
-            "email": email,
-            "username": username,
-            "password": password,
-            "role": role,
-          }),
-        )
-        .timeout(const Duration(seconds: 59));
+  static Future<Map<String, dynamic>> register({
+    required String email,
+    required String username,
+    required String password,
+    required String role,
+  }) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse("$baseUrl/register/"),
+            headers: {
+              "Content-Type": "application/json",
+              "Accept": "application/json",
+            },
+            body: jsonEncode({
+              "email": email,
+              "username": username,
+              "password": password,
+              "role": role,
+            }),
+          )
+          .timeout(const Duration(seconds: 59));
 
-    final body = jsonDecode(response.body);
+      final body = jsonDecode(response.body);
 
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      return body;
-    } else {
-      // Return decoded body so Flutter can map it to user-friendly message
-      return body is Map<String, dynamic> ? body : {"error": body.toString()};
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return body;
+      } else {
+        // Return decoded body so Flutter can map it to user-friendly message
+        return body is Map<String, dynamic> ? body : {"error": body.toString()};
+      }
+    } catch (e) {
+      return {"error": e.toString()};
     }
-  } catch (e) {
-    return {"error": e.toString()};
   }
-}
-
-
 
   // ==========================
   // 🔑 LOGIN
   // ==========================
-static Future<Map<String, dynamic>> login(String email, String password) async {
+  static Future<Map<String, dynamic>> login(
+    String email,
+    String password,
+  ) async {
     final res = await http.post(
       Uri.parse("$baseUrl/api/login/"),
       headers: {"Content-Type": "application/json"},
-      body: jsonEncode({
-        "email": email,
-        "password": password,
-      }),
+      body: jsonEncode({"email": email, "password": password}),
     );
 
     final data = jsonDecode(res.body);
@@ -113,7 +113,6 @@ static Future<Map<String, dynamic>> login(String email, String password) async {
     return data; // 🔥 IMPORTANT
   }
 
-
   // ✅ Optional: logout method
   static Future<void> logout() async {
     token = null;
@@ -124,8 +123,6 @@ static Future<Map<String, dynamic>> login(String email, String password) async {
     // ✅ Update login state
     isLoggedIn.value = false;
   }
-
-
 
   // ==========================
   // 📦 CREATE PACKAGE (Customer)
@@ -225,14 +222,14 @@ static Future<Map<String, dynamic>> login(String email, String password) async {
   // 📍 UPDATE LOCATION (RIDER)
   // ==========================
   static Future<bool> updateLocation(
-      int packageId, double lat, double lng) async {
+    int packageId,
+    double lat,
+    double lng,
+  ) async {
     final response = await http.post(
       Uri.parse("$baseUrl/packages/$packageId/update-location/"),
       headers: headers,
-      body: jsonEncode({
-        "lat": lat,
-        "lng": lng,
-      }),
+      body: jsonEncode({"lat": lat, "lng": lng}),
     );
 
     return response.statusCode == 200;
@@ -242,14 +239,14 @@ static Future<Map<String, dynamic>> login(String email, String password) async {
   // ⭐ RATE RIDER
   // ==========================
   static Future<bool> rateRider(
-      int packageId, int rating, String comment) async {
+    int packageId,
+    int rating,
+    String comment,
+  ) async {
     final response = await http.post(
       Uri.parse("$baseUrl/packages/$packageId/rate/"),
       headers: headers,
-      body: jsonEncode({
-        "rating": rating,
-        "comment": comment,
-      }),
+      body: jsonEncode({"rating": rating, "comment": comment}),
     );
 
     return response.statusCode == 200;
@@ -321,56 +318,62 @@ static Future<Map<String, dynamic>> login(String email, String password) async {
   static Future<dynamic> getRiderProfile() async {}
 
   static Future<dynamic> getEarnings() async {}
-}
 
+  static Future<dynamic> updateRiderProfile(
+    String text,
+    String text2,
+    String text3,
+    String text4,
+    String text5,
+    File file,
+    File file2,
+    File file3,
+  ) async {}
 
-// ==============================
-// 🟢 ADMIN DASHBOARD METHODS
-// ==============================
+  // ==============================
+  // 🟢 ADMIN DASHBOARD METHODS
+  // ==============================
 
-/// Get all riders
-Future<List<dynamic>> getRiders() async {
-  try {
-    // ignore: prefer_typing_uninitialized_variables
-    var baseUrl;
-    final res = await http.get(
-      Uri.parse("$baseUrl/admin/riders/"),
-      headers: {
-        "Authorization": "Bearer ${ApiService.token}", // ✅ Use class name
-        "Content-Type": "application/json",
-      },
-    );
+  /// Get all riders
+  static Future<List<dynamic>> getRiders() async {
+    try {
+      // ignore: prefer_typing_uninitialized_variables
+      var baseUrl;
+      final res = await http.get(
+        Uri.parse("$baseUrl/admin/riders/"),
+        headers: {
+          "Authorization": "Bearer ${ApiService.token}",
+          "Content-Type": "application/json",
+        },
+      );
 
-    if (res.statusCode == 200) {
-      return jsonDecode(res.body);
-    } else {
+      if (res.statusCode == 200) {
+        return jsonDecode(res.body);
+      } else {
+        return [];
+      }
+    } catch (e) {
       return [];
     }
-  } catch (e) {
-    return [];
   }
-}
 
-/// Approve or reject a rider
-Future<bool> reviewRider(
-    int riderId, String status, String reason) async {
-  try {
-    // ignore: prefer_typing_uninitialized_variables
-    var baseUrl;
-    final res = await http.post(
-      Uri.parse("$baseUrl/review-rider/$riderId/"),
-      headers: {
-        "Authorization": "Bearer ${ApiService.token}", // ✅ Use class name
-        "Content-Type": "application/json",
-      },
-      body: jsonEncode({
-        "status": status,
-        "rejection_reason": reason,
-      }),
-    );
+  /// Approve or reject a rider
+  static Future<bool> reviewRider(int riderId, String status, String reason) async {
+    try {
+      // ignore: prefer_typing_uninitialized_variables
+      var baseUrl;
+      final res = await http.post(
+        Uri.parse("$baseUrl/review-rider/$riderId/"),
+        headers: {
+          "Authorization": "Bearer ${ApiService.token}",
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode({"status": status, "rejection_reason": reason}),
+      );
 
-    return res.statusCode == 200;
-  } catch (e) {
-    return false;
+      return res.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
   }
 }

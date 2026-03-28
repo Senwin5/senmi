@@ -54,6 +54,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 reason.text,
               );
               if (success) {
+                // ignore: use_build_context_synchronously
                 Navigator.pop(context);
                 fetchRiders();
               }

@@ -3,8 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 // ignore: depend_on_referenced_packages
 import 'package:image_picker/image_picker.dart';
-import '../../services/api_service.dart';
-import '../features/rider/rider_home.dart';
+import 'package:senmi/services/api_service.dart';
 
 class RiderCompleteProfile extends StatefulWidget {
   const RiderCompleteProfile({super.key});
