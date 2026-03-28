@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:senmi/widgets/custom_buttom.dart';
 import '../../services/api_service.dart';
 import '../../screen_pages/features/customer/customer_home.dart';
+import '../../screen_pages/features/rider/rider_home.dart';
 import '../auth/signup.dart'; // ✅ added import
 
 class LoginScreen extends StatefulWidget {
@@ -29,17 +30,49 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => loading = false);
 
     if (success) {
-      // 👉 GO TO HOME
+      Widget nextScreen;
+
+      // ✅ Navigate based on role
+      if (ApiService.userRole == "rider") {
+        nextScreen = const RiderHome();
+      } else {
+        nextScreen = const CustomerHome();
+      }
+
+      // ignore: use_build_context_synchronously
       Navigator.pushReplacement(
         // ignore: use_build_context_synchronously
         context,
-        MaterialPageRoute(builder: (_) => const CustomerHome()),
+        MaterialPageRoute(builder: (_) => nextScreen),
       );
     } else {
       // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Login failed")),
       );
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    // ✅ Auto-navigate if token exists
+    if (ApiService.token != null && ApiService.userRole != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Widget nextScreen;
+
+        if (ApiService.userRole == "rider") {
+          nextScreen = const RiderHome();
+        } else {
+          nextScreen = const CustomerHome();
+        }
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => nextScreen),
+        );
+      });
     }
   }
 
@@ -80,7 +113,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
             const SizedBox(height: 10),
 
-            // ✅ moved inside Column
             TextButton(
               onPressed: () {
                 Navigator.push(

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:senmi/widgets/custom_buttom.dart';
 import '../../services/api_service.dart';
+import '../../screen_pages/features/customer/customer_home.dart';
+import '../../screen_pages/features/rider/rider_home.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -30,18 +32,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     setState(() => loading = false);
 
-    if (res.containsKey("message")) {
-      // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Registered!")),
-      );
+    // ✅ Auto-login after successful registration
+    if (res.containsKey("access")) {
+      await ApiService.saveToken(res['access']);
+      ApiService.userRole = role;
+
+      Widget nextScreen;
+      if (role == "rider") {
+        nextScreen = const RiderHome();
+      } else {
+        nextScreen = const CustomerHome();
+      }
 
       // ignore: use_build_context_synchronously
-      Navigator.pop(context);
+      Navigator.pushReplacement(
+        // ignore: use_build_context_synchronously
+        context,
+        MaterialPageRoute(builder: (_) => nextScreen),
+      );
     } else {
       // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(res.toString())),
+        SnackBar(content: Text(res['message'] ?? res.toString())),
       );
     }
   }
