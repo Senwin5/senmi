@@ -167,13 +167,32 @@ class _RiderHomeState extends State<RiderHome> {
                             itemCount: packages.length,
                             itemBuilder: (context, index) {
                               final p = packages[index];
+                              final highPay = (p['price'] ?? 0) > 5000;
                               return Card(
-                                elevation: 2,
+                                elevation: 3,
                                 margin:
                                     const EdgeInsets.symmetric(vertical: 6),
+                                color: highPay
+                                    ? Colors.yellow.shade50
+                                    : Colors.white,
                                 child: ListTile(
-                                  title: Text(p['description']),
-                                  subtitle: Text("Pickup: ${p['pickup']}"),
+                                  title: Text(
+                                    p['description'],
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                  subtitle: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const SizedBox(height: 4),
+                                      Text("Pickup: ${p['pickup']}"),
+                                      Text("Delivery: ${p['delivery']}"),
+                                      Text("Price: ₦${p['price']}"),
+                                      Text(
+                                          "Receiver: ${p['receiver_name']} (${p['receiver_phone']})"),
+                                    ],
+                                  ),
                                   trailing: ElevatedButton(
                                     onPressed: () => accept(p['id']),
                                     child: const Text("Accept"),

@@ -24,6 +24,8 @@ class ApiService {
     };
   }
 
+  static bool get isAdmin => null;
+
   // ==========================
   // 🔐 SAVE TOKEN
   // ==========================
@@ -86,30 +88,31 @@ static Future<Map<String, dynamic>> register({
   }
 }
 
+
+
   // ==========================
   // 🔑 LOGIN
   // ==========================
-  static Future<bool> login(String email, String password) async {
-    final response = await http.post(
-      Uri.parse("$baseUrl/login/"),
-      headers: headers,
+static Future<Map<String, dynamic>> login(String email, String password) async {
+    final res = await http.post(
+      Uri.parse("$baseUrl/api/login/"),
+      headers: {"Content-Type": "application/json"},
       body: jsonEncode({
         "email": email,
         "password": password,
       }),
     );
 
-    final data = jsonDecode(response.body);
+    final data = jsonDecode(res.body);
 
-    userRole = data['role']; // ✅ GET ROLE FROM BACKEND
-
-    if (response.statusCode == 200) {
-      await saveToken(data['access']); // ✅ SAVE TOKEN & update isLoggedIn
-      return true;
+    if (res.statusCode == 200) {
+      token = data['access'];
+      userRole = data['role'];
     }
 
-    return false;
+    return data; // 🔥 IMPORTANT
   }
+
 
   // ✅ Optional: logout method
   static Future<void> logout() async {
@@ -121,6 +124,8 @@ static Future<Map<String, dynamic>> register({
     // ✅ Update login state
     isLoggedIn.value = false;
   }
+
+
 
   // ==========================
   // 📦 CREATE PACKAGE (Customer)
@@ -316,4 +321,42 @@ static Future<Map<String, dynamic>> register({
   static Future<dynamic> getRiderProfile() async {}
 
   static Future<dynamic> getEarnings() async {}
+}
+
+
+
+//Admin dashboard
+static Future<List> getRiders() async {
+  final res = await http.get(
+    Uri.parse("$baseUrl/admin/riders/"),
+    headers: {
+      "Authorization": "Bearer $token",
+    },
+  );
+
+  return jsonDecode(res.body);
+}
+
+static Future<bool> reviewRider(
+  int riderId,
+  String status,
+  String reason,
+) async {
+  final res = await http.post(
+    Uri.parse("$baseUrl/review-rider/$riderId/"),
+    headers: {
+      "Authorization": "Bearer $token",
+    },
+    body: {
+      "status": status,
+      "rejection_reason": reason,
+    },
+  );
+
+if (response.statusCode == 200) {
+  token = data['access'];
+  userRole = data['role'];
+  isAdmin = data['is_admin'] ?? false; // ✅
+}
+  return res.statusCode == 200;
 }

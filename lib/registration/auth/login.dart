@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:senmi/screen_pages/admin/admin_dashboard.dart';
 import 'package:senmi/widgets/custom_buttom.dart';
 import '../../services/api_service.dart';
 import '../../screen_pages/features/customer/customer_home.dart';
 import '../../screen_pages/features/rider/rider_home.dart';
-import '../auth/signup.dart'; // ✅ added import
+import '../auth/signup.dart';
+import '../../screen_pages/features/rider/rider_complete_profile.dart'; // ✅ ADD THIS
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -18,37 +20,81 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool loading = false;
 
-  // 🔐 LOGIN FUNCTION
+  // 🔐 LOGIN FUNCTION (FIXED)
   void login() async {
     setState(() => loading = true);
 
-    bool success = await ApiService.login(
+    final res = await ApiService.login(
       emailController.text,
       passwordController.text,
     );
 
     setState(() => loading = false);
 
-    if (success) {
+    // ✅ SUCCESS LOGIN
+    if (res.containsKey("access")) {
       Widget nextScreen;
 
-      // ✅ Navigate based on role
+
+
       if (ApiService.userRole == "rider") {
+        nextScreen = const RiderHome();
+      } else if (ApiService.userRole == "admin") {
+        nextScreen = const AdminDashboard(); // 👈 ADD THIS
+      } else {
+        nextScreen = const CustomerHome();
+      }
+
+  if (ApiService.isAdmin) {
+        nextScreen = const AdminDashboard(); // ✅ ADMIN
+      } else if (ApiService.userRole == "rider") {
         nextScreen = const RiderHome();
       } else {
         nextScreen = const CustomerHome();
       }
 
-      // ignore: use_build_context_synchronously
       Navigator.pushReplacement(
-        // ignore: use_build_context_synchronously
         context,
         MaterialPageRoute(builder: (_) => nextScreen),
       );
     } else {
-      // ignore: use_build_context_synchronously
+      // ❌ ERROR HANDLING
+      String message = res['detail'] ?? "Login failed";
+
+      // 🚨 FORCE PROFILE COMPLETION
+      if (message.contains("Complete your profile")) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const RiderCompleteProfile(),
+          ),
+        );
+        return;
+      }
+
+      // ⏳ PENDING APPROVAL
+      if (message.contains("pending")) {
+        showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: const Text("Pending Approval"),
+            content: const Text(
+              "Your profile is under review. Please wait.",
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("OK"),
+              )
+            ],
+          ),
+        );
+        return;
+      }
+
+      // ❌ GENERAL ERROR
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Login failed")),
+        SnackBar(content: Text(message)),
       );
     }
   }
@@ -57,7 +103,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState() {
     super.initState();
 
-    // ✅ Auto-navigate if token exists
+    // ✅ AUTO LOGIN (ONLY IF VALID)
     if (ApiService.token != null && ApiService.userRole != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Widget nextScreen;

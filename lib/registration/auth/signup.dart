@@ -139,3 +139,38 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 }
+
+
+void register() async {
+  setState(() => loading = true);
+
+  final res = await ApiService.register(
+    email: email.text,
+    username: username.text,
+    password: password.text,
+    role: role,
+  );
+
+  setState(() => loading = false);
+
+  if (res.containsKey("access")) {
+    await ApiService.saveToken(res['access']);
+    ApiService.userRole = role;
+
+    if (role == "rider") {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => CompleteProfileScreen()),
+      );
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => CustomerHome()),
+      );
+    }
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(res['error'] ?? "Registration failed")),
+    );
+  }
+}
