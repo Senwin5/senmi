@@ -1,13 +1,17 @@
 // main.dart
 import 'package:flutter/material.dart';
 import 'package:senmi/registration/auth/login.dart';
+import 'package:senmi/screen_pages/admin/admin_dashboard.dart';
 import 'package:senmi/screen_pages/features/customer/customer_bottomnav.dart';
 import 'package:senmi/screen_pages/features/rider/rider_bottom_nav.dart';
 import 'package:senmi/services/api_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await ApiService.loadToken(); // ✅ LOAD TOKEN & ROLE
+
+  // ✅ Load token and user role from SharedPreferences
+  await ApiService.loadToken();
+
   runApp(const MyApp());
 }
 
@@ -17,19 +21,21 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<bool>(
-      valueListenable: ApiService.isLoggedIn,
+      valueListenable: ApiService.isLoggedIn, // listens to login state
       builder: (context, loggedIn, _) {
         Widget homeScreen;
 
         if (loggedIn) {
-          // Navigate based on role
-          if (ApiService.userRole == "rider") {
-            homeScreen = const RiderBottomNav();
+          // ✅ Determine home screen based on user role
+          if (ApiService.isAdmin) {
+            homeScreen = const AdminDashboard(); // Admin dashboard
+          } else if (ApiService.userRole == "rider") {
+            homeScreen = const RiderBottomNav(); // Rider home
           } else {
-            homeScreen = const CustomerBottomNav();
+            homeScreen = const CustomerBottomNav(); // Customer home
           }
         } else {
-          homeScreen = const LoginScreen();
+          homeScreen = const LoginScreen(); // Not logged in → show login
         }
 
         return MaterialApp(

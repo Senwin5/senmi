@@ -25,30 +25,59 @@ class ApiService {
     };
   }
 
-
   static bool get isAdmin => userRole == "admin";
 
-  // ==========================
-  // 🔐 SAVE TOKEN
-  // ==========================
-  static Future<void> saveToken(String t) async {
+  // 🔐 SAVE TOKEN & ROLE
+  static Future<void> saveTokenAndRole(String t, String role) async {
     token = t;
+    userRole = role;
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString('token', t);
+    await prefs.setString('userRole', role);
 
-    // ✅ Update login state
     isLoggedIn.value = true;
   }
 
-  // ==========================
-  // 🔐 LOAD TOKEN
-  // ==========================
+  // 🔐 LOAD TOKEN & ROLE
   static Future<void> loadToken() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     token = prefs.getString('token');
+    userRole = prefs.getString('userRole');
 
-    // ✅ Update login state based on token presence
-    isLoggedIn.value = token != null;
+    isLoggedIn.value = token != null && userRole != null;
+  }
+
+  // 🔑 LOGIN
+  static Future<Map<String, dynamic>> login(
+    String email,
+    String password,
+  ) async {
+    final res = await http.post(
+      Uri.parse("$baseUrl/api/login/"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"email": email, "password": password}),
+    );
+
+    final data = jsonDecode(res.body);
+
+    if (res.statusCode == 200) {
+      token = data['access'];
+      userRole = data['role'];
+      await saveTokenAndRole(token!, userRole!);
+    }
+
+    return data;
+  }
+
+  // ✅ LOGOUT
+  static Future<void> logout() async {
+    token = null;
+    userRole = null;
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove('token');
+    await prefs.remove('userRole');
+
+    isLoggedIn.value = false;
   }
 
   // ==========================
@@ -82,46 +111,11 @@ class ApiService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         return body;
       } else {
-        // Return decoded body so Flutter can map it to user-friendly message
         return body is Map<String, dynamic> ? body : {"error": body.toString()};
       }
     } catch (e) {
       return {"error": e.toString()};
     }
-  }
-
-  // ==========================
-  // 🔑 LOGIN
-  // ==========================
-  static Future<Map<String, dynamic>> login(
-    String email,
-    String password,
-  ) async {
-    final res = await http.post(
-      Uri.parse("$baseUrl/api/login/"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({"email": email, "password": password}),
-    );
-
-    final data = jsonDecode(res.body);
-
-    if (res.statusCode == 200) {
-      token = data['access'];
-      userRole = data['role'];
-    }
-
-    return data; // 🔥 IMPORTANT
-  }
-
-  // ✅ Optional: logout method
-  static Future<void> logout() async {
-    token = null;
-    userRole = null;
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.remove('token');
-
-    // ✅ Update login state
-    isLoggedIn.value = false;
   }
 
   // ==========================
@@ -312,13 +306,9 @@ class ApiService {
   }
 
   static Future<dynamic> getMyPackages() async {}
-
   static Future<dynamic> getMyHistory() async {}
-
   static Future<dynamic> getRiderProfile() async {}
-
   static Future<dynamic> getEarnings() async {}
-
   static Future<dynamic> updateRiderProfile(
     String text,
     String text2,
@@ -337,8 +327,6 @@ class ApiService {
   /// Get all riders
   static Future<List<dynamic>> getRiders() async {
     try {
-      // ignore: prefer_typing_uninitialized_variables
-      var baseUrl;
       final res = await http.get(
         Uri.parse("$baseUrl/admin/riders/"),
         headers: {
@@ -360,8 +348,6 @@ class ApiService {
   /// Approve or reject a rider
   static Future<bool> reviewRider(int riderId, String status, String reason) async {
     try {
-      // ignore: prefer_typing_uninitialized_variables
-      var baseUrl;
       final res = await http.post(
         Uri.parse("$baseUrl/review-rider/$riderId/"),
         headers: {

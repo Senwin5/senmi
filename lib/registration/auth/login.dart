@@ -33,19 +33,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
     // ✅ SUCCESS LOGIN
     if (res.containsKey("access")) {
+      // Determine next screen based on role
       Widget nextScreen;
-
-
-
-      if (ApiService.userRole == "rider") {
-        nextScreen = const RiderHome();
-      } else if (ApiService.userRole == "admin") {
-        nextScreen = const AdminDashboard(); // 👈 ADD THIS
-      } else {
-        nextScreen = const CustomerHome();
-      }
-
-  if (ApiService.isAdmin) {
+      if (ApiService.isAdmin) {
         nextScreen = const AdminDashboard(); // ✅ ADMIN
       } else if (ApiService.userRole == "rider") {
         nextScreen = const RiderHome();
@@ -112,7 +102,9 @@ class _LoginScreenState extends State<LoginScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Widget nextScreen;
 
-        if (ApiService.userRole == "rider") {
+        if (ApiService.isAdmin) {
+          nextScreen = const AdminDashboard();
+        } else if (ApiService.userRole == "rider") {
           nextScreen = const RiderHome();
         } else {
           nextScreen = const CustomerHome();

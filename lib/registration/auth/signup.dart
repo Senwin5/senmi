@@ -5,7 +5,6 @@ import 'package:senmi/widgets/custom_buttom.dart';
 import '../../services/api_service.dart';
 import '../../screen_pages/features/customer/customer_home.dart';
 
-
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -52,8 +51,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     if (res.containsKey("access")) {
       // Successful registration, auto-login
-      await ApiService.saveToken(res['access']);
-      ApiService.userRole = role;
+      await ApiService.saveTokenAndRole(res['access'], role);
 
       // Redirect based on role
       if (role == "rider") {
