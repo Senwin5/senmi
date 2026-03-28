@@ -324,39 +324,53 @@ static Future<Map<String, dynamic>> login(String email, String password) async {
 }
 
 
+// ==============================
+// 🟢 ADMIN DASHBOARD METHODS
+// ==============================
 
-//Admin dashboard
-static Future<List> getRiders() async {
-  final res = await http.get(
-    Uri.parse("$baseUrl/admin/riders/"),
-    headers: {
-      "Authorization": "Bearer $token",
-    },
-  );
+/// Get all riders
+Future<List<dynamic>> getRiders() async {
+  try {
+    // ignore: prefer_typing_uninitialized_variables
+    var baseUrl;
+    final res = await http.get(
+      Uri.parse("$baseUrl/admin/riders/"),
+      headers: {
+        "Authorization": "Bearer ${ApiService.token}", // ✅ Use class name
+        "Content-Type": "application/json",
+      },
+    );
 
-  return jsonDecode(res.body);
+    if (res.statusCode == 200) {
+      return jsonDecode(res.body);
+    } else {
+      return [];
+    }
+  } catch (e) {
+    return [];
+  }
 }
 
-static Future<bool> reviewRider(
-  int riderId,
-  String status,
-  String reason,
-) async {
-  final res = await http.post(
-    Uri.parse("$baseUrl/review-rider/$riderId/"),
-    headers: {
-      "Authorization": "Bearer $token",
-    },
-    body: {
-      "status": status,
-      "rejection_reason": reason,
-    },
-  );
+/// Approve or reject a rider
+Future<bool> reviewRider(
+    int riderId, String status, String reason) async {
+  try {
+    // ignore: prefer_typing_uninitialized_variables
+    var baseUrl;
+    final res = await http.post(
+      Uri.parse("$baseUrl/review-rider/$riderId/"),
+      headers: {
+        "Authorization": "Bearer ${ApiService.token}", // ✅ Use class name
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode({
+        "status": status,
+        "rejection_reason": reason,
+      }),
+    );
 
-if (response.statusCode == 200) {
-  token = data['access'];
-  userRole = data['role'];
-  isAdmin = data['is_admin'] ?? false; // ✅
-}
-  return res.statusCode == 200;
+    return res.statusCode == 200;
+  } catch (e) {
+    return false;
+  }
 }

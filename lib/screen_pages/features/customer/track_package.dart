@@ -115,6 +115,7 @@ class _TrackingScreenState extends State<TrackingScreen>
   }
 
   Future<void> loadIcon() async {
+    // ignore: deprecated_member_use
     riderIcon = await BitmapDescriptor.fromAssetImage(
       const ImageConfiguration(size: Size(48, 48)),
       'assets/images/bike.png',

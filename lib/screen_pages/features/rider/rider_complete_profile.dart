@@ -1,12 +1,13 @@
 // rider_complete_profile.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
+// ignore: depend_on_referenced_packages
 import 'package:image_picker/image_picker.dart';
 import '../../services/api_service.dart';
 import '../features/rider/rider_home.dart';
 
 class RiderCompleteProfile extends StatefulWidget {
-  const RiderCompleteProfile({Key? key}) : super(key: key);
+  const RiderCompleteProfile({super.key});
 
   @override
   State<RiderCompleteProfile> createState() => _RiderCompleteProfileState();
@@ -67,6 +68,7 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
 
     if (res.containsKey('message')) {
       showDialog(
+        // ignore: use_build_context_synchronously
         context: context,
         builder: (_) => AlertDialog(
           title: const Text("Success"),

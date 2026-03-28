@@ -54,6 +54,7 @@ class _LoginScreenState extends State<LoginScreen> {
       }
 
       Navigator.pushReplacement(
+        // ignore: use_build_context_synchronously
         context,
         MaterialPageRoute(builder: (_) => nextScreen),
       );
@@ -64,6 +65,7 @@ class _LoginScreenState extends State<LoginScreen> {
       // 🚨 FORCE PROFILE COMPLETION
       if (message.contains("Complete your profile")) {
         Navigator.push(
+          // ignore: use_build_context_synchronously
           context,
           MaterialPageRoute(
             builder: (_) => const RiderCompleteProfile(),
@@ -75,6 +77,7 @@ class _LoginScreenState extends State<LoginScreen> {
       // ⏳ PENDING APPROVAL
       if (message.contains("pending")) {
         showDialog(
+          // ignore: use_build_context_synchronously
           context: context,
           builder: (_) => AlertDialog(
             title: const Text("Pending Approval"),
@@ -93,6 +96,7 @@ class _LoginScreenState extends State<LoginScreen> {
       }
 
       // ❌ GENERAL ERROR
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message)),
       );

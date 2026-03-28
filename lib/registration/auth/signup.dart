@@ -1,10 +1,10 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
+import 'package:senmi/screen_pages/features/rider/rider_complete_profile.dart';
 import 'package:senmi/widgets/custom_buttom.dart';
 import '../../services/api_service.dart';
 import '../../screen_pages/features/customer/customer_home.dart';
-import '../../screen_pages/features/rider/rider_home.dart';
+
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -19,10 +19,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final password = TextEditingController();
 
   String role = "customer"; // default
-
   bool loading = false;
 
+  @override
+  void dispose() {
+    // ✅ Dispose controllers to avoid memory leaks
+    email.dispose();
+    username.dispose();
+    password.dispose();
+    super.dispose();
+  }
+
   void register() async {
+    // ✅ Simple validation
+    if (email.text.isEmpty || username.text.isEmpty || password.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please fill all fields")),
+      );
+      return;
+    }
+
     setState(() => loading = true);
 
     final res = await ApiService.register(
@@ -39,13 +55,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
       await ApiService.saveToken(res['access']);
       ApiService.userRole = role;
 
-      Widget nextScreen = role == "rider" ? const RiderHome() : const CustomerHome();
-
-      Navigator.pushReplacement(
-        // ignore: use_build_context_synchronously
-        context,
-        MaterialPageRoute(builder: (_) => nextScreen),
-      );
+      // Redirect based on role
+      if (role == "rider") {
+        Navigator.pushReplacement(
+          // ignore: use_build_context_synchronously
+          context,
+          MaterialPageRoute(builder: (_) => const RiderCompleteProfile()),
+        );
+      } else {
+        Navigator.pushReplacement(
+          // ignore: use_build_context_synchronously
+          context,
+          MaterialPageRoute(builder: (_) => const CustomerHome()),
+        );
+      }
     } else {
       // Friendly error message
       String message = "Registration failed. Please try again.";
@@ -91,42 +114,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
               controller: email,
               decoration: const InputDecoration(labelText: "Email"),
             ),
-
             const SizedBox(height: 10),
-
             TextField(
               controller: username,
               decoration: const InputDecoration(labelText: "Username"),
             ),
-
             const SizedBox(height: 10),
-
             TextField(
               controller: password,
               obscureText: true,
               decoration: const InputDecoration(labelText: "Password"),
             ),
-
             const SizedBox(height: 15),
-
             DropdownButton<String>(
               value: role,
               isExpanded: true,
               items: const [
-                DropdownMenuItem(
-                  value: "customer",
-                  child: Text("Customer"),
-                ),
-                DropdownMenuItem(
-                  value: "rider",
-                  child: Text("Rider"),
-                ),
+                DropdownMenuItem(value: "customer", child: Text("Customer")),
+                DropdownMenuItem(value: "rider", child: Text("Rider")),
               ],
-              onChanged: (val) => setState(() => role = val!),
+              onChanged: (val) {
+                if (val != null) {
+                  setState(() => role = val);
+                }
+              },
             ),
-
             const SizedBox(height: 25),
-
             loading
                 ? const CircularProgressIndicator()
                 : CustomButton(
@@ -136,41 +149,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ],
         ),
       ),
-    );
-  }
-}
-
-
-void register() async {
-  setState(() => loading = true);
-
-  final res = await ApiService.register(
-    email: email.text,
-    username: username.text,
-    password: password.text,
-    role: role,
-  );
-
-  setState(() => loading = false);
-
-  if (res.containsKey("access")) {
-    await ApiService.saveToken(res['access']);
-    ApiService.userRole = role;
-
-    if (role == "rider") {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => CompleteProfileScreen()),
-      );
-    } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => CustomerHome()),
-      );
-    }
-  } else {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(res['error'] ?? "Registration failed")),
     );
   }
 }
