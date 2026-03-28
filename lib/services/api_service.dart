@@ -50,25 +50,41 @@ class ApiService {
   // ==========================
   // 🧍 REGISTER
   // ==========================
-  static Future<Map<String, dynamic>> register({
-    required String email,
-    required String username,
-    required String password,
-    required String role,
-  }) async {
-    final response = await http.post(
-      Uri.parse("$baseUrl/register/"),
-      headers: headers,
-      body: jsonEncode({
-        "email": email,
-        "username": username,
-        "password": password,
-        "role": role,
-      }),
-    );
+static Future<Map<String, dynamic>> register({
+  required String email,
+  required String username,
+  required String password,
+  required String role,
+}) async {
+  try {
+    final response = await http
+        .post(
+          Uri.parse("$baseUrl/register/"),
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+          },
+          body: jsonEncode({
+            "email": email,
+            "username": username,
+            "password": password,
+            "role": role,
+          }),
+        )
+        .timeout(const Duration(seconds: 59));
 
-    return jsonDecode(response.body);
+    final body = jsonDecode(response.body);
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return body;
+    } else {
+      // Return decoded body so Flutter can map it to user-friendly message
+      return body is Map<String, dynamic> ? body : {"error": body.toString()};
+    }
+  } catch (e) {
+    return {"error": e.toString()};
   }
+}
 
   // ==========================
   // 🔑 LOGIN
@@ -298,4 +314,6 @@ class ApiService {
   static Future<dynamic> getMyHistory() async {}
 
   static Future<dynamic> getRiderProfile() async {}
+
+  static Future<dynamic> getEarnings() async {}
 }

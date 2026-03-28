@@ -10,54 +10,182 @@ class RiderHome extends StatefulWidget {
 
 class _RiderHomeState extends State<RiderHome> {
   List packages = [];
+  bool loading = true;
+  double walletBalance = 0.0;
+  double totalEarnings = 0.0;
+  int totalDeliveries = 0;
 
   @override
   void initState() {
     super.initState();
-    loadPackages();
+    loadData();
   }
 
-  void loadPackages() async {
-    final data = await ApiService.getAvailablePackages();
-    setState(() {
-      packages = data;
-    });
+  Future<void> loadData() async {
+    setState(() => loading = true);
+    try {
+      final packageData = await ApiService.getAvailablePackages();
+      final walletData = await ApiService.getWallet();
+      final earningsData = await ApiService.getEarnings();
+
+      setState(() {
+        packages = packageData;
+        walletBalance = walletData['balance'] ?? 0.0;
+        totalEarnings = earningsData['total_earnings'] ?? 0.0;
+        totalDeliveries = earningsData['total_deliveries'] ?? 0;
+        loading = false;
+      });
+    } catch (e) {
+      setState(() => loading = false);
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Error loading data: $e")));
+    }
   }
 
-  // ✅ ACCEPT PACKAGE
   void accept(int id) async {
     bool success = await ApiService.acceptPackage(id);
-
     if (success) {
       // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text("Accepted")));
-      loadPackages();
+      loadData();
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Available Deliveries")),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text("Rider Dashboard"),
+        backgroundColor: Colors.blueAccent,
+      ),
+      body: loading
+          ? const Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              onRefresh: () async => loadData(),
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Welcome, Rider!",
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleLarge
+                          ?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 16),
 
-      body: ListView.builder(
-        itemCount: packages.length,
-        itemBuilder: (context, index) {
-          final p = packages[index];
+                    // ===== Dashboard stats =====
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Card(
+                            color: Colors.green.shade50,
+                            child: Padding(
+                              padding: const EdgeInsets.all(12.0),
+                              child: Column(
+                                children: [
+                                  const Icon(Icons.local_shipping,
+                                      size: 30, color: Colors.green),
+                                  const SizedBox(height: 8),
+                                  const Text("Deliveries"),
+                                  Text(
+                                    totalDeliveries.toString(),
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 18),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Card(
+                            color: Colors.orange.shade50,
+                            child: Padding(
+                              padding: const EdgeInsets.all(12.0),
+                              child: Column(
+                                children: [
+                                  const Icon(Icons.attach_money,
+                                      size: 30, color: Colors.orange),
+                                  const SizedBox(height: 8),
+                                  const Text("Earnings"),
+                                  Text(
+                                    "₦${totalEarnings.toStringAsFixed(2)}",
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 18),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
 
-          return Card(
-            child: ListTile(
-              title: Text(p['description']),
-              subtitle: Text(p['pickup']),
-              trailing: ElevatedButton(
-                child: const Text("Accept"),
-                onPressed: () => accept(p['id']),
+                    // ===== Wallet =====
+                    Card(
+                      color: Colors.blue.shade50,
+                      child: ListTile(
+                        leading: const Icon(Icons.account_balance_wallet),
+                        title: const Text("Wallet Balance"),
+                        trailing:
+                            Text("₦${walletBalance.toStringAsFixed(2)}"),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // ===== Available Deliveries =====
+                    Text(
+                      "Available Deliveries",
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleMedium
+                          ?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 10),
+                    packages.isEmpty
+                        ? const Center(
+                            child: Text(
+                              "No deliveries available at the moment",
+                              style: TextStyle(fontSize: 16),
+                            ),
+                          )
+                        : ListView.builder(
+                            physics: const NeverScrollableScrollPhysics(),
+                            shrinkWrap: true,
+                            itemCount: packages.length,
+                            itemBuilder: (context, index) {
+                              final p = packages[index];
+                              return Card(
+                                elevation: 2,
+                                margin:
+                                    const EdgeInsets.symmetric(vertical: 6),
+                                child: ListTile(
+                                  title: Text(p['description']),
+                                  subtitle: Text("Pickup: ${p['pickup']}"),
+                                  trailing: ElevatedButton(
+                                    onPressed: () => accept(p['id']),
+                                    child: const Text("Accept"),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                  ],
+                ),
               ),
             ),
-          );
-        },
-      ),
     );
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:senmi/widgets/custom_buttom.dart';
 import '../../services/api_service.dart';
@@ -32,28 +34,47 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     setState(() => loading = false);
 
-    // ✅ Auto-login after successful registration
     if (res.containsKey("access")) {
+      // Successful registration, auto-login
       await ApiService.saveToken(res['access']);
       ApiService.userRole = role;
 
-      Widget nextScreen;
-      if (role == "rider") {
-        nextScreen = const RiderHome();
-      } else {
-        nextScreen = const CustomerHome();
-      }
+      Widget nextScreen = role == "rider" ? const RiderHome() : const CustomerHome();
 
-      // ignore: use_build_context_synchronously
       Navigator.pushReplacement(
         // ignore: use_build_context_synchronously
         context,
         MaterialPageRoute(builder: (_) => nextScreen),
       );
     } else {
+      // Friendly error message
+      String message = "Registration failed. Please try again.";
+
+      // Parse backend error if available
+      if (res.containsKey("body")) {
+        try {
+          final body = jsonDecode(res['body']);
+          if (body is Map<String, dynamic>) {
+            if (body.containsKey("email")) {
+              message = "This email is already in use. Please use another email.";
+            } else if (body.containsKey("username")) {
+              message = "This username is already taken. Please choose another.";
+            } else if (body.containsKey("password")) {
+              message = "Password error: ${body['password'].join(", ")}";
+            } else if (body.containsKey("detail")) {
+              message = body['detail'];
+            }
+          }
+        } catch (_) {
+          // leave message as default
+        }
+      } else if (res.containsKey("error")) {
+        message = res['error'];
+      }
+
       // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(res['message'] ?? res.toString())),
+        SnackBar(content: Text(message)),
       );
     }
   }
