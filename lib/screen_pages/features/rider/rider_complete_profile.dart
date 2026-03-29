@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:senmi/screen_pages/features/rider/rider_pending_screen.dart';
 import 'package:senmi/services/api_service.dart';
 
 class RiderCompleteProfile extends StatefulWidget {
@@ -63,6 +64,7 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
     setState(() => loading = false);
 
     if (res.containsKey('message')) {
+      // ✅ Navigate to Pending Screen after success
       showDialog(
         // ignore: use_build_context_synchronously
         context: context,
@@ -72,7 +74,14 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(context);
+                Navigator.pop(context); // close dialog
+                
+                // Navigate to Pending Screen and remove previous screens
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const RiderPendingScreen()),
+                );
+
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text("Profile submitted! Waiting for admin approval."),
@@ -80,7 +89,7 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
                 );
               },
               child: const Text("OK"),
-            )
+            ),
           ],
         ),
       );

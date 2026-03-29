@@ -11,6 +11,7 @@ class ApiService {
 
   static String? token;
   static String? userRole; // ✅ MOVED HERE
+  static String? username;
 
   // ✅ Track login state
   static ValueNotifier<bool> isLoggedIn = ValueNotifier(false);
@@ -63,6 +64,7 @@ class ApiService {
     if (res.statusCode == 200) {
       token = data['access'];
       userRole = data['role'];
+      username = data['username'];
       await saveTokenAndRole(token!, userRole!);
     }
 
@@ -362,4 +364,16 @@ class ApiService {
       return false;
     }
   }
+
+
+  static Future<Map<String, dynamic>> getRiderStatus() async {
+    final res = await http.get(
+      Uri.parse("$baseUrl/rider/status/"),
+      headers: headers,
+    );
+
+    return jsonDecode(res.body);
+  }
 }
+
+

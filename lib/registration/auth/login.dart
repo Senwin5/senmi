@@ -6,6 +6,7 @@ import '../../screen_pages/features/customer/customer_home.dart';
 import '../../screen_pages/features/rider/rider_home.dart';
 import '../auth/signup.dart';
 import '../../screen_pages/features/rider/rider_complete_profile.dart';
+import '../../screen_pages/features/rider/rider_pending_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -20,6 +21,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool loading = false;
 
+  // =========================
+  // 🔑 LOGIN FUNCTION
+  // =========================
   void login() async {
     setState(() => loading = true);
 
@@ -28,88 +32,198 @@ class _LoginScreenState extends State<LoginScreen> {
       passwordController.text,
     );
 
-    setState(() => loading = false);
+    if (!mounted) return;
 
     if (res.containsKey("access")) {
-      Widget nextScreen;
-      if (ApiService.isAdmin) {
-        nextScreen = const AdminDashboard();
-      } else if (ApiService.userRole == "rider") {
-        nextScreen = const RiderHome();
-      } else {
-        nextScreen = const CustomerHome();
-      }
+      try {
+        // ADMIN
+        if (ApiService.isAdmin) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const AdminDashboard()),
+          );
+          return;
+        }
 
-      Navigator.pushReplacement(
-        // ignore: use_build_context_synchronously
-        context,
-        MaterialPageRoute(builder: (_) => nextScreen),
-      );
+        // RIDER
+        if (ApiService.userRole == "rider") {
+          Map<String, dynamic> statusRes = {};
+          try {
+            statusRes = await ApiService.getRiderStatus();
+          } catch (e) {
+            // fallback to pending screen if API fails
+            Navigator.pushReplacement(
+              // ignore: use_build_context_synchronously
+              context,
+              MaterialPageRoute(builder: (_) => const RiderPendingScreen()),
+            );
+            return;
+          }
+
+          if (statusRes['status'] == "no_profile") {
+            Navigator.pushReplacement(
+              // ignore: use_build_context_synchronously
+              context,
+              MaterialPageRoute(builder: (_) => const RiderCompleteProfile()),
+            );
+            return;
+          }
+
+          if (statusRes['status'] == "pending") {
+            Navigator.pushReplacement(
+              // ignore: use_build_context_synchronously
+              context,
+              MaterialPageRoute(builder: (_) => const RiderPendingScreen()),
+            );
+            return;
+          }
+
+          if (statusRes['status'] == "rejected") {
+            // ignore: use_build_context_synchronously
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(statusRes['rejection_reason'] ?? "Rejected")),
+            );
+            return;
+          }
+
+          if (statusRes['status'] == "approved") {
+            Navigator.pushReplacement(
+              // ignore: use_build_context_synchronously
+              context,
+              MaterialPageRoute(builder: (_) => const RiderHome()),
+            );
+            return;
+          }
+        }
+
+        // CUSTOMER
+        Navigator.pushReplacement(
+          // ignore: use_build_context_synchronously
+          context,
+          MaterialPageRoute(builder: (_) => const CustomerHome()),
+        );
+      } finally {
+        setState(() => loading = false);
+      }
     } else {
+      setState(() => loading = false);
       String message = res['detail'] ?? "Login failed";
 
       if (message.contains("Complete your profile")) {
         Navigator.push(
-          // ignore: use_build_context_synchronously
           context,
-          MaterialPageRoute(
-            builder: (_) => const RiderCompleteProfile(),
-          ),
+          MaterialPageRoute(builder: (_) => const RiderCompleteProfile()),
         );
         return;
       }
 
       if (message.contains("pending")) {
-        showDialog(
-          // ignore: use_build_context_synchronously
-          context: context,
-          builder: (_) => AlertDialog(
-            title: const Text("Pending Approval"),
-            content: const Text(
-              "Your profile is under review. Please wait.",
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text("OK"),
-              )
-            ],
-          ),
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const RiderPendingScreen()),
         );
         return;
       }
 
-      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message)),
       );
     }
   }
 
+  // =========================
+  // 🚀 AUTO LOGIN CHECK
+  // =========================
   @override
   void initState() {
     super.initState();
 
-    if (ApiService.token != null && ApiService.userRole != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        Widget nextScreen;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      setState(() => loading = true);
+      await ApiService.loadToken();
 
+      if (!mounted) return;
+
+      if (ApiService.token == null) {
+        setState(() => loading = false);
+        return;
+      }
+
+      try {
+        // ADMIN
         if (ApiService.isAdmin) {
-          nextScreen = const AdminDashboard();
-        } else if (ApiService.userRole == "rider") {
-          nextScreen = const RiderHome();
-        } else {
-          nextScreen = const CustomerHome();
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const AdminDashboard()),
+          );
+          return;
         }
 
+        // RIDER
+        if (ApiService.userRole == "rider") {
+          Map<String, dynamic> statusRes = {};
+          try {
+            statusRes = await ApiService.getRiderStatus();
+          } catch (e) {
+            Navigator.pushReplacement(
+              // ignore: use_build_context_synchronously
+              context,
+              MaterialPageRoute(builder: (_) => const RiderPendingScreen()),
+            );
+            return;
+          }
+
+          if (statusRes['status'] == "no_profile") {
+            Navigator.pushReplacement(
+              // ignore: use_build_context_synchronously
+              context,
+              MaterialPageRoute(builder: (_) => const RiderCompleteProfile()),
+            );
+            return;
+          }
+
+          if (statusRes['status'] == "pending") {
+            Navigator.pushReplacement(
+              // ignore: use_build_context_synchronously
+              context,
+              MaterialPageRoute(builder: (_) => const RiderPendingScreen()),
+            );
+            return;
+          }
+
+          if (statusRes['status'] == "rejected") {
+            // ignore: use_build_context_synchronously
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(statusRes['rejection_reason'] ?? "Rejected")),
+            );
+            return;
+          }
+
+          if (statusRes['status'] == "approved") {
+            Navigator.pushReplacement(
+              // ignore: use_build_context_synchronously
+              context,
+              MaterialPageRoute(builder: (_) => const RiderHome()),
+            );
+            return;
+          }
+        }
+
+        // CUSTOMER
         Navigator.pushReplacement(
+          // ignore: use_build_context_synchronously
           context,
-          MaterialPageRoute(builder: (_) => nextScreen),
+          MaterialPageRoute(builder: (_) => const CustomerHome()),
         );
-      });
-    }
+      } finally {
+        if (mounted) setState(() => loading = false);
+      }
+    });
   }
 
+  // =========================
+  // 🎨 UI
+  // =========================
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -131,10 +245,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: [
                       const Text(
                         "Senmi 🚚",
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 16),
                       const Text(
@@ -181,9 +292,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             onTap: () {
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(
-                                  builder: (_) => const RegisterScreen(),
-                                ),
+                                MaterialPageRoute(builder: (_) => const RegisterScreen()),
                               );
                             },
                             child: const Text(

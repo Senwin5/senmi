@@ -72,7 +72,8 @@ class _RiderHomeState extends State<RiderHome> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "Welcome, Rider!",
+                     // "Welcome, Rider!",
+                      "Welcome, ${ApiService.username ?? 'Rider'}!",
                       style: Theme.of(context)
                           .textTheme
                           .titleLarge

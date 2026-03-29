@@ -1,0 +1,201 @@
+import 'dart:async';
+import 'package:flutter/material.dart';
+import '../../../services/api_service.dart';
+import '../../../registration/auth/login.dart';
+import '../../features/rider/rider_home.dart';
+import '../../features/rider/rider_complete_profile.dart'; // import your complete profile screen
+
+class RiderPendingScreen extends StatefulWidget {
+  const RiderPendingScreen({super.key});
+
+  @override
+  State<RiderPendingScreen> createState() => _RiderPendingScreenState();
+}
+
+class _RiderPendingScreenState extends State<RiderPendingScreen> {
+  bool loading = false;
+  String message = "Your profile is under review.\nPlease wait for admin approval.";
+  bool showCompleteProfileButton = false; // ✅ flag for complete profile button
+  Timer? refreshTimer;
+
+  // ✅ Fetch rider status
+  Future<void> checkStatus() async {
+    if (!mounted) return;
+    setState(() => loading = true);
+
+    try {
+      final res = await ApiService.getRiderStatus();
+      debugPrint("Rider status response: $res");
+
+      if (!mounted) return;
+
+      switch (res['status']) {
+        case "approved":
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const RiderHome()),
+          );
+          return;
+
+        case "rejected":
+          setState(() {
+            message = "Rejected: ${res['rejection_reason'] ?? 'No reason'}";
+            showCompleteProfileButton = false;
+          });
+          break;
+
+        case "pending":
+          setState(() {
+            message = "Your profile is still pending. Please wait for admin approval.";
+            showCompleteProfileButton = false;
+          });
+          break;
+
+        case "no_profile":
+          setState(() {
+            message = "You haven't completed your profile yet. Please fill in your details.";
+            showCompleteProfileButton = true; // ✅ show button
+          });
+          break;
+
+        default:
+          setState(() {
+            message = "Unknown status. Try refreshing.";
+            showCompleteProfileButton = false;
+          });
+      }
+    } catch (e) {
+      debugPrint("Error fetching rider status: $e");
+
+      if (e.toString().contains("401") || e.toString().contains("token")) {
+        await ApiService.logout();
+        if (!mounted) return;
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          (route) => false,
+        );
+        return;
+      }
+
+      if (!mounted) return;
+      setState(() {
+        message = "Failed to fetch status. Try again.";
+        showCompleteProfileButton = false;
+      });
+    } finally {
+      // ignore: control_flow_in_finally
+      if (!mounted) return;
+      setState(() => loading = false);
+    }
+  }
+
+  // ✅ Logout function
+  void logout() async {
+    await ApiService.logout();
+    if (!mounted) return;
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (route) => false,
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // Initial check
+    WidgetsBinding.instance.addPostFrameCallback((_) => checkStatus());
+
+    // Auto refresh every 5 seconds
+    refreshTimer = Timer.periodic(const Duration(seconds: 5), (_) => checkStatus());
+  }
+
+  @override
+  void dispose() {
+    refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  // ✅ Navigate to Complete Profile and refresh status on return
+  void navigateToCompleteProfile() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const RiderCompleteProfile()),
+    );
+
+    // After returning from complete profile, re-check status
+    checkStatus();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Stack(
+        children: [
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.hourglass_top, size: 100, color: Colors.orange),
+                  const SizedBox(height: 24),
+                  const Text(
+                    "Pending Approval",
+                    style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    message,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 16, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 32),
+
+                  // ✅ Refresh status button
+                  ElevatedButton(
+                    onPressed: checkStatus,
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                    ),
+                    child: const Text("Refresh Status"),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // ✅ Complete profile button (conditionally shown)
+                  if (showCompleteProfileButton)
+                    ElevatedButton(
+                      onPressed: navigateToCompleteProfile,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                      ),
+                      child: const Text("Complete Profile"),
+                    ),
+
+                  const SizedBox(height: 16),
+
+                  // Logout button
+                  TextButton(
+                    onPressed: logout,
+                    child: const Text("Logout"),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Loading overlay
+          if (loading)
+            Container(
+              color: Colors.black26,
+              child: const Center(child: CircularProgressIndicator()),
+            ),
+        ],
+      ),
+    );
+  }
+}
