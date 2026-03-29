@@ -1,7 +1,5 @@
-// rider_complete_profile.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
-// ignore: depend_on_referenced_packages
 import 'package:image_picker/image_picker.dart';
 import 'package:senmi/services/api_service.dart';
 
@@ -26,7 +24,6 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
   File? riderImageWithVehicle;
 
   bool loading = false;
-
   final ImagePicker _picker = ImagePicker();
 
   Future<void> pickImage(String type) async {
@@ -75,7 +72,7 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(context); // close dialog first
+                Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text("Profile submitted! Waiting for admin approval."),
@@ -88,17 +85,10 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
         ),
       );
     } else {
-
       String errorText = "";
-      if (res.containsKey('missing_fields')) {
-        errorText += "Please fill all required fields.\n";
-      }
-      if (res.containsKey('missing_images')) {
-        errorText += "Please upload all required images.\n";
-      }
-      if (res.containsKey('detail')) {
-        errorText += res['detail'];
-      }
+      if (res.containsKey('missing_fields')) errorText += "Please fill all required fields.\n";
+      if (res.containsKey('missing_images')) errorText += "Please upload all required images.\n";
+      if (res.containsKey('detail')) errorText += res['detail'];
       // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(errorText.isEmpty ? "Failed to submit profile" : errorText)),
@@ -106,66 +96,125 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
     }
   }
 
+  Widget imagePickerTile(String label, File? file, String type) {
+    return GestureDetector(
+      onTap: () => pickImage(type),
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        height: 120,
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: file != null
+            ? ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.file(file, fit: BoxFit.cover, width: double.infinity),
+              )
+            : Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.add_a_photo, size: 40, color: Colors.grey),
+                    const SizedBox(height: 8),
+                    Text(label, style: const TextStyle(color: Colors.grey)),
+                  ],
+                ),
+              ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Complete Rider Profile")),
-      body: loading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    TextFormField(
-                      controller: fullNameController,
-                      decoration: const InputDecoration(labelText: "Full Name"),
-                      validator: (val) => val!.isEmpty ? "Required" : null,
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  TextFormField(
+                    controller: fullNameController,
+                    decoration: const InputDecoration(
+                      labelText: "Full Name",
+                      prefixIcon: Icon(Icons.person),
+                      border: OutlineInputBorder(),
                     ),
-                    TextFormField(
-                      controller: phoneController,
-                      decoration: const InputDecoration(labelText: "Phone Number"),
-                      validator: (val) => val!.isEmpty ? "Required" : null,
+                    validator: (val) => val!.isEmpty ? "Required" : null,
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: phoneController,
+                    decoration: const InputDecoration(
+                      labelText: "Phone Number",
+                      prefixIcon: Icon(Icons.phone),
+                      border: OutlineInputBorder(),
                     ),
-                    TextFormField(
-                      controller: vehicleController,
-                      decoration: const InputDecoration(labelText: "Vehicle Number"),
-                      validator: (val) => val!.isEmpty ? "Required" : null,
+                    validator: (val) => val!.isEmpty ? "Required" : null,
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: vehicleController,
+                    decoration: const InputDecoration(
+                      labelText: "Vehicle Number",
+                      prefixIcon: Icon(Icons.directions_car),
+                      border: OutlineInputBorder(),
                     ),
-                    TextFormField(
-                      controller: addressController,
-                      decoration: const InputDecoration(labelText: "Address"),
-                      validator: (val) => val!.isEmpty ? "Required" : null,
+                    validator: (val) => val!.isEmpty ? "Required" : null,
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: addressController,
+                    decoration: const InputDecoration(
+                      labelText: "Address",
+                      prefixIcon: Icon(Icons.home),
+                      border: OutlineInputBorder(),
                     ),
-                    TextFormField(
-                      controller: cityController,
-                      decoration: const InputDecoration(labelText: "City"),
-                      validator: (val) => val!.isEmpty ? "Required" : null,
+                    validator: (val) => val!.isEmpty ? "Required" : null,
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: cityController,
+                    decoration: const InputDecoration(
+                      labelText: "City",
+                      prefixIcon: Icon(Icons.location_city),
+                      border: OutlineInputBorder(),
                     ),
-                    const SizedBox(height: 16),
-                    imagePickerTile("Profile Picture", profilePicture, 'profile'),
-                    imagePickerTile("Rider Image 1", riderImage1, 'rider1'),
-                    imagePickerTile("Rider Image with Vehicle", riderImageWithVehicle, 'withVehicle'),
-                    const SizedBox(height: 24),
-                    ElevatedButton(
+                    validator: (val) => val!.isEmpty ? "Required" : null,
+                  ),
+                  const SizedBox(height: 16),
+                  imagePickerTile("Profile Picture", profilePicture, 'profile'),
+                  imagePickerTile("Rider Image 1", riderImage1, 'rider1'),
+                  imagePickerTile("Rider Image with Vehicle", riderImageWithVehicle, 'withVehicle'),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
                       onPressed: submitProfile,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
                       child: const Text("Submit Profile"),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
-    );
-  }
-
-  Widget imagePickerTile(String label, File? file, String type) {
-    return ListTile(
-      title: Text(label),
-      trailing: file != null
-          ? Image.file(file, width: 50, height: 50, fit: BoxFit.cover)
-          : const Icon(Icons.image),
-      onTap: () => pickImage(type),
+          ),
+          if (loading)
+            Container(
+              color: Colors.black45,
+              child: const Center(child: CircularProgressIndicator()),
+            ),
+        ],
+      ),
     );
   }
 }

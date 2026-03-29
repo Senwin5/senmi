@@ -17,9 +17,14 @@ class _TrackingScreenState extends State<TrackingScreen>
     with SingleTickerProviderStateMixin {
   double lat = 6.5244;
   double lng = 3.3792;
+  double pickupLat = 6.5244;
+  double pickupLng = 3.3792;
+  double deliveryLat = 6.5244;
+  double deliveryLng = 3.3792;
   String status = "Loading...";
   GoogleMapController? mapController;
   Set<Polyline> polylines = {};
+  Set<Marker> markers = {};
   BitmapDescriptor? riderIcon;
 
   late WebSocketChannel channel;
@@ -33,43 +38,65 @@ class _TrackingScreenState extends State<TrackingScreen>
   @override
   void initState() {
     super.initState();
-    loadIcon(); // Load bike marker
+    loadIcon();
 
     _currentPos = LatLng(lat, lng);
 
-    // 🔌 Connect to WebSocket
+    // Connect WebSocket
     channel = WebSocketChannel.connect(
       Uri.parse('ws://yourdomain/ws/tracking/${widget.packageId}/'),
     );
 
-    // 📡 Listen for live location updates
     channel.stream.listen((data) {
       final parsed = jsonDecode(data);
 
       double newLat = parsed['lat'];
       double newLng = parsed['lng'];
-      double destLat = parsed['delivery_lat'] ?? newLat;
-      double destLng = parsed['delivery_lng'] ?? newLng;
+      pickupLat = parsed['pickup_lat'] ?? newLat;
+      pickupLng = parsed['pickup_lng'] ?? newLng;
+      deliveryLat = parsed['delivery_lat'] ?? newLat;
+      deliveryLng = parsed['delivery_lng'] ?? newLng;
       String newStatus = parsed['status'] ?? status;
 
       _targetPos = LatLng(newLat, newLng);
       status = newStatus;
 
-      // Start ticker for smooth animation
       _animationProgress = 0.0;
       _ticker.start();
 
-      // Update route line
-      setState(() {
-        polylines = {
-          Polyline(
-            polylineId: const PolylineId("route"),
-            points: [_targetPos!, LatLng(destLat, destLng)],
-            width: 5,
-            color: Colors.blue,
-          ),
-        };
-      });
+      // Update markers
+      markers = {
+        Marker(
+          markerId: const MarkerId('rider'),
+          position: _targetPos!,
+          icon: riderIcon ?? BitmapDescriptor.defaultMarker,
+          infoWindow: const InfoWindow(title: 'Rider'),
+        ),
+        Marker(
+          markerId: const MarkerId('pickup'),
+          position: LatLng(pickupLat, pickupLng),
+          infoWindow: const InfoWindow(title: 'Pickup'),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+        ),
+        Marker(
+          markerId: const MarkerId('delivery'),
+          position: LatLng(deliveryLat, deliveryLng),
+          infoWindow: const InfoWindow(title: 'Delivery'),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+        ),
+      };
+
+      // Update route
+      polylines = {
+        Polyline(
+          polylineId: const PolylineId("route"),
+          points: [LatLng(pickupLat, pickupLng), _targetPos!, LatLng(deliveryLat, deliveryLng)],
+          width: 5,
+          color: Colors.blue,
+        ),
+      };
+
+      setState(() {});
     });
 
     _ticker = createTicker(_onTick);
@@ -79,31 +106,20 @@ class _TrackingScreenState extends State<TrackingScreen>
     if (_currentPos == null || _targetPos == null) return;
 
     setState(() {
-      _animationProgress += 0.02; // speed
+      _animationProgress += 0.02;
       if (_animationProgress >= 1.0) {
         _animationProgress = 1.0;
         _currentPos = _targetPos;
         _ticker.stop();
       } else {
-        // interpolate
         double latTween =
-            _currentPos!.latitude +
-                (_targetPos!.latitude - _currentPos!.latitude) *
-                    _animationProgress;
+            _currentPos!.latitude + (_targetPos!.latitude - _currentPos!.latitude) * _animationProgress;
         double lngTween =
-            _currentPos!.longitude +
-                (_targetPos!.longitude - _currentPos!.longitude) *
-                    _animationProgress;
+            _currentPos!.longitude + (_targetPos!.longitude - _currentPos!.longitude) * _animationProgress;
         _currentPos = LatLng(latTween, lngTween);
       }
 
-      lat = _currentPos!.latitude;
-      lng = _currentPos!.longitude;
-
-      // Move camera
-      mapController?.animateCamera(
-        CameraUpdate.newLatLng(_currentPos!),
-      );
+      mapController?.animateCamera(CameraUpdate.newLatLng(_currentPos!));
     });
   }
 
@@ -122,30 +138,70 @@ class _TrackingScreenState extends State<TrackingScreen>
     );
   }
 
+  IconData getStatusIcon(String status) {
+    switch (status) {
+      case "delivered":
+        return Icons.check_circle;
+      case "picked_up":
+        return Icons.inventory;
+      case "accepted":
+        return Icons.local_shipping;
+      default:
+        return Icons.hourglass_top;
+    }
+  }
+
+  Color getStatusColor(String status) {
+    switch (status) {
+      case "delivered":
+        return Colors.green;
+      case "picked_up":
+        return Colors.orange;
+      case "accepted":
+        return Colors.blue;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String getStatusText(String status) {
+    switch (status) {
+      case "delivered":
+        return "Package Delivered";
+      case "picked_up":
+        return "Package Picked Up";
+      case "accepted":
+        return "Rider on the Way";
+      default:
+        return "Waiting for Rider";
+    }
+  }
+
+  double getProgress(String status) {
+    switch (status) {
+      case "delivered":
+        return 1.0;
+      case "picked_up":
+        return 0.66;
+      case "accepted":
+        return 0.33;
+      default:
+        return 0.0;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
         children: [
           GoogleMap(
-            initialCameraPosition: CameraPosition(
-              target: LatLng(lat, lng),
-              zoom: 15,
-            ),
-            onMapCreated: (controller) {
-              mapController = controller;
-            },
-            markers: {
-              Marker(
-                markerId: const MarkerId("rider"),
-                position: _currentPos ?? LatLng(lat, lng),
-                icon: riderIcon ?? BitmapDescriptor.defaultMarker,
-              ),
-            },
+            initialCameraPosition: CameraPosition(target: LatLng(lat, lng), zoom: 15),
+            onMapCreated: (controller) => mapController = controller,
+            markers: markers,
             polylines: polylines,
           ),
-
-          /// BACK BUTTON
+          // Back Button
           Positioned(
             top: 40,
             left: 10,
@@ -157,15 +213,14 @@ class _TrackingScreenState extends State<TrackingScreen>
               ),
             ),
           ),
-
-          /// BOTTOM SHEET
+          // Bottom Sheet
           Positioned(
             bottom: 0,
             left: 0,
             right: 0,
             child: Container(
-              padding: const EdgeInsets.all(16),
               height: 220,
+              padding: const EdgeInsets.all(16),
               decoration: const BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
@@ -176,29 +231,35 @@ class _TrackingScreenState extends State<TrackingScreen>
                 children: [
                   const Center(child: Icon(Icons.drag_handle, size: 30)),
                   const SizedBox(height: 10),
-                  Text(
-                    "Status: ${status.toUpperCase()}",
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  Row(
+                    children: [
+                      Icon(getStatusIcon(status), color: getStatusColor(status)),
+                      const SizedBox(width: 10),
+                      Text(
+                        getStatusText(status),
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 10),
-                  Text("Tracking ID: ${widget.packageId}",
-                      style: const TextStyle(fontSize: 14)),
-                  const SizedBox(height: 20),
-                  Text("Lat: $lat"),
-                  Text("Lng: $lng"),
-                  const SizedBox(height: 10),
-                  Text(
-                    status == "delivered"
-                        ? "✅ Package delivered"
-                        : status == "picked_up"
-                            ? "📦 Package picked up"
-                            : status == "accepted"
-                                ? "🚚 Rider is on the way"
-                                : "⏳ Waiting for rider",
-                    style: const TextStyle(fontSize: 16),
+                  Text("Tracking ID: ${widget.packageId}", style: const TextStyle(fontSize: 14)),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      const Icon(Icons.location_on, size: 16),
+                      const SizedBox(width: 4),
+                      Text("Lat: ${_currentPos?.latitude.toStringAsFixed(5) ?? lat.toStringAsFixed(5)}"),
+                      const SizedBox(width: 20),
+                      const Icon(Icons.location_on_outlined, size: 16),
+                      const SizedBox(width: 4),
+                      Text("Lng: ${_currentPos?.longitude.toStringAsFixed(5) ?? lng.toStringAsFixed(5)}"),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  LinearProgressIndicator(
+                    value: getProgress(status),
+                    backgroundColor: Colors.grey.shade300,
+                    color: getStatusColor(status),
                   ),
                 ],
               ),

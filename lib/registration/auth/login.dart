@@ -5,7 +5,7 @@ import '../../services/api_service.dart';
 import '../../screen_pages/features/customer/customer_home.dart';
 import '../../screen_pages/features/rider/rider_home.dart';
 import '../auth/signup.dart';
-import '../../screen_pages/features/rider/rider_complete_profile.dart'; // ✅ ADD THIS
+import '../../screen_pages/features/rider/rider_complete_profile.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -20,7 +20,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool loading = false;
 
-  // 🔐 LOGIN FUNCTION (FIXED)
   void login() async {
     setState(() => loading = true);
 
@@ -31,12 +30,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => loading = false);
 
-    // ✅ SUCCESS LOGIN
     if (res.containsKey("access")) {
-      // Determine next screen based on role
       Widget nextScreen;
       if (ApiService.isAdmin) {
-        nextScreen = const AdminDashboard(); // ✅ ADMIN
+        nextScreen = const AdminDashboard();
       } else if (ApiService.userRole == "rider") {
         nextScreen = const RiderHome();
       } else {
@@ -49,10 +46,8 @@ class _LoginScreenState extends State<LoginScreen> {
         MaterialPageRoute(builder: (_) => nextScreen),
       );
     } else {
-      // ❌ ERROR HANDLING
       String message = res['detail'] ?? "Login failed";
 
-      // 🚨 FORCE PROFILE COMPLETION
       if (message.contains("Complete your profile")) {
         Navigator.push(
           // ignore: use_build_context_synchronously
@@ -64,7 +59,6 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
-      // ⏳ PENDING APPROVAL
       if (message.contains("pending")) {
         showDialog(
           // ignore: use_build_context_synchronously
@@ -85,7 +79,6 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
-      // ❌ GENERAL ERROR
       // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message)),
@@ -97,7 +90,6 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState() {
     super.initState();
 
-    // ✅ AUTO LOGIN (ONLY IF VALID)
     if (ApiService.token != null && ApiService.userRole != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Widget nextScreen;
@@ -121,53 +113,101 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              "Senmi 🚚",
-              style: TextStyle(fontSize: 28),
-            ),
-
-            const SizedBox(height: 30),
-
-            TextField(
-              controller: emailController,
-              decoration: const InputDecoration(labelText: "Email"),
-            ),
-
-            TextField(
-              controller: passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(labelText: "Password"),
-            ),
-
-            const SizedBox(height: 20),
-
-            loading
-                ? const CircularProgressIndicator()
-                : CustomButton(
-                    text: "Login",
-                    onPressed: login,
+      backgroundColor: Colors.grey[100],
+      body: Stack(
+        children: [
+          Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Card(
+                elevation: 6,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        "Senmi 🚚",
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        "Sign in to continue",
+                        style: TextStyle(fontSize: 16, color: Colors.grey),
+                      ),
+                      const SizedBox(height: 32),
+                      TextField(
+                        controller: emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        decoration: InputDecoration(
+                          labelText: "Email",
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          prefixIcon: const Icon(Icons.email),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: passwordController,
+                        obscureText: true,
+                        decoration: InputDecoration(
+                          labelText: "Password",
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          prefixIcon: const Icon(Icons.lock),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      CustomButton(
+                        text: "Login",
+                        onPressed: login,
+                        fullWidth: true,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text("Don't have an account? "),
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const RegisterScreen(),
+                                ),
+                              );
+                            },
+                            child: const Text(
+                              "Sign up",
+                              style: TextStyle(
+                                color: Colors.blue,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      )
+                    ],
                   ),
-
-            const SizedBox(height: 10),
-
-            TextButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const RegisterScreen(),
-                  ),
-                );
-              },
-              child: const Text("Create Account"),
+                ),
+              ),
             ),
-          ],
-        ),
+          ),
+          if (loading)
+            Container(
+              color: Colors.black45,
+              child: const Center(child: CircularProgressIndicator()),
+            ),
+        ],
       ),
     );
   }

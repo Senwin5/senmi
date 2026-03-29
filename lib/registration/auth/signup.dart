@@ -4,6 +4,7 @@ import 'package:senmi/screen_pages/features/rider/rider_complete_profile.dart';
 import 'package:senmi/widgets/custom_buttom.dart';
 import '../../services/api_service.dart';
 import '../../screen_pages/features/customer/customer_home.dart';
+import '../auth/login.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -22,7 +23,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   void dispose() {
-    // ✅ Dispose controllers to avoid memory leaks
     email.dispose();
     username.dispose();
     password.dispose();
@@ -30,7 +30,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   void register() async {
-    // ✅ Simple validation
     if (email.text.isEmpty || username.text.isEmpty || password.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please fill all fields")),
@@ -50,10 +49,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => loading = false);
 
     if (res.containsKey("access")) {
-      // Successful registration, auto-login
       await ApiService.saveTokenAndRole(res['access'], role);
 
-      // Redirect based on role
       if (role == "rider") {
         Navigator.pushReplacement(
           // ignore: use_build_context_synchronously
@@ -68,27 +65,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
         );
       }
     } else {
-      // Friendly error message
       String message = "Registration failed. Please try again.";
 
-      // Parse backend error if available
       if (res.containsKey("body")) {
         try {
           final body = jsonDecode(res['body']);
           if (body is Map<String, dynamic>) {
             if (body.containsKey("email")) {
-              message = "This email is already in use. Please use another email.";
+              message = "This email is already in use.";
             } else if (body.containsKey("username")) {
-              message = "This username is already taken. Please choose another.";
+              message = "This username is already taken.";
             } else if (body.containsKey("password")) {
               message = "Password error: ${body['password'].join(", ")}";
             } else if (body.containsKey("detail")) {
               message = body['detail'];
             }
           }
-        } catch (_) {
-          // leave message as default
-        }
+        } catch (_) {}
       } else if (res.containsKey("error")) {
         message = res['error'];
       }
@@ -103,49 +96,130 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Register")),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            TextField(
-              controller: email,
-              decoration: const InputDecoration(labelText: "Email"),
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: username,
-              decoration: const InputDecoration(labelText: "Username"),
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: password,
-              obscureText: true,
-              decoration: const InputDecoration(labelText: "Password"),
-            ),
-            const SizedBox(height: 15),
-            DropdownButton<String>(
-              value: role,
-              isExpanded: true,
-              items: const [
-                DropdownMenuItem(value: "customer", child: Text("Customer")),
-                DropdownMenuItem(value: "rider", child: Text("Rider")),
-              ],
-              onChanged: (val) {
-                if (val != null) {
-                  setState(() => role = val);
-                }
-              },
-            ),
-            const SizedBox(height: 25),
-            loading
-                ? const CircularProgressIndicator()
-                : CustomButton(
-                    text: "Register",
-                    onPressed: register,
+      backgroundColor: Colors.grey[100],
+      body: Stack(
+        children: [
+          Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Card(
+                elevation: 6,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        "Senmi 🚚",
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        "Create a new account",
+                        style: TextStyle(fontSize: 16, color: Colors.grey),
+                      ),
+                      const SizedBox(height: 32),
+                      TextField(
+                        controller: email,
+                        keyboardType: TextInputType.emailAddress,
+                        decoration: InputDecoration(
+                          labelText: "Email",
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          prefixIcon: const Icon(Icons.email),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: username,
+                        decoration: InputDecoration(
+                          labelText: "Username",
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          prefixIcon: const Icon(Icons.person),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: password,
+                        obscureText: true,
+                        decoration: InputDecoration(
+                          labelText: "Password",
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          prefixIcon: const Icon(Icons.lock),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: DropdownButton<String>(
+                          value: role,
+                          isExpanded: true,
+                          underline: const SizedBox(),
+                          items: const [
+                            DropdownMenuItem(value: "customer", child: Text("Customer")),
+                            DropdownMenuItem(value: "rider", child: Text("Rider")),
+                          ],
+                          onChanged: (val) {
+                            if (val != null) setState(() => role = val);
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      CustomButton(
+                        text: "Register",
+                        onPressed: register,
+                        fullWidth: true,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text("Already have an account? "),
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(builder: (_) => const LoginScreen()),
+                              );
+                            },
+                            child: const Text(
+                              "Login",
+                              style: TextStyle(
+                                color: Colors.blue,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          )
+                        ],
+                      )
+                    ],
                   ),
-          ],
-        ),
+                ),
+              ),
+            ),
+          ),
+          if (loading)
+            Container(
+              color: Colors.black45,
+              child: const Center(child: CircularProgressIndicator()),
+            ),
+        ],
       ),
     );
   }
