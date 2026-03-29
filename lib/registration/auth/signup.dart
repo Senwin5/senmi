@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:senmi/screen_pages/features/rider/rider_complete_profile.dart';
 //import 'package:senmi/screen_pages/features/rider/rider_complete_profile.dart';
 import 'package:senmi/widgets/custom_buttom.dart';
 import '../../services/api_service.dart';
 import '../../screen_pages/features/customer/customer_home.dart';
 import '../auth/login.dart';
-import 'package:senmi/screen_pages/features/rider/rider_pending_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -56,7 +56,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         Navigator.pushReplacement(
           // ignore: use_build_context_synchronously
           context,
-          MaterialPageRoute(builder: (_) => const RiderPendingScreen()),
+          MaterialPageRoute(builder: (_) => const RiderCompleteProfile()),
         );
       } else {
         Navigator.pushReplacement(

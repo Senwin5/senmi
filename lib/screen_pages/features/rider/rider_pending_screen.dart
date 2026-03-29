@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../services/api_service.dart';
 import '../../../registration/auth/login.dart';
 import '../../features/rider/rider_home.dart';
-import '../../features/rider/rider_complete_profile.dart'; // import your complete profile screen
+import '../../features/rider/rider_complete_profile.dart';
 
 class RiderPendingScreen extends StatefulWidget {
   const RiderPendingScreen({super.key});
@@ -15,10 +15,22 @@ class RiderPendingScreen extends StatefulWidget {
 class _RiderPendingScreenState extends State<RiderPendingScreen> {
   bool loading = false;
   String message = "Your profile is under review.\nPlease wait for admin approval.";
-  bool showCompleteProfileButton = false; // ✅ flag for complete profile button
+  bool showCompleteProfileButton = false;
   Timer? refreshTimer;
 
-  // ✅ Fetch rider status
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => checkStatus());
+    refreshTimer = Timer.periodic(const Duration(seconds: 5), (_) => checkStatus());
+  }
+
+  @override
+  void dispose() {
+    refreshTimer?.cancel();
+    super.dispose();
+  }
+
   Future<void> checkStatus() async {
     if (!mounted) return;
     setState(() => loading = true);
@@ -26,7 +38,6 @@ class _RiderPendingScreenState extends State<RiderPendingScreen> {
     try {
       final res = await ApiService.getRiderStatus();
       debugPrint("Rider status response: $res");
-
       if (!mounted) return;
 
       switch (res['status']) {
@@ -54,19 +65,18 @@ class _RiderPendingScreenState extends State<RiderPendingScreen> {
         case "no_profile":
           setState(() {
             message = "You haven't completed your profile yet. Please fill in your details.";
-            showCompleteProfileButton = true; // ✅ show button
+            showCompleteProfileButton = true;
           });
           break;
 
         default:
           setState(() {
             message = "Unknown status. Try refreshing.";
-            showCompleteProfileButton = false;
+            showCompleteProfileButton = true;
           });
       }
     } catch (e) {
       debugPrint("Error fetching rider status: $e");
-
       if (e.toString().contains("401") || e.toString().contains("token")) {
         await ApiService.logout();
         if (!mounted) return;
@@ -77,7 +87,6 @@ class _RiderPendingScreenState extends State<RiderPendingScreen> {
         );
         return;
       }
-
       if (!mounted) return;
       setState(() {
         message = "Failed to fetch status. Try again.";
@@ -90,7 +99,14 @@ class _RiderPendingScreenState extends State<RiderPendingScreen> {
     }
   }
 
-  // ✅ Logout function
+  void navigateToCompleteProfile() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const RiderCompleteProfile()),
+    );
+    checkStatus();
+  }
+
   void logout() async {
     await ApiService.logout();
     if (!mounted) return;
@@ -99,33 +115,6 @@ class _RiderPendingScreenState extends State<RiderPendingScreen> {
       MaterialPageRoute(builder: (_) => const LoginScreen()),
       (route) => false,
     );
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    // Initial check
-    WidgetsBinding.instance.addPostFrameCallback((_) => checkStatus());
-
-    // Auto refresh every 5 seconds
-    refreshTimer = Timer.periodic(const Duration(seconds: 5), (_) => checkStatus());
-  }
-
-  @override
-  void dispose() {
-    refreshTimer?.cancel();
-    super.dispose();
-  }
-
-  // ✅ Navigate to Complete Profile and refresh status on return
-  void navigateToCompleteProfile() async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const RiderCompleteProfile()),
-    );
-
-    // After returning from complete profile, re-check status
-    checkStatus();
   }
 
   @override
@@ -153,8 +142,6 @@ class _RiderPendingScreenState extends State<RiderPendingScreen> {
                     style: const TextStyle(fontSize: 16, color: Colors.grey),
                   ),
                   const SizedBox(height: 32),
-
-                  // ✅ Refresh status button
                   ElevatedButton(
                     onPressed: checkStatus,
                     style: ElevatedButton.styleFrom(
@@ -162,10 +149,7 @@ class _RiderPendingScreenState extends State<RiderPendingScreen> {
                     ),
                     child: const Text("Refresh Status"),
                   ),
-
                   const SizedBox(height: 16),
-
-                  // ✅ Complete profile button (conditionally shown)
                   if (showCompleteProfileButton)
                     ElevatedButton(
                       onPressed: navigateToCompleteProfile,
@@ -175,10 +159,7 @@ class _RiderPendingScreenState extends State<RiderPendingScreen> {
                       ),
                       child: const Text("Complete Profile"),
                     ),
-
                   const SizedBox(height: 16),
-
-                  // Logout button
                   TextButton(
                     onPressed: logout,
                     child: const Text("Logout"),
@@ -187,8 +168,6 @@ class _RiderPendingScreenState extends State<RiderPendingScreen> {
               ),
             ),
           ),
-
-          // Loading overlay
           if (loading)
             Container(
               color: Colors.black26,

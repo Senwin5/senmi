@@ -64,9 +64,8 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
     setState(() => loading = false);
 
     if (res.containsKey('message')) {
-      // ✅ Navigate to Pending Screen after success
+      // Navigate to Pending Screen after successful submission
       showDialog(
-        // ignore: use_build_context_synchronously
         context: context,
         builder: (_) => AlertDialog(
           title: const Text("Success"),
@@ -74,14 +73,11 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(context); // close dialog
-                
-                // Navigate to Pending Screen and remove previous screens
+                Navigator.pop(context); // Close dialog
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(builder: (_) => const RiderPendingScreen()),
                 );
-
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text("Profile submitted! Waiting for admin approval."),
@@ -98,7 +94,6 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
       if (res.containsKey('missing_fields')) errorText += "Please fill all required fields.\n";
       if (res.containsKey('missing_images')) errorText += "Please upload all required images.\n";
       if (res.containsKey('detail')) errorText += res['detail'];
-      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(errorText.isEmpty ? "Failed to submit profile" : errorText)),
       );
