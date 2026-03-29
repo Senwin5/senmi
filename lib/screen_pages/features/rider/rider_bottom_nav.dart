@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../services/api_service.dart';
 import 'rider_home.dart';
 import 'wallet_screen.dart';
+import '../../../registration/auth/login.dart';
 
 /// Rider Deliveries (Packages already accepted by rider)
 class RiderDeliveriesScreen extends StatefulWidget {
@@ -109,7 +110,7 @@ class _RiderHistoryScreenState extends State<RiderHistoryScreen> {
   }
 }
 
-/// Rider Profile Screen
+/// Rider Profile Screen (single clean version)
 class RiderProfileScreen extends StatefulWidget {
   const RiderProfileScreen({super.key});
 
@@ -131,7 +132,7 @@ class _RiderProfileScreenState extends State<RiderProfileScreen> {
     setState(() => loading = true);
     final data = await ApiService.getRiderProfile();
     setState(() {
-      rider = data;
+      rider = data ?? {};
       loading = false;
     });
   }
@@ -139,24 +140,98 @@ class _RiderProfileScreenState extends State<RiderProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Profile")),
+      appBar: AppBar(title: const Text("Rider Profile"), centerTitle: true),
       body: loading
           ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+          : RefreshIndicator(
+              onRefresh: loadProfile,
+              child: ListView(
+                padding: const EdgeInsets.all(16),
                 children: [
-                  Text("Full Name: ${rider['full_name'] ?? ''}", style: const TextStyle(fontSize: 18)),
-                  const SizedBox(height: 10),
-                  Text("Email: ${rider['email'] ?? ''}", style: const TextStyle(fontSize: 16)),
-                  const SizedBox(height: 10),
-                  Text("Phone: ${rider['phone_number'] ?? ''}", style: const TextStyle(fontSize: 16)),
-                  const SizedBox(height: 10),
-                  Text("Status: ${rider['status'] ?? ''}", style: const TextStyle(fontSize: 16)),
+                  const SizedBox(height: 20),
+
+                  // 👤 Avatar
+                  const CircleAvatar(
+                    radius: 50,
+                    backgroundColor: Colors.grey,
+                    child: Icon(Icons.person, size: 50, color: Colors.white),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  _buildInfoTile(
+                    icon: Icons.person,
+                    title: "Full Name",
+                    value: rider['full_name'] ?? '',
+                  ),
+
+                  _buildInfoTile(
+                    icon: Icons.email,
+                    title: "Email",
+                    value: rider['email'] ?? '',
+                  ),
+
+                  _buildInfoTile(
+                    icon: Icons.phone,
+                    title: "Phone",
+                    value: rider['phone_number'] ?? '',
+                  ),
+
+                  _buildInfoTile(
+                    icon: Icons.verified,
+                    title: "Status",
+                    value: rider['status'] ?? '',
+                  ),
+
+                  _buildInfoTile(
+                    icon: Icons.badge,
+                    title: "Role",
+                    value: ApiService.userRole ?? 'rider',
+                  ),
+
+                  const SizedBox(height: 30),
+
+                  // 🔴 Logout Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        await ApiService.logout();
+                        if (!mounted) return;
+                        Navigator.pushAndRemoveUntil(
+                          // ignore: use_build_context_synchronously
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const LoginScreen(),
+                          ),
+                          (route) => false,
+                        );
+                      },
+                      icon: const Icon(Icons.logout),
+                      label: const Text("Logout"),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        backgroundColor: Colors.red,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
+    );
+  }
+
+  Widget _buildInfoTile({
+    required IconData icon,
+    required String title,
+    required String value,
+  }) {
+    return Card(
+      child: ListTile(
+        leading: Icon(icon),
+        title: Text(title),
+        subtitle: Text(value),
+      ),
     );
   }
 }
