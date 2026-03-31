@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:senmi/screen_pages/features/rider/rider_pending_screen.dart';
 import 'package:senmi/services/api_service.dart';
@@ -27,16 +28,67 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
   bool loading = false;
   final ImagePicker _picker = ImagePicker();
 
-  Future<void> pickImage(String type) async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      setState(() {
-        if (type == 'profile') profilePicture = File(image.path);
-        if (type == 'rider1') riderImage1 = File(image.path);
-        if (type == 'withVehicle') riderImageWithVehicle = File(image.path);
-      });
-    }
-  }
+Future<void> pickImage(String type) async {
+  showModalBottomSheet(
+    context: context,
+    builder: (_) {
+      return SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text("Take Photo"),
+              onTap: () async {
+                Navigator.pop(context);
+
+                // ✅ ADD THIS (permission request)
+                var status = await Permission.camera.request();
+
+                if (status.isGranted) {
+                  final image = await _picker.pickImage(
+                    source: ImageSource.camera,
+                  );
+
+                  if (image != null) {
+                    setState(() {
+                      if (type == 'profile') profilePicture = File(image.path);
+                      if (type == 'rider1') riderImage1 = File(image.path);
+                      if (type == 'withVehicle') riderImageWithVehicle = File(image.path);
+                    });
+                  }
+                } else {
+                  // ignore: use_build_context_synchronously
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Camera permission denied")),
+                  );
+                }
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo),
+              title: const Text("Choose from Gallery"),
+              onTap: () async {
+                Navigator.pop(context);
+
+                final image = await _picker.pickImage(
+                  source: ImageSource.gallery,
+                );
+
+                if (image != null) {
+                  setState(() {
+                    if (type == 'profile') profilePicture = File(image.path);
+                    if (type == 'rider1') riderImage1 = File(image.path);
+                    if (type == 'withVehicle') riderImageWithVehicle = File(image.path);
+                  });
+                }
+              },
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
 
   void submitProfile() async {
     if (!_formKey.currentState!.validate()) return;
@@ -66,6 +118,7 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
     if (res.containsKey('message')) {
       // Navigate to Pending Screen after successful submission
       showDialog(
+        // ignore: use_build_context_synchronously
         context: context,
         builder: (_) => AlertDialog(
           title: const Text("Success"),
@@ -94,6 +147,7 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
       if (res.containsKey('missing_fields')) errorText += "Please fill all required fields.\n";
       if (res.containsKey('missing_images')) errorText += "Please upload all required images.\n";
       if (res.containsKey('detail')) errorText += res['detail'];
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(errorText.isEmpty ? "Failed to submit profile" : errorText)),
       );
@@ -132,7 +186,8 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Complete Rider Profile")),
+      appBar: AppBar(title: const Text("Complete Rider Profile"),
+      automaticallyImplyLeading: false),
       body: Stack(
         children: [
           SingleChildScrollView(

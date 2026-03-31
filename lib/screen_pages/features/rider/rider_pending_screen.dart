@@ -58,7 +58,7 @@ class _RiderPendingScreenState extends State<RiderPendingScreen> {
         case "pending":
           setState(() {
             message = "Your profile is still pending. Please wait for admin approval.";
-            showCompleteProfileButton = false;
+            showCompleteProfileButton = true;
           });
           break;
 
@@ -90,7 +90,7 @@ class _RiderPendingScreenState extends State<RiderPendingScreen> {
       if (!mounted) return;
       setState(() {
         message = "Failed to fetch status. Try again.";
-        showCompleteProfileButton = false;
+        showCompleteProfileButton = true;
       });
     } finally {
       // ignore: control_flow_in_finally
