@@ -311,16 +311,51 @@ class ApiService {
   static Future<dynamic> getMyHistory() async {}
   static Future<dynamic> getRiderProfile() async {}
   static Future<dynamic> getEarnings() async {}
-  static Future<dynamic> updateRiderProfile(
-    String text,
-    String text2,
-    String text3,
-    String text4,
-    String text5,
-    File file,
-    File file2,
-    File file3,
-  ) async {}
+static Future<Map<String, dynamic>> updateRiderProfile(
+  String fullName,
+  String phone,
+  String vehicle,
+  String address,
+  String city,
+  File profile,
+  File rider1,
+  File vehicleImg,
+) async {
+  try {
+    var request = http.MultipartRequest(
+      'POST',
+      Uri.parse("$baseUrl/rider-profile/"),
+    );
+
+    request.headers['Authorization'] = 'Bearer $token';
+
+    request.fields['full_name'] = fullName;
+    request.fields['phone'] = phone;
+    request.fields['vehicle_number'] = vehicle;
+    request.fields['address'] = address;
+    request.fields['city'] = city;
+
+    request.files.add(await http.MultipartFile.fromPath(
+      'profile_picture',
+      profile.path,
+    ));
+    request.files.add(await http.MultipartFile.fromPath(
+      'rider_image1',
+      rider1.path,
+    ));
+    request.files.add(await http.MultipartFile.fromPath(
+      'rider_with_vehicle',
+      vehicleImg.path,
+    ));
+
+    var response = await request.send();
+    final resBody = await response.stream.bytesToString();
+    return jsonDecode(resBody);
+  } catch (e) {
+    return {"error": e.toString()};
+  }
+}
+
 
   // ==============================
   // 🟢 ADMIN DASHBOARD METHODS
@@ -347,23 +382,30 @@ class ApiService {
     }
   }
 
-  /// Approve or reject a rider
-  static Future<bool> reviewRider(int riderId, String status, String reason) async {
-    try {
-      final res = await http.post(
-        Uri.parse("$baseUrl/review-rider/$riderId/"),
-        headers: {
-          "Authorization": "Bearer ${ApiService.token}",
-          "Content-Type": "application/json",
-        },
-        body: jsonEncode({"status": status, "rejection_reason": reason}),
-      );
+ 
 
-      return res.statusCode == 200;
-    } catch (e) {
-      return false;
-    }
+/// Approve or reject a rider
+static Future<bool> reviewRider(int riderId, String status, String reason) async {
+  try {
+    final url = Uri.parse("$baseUrl/review-rider/$riderId/");
+    final res = await http.post(
+      url,
+      headers: {
+        "Authorization": "Bearer $token",
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode({
+        "status": status.toLowerCase(),
+        "rejection_reason": reason.trim(),
+      }),
+    );
+
+    return res.statusCode == 200;
+  } catch (e) {
+    return false;
   }
+}
+
 
 
   static Future<Map<String, dynamic>> getRiderStatus() async {

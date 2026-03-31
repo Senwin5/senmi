@@ -28,25 +28,50 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
   bool loading = false;
   final ImagePicker _picker = ImagePicker();
 
-Future<void> pickImage(String type) async {
-  showModalBottomSheet(
-    context: context,
-    builder: (_) {
-      return SafeArea(
-        child: Wrap(
-          children: [
-            ListTile(
-              leading: const Icon(Icons.camera_alt),
-              title: const Text("Take Photo"),
-              onTap: () async {
-                Navigator.pop(context);
+  Future<void> pickImage(String type) async {
+    showModalBottomSheet(
+      context: context,
+      builder: (_) {
+        return SafeArea(
+          child: Wrap(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text("Take Photo"),
+                onTap: () async {
+                  Navigator.pop(context);
 
-                // ✅ ADD THIS (permission request)
-                var status = await Permission.camera.request();
+                  // ✅ REQUEST CAMERA PERMISSION
+                  var status = await Permission.camera.request();
 
-                if (status.isGranted) {
+                  if (status.isGranted) {
+                    final image = await _picker.pickImage(
+                      source: ImageSource.camera,
+                    );
+
+                    if (image != null) {
+                      setState(() {
+                        if (type == 'profile') profilePicture = File(image.path);
+                        if (type == 'rider1') riderImage1 = File(image.path);
+                        if (type == 'withVehicle') riderImageWithVehicle = File(image.path);
+                      });
+                    }
+                  } else {
+                    // ignore: use_build_context_synchronously
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Camera permission denied")),
+                    );
+                  }
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo),
+                title: const Text("Choose from Gallery"),
+                onTap: () async {
+                  Navigator.pop(context);
+
                   final image = await _picker.pickImage(
-                    source: ImageSource.camera,
+                    source: ImageSource.gallery,
                   );
 
                   if (image != null) {
@@ -56,39 +81,14 @@ Future<void> pickImage(String type) async {
                       if (type == 'withVehicle') riderImageWithVehicle = File(image.path);
                     });
                   }
-                } else {
-                  // ignore: use_build_context_synchronously
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Camera permission denied")),
-                  );
-                }
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo),
-              title: const Text("Choose from Gallery"),
-              onTap: () async {
-                Navigator.pop(context);
-
-                final image = await _picker.pickImage(
-                  source: ImageSource.gallery,
-                );
-
-                if (image != null) {
-                  setState(() {
-                    if (type == 'profile') profilePicture = File(image.path);
-                    if (type == 'rider1') riderImage1 = File(image.path);
-                    if (type == 'withVehicle') riderImageWithVehicle = File(image.path);
-                  });
-                }
-              },
-            ),
-          ],
-        ),
-      );
-    },
-  );
-}
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   void submitProfile() async {
     if (!_formKey.currentState!.validate()) return;
@@ -116,7 +116,6 @@ Future<void> pickImage(String type) async {
     setState(() => loading = false);
 
     if (res.containsKey('message')) {
-      // Navigate to Pending Screen after successful submission
       showDialog(
         // ignore: use_build_context_synchronously
         context: context,
@@ -126,7 +125,7 @@ Future<void> pickImage(String type) async {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(context); // Close dialog
+                Navigator.pop(context);
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(builder: (_) => const RiderPendingScreen()),
@@ -186,8 +185,16 @@ Future<void> pickImage(String type) async {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Complete Rider Profile"),
-      automaticallyImplyLeading: false),
+      appBar: AppBar(
+        title: const Text("Complete Rider Profile"),
+        automaticallyImplyLeading: false, // remove default back arrow
+        leading: IconButton(
+          icon: const Icon(Icons.close), // ✅ custom close icon
+          onPressed: () {
+            Navigator.pop(context); // close the screen
+          },
+        ),
+      ),
       body: Stack(
         children: [
           SingleChildScrollView(

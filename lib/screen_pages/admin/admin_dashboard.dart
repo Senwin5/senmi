@@ -137,7 +137,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                         const SizedBox(height: 10),
 
                         // Action buttons
-                        if (r['status'] == "pending")
+                        if ((r['status'] ?? '') == "pending") // ✅ FIXED CONDITION
                           Row(
                             children: [
                               ElevatedButton(
