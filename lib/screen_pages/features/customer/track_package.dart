@@ -15,6 +15,7 @@ class TrackingScreen extends StatefulWidget {
 
 class _TrackingScreenState extends State<TrackingScreen>
     with SingleTickerProviderStateMixin {
+  // Default coordinates (city center)
   double lat = 6.5244;
   double lng = 3.3792;
   double pickupLat = 6.5244;
@@ -28,7 +29,7 @@ class _TrackingScreenState extends State<TrackingScreen>
   Set<Marker> markers = {};
   BitmapDescriptor? riderIcon;
 
-  late WebSocketChannel channel;
+  WebSocketChannel? channel;
 
   // Animation
   late Ticker _ticker;
@@ -39,85 +40,102 @@ class _TrackingScreenState extends State<TrackingScreen>
   @override
   void initState() {
     super.initState();
-    loadIcon();
-
     _currentPos = LatLng(lat, lng);
-
-    // Connect WebSocket
-    channel = WebSocketChannel.connect(
-      Uri.parse('ws://yourdomain/ws/tracking/${widget.packageId}/'),
-    );
-
-    channel.stream.listen(
-      (data) {
-        try {
-          final parsed = jsonDecode(data);
-
-          double newLat = parsed['lat'];
-          double newLng = parsed['lng'];
-          pickupLat = parsed['pickup_lat'] ?? newLat;
-          pickupLng = parsed['pickup_lng'] ?? newLng;
-          deliveryLat = parsed['delivery_lat'] ?? newLat;
-          deliveryLng = parsed['delivery_lng'] ?? newLng;
-          String newStatus = parsed['status'] ?? status;
-
-          _targetPos = LatLng(newLat, newLng);
-          status = newStatus;
-
-          if (_currentPos == null) _currentPos = _targetPos;
-
-          _animationProgress = 0.0;
-          _ticker.start();
-
-          // Update markers
-          markers = {
-            Marker(
-              markerId: const MarkerId('rider'),
-              position: _targetPos!,
-              icon: riderIcon ?? BitmapDescriptor.defaultMarker,
-              infoWindow: const InfoWindow(title: 'Rider'),
-            ),
-            Marker(
-              markerId: const MarkerId('pickup'),
-              position: LatLng(pickupLat, pickupLng),
-              infoWindow: const InfoWindow(title: 'Pickup'),
-              icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
-            ),
-            Marker(
-              markerId: const MarkerId('delivery'),
-              position: LatLng(deliveryLat, deliveryLng),
-              infoWindow: const InfoWindow(title: 'Delivery'),
-              icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-            ),
-          };
-
-          // Update route
-          polylines = {
-            Polyline(
-              polylineId: const PolylineId("route"),
-              points: [LatLng(pickupLat, pickupLng), _targetPos!, LatLng(deliveryLat, deliveryLng)],
-              width: 5,
-              color: Colors.blue,
-            ),
-          };
-
-          if (mounted) setState(() {});
-        } catch (e) {
-          debugPrint("WebSocket parse error: $e");
-        }
-      },
-      onDone: () {
-        debugPrint("WebSocket closed");
-      },
-      onError: (error) {
-        debugPrint("WebSocket error: $error");
-      },
-      cancelOnError: false,
-    );
-
     _ticker = createTicker(_onTick);
+    loadIcon();
+    connectWebSocket();
   }
 
+  // 🔹 Load custom rider icon
+  Future<void> loadIcon() async {
+    // ignore: deprecated_member_use
+    riderIcon = await BitmapDescriptor.fromAssetImage(
+      const ImageConfiguration(size: Size(48, 48)),
+      'assets/images/bike.png',
+    );
+  }
+
+  // 🔹 Connect WebSocket safely
+  void connectWebSocket() {
+    try {
+      channel = WebSocketChannel.connect(
+        Uri.parse('ws://yourdomain/ws/tracking/${widget.packageId}/'),
+      );
+
+      channel!.stream.listen(
+        (data) {
+          try {
+            final parsed = jsonDecode(data);
+            double newLat = parsed['lat'];
+            double newLng = parsed['lng'];
+            pickupLat = parsed['pickup_lat'] ?? newLat;
+            pickupLng = parsed['pickup_lng'] ?? newLng;
+            deliveryLat = parsed['delivery_lat'] ?? newLat;
+            deliveryLng = parsed['delivery_lng'] ?? newLng;
+            String newStatus = parsed['status'] ?? status;
+
+            _targetPos = LatLng(newLat, newLng);
+            status = newStatus;
+
+            _currentPos ??= _targetPos;
+
+            _animationProgress = 0.0;
+            _ticker.start();
+
+            // Update markers
+            markers = {
+              Marker(
+                markerId: const MarkerId('rider'),
+                position: _targetPos!,
+                icon: riderIcon ?? BitmapDescriptor.defaultMarker,
+                infoWindow: const InfoWindow(title: 'Rider'),
+              ),
+              Marker(
+                markerId: const MarkerId('pickup'),
+                position: LatLng(pickupLat, pickupLng),
+                infoWindow: const InfoWindow(title: 'Pickup'),
+                icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+              ),
+              Marker(
+                markerId: const MarkerId('delivery'),
+                position: LatLng(deliveryLat, deliveryLng),
+                infoWindow: const InfoWindow(title: 'Delivery'),
+                icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+              ),
+            };
+
+            // Update route
+            polylines = {
+              Polyline(
+                polylineId: const PolylineId("route"),
+                points: [LatLng(pickupLat, pickupLng), _targetPos!, LatLng(deliveryLat, deliveryLng)],
+                width: 5,
+                color: Colors.blue,
+              ),
+            };
+
+            if (mounted) setState(() {});
+          } catch (e) {
+            debugPrint("WebSocket data parse error: $e");
+          }
+        },
+        onDone: () {
+          debugPrint("WebSocket closed. Retrying in 3s...");
+          Future.delayed(const Duration(seconds: 3), connectWebSocket);
+        },
+        onError: (error) {
+          debugPrint("WebSocket error: $error. Retrying in 3s...");
+          Future.delayed(const Duration(seconds: 3), connectWebSocket);
+        },
+        cancelOnError: true,
+      );
+    } catch (e) {
+      debugPrint("WebSocket connection failed: $e. Retrying in 3s...");
+      Future.delayed(const Duration(seconds: 3), connectWebSocket);
+    }
+  }
+
+  // 🔹 Animate rider smoothly
   void _onTick(Duration elapsed) {
     if (_currentPos == null || _targetPos == null || mapController == null) return;
 
@@ -134,25 +152,18 @@ class _TrackingScreenState extends State<TrackingScreen>
             (_targetPos!.longitude - _currentPos!.longitude) * _animationProgress;
         _currentPos = LatLng(latTween, lngTween);
       }
-
       mapController?.animateCamera(CameraUpdate.newLatLng(_currentPos!));
     });
   }
 
   @override
   void dispose() {
-    channel.sink.close();
+    channel?.sink.close();
     _ticker.dispose();
     super.dispose();
   }
 
-  Future<void> loadIcon() async {
-    riderIcon = await BitmapDescriptor.fromAssetImage(
-      const ImageConfiguration(size: Size(48, 48)),
-      'assets/images/bike.png',
-    );
-  }
-
+  // 🔹 Helpers for status UI
   IconData getStatusIcon(String status) {
     switch (status) {
       case "delivered":
@@ -216,7 +227,7 @@ class _TrackingScreenState extends State<TrackingScreen>
             markers: markers,
             polylines: polylines,
           ),
-          // Back Button
+          // Back button
           Positioned(
             top: 40,
             left: 10,
@@ -228,7 +239,7 @@ class _TrackingScreenState extends State<TrackingScreen>
               ),
             ),
           ),
-          // Bottom Sheet
+          // Bottom sheet
           Positioned(
             bottom: 0,
             left: 0,
