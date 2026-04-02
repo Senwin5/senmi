@@ -1,3 +1,6 @@
+#$env:ANDROID_NDK_HOME="C:\Users\senwin\AppData\Local\Android\Sdk\ndk\27.0.12077973"
+#flutter run -v
+
 # Miscellaneous
 *.class
 *.log

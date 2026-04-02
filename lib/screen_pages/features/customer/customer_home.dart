@@ -48,26 +48,51 @@ class _CustomerHomeState extends State<CustomerHome> {
                 ),
               ),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  const Text(
+                    "Welcome 👋",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  const Text(
+                    "Send & Track Packages",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
                   // 🔍 SEARCH BAR
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                     child: const TextField(
                       decoration: InputDecoration(
                         hintText: "Enter track number",
                         border: InputBorder.none,
-                        icon: Icon(Icons.search),
+                        icon: Icon(Icons.search, color: Colors.grey),
                       ),
                     ),
                   ),
 
                   const SizedBox(height: 20),
 
-                  Image.asset("assets/images/delivery.png", height: 240),
+                  Center(
+                    child: Image.asset(
+                      "assets/images/delivery.png",
+                      height: 180,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -125,22 +150,45 @@ class _CustomerHomeState extends State<CustomerHome> {
 
                   const SizedBox(height: 10),
 
-                  // 🔴 YOUR ORIGINAL PACKAGE LIST (UNCHANGED)
+                  // 🔴 YOUR ORIGINAL PACKAGE LIST (SLIGHTLY POLISHED)
                   ...packages.map((p) {
-                    return Card(
-                      child: ListTile(
-                        title: Text(p['description']),
-                        subtitle: Text("Status: ${p['status']}"),
-                        trailing: Text("₦${p['price']}"),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  TrackingScreen(packageId: p['id']),
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      child: Card(
+                        elevation: 3,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.all(12),
+                          title: Text(
+                            p['description'],
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
                             ),
-                          );
-                        },
+                          ),
+                          subtitle: Text(
+                            "Status: ${p['status']}",
+                            style: TextStyle(color: Colors.grey.shade600),
+                          ),
+                          trailing: Text(
+                            "₦${p['price']}",
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green,
+                            ),
+                          ),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    TrackingScreen(packageId: p['id']),
+                              ),
+                            );
+                          },
+                        ),
                       ),
                     );
                   }),
@@ -151,9 +199,11 @@ class _CustomerHomeState extends State<CustomerHome> {
         ),
       ),
 
-      // ➕ FLOATING BUTTON (UNCHANGED)
+      // ➕ FLOATING BUTTON (UNCHANGED LOGIC, BETTER STYLE)
       floatingActionButton: FloatingActionButton(
-        child: const Icon(Icons.add),
+        backgroundColor: const Color(0xFF5F5FFF),
+        elevation: 6,
+        child: const Icon(Icons.add, color: Colors.white),
         onPressed: () {
           Navigator.push(
             context,
@@ -164,7 +214,7 @@ class _CustomerHomeState extends State<CustomerHome> {
     );
   }
 
-  // 🔹 CARD UI (NEW ONLY FOR DESIGN)
+  // 🔹 CARD UI (IMPROVED DESIGN ONLY)
   Widget _card({
     required IconData icon,
     required String title,
@@ -177,18 +227,31 @@ class _CustomerHomeState extends State<CustomerHome> {
         onTap: onTap,
         borderRadius: BorderRadius.circular(20),
         child: Ink(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(20),
-            boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 6)],
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                spreadRadius: 2,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
           child: Row(
             children: [
-              CircleAvatar(
-                radius: 28,
-                backgroundColor: Colors.grey.shade200,
-                child: Icon(icon),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEEF0FF),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  icon,
+                  color: const Color(0xFF5F5FFF),
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -197,16 +260,25 @@ class _CustomerHomeState extends State<CustomerHome> {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black, // ✅ BLACK TITLE
+                        fontSize: 16,
+                      ),
                     ),
-                    const SizedBox(height: 5),
+                    const SizedBox(height: 6),
                     Text(
                       subtitle,
-                      style: TextStyle(color: Colors.grey.shade600),
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 13,
+                      ),
                     ),
                   ],
                 ),
               ),
+              const Icon(Icons.arrow_forward_ios,
+                  size: 16, color: Colors.grey),
             ],
           ),
         ),

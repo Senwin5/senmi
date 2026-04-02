@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:senmi/screen_pages/features/customer/track_package.dart';
 import 'package:senmi/widgets/custom_buttom.dart';
 import '../../../services/api_service.dart';
 
@@ -12,8 +11,17 @@ class CreatePackageScreen extends StatefulWidget {
 
 class _CreatePackageScreenState extends State<CreatePackageScreen> {
   final description = TextEditingController();
-  final pickup = TextEditingController();
-  final delivery = TextEditingController();
+
+  // PICKUP
+  final pickupAddress = TextEditingController();
+  final senderName = TextEditingController();
+  final senderPhone = TextEditingController();
+
+  // DROPOFF
+  final deliveryAddress = TextEditingController();
+  final receiverName = TextEditingController();
+  final receiverPhone = TextEditingController();
+
   final price = TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
@@ -26,21 +34,24 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
 
     final res = await ApiService.createPackage({
       "description": description.text,
-      "pickup_address": pickup.text,
-      "delivery_address": delivery.text,
+      "pickup_address": pickupAddress.text,
+      "delivery_address": deliveryAddress.text,
       "price": double.tryParse(price.text) ?? 0,
+
+      // 🔥 NEW FIELDS (make sure your Django API supports them)
+      "sender_name": senderName.text,
+      "sender_phone": senderPhone.text,
+      "receiver_name": receiverName.text,
+      "receiver_phone": receiverPhone.text,
     });
 
     setState(() => loading = false);
 
     if (res['id'] != null) {
-      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text("Package created!")));
-      // ignore: use_build_context_synchronously
       Navigator.pop(context);
     } else {
-      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text("Failed to create package.")));
     }
@@ -49,7 +60,13 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Create Package")),
+      backgroundColor: Colors.grey.shade100,
+
+      appBar: AppBar(
+        title: const Text("Add Package"),
+        backgroundColor: const Color(0xFF5F5FFF),
+      ),
+
       body: Stack(
         children: [
           SingleChildScrollView(
@@ -58,22 +75,66 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
               key: _formKey,
               child: Column(
                 children: [
-                  _buildTextField(description, "Description", Icons.description),
-                  const SizedBox(height: 12),
-                  _buildTextField(pickup, "Pickup Address", Icons.location_on),
-                  const SizedBox(height: 12),
-                  _buildTextField(delivery, "Delivery Address", Icons.location_city),
-                  const SizedBox(height: 12),
-                  _buildTextField(price, "Price", Icons.attach_money, isNumber: true),
+                  // 🚚 IMAGE
+                  Image.asset("assets/images/delivery.png", height: 120),
+
                   const SizedBox(height: 20),
+
+                  // 📦 DESCRIPTION
+                  _sectionCard(
+                    title: "Package Info",
+                    children: [
+                      _input(description, "Description", Icons.description),
+                      const SizedBox(height: 12),
+                      _input(price, "Price", Icons.attach_money, isNumber: true),
+                    ],
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // 📍 PICKUP SECTION
+                  _sectionCard(
+                    title: "Pick-up details",
+                    children: [
+                      _input(pickupAddress, "Pick-up Address", Icons.location_on),
+                      const SizedBox(height: 12),
+                      _input(senderName, "Sender Name", Icons.person),
+                      const SizedBox(height: 12),
+                      _input(senderPhone, "Sender Phone", Icons.phone, isNumber: true),
+                    ],
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // 📍 DROPOFF SECTION
+                  _sectionCard(
+                    title: "Drop-off details",
+                    children: [
+                      _input(deliveryAddress, "Drop-off Address", Icons.location_on),
+                      const SizedBox(height: 12),
+                      _input(receiverName, "Receiver Name", Icons.person),
+                      const SizedBox(height: 12),
+                      _input(receiverPhone, "Receiver Phone", Icons.phone, isNumber: true),
+                    ],
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // 🚀 BUTTON
                   SizedBox(
                     width: double.infinity,
-                    child: CustomButton(text: "Create", onPressed: create, fullWidth: true,padding: const EdgeInsets.all(16),),
+                    child: CustomButton(
+                      text: "Create Package",
+                      onPressed: create,
+                      fullWidth: true,
+                      padding: const EdgeInsets.all(16),
+                    ),
                   ),
                 ],
               ),
             ),
           ),
+
           if (loading)
             Container(
               color: Colors.black45,
@@ -84,108 +145,53 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label, IconData icon,
+  // 🔹 SECTION CARD (like your screenshot)
+  Widget _sectionCard({required String title, required List<Widget> children}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+          )
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  // 🔹 INPUT FIELD
+  Widget _input(TextEditingController controller, String hint, IconData icon,
       {bool isNumber = false}) {
     return TextFormField(
       controller: controller,
-      keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+      keyboardType: isNumber ? TextInputType.phone : TextInputType.text,
       decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        hintText: hint,
+        prefixIcon: Icon(icon, color: const Color(0xFF5F5FFF)),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
       ),
       validator: (val) => val!.isEmpty ? "Required" : null,
-    );
-  }
-}
-
-class CustomerPackagesScreen extends StatefulWidget {
-  const CustomerPackagesScreen({super.key});
-
-  @override
-  State<CustomerPackagesScreen> createState() => _CustomerPackagesScreenState();
-}
-
-class _CustomerPackagesScreenState extends State<CustomerPackagesScreen> {
-  List packages = [];
-  bool loading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    fetchPackages();
-  }
-
-  Future fetchPackages() async {
-    setState(() => loading = true);
-    var data = await ApiService.getCustomerPackages();
-    setState(() {
-      packages = data;
-      loading = false;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("My Packages")),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const CreatePackageScreen()),
-          ).then((_) => fetchPackages());
-        },
-        child: const Icon(Icons.add),
-      ),
-      body: loading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: fetchPackages,
-              child: packages.isEmpty
-                  ? const Center(child: Text("No packages yet. Tap + to create one."))
-                  : ListView.builder(
-                      itemCount: packages.length,
-                      itemBuilder: (context, index) {
-                        var p = packages[index];
-                        return GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) => TrackingScreen(packageId: p['id'])),
-                            );
-                          },
-                          child: Card(
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(15)),
-                            elevation: 4,
-                            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            child: Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    p['description'],
-                                    style: const TextStyle(
-                                        fontSize: 18, fontWeight: FontWeight.bold),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Chip(
-                                    label: Text("Status: ${p['status']}"),
-                                    backgroundColor: Colors.blue.shade100,
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text("💰 ₦${p['price']}", style: const TextStyle(fontSize: 16)),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-            ),
     );
   }
 }
