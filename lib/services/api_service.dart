@@ -450,6 +450,8 @@ static Future<bool> reviewRider(int riderId, String status, String reason) async
   static Future<dynamic> getPackage(String packageId) async {}
 
   static Future<dynamic> getUserPackages() async {}
+
+  static Future<dynamic> getUserProfile() async {}
 }
 
 

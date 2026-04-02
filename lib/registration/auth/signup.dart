@@ -181,11 +181,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                       ),
                       const SizedBox(height: 24),
-                      CustomButton(
+                     CustomButton(
                         text: "Register",
                         onPressed: register,
                         fullWidth: true,
                         padding: const EdgeInsets.symmetric(vertical: 16),
+                        color: Colors.blue, // ✅ Replace null with a valid color
                       ),
                       const SizedBox(height: 16),
                       Row(

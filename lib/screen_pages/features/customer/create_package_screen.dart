@@ -15,20 +15,22 @@ class CreatePackageScreen extends StatefulWidget {
 }
 
 class _CreatePackageScreenState extends State<CreatePackageScreen> {
+  // Controllers
   final description = TextEditingController();
 
-  // PICKUP
+  // Pickup
   final pickupAddress = TextEditingController();
   final senderName = TextEditingController();
   final senderPhone = TextEditingController();
 
-  // DROPOFF
+  // Dropoff
   final deliveryAddress = TextEditingController();
   final receiverName = TextEditingController();
   final receiverPhone = TextEditingController();
 
   final price = TextEditingController();
 
+  // Coordinates
   double? pickupLat;
   double? pickupLng;
   double? deliveryLat;
@@ -37,12 +39,12 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
   final _formKey = GlobalKey<FormState>();
   bool loading = false;
 
-  // 💰 PAYMENT OPTION
-  String paymentOption = "sender"; // default: sender pays
+  // Payment option
+  String paymentOption = "sender";
 
-  // 💰 DISTANCE CALCULATION
+  // DISTANCE CALCULATION
   double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
-    const R = 6371;
+    const R = 6371; // Earth radius in km
     double dLat = (lat2 - lat1) * pi / 180;
     double dLon = (lon2 - lon1) * pi / 180;
 
@@ -60,12 +62,12 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
     if (pickupLat != null && deliveryLat != null) {
       double distance =
           calculateDistance(pickupLat!, pickupLng!, deliveryLat!, deliveryLng!);
-      double calculatedPrice = distance * 500;
+      double calculatedPrice = distance * 500; // Price formula
       price.text = calculatedPrice.toStringAsFixed(0);
     }
   }
 
-  void create() async {
+  Future<void> create() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => loading = true);
@@ -93,7 +95,6 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text("Package created!")));
 
-      // Navigate to Package Details
       Navigator.push(
         // ignore: use_build_context_synchronously
         context,
@@ -108,8 +109,6 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
     }
   }
 
-
-  // 🗺️ MAP PICKER
   Future<void> openMap(bool isPickup) async {
     final result = await Navigator.of(context).push(_slideFadeRoute(const MapScreen()));
 
@@ -164,6 +163,7 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
               key: _formKey,
               child: Column(
                 children: [
+                  // Locations
                   _card(
                     child: Column(
                       children: [
@@ -182,6 +182,7 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
+                  // Sender
                   _card(
                     title: "Sender",
                     child: Column(
@@ -193,6 +194,7 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
+                  // Receiver
                   _card(
                     title: "Receiver",
                     child: Column(
@@ -204,6 +206,7 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
+                  // Package details
                   _card(
                     title: "Package",
                     child: Column(
@@ -216,6 +219,7 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
+                  // Payment
                   _card(
                     title: "Payment",
                     child: Column(
@@ -225,26 +229,32 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
                           value: "sender",
                           // ignore: deprecated_member_use
                           groupValue: paymentOption,
+                          fillColor: WidgetStateProperty.all(Colors.blue),
                           // ignore: deprecated_member_use
-                          onChanged: (val) => setState(() => paymentOption = val!),
+                          onChanged: (val) =>
+                              setState(() => paymentOption = val!),
                         ),
                         RadioListTile<String>(
                           title: const Text("Receiver Pays"),
                           value: "receiver",
                           // ignore: deprecated_member_use
                           groupValue: paymentOption,
+                          fillColor: WidgetStateProperty.all(Colors.blue),
                           // ignore: deprecated_member_use
-                          onChanged: (val) => setState(() => paymentOption = val!),
+                          onChanged: (val) =>
+                              setState(() => paymentOption = val!),
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 20),
+                  // Submit button
                   CustomButton(
                     text: "Request Rider",
                     onPressed: create,
                     fullWidth: true,
                     padding: const EdgeInsets.all(16),
+                    color: Colors.blue, // ✅ give a valid color
                   ),
                 ],
               ),
@@ -260,6 +270,7 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
     );
   }
 
+  // Helper Widgets
   Widget _card({String? title, required Widget child}) {
     return Container(
       width: double.infinity,

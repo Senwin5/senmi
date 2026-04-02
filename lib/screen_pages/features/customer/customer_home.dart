@@ -30,6 +30,7 @@ class _CustomerHomeState extends State<CustomerHome> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBody: true, // ensures bottom area matches body
       backgroundColor: Colors.grey.shade100,
 
       body: SafeArea(
@@ -150,7 +151,7 @@ class _CustomerHomeState extends State<CustomerHome> {
 
                   const SizedBox(height: 10),
 
-                  // 🔴 YOUR ORIGINAL PACKAGE LIST (SLIGHTLY POLISHED)
+                  // 🔴 YOUR ORIGINAL PACKAGE LIST
                   ...packages.map((p) {
                     return Container(
                       margin: const EdgeInsets.only(bottom: 12),
@@ -199,7 +200,7 @@ class _CustomerHomeState extends State<CustomerHome> {
         ),
       ),
 
-      // ➕ FLOATING BUTTON (UNCHANGED LOGIC, BETTER STYLE)
+      // ➕ FLOATING BUTTON
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color(0xFF5F5FFF),
         elevation: 6,
@@ -211,10 +212,16 @@ class _CustomerHomeState extends State<CustomerHome> {
           ).then((_) => loadPackages());
         },
       ),
+
+      // 🟢 FIX BLACK BOTTOM AREA
+      bottomNavigationBar: Container(
+        height: MediaQuery.of(context).padding.bottom,
+        color: Colors.grey.shade100,
+      ),
     );
   }
 
-  // 🔹 CARD UI (IMPROVED DESIGN ONLY)
+  // 🔹 CARD UI
   Widget _card({
     required IconData icon,
     required String title,
@@ -263,7 +270,7 @@ class _CustomerHomeState extends State<CustomerHome> {
                       title,
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: Colors.black, // ✅ BLACK TITLE
+                        color: Colors.black,
                         fontSize: 16,
                       ),
                     ),
