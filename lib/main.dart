@@ -24,7 +24,6 @@ class MyApp extends StatelessWidget {
       valueListenable: ApiService.isLoggedIn, // listens to login state
       builder: (context, loggedIn, _) {
         Widget homeScreen;
-
         if (loggedIn) {
           // ✅ Determine home screen based on user role
           if (ApiService.isAdmin) {

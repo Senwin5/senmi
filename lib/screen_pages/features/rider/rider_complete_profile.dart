@@ -90,68 +90,74 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
     );
   }
 
-  void submitProfile() async {
-    if (!_formKey.currentState!.validate()) return;
+void submitProfile() async {
+  if (!_formKey.currentState!.validate()) return;
 
-    if (profilePicture == null || riderImage1 == null || riderImageWithVehicle == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("All images are required.")),
-      );
-      return;
-    }
-
-    setState(() => loading = true);
-
-    final res = await ApiService.updateRiderProfile(
-      fullNameController.text,
-      phoneController.text,
-      vehicleController.text,
-      addressController.text,
-      cityController.text,
-      profilePicture!,
-      riderImage1!,
-      riderImageWithVehicle!,
+  if (profilePicture == null || riderImage1 == null || riderImageWithVehicle == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("All images are required.")),
     );
-
-    setState(() => loading = false);
-
-    if (res.containsKey('message')) {
-      showDialog(
-        // ignore: use_build_context_synchronously
-        context: context,
-        builder: (_) => AlertDialog(
-          title: const Text("Success"),
-          content: Text(res['message']),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => const RiderPendingScreen()),
-                );
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("Profile submitted! Waiting for admin approval."),
-                  ),
-                );
-              },
-              child: const Text("OK"),
-            ),
-          ],
-        ),
-      );
-    } else {
-      String errorText = "";
-      if (res.containsKey('missing_fields')) errorText += "Please fill all required fields.\n";
-      if (res.containsKey('missing_images')) errorText += "Please upload all required images.\n";
-      if (res.containsKey('detail')) errorText += res['detail'];
-      // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorText.isEmpty ? "Failed to submit profile" : errorText)),
-      );
-    }
+    return;
   }
+
+  setState(() => loading = true);
+
+  final res = await ApiService.updateRiderProfile(
+    fullNameController.text,
+    phoneController.text,
+    vehicleController.text,
+    addressController.text,
+    cityController.text,
+    profilePicture!,
+    riderImage1!,
+    riderImageWithVehicle!,
+  );
+
+  setState(() => loading = false);
+
+  if (res.containsKey('error')) {
+    // 🔹 show API error
+    // ignore: use_build_context_synchronously
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(res['error'])),
+    );
+    return;
+  }
+
+  if (res.containsKey('message')) {
+    showDialog(
+      // ignore: use_build_context_synchronously
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Success"),
+        content: Text(res['message']),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const RiderPendingScreen()),
+              );
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text("Profile submitted! Waiting for admin approval."),
+                ),
+              );
+            },
+            child: const Text("OK"),
+          ),
+        ],
+      ),
+    );
+  } else {
+    // 🔹 catch any unexpected API response
+    // ignore: use_build_context_synchronously
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Failed to submit profile: ${res.toString()}")),
+    );
+  }
+}
 
   Widget imagePickerTile(String label, File? file, String type) {
     return GestureDetector(

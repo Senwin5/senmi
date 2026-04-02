@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 // ignore: depend_on_referenced_packages
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart'; // ✅ For ValueNotifier
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class ApiService {
   // 🔥 CHANGE THIS
@@ -311,50 +312,61 @@ class ApiService {
   static Future<dynamic> getMyHistory() async {}
   static Future<dynamic> getRiderProfile() async {}
   static Future<dynamic> getEarnings() async {}
+
 static Future<Map<String, dynamic>> updateRiderProfile(
-  String fullName,
-  String phone,
-  String vehicle,
-  String address,
-  String city,
-  File profile,
-  File rider1,
-  File vehicleImg,
-) async {
-  try {
-    var request = http.MultipartRequest(
-      'POST',
-      Uri.parse("$baseUrl/rider-profile/"),
-    );
+    String fullName,
+    String phone,
+    String vehicle,
+    String address,
+    String city,
+    File profile,
+    File rider1,
+    File vehicleImg,
+  ) async {
+    try {
+      // ✅ Create storage instance
+      final storage = FlutterSecureStorage();
 
-    request.headers['Authorization'] = 'Bearer $token';
+      // ✅ Read token from secure storage
+      final token = await storage.read(key: 'access_token');
 
-    request.fields['full_name'] = fullName;
-    request.fields['phone'] = phone;
-    request.fields['vehicle_number'] = vehicle;
-    request.fields['address'] = address;
-    request.fields['city'] = city;
+      if (token == null) {
+        return {"error": "User not logged in"};
+      }
 
-    request.files.add(await http.MultipartFile.fromPath(
-      'profile_picture',
-      profile.path,
-    ));
-    request.files.add(await http.MultipartFile.fromPath(
-      'rider_image1',
-      rider1.path,
-    ));
-    request.files.add(await http.MultipartFile.fromPath(
-      'rider_with_vehicle',
-      vehicleImg.path,
-    ));
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse("$baseUrl/rider-profile/"),
+      );
 
-    var response = await request.send();
-    final resBody = await response.stream.bytesToString();
-    return jsonDecode(resBody);
-  } catch (e) {
-    return {"error": e.toString()};
+      request.headers['Authorization'] = 'Bearer $token';
+
+      request.fields['full_name'] = fullName;
+      request.fields['phone'] = phone;
+      request.fields['vehicle_number'] = vehicle;
+      request.fields['address'] = address;
+      request.fields['city'] = city;
+
+      request.files.add(await http.MultipartFile.fromPath(
+        'profile_picture',
+        profile.path,
+      ));
+      request.files.add(await http.MultipartFile.fromPath(
+        'rider_image1',
+        rider1.path,
+      ));
+      request.files.add(await http.MultipartFile.fromPath(
+        'rider_with_vehicle',
+        vehicleImg.path,
+      ));
+
+      var response = await request.send();
+      final resBody = await response.stream.bytesToString();
+      return jsonDecode(resBody);
+    } catch (e) {
+      return {"error": e.toString()};
+    }
   }
-}
 
 
   // ==============================
