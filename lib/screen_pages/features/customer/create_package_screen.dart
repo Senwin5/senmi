@@ -1,4 +1,9 @@
+// lib/screen_pages/features/customer/create_package_screen.dart
+import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:senmi/map/map_picker_screen.dart';
+import 'package:senmi/screen_pages/features/customer/create_package_details.dart';
 import 'package:senmi/widgets/custom_buttom.dart';
 import '../../../services/api_service.dart';
 
@@ -24,8 +29,41 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
 
   final price = TextEditingController();
 
+  double? pickupLat;
+  double? pickupLng;
+  double? deliveryLat;
+  double? deliveryLng;
+
   final _formKey = GlobalKey<FormState>();
   bool loading = false;
+
+  // 💰 PAYMENT OPTION
+  String paymentOption = "sender"; // default: sender pays
+
+  // 💰 DISTANCE CALCULATION
+  double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+    const R = 6371;
+    double dLat = (lat2 - lat1) * pi / 180;
+    double dLon = (lon2 - lon1) * pi / 180;
+
+    double a = sin(dLat / 2) * sin(dLat / 2) +
+        cos(lat1 * pi / 180) *
+            cos(lat2 * pi / 180) *
+            sin(dLon / 2) *
+            sin(dLon / 2);
+
+    double c = 2 * atan2(sqrt(a), sqrt(1 - a));
+    return R * c;
+  }
+
+  void calculatePrice() {
+    if (pickupLat != null && deliveryLat != null) {
+      double distance =
+          calculateDistance(pickupLat!, pickupLng!, deliveryLat!, deliveryLng!);
+      double calculatedPrice = distance * 500;
+      price.text = calculatedPrice.toStringAsFixed(0);
+    }
+  }
 
   void create() async {
     if (!_formKey.currentState!.validate()) return;
@@ -37,36 +75,87 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
       "pickup_address": pickupAddress.text,
       "delivery_address": deliveryAddress.text,
       "price": double.tryParse(price.text) ?? 0,
-
-      // 🔥 NEW FIELDS (make sure your Django API supports them)
+      "pickup_lat": pickupLat,
+      "pickup_lng": pickupLng,
+      "delivery_lat": deliveryLat,
+      "delivery_lng": deliveryLng,
       "sender_name": senderName.text,
       "sender_phone": senderPhone.text,
       "receiver_name": receiverName.text,
       "receiver_phone": receiverPhone.text,
+      "payer": paymentOption,
     });
 
     setState(() => loading = false);
 
     if (res['id'] != null) {
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text("Package created!")));
-      Navigator.pop(context);
+
+      // Navigate to Package Details
+      Navigator.push(
+        // ignore: use_build_context_synchronously
+        context,
+        MaterialPageRoute(
+          builder: (_) => PackageDetailsScreen(packageId: res['id']),
+        ),
+      );
     } else {
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text("Failed to create package.")));
     }
   }
 
+
+  // 🗺️ MAP PICKER
+  Future<void> openMap(bool isPickup) async {
+    final result = await Navigator.of(context).push(_slideFadeRoute(const MapScreen()));
+
+    if (result != null) {
+      setState(() {
+        if (isPickup) {
+          pickupAddress.text = result['address'];
+          pickupLat = result['lat'];
+          pickupLng = result['lng'];
+        } else {
+          deliveryAddress.text = result['address'];
+          deliveryLat = result['lat'];
+          deliveryLng = result['lng'];
+        }
+
+        calculatePrice();
+      });
+    }
+  }
+
+  Route _slideFadeRoute(Widget page) {
+    return PageRouteBuilder(
+      pageBuilder: (context, animation, secondaryAnimation) => page,
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        final slide = Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero)
+            .animate(animation);
+        final fade = Tween<double>(begin: 0, end: 1).animate(animation);
+        return SlideTransition(
+          position: slide,
+          child: FadeTransition(opacity: fade, child: child),
+        );
+      },
+      transitionDuration: const Duration(milliseconds: 400),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
-
+      backgroundColor: const Color(0xFFF7F8FA),
       appBar: AppBar(
-        title: const Text("Add Package"),
-        backgroundColor: const Color(0xFF5F5FFF),
+        title: const Text("New Delivery"),
+        elevation: 0,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
       ),
-
       body: Stack(
         children: [
           SingleChildScrollView(
@@ -75,69 +164,95 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
               key: _formKey,
               child: Column(
                 children: [
-                  // 🚚 IMAGE
-                  Image.asset("assets/images/delivery.png", height: 120),
-
-                  const SizedBox(height: 20),
-
-                  // 📦 DESCRIPTION
-                  _sectionCard(
-                    title: "Package Info",
-                    children: [
-                      _input(description, "Description", Icons.description),
-                      const SizedBox(height: 12),
-                      _input(price, "Price", Icons.attach_money, isNumber: true),
-                    ],
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // 📍 PICKUP SECTION
-                  _sectionCard(
-                    title: "Pick-up details",
-                    children: [
-                      _input(pickupAddress, "Pick-up Address", Icons.location_on),
-                      const SizedBox(height: 12),
-                      _input(senderName, "Sender Name", Icons.person),
-                      const SizedBox(height: 12),
-                      _input(senderPhone, "Sender Phone", Icons.phone, isNumber: true),
-                    ],
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // 📍 DROPOFF SECTION
-                  _sectionCard(
-                    title: "Drop-off details",
-                    children: [
-                      _input(deliveryAddress, "Drop-off Address", Icons.location_on),
-                      const SizedBox(height: 12),
-                      _input(receiverName, "Receiver Name", Icons.person),
-                      const SizedBox(height: 12),
-                      _input(receiverPhone, "Receiver Phone", Icons.phone, isNumber: true),
-                    ],
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // 🚀 BUTTON
-                  SizedBox(
-                    width: double.infinity,
-                    child: CustomButton(
-                      text: "Create Package",
-                      onPressed: create,
-                      fullWidth: true,
-                      padding: const EdgeInsets.all(16),
+                  _card(
+                    child: Column(
+                      children: [
+                        _locationTile(
+                          "Pickup location",
+                          pickupAddress,
+                          () => openMap(true),
+                        ),
+                        const Divider(),
+                        _locationTile(
+                          "Drop-off location",
+                          deliveryAddress,
+                          () => openMap(false),
+                        ),
+                      ],
                     ),
+                  ),
+                  const SizedBox(height: 16),
+                  _card(
+                    title: "Sender",
+                    child: Column(
+                      children: [
+                        _input(senderName, "Enter full name"),
+                        const SizedBox(height: 12),
+                        _input(senderPhone, "Enter phone number", isNumber: true),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  _card(
+                    title: "Receiver",
+                    child: Column(
+                      children: [
+                        _input(receiverName, "Enter full name"),
+                        const SizedBox(height: 12),
+                        _input(receiverPhone, "Enter phone number", isNumber: true),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  _card(
+                    title: "Package",
+                    child: Column(
+                      children: [
+                        _input(description, "Describe your package"),
+                        const SizedBox(height: 12),
+                        _input(price, "Price will be calculated",
+                            isNumber: true, readOnly: true),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  _card(
+                    title: "Payment",
+                    child: Column(
+                      children: [
+                        RadioListTile<String>(
+                          title: const Text("Sender Pays"),
+                          value: "sender",
+                          // ignore: deprecated_member_use
+                          groupValue: paymentOption,
+                          // ignore: deprecated_member_use
+                          onChanged: (val) => setState(() => paymentOption = val!),
+                        ),
+                        RadioListTile<String>(
+                          title: const Text("Receiver Pays"),
+                          value: "receiver",
+                          // ignore: deprecated_member_use
+                          groupValue: paymentOption,
+                          // ignore: deprecated_member_use
+                          onChanged: (val) => setState(() => paymentOption = val!),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  CustomButton(
+                    text: "Request Rider",
+                    onPressed: create,
+                    fullWidth: true,
+                    padding: const EdgeInsets.all(16),
                   ),
                 ],
               ),
             ),
           ),
-
           if (loading)
             Container(
-              color: Colors.black45,
+              color: Colors.black26,
               child: const Center(child: CircularProgressIndicator()),
             ),
         ],
@@ -145,52 +260,67 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
     );
   }
 
-  // 🔹 SECTION CARD (like your screenshot)
-  Widget _sectionCard({required String title, required List<Widget> children}) {
+  Widget _card({String? title, required Widget child}) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-          )
+        boxShadow: const [
+          BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 3))
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
+          if (title != null)
+            Text(
+              title,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 15,
+                color: Colors.black,
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-          ...children,
+          if (title != null) const SizedBox(height: 12),
+          child,
         ],
       ),
     );
   }
 
-  // 🔹 INPUT FIELD
-  Widget _input(TextEditingController controller, String hint, IconData icon,
-      {bool isNumber = false}) {
+  Widget _locationTile(String title, TextEditingController controller, VoidCallback onTap) {
+    return ListTile(
+      onTap: onTap,
+      contentPadding: EdgeInsets.zero,
+      leading: const Icon(Icons.location_on, color: Colors.blue),
+      title: Text(title, style: const TextStyle(color: Colors.black)),
+      subtitle: Text(
+        controller.text.isEmpty ? "Select location" : controller.text,
+        style: const TextStyle(color: Colors.black54),
+      ),
+    );
+  }
+
+  Widget _input(TextEditingController controller, String hint,
+      {bool isNumber = false, bool readOnly = false}) {
     return TextFormField(
       controller: controller,
+      readOnly: readOnly,
       keyboardType: isNumber ? TextInputType.phone : TextInputType.text,
       decoration: InputDecoration(
         hintText: hint,
-        prefixIcon: Icon(icon, color: const Color(0xFF5F5FFF)),
+        hintStyle: const TextStyle(color: Colors.black45),
+        filled: true,
+        fillColor: const Color(0xFFF1F2F6),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
         ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
+      style: const TextStyle(color: Colors.black87),
       validator: (val) => val!.isEmpty ? "Required" : null,
     );
   }

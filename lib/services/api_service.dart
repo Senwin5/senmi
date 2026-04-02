@@ -442,6 +442,14 @@ static Future<bool> reviewRider(int riderId, String status, String reason) async
 
     return jsonDecode(res.body);
   }
+
+  static Future<dynamic> getPaymentLink(Map<String, Object> map) async {}
+
+  static Future<dynamic> createPaystackPaymentLink(Map<String, Object> map) async {}
+
+  static Future<dynamic> getPackage(String packageId) async {}
+
+  static Future<dynamic> getUserPackages() async {}
 }
 
 
