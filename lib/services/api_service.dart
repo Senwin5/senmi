@@ -4,7 +4,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 // ignore: depend_on_referenced_packages
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart'; // ✅ For ValueNotifier
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class ApiService {
   // 🔥 CHANGE THIS
@@ -313,7 +312,11 @@ class ApiService {
   static Future<dynamic> getRiderProfile() async {}
   static Future<dynamic> getEarnings() async {}
 
-static Future<Map<String, dynamic>> updateRiderProfile(
+
+// ================================
+  // Rider Profile Update (Static)
+  // ================================
+  static Future<Map<String, dynamic>> updateRiderProfile(
     String fullName,
     String phone,
     String vehicle,
@@ -323,22 +326,10 @@ static Future<Map<String, dynamic>> updateRiderProfile(
     File rider1,
     File vehicleImg,
   ) async {
+    if (token == null) return {"error": "User not logged in"};
+
     try {
-      // ✅ Create storage instance
-      final storage = FlutterSecureStorage();
-
-      // ✅ Read token from secure storage
-      final token = await storage.read(key: 'access_token');
-
-      if (token == null) {
-        return {"error": "User not logged in"};
-      }
-
-      var request = http.MultipartRequest(
-        'POST',
-        Uri.parse("$baseUrl/rider-profile/"),
-      );
-
+      var request = http.MultipartRequest('POST', Uri.parse("$baseUrl/rider-profile/"));
       request.headers['Authorization'] = 'Bearer $token';
 
       request.fields['full_name'] = fullName;
@@ -347,26 +338,49 @@ static Future<Map<String, dynamic>> updateRiderProfile(
       request.fields['address'] = address;
       request.fields['city'] = city;
 
-      request.files.add(await http.MultipartFile.fromPath(
-        'profile_picture',
-        profile.path,
-      ));
-      request.files.add(await http.MultipartFile.fromPath(
-        'rider_image1',
-        rider1.path,
-      ));
-      request.files.add(await http.MultipartFile.fromPath(
-        'rider_with_vehicle',
-        vehicleImg.path,
-      ));
+      request.files.add(await http.MultipartFile.fromPath('profile_picture', profile.path));
+      request.files.add(await http.MultipartFile.fromPath('rider_image1', rider1.path));
+      request.files.add(await http.MultipartFile.fromPath('rider_with_vehicle', vehicleImg.path));
 
-      var response = await request.send();
+      final response = await request.send();
       final resBody = await response.stream.bytesToString();
-      return jsonDecode(resBody);
+      final data = jsonDecode(resBody);
+
+      if (response.statusCode == 401) {
+        await logout();
+        return {"error": "Unauthorized. Please log in again."};
+      }
+
+      return data;
     } catch (e) {
       return {"error": e.toString()};
     }
   }
+
+
+
+// Safe Rider Status Fetch
+// ================================
+static Future<Map<String, dynamic>> getRiderStatusSafe() async {
+  if (token == null) return {"status": "no_token", "error": "No token available"};
+
+  try {
+    final res = await http.get(
+      Uri.parse("$baseUrl/rider/status/"),
+      headers: headers,
+    );
+
+    if (res.statusCode == 401) {
+      return {"status": "unauthorized", "error": "Token expired or invalid"};
+    }
+
+    final data = jsonDecode(res.body);
+    return data is Map<String, dynamic> ? data : {"status": "unknown", "data": data};
+  } catch (e) {
+    return {"status": "error", "error": e.toString()};
+  }
+}
+
 
 
   // ==============================

@@ -31,17 +31,34 @@ class _RiderPendingScreenState extends State<RiderPendingScreen> {
     super.dispose();
   }
 
+  // ✅ Production-ready status checker
   Future<void> checkStatus() async {
     if (!mounted) return;
     setState(() => loading = true);
 
     try {
-      final res = await ApiService.getRiderStatus();
-      debugPrint("Rider status response: $res");
-      if (!mounted) return;
+      final res = await ApiService.getRiderStatusSafe();
 
-      switch (res['status']) {
+      if (res['status'] == 'unauthorized' || res['status'] == 'no_token') {
+        // User not logged in or token expired
+        if (!mounted) return;
+        await ApiService.logout();
+        Navigator.pushAndRemoveUntil(
+          // ignore: use_build_context_synchronously
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          (route) => false,
+        );
+        return;
+      }
+
+      final statusData = res['data'] ?? res;
+      final status = statusData['status']?.toString() ?? 'unknown';
+      final reason = statusData['rejection_reason']?.toString();
+
+      switch (status) {
         case "approved":
+          if (!mounted) return;
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (_) => const RiderHome()),
@@ -50,7 +67,7 @@ class _RiderPendingScreenState extends State<RiderPendingScreen> {
 
         case "rejected":
           setState(() {
-            message = "Rejected: ${res['rejection_reason'] ?? 'No reason'}";
+            message = "Rejected: ${reason ?? 'No reason'}";
             showCompleteProfileButton = false;
           });
           break;
@@ -58,7 +75,7 @@ class _RiderPendingScreenState extends State<RiderPendingScreen> {
         case "pending":
           setState(() {
             message = "Your profile is still pending. Please wait for admin approval.";
-            showCompleteProfileButton = true;
+            showCompleteProfileButton = false;
           });
           break;
 
@@ -71,23 +88,12 @@ class _RiderPendingScreenState extends State<RiderPendingScreen> {
 
         default:
           setState(() {
-            message = "Unknown status. Try refreshing.";
+            message = "Unknown status: $status. Try refreshing.";
             showCompleteProfileButton = true;
           });
       }
     } catch (e) {
       debugPrint("Error fetching rider status: $e");
-      if (e.toString().contains("401") || e.toString().contains("token")) {
-        await ApiService.logout();
-        if (!mounted) return;
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
-          (route) => false,
-        );
-        return;
-      }
-      if (!mounted) return;
       setState(() {
         message = "Failed to fetch status. Try again.";
         showCompleteProfileButton = true;
@@ -178,3 +184,4 @@ class _RiderPendingScreenState extends State<RiderPendingScreen> {
     );
   }
 }
+
