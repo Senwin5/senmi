@@ -82,6 +82,8 @@ class ApiService {
     isLoggedIn.value = false;
   }
 
+  
+
   // ==========================
   // 🧍 REGISTER
   // ==========================
@@ -443,6 +445,85 @@ static Future<bool> reviewRider(int riderId, String status, String reason) async
     return jsonDecode(res.body);
   }
 
+
+// ============================================
+// Get the currently logged-in user profile
+// ============================================
+static Future<Map<String, dynamic>?> getUserProfile() async {
+  // 1️⃣ If the user is not logged in, token will be null
+  if (token == null) return null;
+
+  try {
+    // 2️⃣ Make GET request to your API endpoint for profile
+    final response = await http.get(
+      Uri.parse("$baseUrl/profile/"), // <-- Change if your API uses a different path
+      headers: headers, // Sends Authorization token automatically if set
+    );
+
+    // 3️⃣ Handle successful response
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      // Make sure it's a Map
+      return data is Map<String, dynamic> ? data : null;
+    } 
+    
+    // 4️⃣ Handle unauthorized (token expired)
+    else if (response.statusCode == 401) {
+      await logout(); // Force logout
+      return null;
+    } 
+    
+    // 5️⃣ Handle any other status codes
+    else {
+      return null;
+    }
+  } catch (e) {
+    // 6️⃣ Catch network / parsing errors
+    debugPrint("Error fetching profile: $e");
+    return null;
+  }
+}
+
+
+
+// DELETE USER ACCOUNT
+static Future<bool> deleteUser() async {
+  if (token == null) return false;
+
+  try {
+    final uri = Uri.parse("$baseUrl/profile/"); // your endpoint
+
+    final res = await http.delete(
+      uri,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
+    );
+
+    // Debugging
+    debugPrint("DELETE ${uri.toString()} returned ${res.statusCode}");
+    debugPrint("Response body: ${res.body}");
+
+    if (res.statusCode == 200 || res.statusCode == 204) {
+      debugPrint("User deleted successfully!");
+      return true;
+    } else if (res.statusCode == 401) {
+      debugPrint("Unauthorized! Logging out...");
+      await logout();
+      return false;
+    } else {
+      debugPrint("Delete failed with status ${res.statusCode}");
+      return false;
+    }
+  } catch (e) {
+    debugPrint("Error deleting user: $e");
+    return false;
+  }
+}
+
+
+
   static Future<dynamic> getPaymentLink(Map<String, Object> map) async {}
 
   static Future<dynamic> createPaystackPaymentLink(Map<String, Object> map) async {}
@@ -451,7 +532,7 @@ static Future<bool> reviewRider(int riderId, String status, String reason) async
 
   static Future<dynamic> getUserPackages() async {}
 
-  static Future<dynamic> getUserProfile() async {}
 }
+
 
 

@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import '../../../services/api_service.dart';
 import 'package:senmi/widgets/custom_buttom.dart';
-import '../../../registration/auth/login.dart'; // Assuming you have a login screen
+import '../../../registration/auth/login.dart'; // Login screen
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -21,31 +21,74 @@ class _ProfileScreenState extends State<ProfileScreen> {
     fetchUser();
   }
 
+  /// Fetch the currently logged-in user profile
   Future<void> fetchUser() async {
     setState(() => loading = true);
     try {
-      final res = await ApiService.getUserProfile(); // Your API to get user data
+      final res = await ApiService.getUserProfile();
       setState(() {
         user = res;
         loading = false;
       });
     } catch (e) {
       setState(() => loading = false);
+      // Show error snackbar
       // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Failed to load profile: $e")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to load profile: $e")),
+      );
     }
   }
 
+  /// Logout the user and navigate to login screen
   void logout() {
-    // Clear auth tokens, session etc.
     ApiService.logout();
     Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
-        (route) => false);
+      context,
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (route) => false,
+    );
   }
 
+  /// Delete the user account
+  Future<void> deleteAccount() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Delete Account"),
+        content: const Text("Are you sure you want to delete your account? This action cannot be undone."),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Cancel")),
+          ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text("Delete")),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      final success = await ApiService.deleteUser();
+      if (success) {
+        logout(); // await logout to clear token first
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Account deleted successfully.")),
+        );
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Failed to delete account.")),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error deleting account: $e")),
+      );
+    }
+  }
+
+  /// Info card widget
   Widget _infoCard(String title, String value, {VoidCallback? onEdit}) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
@@ -121,7 +164,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         },
                         fullWidth: true,
                         padding: const EdgeInsets.all(16),
-                        color: Colors.blue, // ✅ Set a real color
+                        color: Colors.blue,
                       ),
 
                       const SizedBox(height: 12),
@@ -133,6 +176,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         fullWidth: true,
                         padding: const EdgeInsets.all(16),
                         color: Colors.red,
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      // Delete account button
+                      CustomButton(
+                        text: "Delete Account",
+                        onPressed: deleteAccount,
+                        fullWidth: true,
+                        padding: const EdgeInsets.all(16),
+                        color: Colors.grey, // ✅ MaterialColor
                       ),
                     ],
                   ),
