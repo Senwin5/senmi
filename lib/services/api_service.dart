@@ -491,7 +491,7 @@ static Future<bool> deleteUser() async {
   if (token == null) return false;
 
   try {
-    final uri = Uri.parse("$baseUrl/profile/"); // your endpoint
+    final uri = Uri.parse("$baseUrl/profile/delete/"); // your endpoint
 
     final res = await http.delete(
       uri,
