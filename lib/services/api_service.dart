@@ -87,40 +87,41 @@ class ApiService {
   // ==========================
   // 🧍 REGISTER
   // ==========================
-  static Future<Map<String, dynamic>> register({
-    required String email,
-    required String username,
-    required String password,
-    required String role,
-  }) async {
-    try {
-      final response = await http
-          .post(
-            Uri.parse("$baseUrl/register/"),
-            headers: {
-              "Content-Type": "application/json",
-              "Accept": "application/json",
-            },
-            body: jsonEncode({
-              "email": email,
-              "username": username,
-              "password": password,
-              "role": role,
-            }),
-          )
-          .timeout(const Duration(seconds: 59));
+static Future<Map<String, dynamic>> register({
+  required String email,
+  required String username,
+  required String password,
+  required String role,
+  String? phoneNumber, // new optional parameter
+}) async {
+  try {
+    final response = await http.post(
+      Uri.parse("$baseUrl/register/"),
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      },
+      body: jsonEncode({
+        "email": email,
+        "username": username,
+        "password": password,
+        "role": role,
+        "phone_number": phoneNumber, // send if provided
+      }),
+    ).timeout(const Duration(seconds: 59));
 
-      final body = jsonDecode(response.body);
+    final body = jsonDecode(response.body);
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        return body;
-      } else {
-        return body is Map<String, dynamic> ? body : {"error": body.toString()};
-      }
-    } catch (e) {
-      return {"error": e.toString()};
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return body;
+    } else {
+      return body is Map<String, dynamic> ? body : {"error": body.toString()};
     }
+  } catch (e) {
+    return {"error": e.toString()};
   }
+}
+
 
   // ==========================
   // 📦 CREATE PACKAGE (Customer)

@@ -1,8 +1,9 @@
 // lib/screen_pages/features/customer/profile_screen.dart
 import 'package:flutter/material.dart';
+import 'package:senmi/registration/auth/signup.dart';
 import '../../../services/api_service.dart';
 import 'package:senmi/widgets/custom_buttom.dart';
-import '../../../registration/auth/login.dart'; // Login screen
+import '../../../registration/auth/login.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -26,13 +27,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() => loading = true);
     try {
       final res = await ApiService.getUserProfile();
+
       setState(() {
         user = res;
         loading = false;
       });
     } catch (e) {
       setState(() => loading = false);
-      // Show error snackbar
+
       // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Failed to load profile: $e")),
@@ -40,7 +42,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  /// Logout the user and navigate to login screen
+  /// Logout
   void logout() {
     ApiService.logout();
     Navigator.pushAndRemoveUntil(
@@ -48,44 +50,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       MaterialPageRoute(builder: (_) => const LoginScreen()),
       (route) => false,
     );
-  }
-
-  /// Delete the user account
-  Future<void> deleteAccount() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text("Delete Account"),
-        content: const Text("Are you sure you want to delete your account? This action cannot be undone."),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Cancel")),
-          ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text("Delete")),
-        ],
-      ),
-    );
-
-    if (confirmed != true) return;
-
-    try {
-      final success = await ApiService.deleteUser();
-      if (success) {
-        logout(); // await logout to clear token first
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Account deleted successfully.")),
-        );
-      } else {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Failed to delete account.")),
-        );
-      }
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error deleting account: $e")),
-      );
-    }
   }
 
   /// Info card widget
@@ -97,7 +61,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: ListTile(
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Text(value),
-        trailing: onEdit != null ? IconButton(icon: const Icon(Icons.edit), onPressed: onEdit) : null,
+        trailing: onEdit != null
+            ? IconButton(icon: const Icon(Icons.edit), onPressed: onEdit)
+            : null,
       ),
     );
   }
@@ -108,7 +74,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: const Color(0xFFF7F8FA),
       appBar: AppBar(
         title: const Text("Profile"),
-        elevation: 0,
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
       ),
@@ -120,48 +85,73 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     children: [
-                      // Avatar
+                      // =========================
+                      // 👤 AVATAR
+                      // =========================
                       CircleAvatar(
                         radius: 50,
                         backgroundColor: Colors.blue.shade100,
                         child: Text(
-                          user!['name'] != null && user!['name'].isNotEmpty
-                              ? user!['name'][0].toUpperCase()
+                          user!['username'] != null &&
+                                  user!['username'].isNotEmpty
+                              ? user!['username'][0].toUpperCase()
                               : "U",
-                          style: const TextStyle(fontSize: 40, color: Colors.white),
+                          style: const TextStyle(
+                              fontSize: 40, color: Colors.white),
                         ),
                       ),
+
                       const SizedBox(height: 16),
+
+                      // =========================
+                      // 🧍 USERNAME
+                      // =========================
                       Text(
-                        user!['name'] ?? "User",
-                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                        user!['username'] ?? "User",
+                        style: const TextStyle(
+                            fontSize: 22, fontWeight: FontWeight.bold),
                       ),
+
                       const SizedBox(height: 4),
+
+                      // =========================
+                      // 📧 EMAIL
+                      // =========================
                       Text(
                         user!['email'] ?? "",
                         style: const TextStyle(color: Colors.black54),
                       ),
+
                       const SizedBox(height: 20),
 
-                      // User Info Cards
-                      _infoCard("Full Name", user!['name'] ?? "", onEdit: () {
-                        // Navigate to edit profile
-                      }),
-                      _infoCard("Email", user!['email'] ?? "", onEdit: () {
-                        // Navigate to edit email
-                      }),
-                      _infoCard("Phone", user!['phone'] ?? "", onEdit: () {
-                        // Navigate to edit phone
-                      }),
+                      // =========================
+                      // 📄 INFO CARDS
+                      // =========================
+                      _infoCard(
+                        "Username",
+                        user!['username'] ?? "No name",
+                      ),
+
+                      _infoCard(
+                        "Email",
+                        user!['email'] ?? "No email",
+                      ),
+
+                      _infoCard(
+                        "Phone",
+                        (user!['phone_number'] ?? "").isEmpty
+                            ? "No phone added"
+                            : user!['phone_number'],
+                      ),
 
                       const SizedBox(height: 24),
 
-                      // Change password button
+                      // =========================
+                      // 🔐 CHANGE PASSWORD
+                      // =========================
                       CustomButton(
                         text: "Change Password",
-                        onPressed: () {
-                          // Navigate to change password screen
-                        },
+                        onPressed: () {},
                         fullWidth: true,
                         padding: const EdgeInsets.all(16),
                         color: Colors.blue,
@@ -169,7 +159,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                       const SizedBox(height: 12),
 
-                      // Logout button
+                      // =========================
+                      // 🚪 LOGOUT
+                      // =========================
                       CustomButton(
                         text: "Logout",
                         onPressed: logout,
@@ -180,14 +172,86 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                       const SizedBox(height: 12),
 
-                      // Delete account button
+      
+                    
+                      // ❌ DELETE ACCOUNT
                       CustomButton(
                         text: "Delete Account",
-                        onPressed: deleteAccount,
+                        onPressed: () async {
+                          final confirmed = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text("Confirm Delete"),
+                              content: const Text(
+                                  "Are you sure you want to delete your account? This action cannot be undone."),
+                              actions: [
+                                TextButton(
+                                    onPressed: () => Navigator.pop(context, false),
+                                    child: const Text("Cancel")),
+                                TextButton(
+                                    onPressed: () => Navigator.pop(context, true),
+                                    child: const Text(
+                                      "Delete",
+                                      style: TextStyle(color: Colors.red),
+                                    )),
+                              ],
+                            ),
+                          );
+
+                          if (confirmed == true) {
+                            try {
+                              final deleted = await ApiService.deleteUser();
+                              if (deleted && mounted) {
+                                // ✅ Use post-frame callback to fix navigation
+                                WidgetsBinding.instance.addPostFrameCallback((_) async {
+                                  final goToLogin = await showDialog<bool>(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      title: const Text("Account Deleted"),
+                                      content: const Text(
+                                          "Your account has been deleted. Where do you want to go next?"),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(context, true),
+                                          child: const Text("Login"),
+                                        ),
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(context, false),
+                                          child: const Text("Sign Up"),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+
+                                  if (goToLogin == true) {
+                                    Navigator.pushAndRemoveUntil(
+                                      context,
+                                      MaterialPageRoute(builder: (_) => const LoginScreen()),
+                                      (route) => false,
+                                    );
+                                  } else {
+                                    Navigator.pushAndRemoveUntil(
+                                      context,
+                                      MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                                      (route) => false,
+                                    );
+                                  }
+                                });
+                              }
+                            } catch (e) {
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text("Failed to delete account: $e")),
+                                );
+                              }
+                            }
+                          }
+                        },
                         fullWidth: true,
                         padding: const EdgeInsets.all(16),
-                        color: Colors.grey, // ✅ MaterialColor
+                        color: Colors.red,
                       ),
+
                     ],
                   ),
                 ),
