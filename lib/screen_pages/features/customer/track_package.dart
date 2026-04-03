@@ -91,9 +91,7 @@ class _TrackingScreenState extends State<TrackingScreen>
             }
 
             // ✅ CAMERA ONLY ON UPDATE (NOT IN TICKER)
-            mapController?.animateCamera(
-              CameraUpdate.newLatLng(_targetPos!),
-            );
+            mapController?.animateCamera(CameraUpdate.newLatLng(_targetPos!));
 
             // ✅ LIGHTWEIGHT MARKER UPDATE
             markers.removeWhere((m) => m.markerId.value == 'rider');
@@ -111,7 +109,9 @@ class _TrackingScreenState extends State<TrackingScreen>
               Marker(
                 markerId: const MarkerId('pickup'),
                 position: LatLng(pickupLat, pickupLng),
-                icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+                icon: BitmapDescriptor.defaultMarkerWithHue(
+                  BitmapDescriptor.hueBlue,
+                ),
               ),
             );
 
@@ -119,7 +119,9 @@ class _TrackingScreenState extends State<TrackingScreen>
               Marker(
                 markerId: const MarkerId('delivery'),
                 position: LatLng(deliveryLat, deliveryLng),
-                icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+                icon: BitmapDescriptor.defaultMarkerWithHue(
+                  BitmapDescriptor.hueGreen,
+                ),
               ),
             );
 
@@ -163,13 +165,13 @@ class _TrackingScreenState extends State<TrackingScreen>
       _currentPos = _targetPos;
       _ticker.stop();
     } else {
-      double latTween = _currentPos!.latitude +
-          (_targetPos!.latitude - _currentPos!.latitude) *
-              _animationProgress;
+      double latTween =
+          _currentPos!.latitude +
+          (_targetPos!.latitude - _currentPos!.latitude) * _animationProgress;
 
-      double lngTween = _currentPos!.longitude +
-          (_targetPos!.longitude - _currentPos!.longitude) *
-              _animationProgress;
+      double lngTween =
+          _currentPos!.longitude +
+          (_targetPos!.longitude - _currentPos!.longitude) * _animationProgress;
 
       _currentPos = LatLng(latTween, lngTween);
     }
@@ -247,8 +249,10 @@ class _TrackingScreenState extends State<TrackingScreen>
       body: Stack(
         children: [
           GoogleMap(
-            initialCameraPosition:
-                CameraPosition(target: LatLng(lat, lng), zoom: 15),
+            initialCameraPosition: CameraPosition(
+              target: LatLng(lat, lng),
+              zoom: 15,
+            ),
             onMapCreated: (controller) => mapController = controller,
             markers: markers,
             polylines: polylines,
@@ -273,8 +277,7 @@ class _TrackingScreenState extends State<TrackingScreen>
               padding: const EdgeInsets.all(16),
               decoration: const BoxDecoration(
                 color: Colors.white,
-                borderRadius:
-                    BorderRadius.vertical(top: Radius.circular(25)),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
                 boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
               ),
               child: Column(
@@ -284,13 +287,17 @@ class _TrackingScreenState extends State<TrackingScreen>
                   const SizedBox(height: 10),
                   Row(
                     children: [
-                      Icon(getStatusIcon(status),
-                          color: getStatusColor(status)),
+                      Icon(
+                        getStatusIcon(status),
+                        color: getStatusColor(status),
+                      ),
                       const SizedBox(width: 10),
                       Text(
                         getStatusText(status),
                         style: const TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ],
                   ),
@@ -298,11 +305,10 @@ class _TrackingScreenState extends State<TrackingScreen>
                   Text("Tracking ID: ${widget.packageId}"),
                   const SizedBox(height: 12),
                   Text(
-                      "Lat: ${_currentPos?.latitude.toStringAsFixed(5)} | Lng: ${_currentPos?.longitude.toStringAsFixed(5)}"),
-                  const SizedBox(height: 12),
-                  LinearProgressIndicator(
-                    value: getProgress(status),
+                    "Lat: ${_currentPos?.latitude.toStringAsFixed(5)} | Lng: ${_currentPos?.longitude.toStringAsFixed(5)}",
                   ),
+                  const SizedBox(height: 12),
+                  LinearProgressIndicator(value: getProgress(status)),
                 ],
               ),
             ),
