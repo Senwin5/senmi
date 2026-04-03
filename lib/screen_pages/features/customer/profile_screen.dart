@@ -225,12 +225,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                                   if (goToLogin == true) {
                                     Navigator.pushAndRemoveUntil(
+                                      // ignore: use_build_context_synchronously
                                       context,
                                       MaterialPageRoute(builder: (_) => const LoginScreen()),
                                       (route) => false,
                                     );
                                   } else {
                                     Navigator.pushAndRemoveUntil(
+                                      // ignore: use_build_context_synchronously
                                       context,
                                       MaterialPageRoute(builder: (_) => const RegisterScreen()),
                                       (route) => false,

@@ -15,8 +15,8 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   final email = TextEditingController();
   final username = TextEditingController();
+  final phone = TextEditingController(); 
   final password = TextEditingController();
-  final phone = TextEditingController(); // ✅ Added phone controller
 
   String role = "customer"; // default
   bool loading = false;
@@ -25,16 +25,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void dispose() {
     email.dispose();
     username.dispose();
+    phone.dispose(); 
     password.dispose();
-    phone.dispose(); // ✅ Dispose phone controller
     super.dispose();
   }
 
   void register() async {
     if (email.text.isEmpty ||
         username.text.isEmpty ||
-        password.text.isEmpty ||
-        (role == "customer" && phone.text.isEmpty)) {
+        phone.text.isEmpty || 
+        password.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please fill all fields")),
       );
@@ -46,9 +46,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final res = await ApiService.register(
       email: email.text,
       username: username.text,
+      phoneNumber: phone.text, 
       password: password.text,
       role: role,
-      phoneNumber: phone.text, // ✅ Send phone to backend
     );
 
     setState(() => loading = false);
@@ -58,13 +58,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       if (role == "rider") {
         Navigator.pushReplacement(
-          // ignore: use_build_context_synchronously
           context,
           MaterialPageRoute(builder: (_) => const RiderCompleteProfile()),
         );
       } else {
         Navigator.pushReplacement(
-          // ignore: use_build_context_synchronously
           context,
           MaterialPageRoute(builder: (_) => const CustomerBottomNav()),
         );
@@ -72,7 +70,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     } else {
       String message = "Registration failed. Please try again.";
       if (res.containsKey("email")) {
-        message = res['email'][0]; // Django sends errors as list
+        message = res['email'][0]; 
       } else if (res.containsKey("username")) {
         message = res['username'][0];
       } else if (res.containsKey("password")) {
@@ -85,7 +83,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
         message = res['detail'];
       }
 
-      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message)),
       );
@@ -95,14 +92,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50], // ✅ lighter background
+      backgroundColor: Colors.grey[50],
       body: Stack(
         children: [
           Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Card(
-                elevation: 8, // slightly higher elevation for nice shadow
+                elevation: 8,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
@@ -125,6 +122,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         style: TextStyle(fontSize: 16, color: Colors.grey),
                       ),
                       const SizedBox(height: 24),
+                      // ✅ Email
                       TextField(
                         controller: email,
                         keyboardType: TextInputType.emailAddress,
@@ -137,6 +135,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                       ),
                       const SizedBox(height: 16),
+                      // ✅ Username
                       TextField(
                         controller: username,
                         decoration: InputDecoration(
@@ -148,6 +147,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                       ),
                       const SizedBox(height: 16),
+                      // ✅ Phone Number (always visible)
+                      TextField(
+                        controller: phone,
+                        keyboardType: TextInputType.phone,
+                        decoration: InputDecoration(
+                          labelText: "Phone Number",
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          prefixIcon: const Icon(Icons.phone),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      // ✅ Password
                       TextField(
                         controller: password,
                         obscureText: true,
@@ -160,21 +173,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      // ✅ Phone field only visible for customer
-                      if (role == "customer") ...[
-                        TextField(
-                          controller: phone,
-                          keyboardType: TextInputType.phone,
-                          decoration: InputDecoration(
-                            labelText: "Phone Number",
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            prefixIcon: const Icon(Icons.phone),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                      ],
+                      // ✅ Role dropdown
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         decoration: BoxDecoration(
@@ -235,8 +234,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
           if (loading)
             Container(
-              // ignore: deprecated_member_use
-              color: Colors.white.withOpacity(0.7), // ✅ lighter overlay
+              color: Colors.white.withOpacity(0.7),
               child: const Center(
                 child: CircularProgressIndicator(color: Colors.blue),
               ),
