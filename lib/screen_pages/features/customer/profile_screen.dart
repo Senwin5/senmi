@@ -90,7 +90,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       // =========================
                       CircleAvatar(
                         radius: 50,
-                        backgroundColor: Colors.blue.shade100,
+                        backgroundColor: const Color.fromARGB(255, 56, 139, 207),
                         child: Text(
                           user!['username'] != null &&
                                   user!['username'].isNotEmpty
@@ -109,7 +109,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       Text(
                         user!['username'] ?? "User",
                         style: const TextStyle(
-                            fontSize: 22, fontWeight: FontWeight.bold),
+                            fontSize: 22, fontWeight: FontWeight.bold,
+                            color: Colors.black54),
                       ),
 
                       const SizedBox(height: 4),
