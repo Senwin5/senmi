@@ -14,7 +14,8 @@ class RiderPendingScreen extends StatefulWidget {
 
 class _RiderPendingScreenState extends State<RiderPendingScreen> {
   bool loading = false;
-  String message = "Your profile is under review.\nPlease wait for admin approval.";
+  String message =
+      "Your profile is under review.\nPlease wait for admin approval.";
   bool showCompleteProfileButton = false;
   Timer? refreshTimer;
 
@@ -22,7 +23,10 @@ class _RiderPendingScreenState extends State<RiderPendingScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) => checkStatus());
-    refreshTimer = Timer.periodic(const Duration(seconds: 5), (_) => checkStatus());
+    refreshTimer = Timer.periodic(
+      const Duration(seconds: 5),
+      (_) => checkStatus(),
+    );
   }
 
   @override
@@ -74,14 +78,16 @@ class _RiderPendingScreenState extends State<RiderPendingScreen> {
 
         case "pending":
           setState(() {
-            message = "Your profile is still pending. Please wait for admin approval.";
-            showCompleteProfileButton = false;
+            message =
+                "Your profile is still pending. Please wait for admin approval.";
+            showCompleteProfileButton = true;
           });
           break;
 
         case "no_profile":
           setState(() {
-            message = "You haven't completed your profile yet. Please fill in your details.";
+            message =
+                "You haven't completed your profile yet. Please fill in your details.";
             showCompleteProfileButton = true;
           });
           break;
@@ -135,7 +141,11 @@ class _RiderPendingScreenState extends State<RiderPendingScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.hourglass_top, size: 100, color: Colors.orange),
+                  const Icon(
+                    Icons.hourglass_top,
+                    size: 100,
+                    color: Colors.orange,
+                  ),
                   const SizedBox(height: 24),
                   const Text(
                     "Pending Approval",
@@ -151,7 +161,10 @@ class _RiderPendingScreenState extends State<RiderPendingScreen> {
                   ElevatedButton(
                     onPressed: checkStatus,
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 14,
+                      ),
                     ),
                     child: const Text("Refresh Status"),
                   ),
@@ -161,15 +174,15 @@ class _RiderPendingScreenState extends State<RiderPendingScreen> {
                       onPressed: navigateToCompleteProfile,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green,
-                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 14,
+                        ),
                       ),
                       child: const Text("Complete Profile"),
                     ),
                   const SizedBox(height: 16),
-                  TextButton(
-                    onPressed: logout,
-                    child: const Text("Logout"),
-                  ),
+                  TextButton(onPressed: logout, child: const Text("Logout")),
                 ],
               ),
             ),
@@ -184,4 +197,3 @@ class _RiderPendingScreenState extends State<RiderPendingScreen> {
     );
   }
 }
-

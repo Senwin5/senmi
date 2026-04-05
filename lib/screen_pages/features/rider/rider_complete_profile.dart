@@ -207,7 +207,10 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () {
-            Navigator.pop(context);
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const RiderPendingScreen()),
+            );
           },
         ),
       ),
