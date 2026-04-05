@@ -83,16 +83,15 @@ class ApiService {
   }
 
   
-
-  // ==========================
-  // 🧍 REGISTER
-  // ==========================
+// ==========================
+// 🧍 REGISTER
+// ==========================
 static Future<Map<String, dynamic>> register({
   required String email,
   required String username,
   required String password,
   required String role,
-  String? phoneNumber, // new optional parameter
+  String? phoneNumber, // optional parameter
 }) async {
   try {
     final response = await http.post(
@@ -106,13 +105,24 @@ static Future<Map<String, dynamic>> register({
         "username": username,
         "password": password,
         "role": role,
-        "phone_number": phoneNumber, // send if provided
+        if (phoneNumber != null && phoneNumber.isNotEmpty)
+          "phone_number": phoneNumber,
       }),
     ).timeout(const Duration(seconds: 59));
 
-    final body = jsonDecode(response.body);
+    dynamic body;
+    try {
+      body = jsonDecode(response.body);
+    } catch (e) {
+      print("❌ RAW RESPONSE: ${response.body}");
+      return {"error": "Server error (not JSON). Check Django backend."};
+    }
 
     if (response.statusCode == 200 || response.statusCode == 201) {
+      // ✅ Save token if backend returns it
+      if (body.containsKey("access") && body['access'] != null) {
+        await saveTokenAndRole(body['access'], body['role'] ?? role);
+      }
       return body;
     } else {
       return body is Map<String, dynamic> ? body : {"error": body.toString()};

@@ -33,7 +33,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void register() async {
     if (email.text.isEmpty ||
         username.text.isEmpty ||
-        phone.text.isEmpty || 
+        phone.text.isEmpty ||
         password.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please fill all fields")),
@@ -46,31 +46,49 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final res = await ApiService.register(
       email: email.text,
       username: username.text,
-      phoneNumber: phone.text, 
+      phoneNumber: phone.text,
       password: password.text,
       role: role,
     );
 
     setState(() => loading = false);
 
-    if (res.containsKey("access")) {
+    // ✅ If backend returned access token
+    if (res.containsKey("access") && res['access'] != null) {
       await ApiService.saveTokenAndRole(res['access'], role);
 
       if (role == "rider") {
         Navigator.pushReplacement(
+          // ignore: use_build_context_synchronously
           context,
           MaterialPageRoute(builder: (_) => const RiderCompleteProfile()),
         );
       } else {
         Navigator.pushReplacement(
+          // ignore: use_build_context_synchronously
           context,
           MaterialPageRoute(builder: (_) => const CustomerBottomNav()),
         );
       }
-    } else {
+    }
+    // ✅ If user created but no token returned
+    else if (res.containsKey("username") || res.containsKey("email")) {
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Account created. Please login.")),
+      );
+      Navigator.pushReplacement(
+        // ignore: use_build_context_synchronously
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      );
+    }
+    // ❌ Registration error
+    else {
       String message = "Registration failed. Please try again.";
+
       if (res.containsKey("email")) {
-        message = res['email'][0]; 
+        message = res['email'][0];
       } else if (res.containsKey("username")) {
         message = res['username'][0];
       } else if (res.containsKey("password")) {
@@ -83,6 +101,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         message = res['detail'];
       }
 
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message)),
       );
@@ -234,6 +253,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
           if (loading)
             Container(
+              // ignore: deprecated_member_use
               color: Colors.white.withOpacity(0.7),
               child: const Center(
                 child: CircularProgressIndicator(color: Colors.blue),
