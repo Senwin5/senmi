@@ -132,7 +132,7 @@ class _RiderProfileScreenState extends State<RiderProfileScreen> {
     setState(() => loading = true);
     final data = await ApiService.getRiderProfile();
     setState(() {
-      rider = data ?? {};
+      rider = data;
       loading = false;
     });
   }

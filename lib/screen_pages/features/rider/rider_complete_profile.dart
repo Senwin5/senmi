@@ -41,9 +41,7 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
                 onTap: () async {
                   Navigator.pop(context);
 
-                  // ✅ REQUEST CAMERA PERMISSION
                   var status = await Permission.camera.request();
-
                   if (status.isGranted) {
                     final image = await _picker.pickImage(
                       source: ImageSource.camera,
@@ -57,7 +55,6 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
                       });
                     }
                   } else {
-                    // ignore: use_build_context_synchronously
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text("Camera permission denied")),
                     );
@@ -90,74 +87,69 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
     );
   }
 
-void submitProfile() async {
-  if (!_formKey.currentState!.validate()) return;
+  void submitProfile() async {
+    if (!_formKey.currentState!.validate()) return;
 
-  if (profilePicture == null || riderImage1 == null || riderImageWithVehicle == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("All images are required.")),
+    if (profilePicture == null || riderImage1 == null || riderImageWithVehicle == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("All images are required.")),
+      );
+      return;
+    }
+
+    setState(() => loading = true);
+
+    final res = await ApiService.updateRiderProfile(
+      fullNameController.text,
+      phoneController.text,
+      vehicleController.text,
+      addressController.text,
+      cityController.text,
+      profilePicture!,
+      riderImage1!,
+      riderImageWithVehicle!,
     );
-    return;
+
+    setState(() => loading = false);
+
+    if (res.containsKey('error')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(res['error'])),
+      );
+      return;
+    }
+
+    if (res.containsKey('message')) {
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text("Success"),
+          content: Text(res['message']),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const RiderPendingScreen()),
+                );
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Profile submitted! Waiting for admin approval."),
+                  ),
+                );
+              },
+              child: const Text("OK"),
+            ),
+          ],
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to submit profile: ${res.toString()}")),
+      );
+    }
   }
-
-  setState(() => loading = true);
-
-  final res = await ApiService.updateRiderProfile(
-    fullNameController.text,
-    phoneController.text,
-    vehicleController.text,
-    addressController.text,
-    cityController.text,
-    profilePicture!,
-    riderImage1!,
-    riderImageWithVehicle!,
-  );
-
-  setState(() => loading = false);
-
-  if (res.containsKey('error')) {
-    // 🔹 show API error
-    // ignore: use_build_context_synchronously
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(res['error'])),
-    );
-    return;
-  }
-
-  if (res.containsKey('message')) {
-    showDialog(
-      // ignore: use_build_context_synchronously
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text("Success"),
-        content: Text(res['message']),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => const RiderPendingScreen()),
-              );
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text("Profile submitted! Waiting for admin approval."),
-                ),
-              );
-            },
-            child: const Text("OK"),
-          ),
-        ],
-      ),
-    );
-  } else {
-    // 🔹 catch any unexpected API response
-    // ignore: use_build_context_synchronously
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Failed to submit profile: ${res.toString()}")),
-    );
-  }
-}
 
   Widget imagePickerTile(String label, File? file, String type) {
     return GestureDetector(
@@ -193,92 +185,114 @@ void submitProfile() async {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Complete Rider Profile"),
-        automaticallyImplyLeading: false, // remove default back arrow
+        automaticallyImplyLeading: false,
         leading: IconButton(
-          icon: const Icon(Icons.close), // ✅ custom close icon
+          icon: const Icon(Icons.close),
           onPressed: () {
-            Navigator.pop(context); // close the screen
+            Navigator.pop(context);
           },
         ),
       ),
       body: Stack(
         children: [
-          SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  TextFormField(
-                    controller: fullNameController,
-                    decoration: const InputDecoration(
-                      labelText: "Full Name",
-                      prefixIcon: Icon(Icons.person),
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (val) => val!.isEmpty ? "Required" : null,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: phoneController,
-                    decoration: const InputDecoration(
-                      labelText: "Phone Number",
-                      prefixIcon: Icon(Icons.phone),
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (val) => val!.isEmpty ? "Required" : null,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: vehicleController,
-                    decoration: const InputDecoration(
-                      labelText: "Vehicle Number",
-                      prefixIcon: Icon(Icons.directions_car),
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (val) => val!.isEmpty ? "Required" : null,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: addressController,
-                    decoration: const InputDecoration(
-                      labelText: "Address",
-                      prefixIcon: Icon(Icons.home),
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (val) => val!.isEmpty ? "Required" : null,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: cityController,
-                    decoration: const InputDecoration(
-                      labelText: "City",
-                      prefixIcon: Icon(Icons.location_city),
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (val) => val!.isEmpty ? "Required" : null,
-                  ),
-                  const SizedBox(height: 16),
-                  imagePickerTile("Profile Picture", profilePicture, 'profile'),
-                  imagePickerTile("Rider Image 1", riderImage1, 'rider1'),
-                  imagePickerTile("Rider Image with Vehicle", riderImageWithVehicle, 'withVehicle'),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: submitProfile,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+          FutureBuilder<Map<String, dynamic>>(
+            future: ApiService.getRiderProfile(), // Make sure this returns a Map
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              if (snapshot.hasError || snapshot.data == null) {
+                return const Center(child: Text("Error loading profile"));
+              }
+
+              final profile = snapshot.data!;
+
+              // Prefill controllers only if they are empty (avoid overwriting typing)
+              if (fullNameController.text.isEmpty) fullNameController.text = profile['full_name'] ?? '';
+              if (phoneController.text.isEmpty) phoneController.text = profile['phone'] ?? '';
+              if (vehicleController.text.isEmpty) vehicleController.text = profile['vehicle_number'] ?? '';
+              if (addressController.text.isEmpty) addressController.text = profile['address'] ?? '';
+              if (cityController.text.isEmpty) cityController.text = profile['city'] ?? '';
+
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      TextFormField(
+                        controller: fullNameController,
+                        decoration: const InputDecoration(
+                          labelText: "Full Name",
+                          prefixIcon: Icon(Icons.person),
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (val) => val!.isEmpty ? "Required" : null,
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: phoneController,
+                        decoration: const InputDecoration(
+                          labelText: "Phone Number",
+                          prefixIcon: Icon(Icons.phone),
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (val) => val!.isEmpty ? "Required" : null,
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: vehicleController,
+                        decoration: const InputDecoration(
+                          labelText: "Vehicle Number",
+                          prefixIcon: Icon(Icons.directions_car),
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (val) => val!.isEmpty ? "Required" : null,
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: addressController,
+                        decoration: const InputDecoration(
+                          labelText: "Address",
+                          prefixIcon: Icon(Icons.home),
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (val) => val!.isEmpty ? "Required" : null,
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: cityController,
+                        decoration: const InputDecoration(
+                          labelText: "City",
+                          prefixIcon: Icon(Icons.location_city),
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (val) => val!.isEmpty ? "Required" : null,
+                      ),
+                      const SizedBox(height: 16),
+                      imagePickerTile("Profile Picture", profilePicture, 'profile'),
+                      imagePickerTile("Rider Image 1", riderImage1, 'rider1'),
+                      imagePickerTile("Rider Image with Vehicle", riderImageWithVehicle, 'withVehicle'),
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: submitProfile,
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text("Submit Profile"),
                         ),
                       ),
-                      child: const Text("Submit Profile"),
-                    ),
+                    ],
                   ),
-                ],
-              ),
-            ),
+                ),
+              );
+            },
           ),
           if (loading)
             Container(

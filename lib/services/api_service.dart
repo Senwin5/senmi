@@ -322,8 +322,30 @@ static Future<Map<String, dynamic>> register({
 
   static Future<dynamic> getMyPackages() async {}
   static Future<dynamic> getMyHistory() async {}
-  static Future<dynamic> getRiderProfile() async {}
   static Future<dynamic> getEarnings() async {}
+
+
+// After
+static Future<Map<String, dynamic>> getRiderProfile() async {
+  // Example implementation:
+  if (token == null) return {}; // return empty map if not logged in
+
+  try {
+    final response = await http.get(
+      Uri.parse("$baseUrl/rider-profile/"),
+      headers: headers,
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data is Map<String, dynamic> ? data : {};
+    } else {
+      return {};
+    }
+  } catch (e) {
+    return {"error": e.toString()};
+  }
+}
 
 
 // ================================
