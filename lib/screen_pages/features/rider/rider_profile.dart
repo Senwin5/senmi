@@ -10,7 +10,7 @@ class RiderProfileScreen extends StatefulWidget {
 }
 
 class _RiderProfileScreenState extends State<RiderProfileScreen> {
-  Map rider = {};
+  Map<String, dynamic> rider = {};
   bool loading = true;
 
   @override
@@ -19,7 +19,7 @@ class _RiderProfileScreenState extends State<RiderProfileScreen> {
     loadProfile();
   }
 
-  Future loadProfile() async {
+  Future<void> loadProfile() async{
     setState(() => loading = true);
     final data = await ApiService.getRiderProfile();
 

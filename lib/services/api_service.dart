@@ -163,6 +163,7 @@ static Future<Map<String, dynamic>> register({
     return null;
   }
 
+
   // ==========================
   // 📦 CUSTOMER PACKAGES
   // ==========================
@@ -327,32 +328,27 @@ static Future<Map<String, dynamic>> register({
 
 // After
 static Future<Map<String, dynamic>> getRiderProfile() async {
-  if (token == null) return {};
+  final response = await http.get(
+    Uri.parse("$baseUrl/rider-profile/"),
+    headers: headers,
+  );
 
-  try {
-    final response = await http.get(
-      Uri.parse("$baseUrl/rider-profile/"),
-      headers: headers,
-    );
+  final data = jsonDecode(response.body);
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-
-      // Handle list or map
-      if (data is List && data.isNotEmpty) {
-        return data.first as Map<String, dynamic>;
-      } else if (data is Map<String, dynamic>) {
-        return data;
-      } else {
-        return {};
-      }
-    } else {
-      return {};
-    }
-  } catch (e) {
-    return {"error": e.toString()};
+  // Always return a Map
+  if (data is Map<String, dynamic>) {
+    return data;
   }
+
+  // If backend mistakenly returns list
+  if (data is List && data.isNotEmpty) {
+    return data.first;
+  }
+
+  return {};
 }
+
+
 
 
 // ================================
