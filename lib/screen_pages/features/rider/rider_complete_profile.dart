@@ -49,12 +49,17 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
 
                     if (image != null) {
                       setState(() {
-                        if (type == 'profile') profilePicture = File(image.path);
+                        if (type == 'profile') {
+                          profilePicture = File(image.path);
+                        }
                         if (type == 'rider1') riderImage1 = File(image.path);
-                        if (type == 'withVehicle') riderImageWithVehicle = File(image.path);
+                        if (type == 'withVehicle') {
+                          riderImageWithVehicle = File(image.path);
+                        }
                       });
                     }
                   } else {
+                    // ignore: use_build_context_synchronously
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text("Camera permission denied")),
                     );
@@ -75,7 +80,9 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
                     setState(() {
                       if (type == 'profile') profilePicture = File(image.path);
                       if (type == 'rider1') riderImage1 = File(image.path);
-                      if (type == 'withVehicle') riderImageWithVehicle = File(image.path);
+                      if (type == 'withVehicle') {
+                        riderImageWithVehicle = File(image.path);
+                      }
                     });
                   }
                 },
@@ -90,10 +97,12 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
   void submitProfile() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (profilePicture == null || riderImage1 == null || riderImageWithVehicle == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("All images are required.")),
-      );
+    if (profilePicture == null ||
+        riderImage1 == null ||
+        riderImageWithVehicle == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("All images are required.")));
       return;
     }
 
@@ -113,14 +122,16 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
     setState(() => loading = false);
 
     if (res.containsKey('error')) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(res['error'])),
-      );
+      ScaffoldMessenger.of(
+        // ignore: use_build_context_synchronously
+        context,
+      ).showSnackBar(SnackBar(content: Text(res['error'])));
       return;
     }
 
     if (res.containsKey('message')) {
       showDialog(
+        // ignore: use_build_context_synchronously
         context: context,
         builder: (_) => AlertDialog(
           title: const Text("Success"),
@@ -135,7 +146,9 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
                 );
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text("Profile submitted! Waiting for admin approval."),
+                    content: Text(
+                      "Profile submitted! Waiting for admin approval.",
+                    ),
                   ),
                 );
               },
@@ -145,6 +158,7 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
         ),
       );
     } else {
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Failed to submit profile: ${res.toString()}")),
       );
@@ -164,7 +178,11 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
         child: file != null
             ? ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.file(file, fit: BoxFit.cover, width: double.infinity),
+                child: Image.file(
+                  file,
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                ),
               )
             : Center(
                 child: Column(
@@ -195,8 +213,8 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
       ),
       body: Stack(
         children: [
-          FutureBuilder<Map<String, dynamic>>(
-            future: ApiService.getRiderProfile(), // Make sure this returns a Map
+          FutureBuilder<dynamic>(
+            future: ApiService.getRiderProfile(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
@@ -206,14 +224,27 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
                 return const Center(child: Text("Error loading profile"));
               }
 
-              final profile = snapshot.data!;
+              // Safely cast to Map
+              final profile = snapshot.data is Map<String, dynamic>
+                  ? snapshot.data as Map<String, dynamic>
+                  : {};
 
-              // Prefill controllers only if they are empty (avoid overwriting typing)
-              if (fullNameController.text.isEmpty) fullNameController.text = profile['full_name'] ?? '';
-              if (phoneController.text.isEmpty) phoneController.text = profile['phone'] ?? '';
-              if (vehicleController.text.isEmpty) vehicleController.text = profile['vehicle_number'] ?? '';
-              if (addressController.text.isEmpty) addressController.text = profile['address'] ?? '';
-              if (cityController.text.isEmpty) cityController.text = profile['city'] ?? '';
+              // Prefill controllers only if they are empty
+              if (fullNameController.text.isEmpty) {
+                fullNameController.text = profile['full_name'] ?? '';
+              }
+              if (phoneController.text.isEmpty) {
+                phoneController.text = profile['phone'] ?? '';
+              }
+              if (vehicleController.text.isEmpty) {
+                vehicleController.text = profile['vehicle_number'] ?? '';
+              }
+              if (addressController.text.isEmpty) {
+                addressController.text = profile['address'] ?? '';
+              }
+              if (cityController.text.isEmpty) {
+                cityController.text = profile['city'] ?? '';
+              }
 
               return SingleChildScrollView(
                 padding: const EdgeInsets.all(16),

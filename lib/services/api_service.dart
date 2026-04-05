@@ -327,8 +327,7 @@ static Future<Map<String, dynamic>> register({
 
 // After
 static Future<Map<String, dynamic>> getRiderProfile() async {
-  // Example implementation:
-  if (token == null) return {}; // return empty map if not logged in
+  if (token == null) return {};
 
   try {
     final response = await http.get(
@@ -338,7 +337,15 @@ static Future<Map<String, dynamic>> getRiderProfile() async {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      return data is Map<String, dynamic> ? data : {};
+
+      // Handle list or map
+      if (data is List && data.isNotEmpty) {
+        return data.first as Map<String, dynamic>;
+      } else if (data is Map<String, dynamic>) {
+        return data;
+      } else {
+        return {};
+      }
     } else {
       return {};
     }
