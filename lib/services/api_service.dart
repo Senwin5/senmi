@@ -69,7 +69,7 @@ class ApiService {
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({"email": email, "password": password}),
     );
-    
+
     final data = jsonDecode(res.body);
 
     if (res.statusCode == 200) {
@@ -93,56 +93,56 @@ class ApiService {
     isLoggedIn.value = false;
   }
 
-  
-// ==========================
-// 🧍 REGISTER
-// ==========================
-static Future<Map<String, dynamic>> register({
-  required String email,
-  required String username,
-  required String password,
-  required String role,
-  String? phoneNumber, // optional parameter
-}) async {
-  try {
-    final response = await http.post(
-      Uri.parse("$baseUrl/register/"),
-      headers: {
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-      },
-      body: jsonEncode({
-        "email": email,
-        "username": username,
-        "password": password,
-        "role": role,
-        if (phoneNumber != null && phoneNumber.isNotEmpty)
-          "phone_number": phoneNumber,
-      }),
-    ).timeout(const Duration(seconds: 59));
-
-    dynamic body;
+  // ==========================
+  // 🧍 REGISTER
+  // ==========================
+  static Future<Map<String, dynamic>> register({
+    required String email,
+    required String username,
+    required String password,
+    required String role,
+    String? phoneNumber, // optional parameter
+  }) async {
     try {
-      body = jsonDecode(response.body);
-    } catch (e) {
-      print("❌ RAW RESPONSE: ${response.body}");
-      return {"error": "Server error (not JSON). Check Django backend."};
-    }
+      final response = await http
+          .post(
+            Uri.parse("$baseUrl/register/"),
+            headers: {
+              "Content-Type": "application/json",
+              "Accept": "application/json",
+            },
+            body: jsonEncode({
+              "email": email,
+              "username": username,
+              "password": password,
+              "role": role,
+              if (phoneNumber != null && phoneNumber.isNotEmpty)
+                "phone_number": phoneNumber,
+            }),
+          )
+          .timeout(const Duration(seconds: 59));
 
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      // ✅ Save token if backend returns it
-      if (body.containsKey("access") && body['access'] != null) {
-        await saveTokenAndRole(body['access'], body['role'] ?? role);
+      dynamic body;
+      try {
+        body = jsonDecode(response.body);
+      } catch (e) {
+        print("❌ RAW RESPONSE: ${response.body}");
+        return {"error": "Server error (not JSON). Check Django backend."};
       }
-      return body;
-    } else {
-      return body is Map<String, dynamic> ? body : {"error": body.toString()};
-    }
-  } catch (e) {
-    return {"error": e.toString()};
-  }
-}
 
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        // ✅ Save token if backend returns it
+        if (body.containsKey("access") && body['access'] != null) {
+          await saveTokenAndRole(body['access'], body['role'] ?? role);
+        }
+        return body;
+      } else {
+        return body is Map<String, dynamic> ? body : {"error": body.toString()};
+      }
+    } catch (e) {
+      return {"error": e.toString()};
+    }
+  }
 
   // ==========================
   // 📦 CREATE PACKAGE (Customer)
@@ -173,7 +173,6 @@ static Future<Map<String, dynamic>> register({
     }
     return null;
   }
-
 
   // ==========================
   // 📦 CUSTOMER PACKAGES
@@ -336,118 +335,124 @@ static Future<Map<String, dynamic>> register({
   static Future<dynamic> getMyHistory() async {}
   static Future<dynamic> getEarnings() async {}
 
+  // getRiderProfile
+  static Future<Map<String, dynamic>> getRiderProfile() async {
+    final response = await http.get(
+      Uri.parse("$baseUrl/rider-profile/"),
+      headers: await getAuthHeaders(),
+    );
 
+    final data = jsonDecode(response.body);
 
-// getRiderProfile
-static Future<Map<String, dynamic>> getRiderProfile() async {
-  final response = await http.get(
-    Uri.parse("$baseUrl/rider-profile/"),
-    headers: await getAuthHeaders(),
-  );
-
-  final data = jsonDecode(response.body);
-
-  // If it's already a map
-  if (data is Map<String, dynamic>) {
-    return Map<String, dynamic>.from(data);
-  }
-
-  // If backend mistakenly returns list
-  if (data is List) {
-    if (data.isNotEmpty && data[0] is Map) {
-      return Map<String, dynamic>.from(data[0] as Map);
+    // If it's already a map
+    if (data is Map<String, dynamic>) {
+      return Map<String, dynamic>.from(data);
     }
+
+    // If backend mistakenly returns list
+    if (data is List) {
+      if (data.isNotEmpty && data[0] is Map) {
+        return Map<String, dynamic>.from(data[0] as Map);
+      }
+    }
+
+    return {};
   }
 
-  return {};
-}
-
-
-
-// ================================
+  // ================================
   // Rider Profile Update (Static)
   // ================================
 
-static Future<Map<String, dynamic>> updateRiderProfile(
-  String fullName,
-  String phone,
-  String vehicle,
-  String address,
-  String city,
-  File? profile,
-  File? rider1,
-  File? vehicleImg,
-) async {
-  try {
-    var request = http.MultipartRequest(
-      'PUT',
-      Uri.parse("$baseUrl/rider-profile/"),
-    );
+  static Future<Map<String, dynamic>> updateRiderProfile(
+    String fullName,
+    String phone,
+    String vehicle,
+    String address,
+    String city,
+    File? profile,
+    File? rider1,
+    File? vehicleImg,
+  ) async {
+    try {
+      var request = http.MultipartRequest(
+        'PUT',
+        Uri.parse("$baseUrl/rider-profile/"),
+      );
 
-    // Add headers
-    request.headers.addAll(await getAuthHeaders());
+      // Add headers
+      final headers = await getAuthHeaders();
+      headers.remove("Content-Type");
 
-    // Add fields
-    request.fields['full_name'] = fullName;
-    request.fields['phone_number'] = phone; // ✅ Correct
-    request.fields['vehicle_number'] = vehicle;
-    request.fields['address'] = address;
-    request.fields['city'] = city;
+      request.headers.addAll(headers);
 
-    // Add files with correct field names
-    if (profile != null) {
-      request.files.add(await http.MultipartFile.fromPath('profile_picture', profile.path));
+      // Add fields
+      request.fields['full_name'] = fullName;
+      request.fields['phone_number'] = phone; // ✅ Correct
+      request.fields['vehicle_number'] = vehicle;
+      request.fields['address'] = address;
+      request.fields['city'] = city;
+
+      // Add files with correct field names
+      if (profile != null) {
+        request.files.add(
+          await http.MultipartFile.fromPath('profile_picture', profile.path),
+        );
+      }
+      if (rider1 != null) {
+        request.files.add(
+          await http.MultipartFile.fromPath('rider_image_1', rider1.path),
+        ); // ✅ corrected
+      }
+      if (vehicleImg != null) {
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'rider_image_with_vehicle',
+            vehicleImg.path,
+          ),
+        ); // ✅ corrected
+      }
+
+      final response = await request.send();
+      final resBody = await response.stream.bytesToString();
+      final data = jsonDecode(resBody);
+
+      if (response.statusCode == 401) {
+        await logout();
+        return {"error": "Session expired. Please login again."};
+      }
+
+      return data;
+    } catch (e) {
+      return {"error": e.toString()};
     }
-    if (rider1 != null) {
-      request.files.add(await http.MultipartFile.fromPath('rider_image_1', rider1.path)); // ✅ corrected
-    }
-    if (vehicleImg != null) {
-      request.files.add(await http.MultipartFile.fromPath('rider_image_with_vehicle', vehicleImg.path)); // ✅ corrected
-    }
-
-    final response = await request.send();
-    final resBody = await response.stream.bytesToString();
-    final data = jsonDecode(resBody);
-
-    if (response.statusCode == 401) {
-      await logout();
-      return {"error": "Session expired. Please login again."};
-    }
-
-    return data;
-  } catch (e) {
-    return {"error": e.toString()};
   }
-}
 
-
-
-
-// Safe Rider Status Fetch
-// ================================
-static Future<Map<String, dynamic>> getRiderStatusSafe() async {
-  await loadToken();
-  if (token == null) return {"status": "no_token", "error": "No token available"};
-
-  try {
-
-    final res = await http.get(
-      Uri.parse("$baseUrl/rider/status/"),
-      headers: await ApiService.getAuthHeaders(),
-    );
-
-    if (res.statusCode == 401) {
-      return {"status": "unauthorized", "error": "Token expired or invalid"};
+  // Safe Rider Status Fetch
+  // ================================
+  static Future<Map<String, dynamic>> getRiderStatusSafe() async {
+    await loadToken();
+    if (token == null) {
+      return {"status": "no_token", "error": "No token available"};
     }
 
-    final data = jsonDecode(res.body);
-    return data is Map<String, dynamic> ? data : {"status": "unknown", "data": data};
-  } catch (e) {
-    return {"status": "error", "error": e.toString()};
+    try {
+      final res = await http.get(
+        Uri.parse("$baseUrl/rider/status/"),
+        headers: await ApiService.getAuthHeaders(),
+      );
+
+      if (res.statusCode == 401) {
+        return {"status": "unauthorized", "error": "Token expired or invalid"};
+      }
+
+      final data = jsonDecode(res.body);
+      return data is Map<String, dynamic>
+          ? data
+          : {"status": "unknown", "data": data};
+    } catch (e) {
+      return {"status": "error", "error": e.toString()};
+    }
   }
-}
-
-
 
   // ==============================
   // 🟢 ADMIN DASHBOARD METHODS
@@ -474,31 +479,31 @@ static Future<Map<String, dynamic>> getRiderStatusSafe() async {
     }
   }
 
- 
+  /// Approve or reject a rider
+  static Future<bool> reviewRider(
+    int riderId,
+    String status,
+    String reason,
+  ) async {
+    try {
+      final url = Uri.parse("$baseUrl/review-rider/$riderId/");
+      final res = await http.post(
+        url,
+        headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode({
+          "status": status.toLowerCase(),
+          "rejection_reason": reason.trim(),
+        }),
+      );
 
-/// Approve or reject a rider
-static Future<bool> reviewRider(int riderId, String status, String reason) async {
-  try {
-    final url = Uri.parse("$baseUrl/review-rider/$riderId/");
-    final res = await http.post(
-      url,
-      headers: {
-        "Authorization": "Bearer $token",
-        "Content-Type": "application/json",
-      },
-      body: jsonEncode({
-        "status": status.toLowerCase(),
-        "rejection_reason": reason.trim(),
-      }),
-    );
-
-    return res.statusCode == 200;
-  } catch (e) {
-    return false;
+      return res.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
   }
-}
-
-
 
   static Future<Map<String, dynamic>> getRiderStatus() async {
     final res = await http.get(
@@ -509,94 +514,87 @@ static Future<bool> reviewRider(int riderId, String status, String reason) async
     return jsonDecode(res.body);
   }
 
+  // ============================================
+  // Get the currently logged-in user profile
+  // ============================================
+  static Future<Map<String, dynamic>?> getUserProfile() async {
+    // 1️⃣ If the user is not logged in, token will be null
+    if (token == null) return null;
 
-// ============================================
-// Get the currently logged-in user profile
-// ============================================
-static Future<Map<String, dynamic>?> getUserProfile() async {
-  // 1️⃣ If the user is not logged in, token will be null
-  if (token == null) return null;
+    try {
+      // 2️⃣ Make GET request to your API endpoint for profile
+      final response = await http.get(
+        Uri.parse(
+          "$baseUrl/profile/",
+        ), // <-- Change if your API uses a different path
+        headers: headers, // Sends Authorization token automatically if set
+      );
 
-  try {
-    // 2️⃣ Make GET request to your API endpoint for profile
-    final response = await http.get(
-      Uri.parse("$baseUrl/profile/"), // <-- Change if your API uses a different path
-      headers: headers, // Sends Authorization token automatically if set
-    );
-
-    // 3️⃣ Handle successful response
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      // Make sure it's a Map
-      return data is Map<String, dynamic> ? data : null;
-    } 
-    
-    // 4️⃣ Handle unauthorized (token expired)
-    else if (response.statusCode == 401) {
-      await logout(); // Force logout
-      return null;
-    } 
-    
-    // 5️⃣ Handle any other status codes
-    else {
+      // 3️⃣ Handle successful response
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        // Make sure it's a Map
+        return data is Map<String, dynamic> ? data : null;
+      }
+      // 4️⃣ Handle unauthorized (token expired)
+      else if (response.statusCode == 401) {
+        await logout(); // Force logout
+        return null;
+      }
+      // 5️⃣ Handle any other status codes
+      else {
+        return null;
+      }
+    } catch (e) {
+      // 6️⃣ Catch network / parsing errors
+      debugPrint("Error fetching profile: $e");
       return null;
     }
-  } catch (e) {
-    // 6️⃣ Catch network / parsing errors
-    debugPrint("Error fetching profile: $e");
-    return null;
   }
-}
 
+  // DELETE USER ACCOUNT
+  static Future<bool> deleteUser() async {
+    if (token == null) return false;
 
+    try {
+      final uri = Uri.parse("$baseUrl/profile/delete/"); // your endpoint
 
-// DELETE USER ACCOUNT
-static Future<bool> deleteUser() async {
-  if (token == null) return false;
+      final res = await http.delete(
+        uri,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
 
-  try {
-    final uri = Uri.parse("$baseUrl/profile/delete/"); // your endpoint
+      // Debugging
+      debugPrint("DELETE ${uri.toString()} returned ${res.statusCode}");
+      debugPrint("Response body: ${res.body}");
 
-    final res = await http.delete(
-      uri,
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer $token",
-      },
-    );
-
-    // Debugging
-    debugPrint("DELETE ${uri.toString()} returned ${res.statusCode}");
-    debugPrint("Response body: ${res.body}");
-
-    if (res.statusCode == 200 || res.statusCode == 204) {
-      debugPrint("User deleted successfully!");
-      return true;
-    } else if (res.statusCode == 401) {
-      debugPrint("Unauthorized! Logging out...");
-      await logout();
-      return false;
-    } else {
-      debugPrint("Delete failed with status ${res.statusCode}");
+      if (res.statusCode == 200 || res.statusCode == 204) {
+        debugPrint("User deleted successfully!");
+        return true;
+      } else if (res.statusCode == 401) {
+        debugPrint("Unauthorized! Logging out...");
+        await logout();
+        return false;
+      } else {
+        debugPrint("Delete failed with status ${res.statusCode}");
+        return false;
+      }
+    } catch (e) {
+      debugPrint("Error deleting user: $e");
       return false;
     }
-  } catch (e) {
-    debugPrint("Error deleting user: $e");
-    return false;
   }
-}
-
-
 
   static Future<dynamic> getPaymentLink(Map<String, Object> map) async {}
 
-  static Future<dynamic> createPaystackPaymentLink(Map<String, Object> map) async {}
+  static Future<dynamic> createPaystackPaymentLink(
+    Map<String, Object> map,
+  ) async {}
 
   static Future<dynamic> getPackage(String packageId) async {}
 
   static Future<dynamic> getUserPackages() async {}
-
 }
-
-
-
