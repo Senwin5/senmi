@@ -40,12 +40,13 @@ class ApiService {
   }
 
   // 🔐 SAVE TOKEN & ROLE
-  static Future<void> saveTokenAndRole(String t, String role) async {
+  static Future<void> saveTokenAndRole(String t, String role, String user) async {
     token = t;
     userRole = role;
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString('token', t);
     await prefs.setString('userRole', role);
+    await prefs.setString('username', user);
 
     isLoggedIn.value = true;
   }
@@ -55,7 +56,7 @@ class ApiService {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     token = prefs.getString('token');
     userRole = prefs.getString('userRole');
-
+    username = prefs.getString('username');
     isLoggedIn.value = token != null && userRole != null;
   }
 
@@ -76,7 +77,7 @@ class ApiService {
       token = data['access'];
       userRole = data['role'];
       username = data['username'];
-      await saveTokenAndRole(token!, userRole!);
+      await saveTokenAndRole(token!, userRole!, data['username']);
     }
 
     return data;
@@ -89,6 +90,7 @@ class ApiService {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
     await prefs.remove('userRole');
+    username = prefs.getString('username');
 
     isLoggedIn.value = false;
   }
@@ -126,14 +128,17 @@ class ApiService {
       try {
         body = jsonDecode(response.body);
       } catch (e) {
-        print("❌ RAW RESPONSE: ${response.body}");
         return {"error": "Server error (not JSON). Check Django backend."};
       }
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         // ✅ Save token if backend returns it
         if (body.containsKey("access") && body['access'] != null) {
-          await saveTokenAndRole(body['access'], body['role'] ?? role);
+          await saveTokenAndRole(
+            body['access'],
+            body['role'] ?? role,
+            body['username'] ?? username ?? '', // ✅ make sure username is passed
+          );
         }
         return body;
       } else {

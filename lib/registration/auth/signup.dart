@@ -55,7 +55,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     // ✅ If backend returned access token
     if (res.containsKey("access") && res['access'] != null) {
-      await ApiService.saveTokenAndRole(res['access'], role);
+      await ApiService.saveTokenAndRole(
+        res['access'],
+        role,
+        username.text, 
+      );
 
       if (role == "rider") {
         Navigator.pushReplacement(
