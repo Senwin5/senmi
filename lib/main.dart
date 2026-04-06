@@ -6,13 +6,12 @@ import 'package:senmi/screen_pages/features/customer/customer_bottomnav.dart';
 import 'package:senmi/screen_pages/features/rider/rider_bottom_nav.dart';
 import 'package:senmi/services/api_service.dart';
 
+
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // ✅ Load token and user role from SharedPreferences
-  await ApiService.loadToken();
-
-  runApp(const MyApp());
+  await ApiService.loadToken(); // 🔥 THIS IS CRITICAL
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {

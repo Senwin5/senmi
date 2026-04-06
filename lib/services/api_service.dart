@@ -28,6 +28,17 @@ class ApiService {
 
   static bool get isAdmin => userRole == "admin";
 
+  static Future<Map<String, String>> getAuthHeaders() async {
+    if (token == null) {
+      await loadToken(); // 🔥 ensures token is always loaded
+    }
+
+    return {
+      "Content-Type": "application/json",
+      if (token != null) "Authorization": "Bearer $token",
+    };
+  }
+
   // 🔐 SAVE TOKEN & ROLE
   static Future<void> saveTokenAndRole(String t, String role) async {
     token = t;
@@ -326,23 +337,26 @@ static Future<Map<String, dynamic>> register({
   static Future<dynamic> getEarnings() async {}
 
 
-// After
+
+// getRiderProfile
 static Future<Map<String, dynamic>> getRiderProfile() async {
   final response = await http.get(
     Uri.parse("$baseUrl/rider-profile/"),
-    headers: headers,
+    headers: await getAuthHeaders(),
   );
 
   final data = jsonDecode(response.body);
 
-  // Always return a Map
-  if (data is Map<String, dynamic>) {
-    return data;
+  // If it's already a map
+  if (data is Map) {
+    return Map<String, dynamic>.from(
+        data.map((key, value) => MapEntry(key.toString(), value)));
   }
 
   // If backend mistakenly returns list
-  if (data is List && data.isNotEmpty) {
-    return data.first;
+  if (data is List && data.isNotEmpty && data.first is Map) {
+    return Map<String, dynamic>.from(
+        (data.first as Map).map((key, value) => MapEntry(key.toString(), value)));
   }
 
   return {};
@@ -354,50 +368,58 @@ static Future<Map<String, dynamic>> getRiderProfile() async {
 // ================================
   // Rider Profile Update (Static)
   // ================================
-  static Future<Map<String, dynamic>> updateRiderProfile(
-    String fullName,
-    String phone,
-    String vehicle,
-    String address,
-    String city,
-    File profile,
-    File rider1,
-    File vehicleImg,
-  ) async {
-    if (token == null) return {"error": "User not logged in"};
 
-    try {
-      var request = http.MultipartRequest(
-        'PUT', // <-- change POST to PUT
-        Uri.parse("$baseUrl/rider-profile/"),
-      );
-      request.headers['Authorization'] = 'Bearer $token';
+static Future<Map<String, dynamic>> updateRiderProfile(
+  String fullName,
+  String phone,
+  String vehicle,
+  String address,
+  String city,
+  File? profile,
+  File? rider1,
+  File? vehicleImg,
+) async {
+  try {
+    var request = http.MultipartRequest(
+      'PUT',
+      Uri.parse("$baseUrl/rider-profile/"),
+    );
 
-      request.fields['full_name'] = fullName;
-      request.fields['phone'] = phone;
-      request.fields['vehicle_number'] = vehicle;
-      request.fields['address'] = address;
-      request.fields['city'] = city;
+    // Add headers
+    request.headers.addAll(await getAuthHeaders());
 
+    // Add fields
+    request.fields['full_name'] = fullName;
+    request.fields['phone_number'] = phone; // ✅ Correct
+    request.fields['vehicle_number'] = vehicle;
+    request.fields['address'] = address;
+    request.fields['city'] = city;
+
+    // Add files with correct field names
+    if (profile != null) {
       request.files.add(await http.MultipartFile.fromPath('profile_picture', profile.path));
-      request.files.add(await http.MultipartFile.fromPath('rider_image1', rider1.path));
-      request.files.add(await http.MultipartFile.fromPath('rider_with_vehicle', vehicleImg.path));
-
-      final response = await request.send();
-      final resBody = await response.stream.bytesToString();
-      final data = jsonDecode(resBody);
-
-      if (response.statusCode == 401) {
-        await logout();
-        return {"error": "Unauthorized. Please log in again."};
-      }
-
-      return data;
-    } catch (e) {
-      return {"error": e.toString()};
     }
-  }
+    if (rider1 != null) {
+      request.files.add(await http.MultipartFile.fromPath('rider_image_1', rider1.path)); // ✅ corrected
+    }
+    if (vehicleImg != null) {
+      request.files.add(await http.MultipartFile.fromPath('rider_image_with_vehicle', vehicleImg.path)); // ✅ corrected
+    }
 
+    final response = await request.send();
+    final resBody = await response.stream.bytesToString();
+    final data = jsonDecode(resBody);
+
+    if (response.statusCode == 401) {
+      await logout();
+      return {"error": "Session expired. Please login again."};
+    }
+
+    return data;
+  } catch (e) {
+    return {"error": e.toString()};
+  }
+}
 
 
 
@@ -405,12 +427,14 @@ static Future<Map<String, dynamic>> getRiderProfile() async {
 // Safe Rider Status Fetch
 // ================================
 static Future<Map<String, dynamic>> getRiderStatusSafe() async {
+  await loadToken();
   if (token == null) return {"status": "no_token", "error": "No token available"};
 
   try {
+
     final res = await http.get(
       Uri.parse("$baseUrl/rider/status/"),
-      headers: headers,
+      headers: await ApiService.getAuthHeaders(),
     );
 
     if (res.statusCode == 401) {

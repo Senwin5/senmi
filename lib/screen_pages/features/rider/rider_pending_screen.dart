@@ -24,8 +24,17 @@ class _RiderPendingScreenState extends State<RiderPendingScreen> {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+
       await ApiService.loadToken();
-      checkStatus();
+      if (ApiService.token == null) {
+        setState(() {
+          message = "Please login again.";
+          showCompleteProfileButton = true;
+        });
+        return;
+      }
+
+      await checkStatus();
 
       refreshTimer = Timer.periodic(
         const Duration(seconds: 15), // ✅ kept your original timing
@@ -49,13 +58,18 @@ class _RiderPendingScreenState extends State<RiderPendingScreen> {
     try {
       final res = await ApiService.getRiderStatusSafe();
 
-      // ✅ handle no_token WITHOUT breaking your flow
+      //handle no_token WITHOUT breaking your flow
+
       if (res['status'] == 'no_token') {
+        await ApiService.loadToken(); // try reloading
+        if (ApiService.token != null) {
+          await checkStatus(); // retry
+          return;
+        }
         setState(() {
           message = "Please login again.";
-          showCompleteProfileButton = true; // ✅ KEEP BUTTON WORKING
+          showCompleteProfileButton = true;
         });
-        return;
       }
 
       // ✅ keep your original logout behavior
