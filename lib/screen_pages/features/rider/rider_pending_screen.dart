@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:senmi/screen_pages/features/rider/rider_bottom_nav.dart';
 import '../../../services/api_service.dart';
 import '../../../registration/auth/login.dart';
 import '../../features/rider/rider_home.dart';
@@ -93,7 +94,7 @@ class _RiderPendingScreenState extends State<RiderPendingScreen> {
           if (!mounted) return;
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (_) => const RiderHome()),
+            MaterialPageRoute(builder: (_) => const RiderBottomNav()),
           );
           return;
 
