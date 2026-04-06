@@ -18,8 +18,11 @@ class _RiderHomeState extends State<RiderHome> {
   @override
   void initState() {
     super.initState();
-    loadData();
+    // ensure token is loaded first
+    ApiService.loadToken().then((_) => loadData());
   }
+
+  String riderName = "Rider"; // default
 
   Future<void> loadData() async {
     setState(() => loading = true);
@@ -27,19 +30,29 @@ class _RiderHomeState extends State<RiderHome> {
       final packageData = await ApiService.getAvailablePackages();
       final walletData = await ApiService.getWallet();
       final earningsData = await ApiService.getEarnings();
+      final riderProfile = await ApiService.getRiderProfile();
+
+      // DEBUG: print raw API response
+      print("Raw rider profile: $riderProfile");
 
       setState(() {
         packages = packageData;
         walletBalance = walletData['balance'] ?? 0.0;
         totalEarnings = earningsData['total_earnings'] ?? 0.0;
         totalDeliveries = earningsData['total_deliveries'] ?? 0;
+
+        // ✅ Use full_name or name from API; fallback to 'Rider'
+        riderName =
+            riderProfile['full_name'] ?? riderProfile['name'] ?? 'Rider';
+
         loading = false;
       });
     } catch (e) {
       setState(() => loading = false);
-      // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Error loading data: $e")));
+      ScaffoldMessenger.of(
+        // ignore: use_build_context_synchronously
+        context,
+      ).showSnackBar(SnackBar(content: Text("Error loading data: $e")));
     }
   }
 
@@ -47,8 +60,10 @@ class _RiderHomeState extends State<RiderHome> {
     bool success = await ApiService.acceptPackage(id);
     if (success) {
       // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text("Accepted")));
+      ScaffoldMessenger.of(
+        // ignore: use_build_context_synchronously
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Accepted")));
       loadData();
     }
   }
@@ -72,12 +87,10 @@ class _RiderHomeState extends State<RiderHome> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                     // "Welcome, Rider!",
-                      "Welcome, ${ApiService.username ?? 'Rider'}!",
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleLarge
-                          ?.copyWith(fontWeight: FontWeight.bold),
+                      "Welcome, $riderName!",
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 16),
 
@@ -92,15 +105,19 @@ class _RiderHomeState extends State<RiderHome> {
                               padding: const EdgeInsets.all(12.0),
                               child: Column(
                                 children: [
-                                  const Icon(Icons.local_shipping,
-                                      size: 30, color: Colors.green),
+                                  const Icon(
+                                    Icons.local_shipping,
+                                    size: 30,
+                                    color: Colors.green,
+                                  ),
                                   const SizedBox(height: 8),
                                   const Text("Deliveries"),
                                   Text(
                                     totalDeliveries.toString(),
                                     style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 18),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -115,15 +132,19 @@ class _RiderHomeState extends State<RiderHome> {
                               padding: const EdgeInsets.all(12.0),
                               child: Column(
                                 children: [
-                                  const Icon(Icons.attach_money,
-                                      size: 30, color: Colors.orange),
+                                  const Icon(
+                                    Icons.attach_money,
+                                    size: 30,
+                                    color: Colors.orange,
+                                  ),
                                   const SizedBox(height: 8),
                                   const Text("Earnings"),
                                   Text(
                                     "₦${totalEarnings.toStringAsFixed(2)}",
                                     style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 18),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -140,8 +161,7 @@ class _RiderHomeState extends State<RiderHome> {
                       child: ListTile(
                         leading: const Icon(Icons.account_balance_wallet),
                         title: const Text("Wallet Balance"),
-                        trailing:
-                            Text("₦${walletBalance.toStringAsFixed(2)}"),
+                        trailing: Text("₦${walletBalance.toStringAsFixed(2)}"),
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -149,10 +169,9 @@ class _RiderHomeState extends State<RiderHome> {
                     // ===== Available Deliveries =====
                     Text(
                       "Available Deliveries",
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium
-                          ?.copyWith(fontWeight: FontWeight.bold),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 10),
                     packages.isEmpty
@@ -171,16 +190,16 @@ class _RiderHomeState extends State<RiderHome> {
                               final highPay = (p['price'] ?? 0) > 5000;
                               return Card(
                                 elevation: 3,
-                                margin:
-                                    const EdgeInsets.symmetric(vertical: 6),
+                                margin: const EdgeInsets.symmetric(vertical: 6),
                                 color: highPay
                                     ? Colors.yellow.shade50
                                     : Colors.white,
                                 child: ListTile(
                                   title: Text(
                                     p['description'],
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                   subtitle: Column(
                                     crossAxisAlignment:
@@ -191,7 +210,8 @@ class _RiderHomeState extends State<RiderHome> {
                                       Text("Delivery: ${p['delivery']}"),
                                       Text("Price: ₦${p['price']}"),
                                       Text(
-                                          "Receiver: ${p['receiver_name']} (${p['receiver_phone']})"),
+                                        "Receiver: ${p['receiver_name']} (${p['receiver_phone']})",
+                                      ),
                                     ],
                                   ),
                                   trailing: ElevatedButton(

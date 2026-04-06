@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:senmi/screen_pages/features/rider/rider_bottom_nav.dart';
 import '../../../services/api_service.dart';
 import '../../../registration/auth/login.dart';
-import '../../features/rider/rider_home.dart';
 import '../../features/rider/rider_complete_profile.dart';
 
 class RiderPendingScreen extends StatefulWidget {
@@ -78,6 +77,7 @@ class _RiderPendingScreenState extends State<RiderPendingScreen> {
         if (!mounted) return;
         await ApiService.logout();
         Navigator.pushAndRemoveUntil(
+          // ignore: use_build_context_synchronously
           context,
           MaterialPageRoute(builder: (_) => const LoginScreen()),
           (route) => false,

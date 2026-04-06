@@ -348,20 +348,19 @@ static Future<Map<String, dynamic>> getRiderProfile() async {
   final data = jsonDecode(response.body);
 
   // If it's already a map
-  if (data is Map) {
-    return Map<String, dynamic>.from(
-        data.map((key, value) => MapEntry(key.toString(), value)));
+  if (data is Map<String, dynamic>) {
+    return Map<String, dynamic>.from(data);
   }
 
   // If backend mistakenly returns list
-  if (data is List && data.isNotEmpty && data.first is Map) {
-    return Map<String, dynamic>.from(
-        (data.first as Map).map((key, value) => MapEntry(key.toString(), value)));
+  if (data is List) {
+    if (data.isNotEmpty && data[0] is Map) {
+      return Map<String, dynamic>.from(data[0] as Map);
+    }
   }
 
   return {};
 }
-
 
 
 

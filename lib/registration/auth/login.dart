@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:senmi/screen_pages/admin/admin_dashboard.dart';
+import 'package:senmi/screen_pages/features/rider/rider_bottom_nav.dart';
 import 'package:senmi/widgets/custom_buttom.dart';
 import '../../services/api_service.dart';
 import '../../screen_pages/features/customer/customer_home.dart';
@@ -90,7 +91,7 @@ class _LoginScreenState extends State<LoginScreen> {
             Navigator.pushReplacement(
               // ignore: use_build_context_synchronously
               context,
-              MaterialPageRoute(builder: (_) => const RiderHome()),
+              MaterialPageRoute(builder: (_) => const RiderBottomNav()),
             );
             return;
           }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:senmi/services/api_service.dart';
 import '../../../registration/auth/login.dart';
+// <-- you'll need a ChangePasswordScreen
+import 'package:senmi/widgets/custom_buttom.dart';
 
 class RiderProfileScreen extends StatefulWidget {
   const RiderProfileScreen({super.key});
@@ -19,7 +21,7 @@ class _RiderProfileScreenState extends State<RiderProfileScreen> {
     loadProfile();
   }
 
-  Future<void> loadProfile() async{
+  Future<void> loadProfile() async {
     setState(() => loading = true);
     final data = await ApiService.getRiderProfile();
 
@@ -27,6 +29,59 @@ class _RiderProfileScreenState extends State<RiderProfileScreen> {
       rider = data;
       loading = false;
     });
+  }
+
+  /// Logout
+  Future<void> logout() async {
+    await ApiService.logout();
+    if (!mounted) return;
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (route) => false,
+    );
+  }
+
+  /// Delete Account
+  Future<void> deleteAccount() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Confirm Delete"),
+        content: const Text(
+            "Are you sure you want to delete your account? This action cannot be undone."),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text("Cancel")),
+          TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text(
+                "Delete",
+                style: TextStyle(color: Colors.red),
+              )),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      final deleted = await ApiService.deleteUser();
+      if (deleted && mounted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const LoginScreen()),
+            (route) => false,
+          );
+        });
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Failed to delete account")),
+          );
+        }
+      }
+    }
   }
 
   @override
@@ -86,31 +141,38 @@ class _RiderProfileScreenState extends State<RiderProfileScreen> {
 
                   const SizedBox(height: 30),
 
-                  // 🔴 Logout Button
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: () async {
-                        await ApiService.logout();
+                  // 🔐 CHANGE PASSWORD
+                  CustomButton(
+                    text: "Change Password",
+                    onPressed: () {
+                     
+                      // Navigator.push(context, MaterialPageRoute(builder: (_) => ChangePasswordScreen()));
+                    },
+                    fullWidth: true,
+                    padding: const EdgeInsets.all(16),
+                    color: Colors.blue,
+                  ),
 
-                        if (!mounted) return;
+                  const SizedBox(height: 12),
 
-                        Navigator.pushAndRemoveUntil(
-                          // ignore: use_build_context_synchronously
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const LoginScreen(),
-                          ),
-                          (route) => false,
-                        );
-                      },
-                      icon: const Icon(Icons.logout),
-                      label: const Text("Logout"),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        backgroundColor: Colors.red,
-                      ),
-                    ),
+                  // 🔴 LOGOUT
+                  CustomButton(
+                    text: "Logout",
+                    onPressed: logout,
+                    fullWidth: true,
+                    padding: const EdgeInsets.all(16),
+                    color: Colors.red,
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // ❌ DELETE ACCOUNT
+                  CustomButton(
+                    text: "Delete Account",
+                    onPressed: deleteAccount,
+                    fullWidth: true,
+                    padding: const EdgeInsets.all(16),
+                    color: Colors.red,
                   ),
                 ],
               ),
