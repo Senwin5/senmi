@@ -22,11 +22,16 @@ class _RiderPendingScreenState extends State<RiderPendingScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => checkStatus());
-    refreshTimer = Timer.periodic(
-      const Duration(seconds: 5),
-      (_) => checkStatus(),
-    );
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await ApiService.loadToken();
+      checkStatus();
+
+      refreshTimer = Timer.periodic(
+        const Duration(seconds: 15), // ✅ kept your original timing
+        (_) => checkStatus(),
+      );
+    });
   }
 
   @override
@@ -35,20 +40,29 @@ class _RiderPendingScreenState extends State<RiderPendingScreen> {
     super.dispose();
   }
 
-  // ✅ Production-ready status checker
   Future<void> checkStatus() async {
-    if (!mounted) return;
+    // ✅ prevent multiple overlapping calls (THIS FIXES RANDOM BREAKING)
+    if (!mounted || loading) return;
+
     setState(() => loading = true);
 
     try {
       final res = await ApiService.getRiderStatusSafe();
 
-      if (res['status'] == 'unauthorized' || res['status'] == 'no_token') {
-        // User not logged in or token expired
+      // ✅ handle no_token WITHOUT breaking your flow
+      if (res['status'] == 'no_token') {
+        setState(() {
+          message = "Please login again.";
+          showCompleteProfileButton = true; // ✅ KEEP BUTTON WORKING
+        });
+        return;
+      }
+
+      // ✅ keep your original logout behavior
+      if (res['status'] == 'unauthorized') {
         if (!mounted) return;
         await ApiService.logout();
         Navigator.pushAndRemoveUntil(
-          // ignore: use_build_context_synchronously
           context,
           MaterialPageRoute(builder: (_) => const LoginScreen()),
           (route) => false,
@@ -116,6 +130,8 @@ class _RiderPendingScreenState extends State<RiderPendingScreen> {
       context,
       MaterialPageRoute(builder: (_) => const RiderCompleteProfile()),
     );
+
+    // ✅ recheck AFTER returning (important)
     checkStatus();
   }
 

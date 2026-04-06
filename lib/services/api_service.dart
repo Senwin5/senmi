@@ -367,7 +367,10 @@ static Future<Map<String, dynamic>> getRiderProfile() async {
     if (token == null) return {"error": "User not logged in"};
 
     try {
-      var request = http.MultipartRequest('POST', Uri.parse("$baseUrl/rider-profile/"));
+      var request = http.MultipartRequest(
+        'PUT', // <-- change POST to PUT
+        Uri.parse("$baseUrl/rider-profile/"),
+      );
       request.headers['Authorization'] = 'Bearer $token';
 
       request.fields['full_name'] = fullName;
@@ -394,6 +397,8 @@ static Future<Map<String, dynamic>> getRiderProfile() async {
       return {"error": e.toString()};
     }
   }
+
+
 
 
 
