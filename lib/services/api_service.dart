@@ -213,17 +213,33 @@ class ApiService {
     return null;
   }
 
-  // ==========================
-  // 🚚 AVAILABLE PACKAGES (RIDER)
-  // ==========================
-  static Future<List<dynamic>> getAvailablePackages() async {
-    final response = await http.get(
-      Uri.parse("$baseUrl/packages/"),
-      headers: headers,
-    );
+  // 🚚 AVAILABLE PACKAGES (RIDER) - FIXED
 
-    return jsonDecode(response.body);
+  static Future<List<dynamic>> getAvailablePackages() async {
+    await loadToken(); // Ensure token is loaded
+    if (token == null) return [];
+
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/packages/"),
+        headers: headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        // Defensive: ensure a List
+        return data is List ? data : [];
+      } else {
+        debugPrint("getAvailablePackages failed: ${response.statusCode}");
+        return [];
+      }
+    } catch (e) {
+      debugPrint("Error fetching available packages: $e");
+      return [];
+    }
   }
+
+  
 
   // ==========================
   // ✅ ACCEPT PACKAGE

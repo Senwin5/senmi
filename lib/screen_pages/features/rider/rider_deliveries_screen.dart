@@ -28,6 +28,7 @@ class _RiderDeliveriesScreenState extends State<RiderDeliveriesScreen> {
       });
     } catch (e) {
       setState(() => loading = false);
+      debugPrint("Fetch error: $e");
       if (mounted) {
         ScaffoldMessenger.of(
           context,
