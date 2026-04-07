@@ -44,22 +44,25 @@ class _RiderHomeState extends State<RiderHome> {
       setState(() {
         packages = packageData;
         walletBalance = walletData['balance'] ?? 0.0;
-        totalEarnings = earningsData['total_earnings'] ?? 0.0;
+
+        totalEarnings = (earningsData['total_earnings'] ?? 0).toDouble();
+
         totalDeliveries = earningsData['total_deliveries'] ?? 0;
 
         riderName = (username != null && username.toString().trim().isNotEmpty)
             ? username
             : (fullName != null && fullName.toString().trim().isNotEmpty)
-                ? fullName
-                : riderName;
+            ? fullName
+            : riderName;
 
         loading = false;
       });
     } catch (e) {
       setState(() => loading = false);
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text("Error loading data: $e")));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Error loading data: $e")));
       }
     }
   }
@@ -67,8 +70,9 @@ class _RiderHomeState extends State<RiderHome> {
   void accept(int id) async {
     bool success = await ApiService.acceptPackage(id);
     if (success && mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text("Accepted")));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Accepted")));
       loadData();
     }
   }
@@ -82,20 +86,31 @@ class _RiderHomeState extends State<RiderHome> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
+      backgroundColor: isDark ? Colors.black : Colors.grey.shade100,
       appBar: AppBar(
-        title: const Text("Rider Dashboard"),
-        backgroundColor: Colors.blueAccent,
+        title: const Text(
+          "Dashboard",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.purple, // dark mode already purple
         elevation: 0,
         actions: [
           Row(
             children: [
-              Text(isOnline ? "Online" : "Offline"),
+              Text(
+                isOnline ? "Online" : "Offline",
+                style: const TextStyle(color: Colors.white), // force white
+              ),
               Switch(
                 value: isOnline,
                 onChanged: toggleOnlineStatus,
                 activeThumbColor: Colors.green,
+                inactiveThumbColor: Colors.white,
+                activeTrackColor: Colors.greenAccent,
+                inactiveTrackColor: Colors.white24,
               ),
             ],
           ),
@@ -108,9 +123,10 @@ class _RiderHomeState extends State<RiderHome> {
             heroTag: "walletBtn",
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Navigate to Wallet")));
+                const SnackBar(content: Text("Navigate to Wallet")),
+              );
             },
-            backgroundColor: Colors.blueAccent,
+            backgroundColor: Colors.purple,
             child: const Icon(Icons.account_balance_wallet),
           ),
           const SizedBox(height: 12),
@@ -118,9 +134,10 @@ class _RiderHomeState extends State<RiderHome> {
             heroTag: "historyBtn",
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Navigate to History")));
+                const SnackBar(content: Text("Navigate to History")),
+              );
             },
-            backgroundColor: Colors.orangeAccent,
+            backgroundColor: Colors.green,
             child: const Icon(Icons.history),
           ),
         ],
@@ -131,23 +148,27 @@ class _RiderHomeState extends State<RiderHome> {
               onRefresh: loadData,
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 20,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       "Welcome, $riderName!",
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: Colors.black87,
+                            color: isDark ? Colors.white : Colors.black87,
                           ),
                     ),
                     const SizedBox(height: 20),
-                    _buildStatsRow(),
+                    _buildStatsRow(isDark),
                     const SizedBox(height: 20),
-                    _buildWalletCard(),
+                    _buildWalletCard(isDark),
                     const SizedBox(height: 25),
-                    _buildAvailableDeliveries(),
+                    _buildAvailableDeliveries(isDark),
                   ],
                 ),
               ),
@@ -155,21 +176,23 @@ class _RiderHomeState extends State<RiderHome> {
     );
   }
 
-  Row _buildStatsRow() {
+  Row _buildStatsRow(bool isDark) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
+        // Deliveries card
         Expanded(
           child: Container(
             decoration: BoxDecoration(
-              gradient: LinearGradient(colors: [Colors.green.shade400, Colors.green.shade200]),
+              gradient: const LinearGradient(
+                colors: [Colors.purple, Colors.purple],
+              ),
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [
+              boxShadow: const [
                 BoxShadow(
-                  // ignore: deprecated_member_use
-                  color: Colors.green.shade100.withOpacity(0.5),
+                  color: Colors.black26,
                   blurRadius: 6,
-                  offset: const Offset(0, 3),
+                  offset: Offset(0, 3),
                 ),
               ],
             ),
@@ -178,43 +201,67 @@ class _RiderHomeState extends State<RiderHome> {
               children: [
                 const Icon(Icons.local_shipping, size: 30, color: Colors.white),
                 const SizedBox(height: 8),
-                const Text("Deliveries", style: TextStyle(color: Colors.white70)),
+                const Text(
+                  "Deliveries",
+                  style: TextStyle(color: Colors.white70),
+                ),
                 const SizedBox(height: 4),
                 Text(
                   totalDeliveries.toString(),
                   style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: Colors.white,
+                  ),
                 ),
               ],
             ),
           ),
         ),
         const SizedBox(width: 12),
+        // Earnings card
         Expanded(
           child: Container(
             decoration: BoxDecoration(
-              gradient: LinearGradient(colors: [Colors.orange.shade400, Colors.orange.shade200]),
+              gradient: const LinearGradient(
+                colors: [Colors.green, Colors.green],
+              ),
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [
+              boxShadow: const [
                 BoxShadow(
-                  // ignore: deprecated_member_use
-                  color: Colors.orange.shade100.withOpacity(0.5),
+                  color: Colors.black26,
                   blurRadius: 6,
-                  offset: const Offset(0, 3),
+                  offset: Offset(0, 3),
                 ),
               ],
             ),
             padding: const EdgeInsets.symmetric(vertical: 20),
             child: Column(
               children: [
-                const Icon(Icons.attach_money, size: 30, color: Colors.white),
+                // Replace the dollar icon with Naira text
+                Container(
+                  width: 30,
+                  height: 30,
+                  alignment: Alignment.center,
+                  child: const Text(
+                    '₦',
+                    style: TextStyle(
+                      fontSize: 24,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 8),
                 const Text("Earnings", style: TextStyle(color: Colors.white70)),
                 const SizedBox(height: 4),
                 Text(
                   "₦${totalEarnings.toStringAsFixed(2)}",
                   style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: Colors.white,
+                  ),
                 ),
               ],
             ),
@@ -224,13 +271,17 @@ class _RiderHomeState extends State<RiderHome> {
     );
   }
 
-  Card _buildWalletCard() {
+  Card _buildWalletCard(bool isDark) {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 3,
-      color: Colors.blue.shade50,
+      color: isDark ? Colors.grey[800] : Colors.blue.shade50,
       child: ListTile(
-        leading: const Icon(Icons.account_balance_wallet, color: Colors.blueAccent, size: 28),
+        leading: Icon(
+          Icons.account_balance_wallet,
+          color: isDark ? Colors.purple : Colors.blueAccent,
+          size: 28,
+        ),
         title: const Text(
           "Wallet Balance",
           style: TextStyle(fontWeight: FontWeight.bold),
@@ -243,23 +294,26 @@ class _RiderHomeState extends State<RiderHome> {
     );
   }
 
-  Widget _buildAvailableDeliveries() {
+  Widget _buildAvailableDeliveries(bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           "Available Deliveries",
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : Colors.black87,
+          ),
         ),
         const SizedBox(height: 10),
         packages.isEmpty
-            ? const Center(
+            ? Center(
                 child: Text(
                   "No deliveries available at the moment",
-                  style: TextStyle(fontSize: 16, color: Colors.black54),
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: isDark ? Colors.white60 : Colors.black54,
+                  ),
                 ),
               )
             : ListView.builder(
@@ -271,33 +325,66 @@ class _RiderHomeState extends State<RiderHome> {
                   final highPay = (p['price'] ?? 0) > 5000;
                   return Card(
                     elevation: 4,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     margin: const EdgeInsets.symmetric(vertical: 6),
-                    color: highPay ? Colors.yellow.shade50 : Colors.white,
+                    color: isDark
+                        ? Colors.grey[900]
+                        : highPay
+                        ? Colors.yellow.shade50
+                        : Colors.white,
                     shadowColor: Colors.black26,
                     child: ListTile(
-                      contentPadding:
-                          const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                       title: Text(
                         p['description'] ?? "",
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
                       ),
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const SizedBox(height: 4),
-                          Text("Pickup: ${p['pickup'] ?? '-'}"),
-                          Text("Delivery: ${p['delivery'] ?? '-'}"),
-                          Text("Price: ₦${p['price'] ?? 0}"),
                           Text(
-                              "Receiver: ${p['receiver_name'] ?? '-'} (${p['receiver_phone'] ?? '-'})"),
+                            "Pickup: ${p['pickup'] ?? '-'}",
+                            style: TextStyle(
+                              color: isDark ? Colors.white60 : Colors.black54,
+                            ),
+                          ),
+                          Text(
+                            "Delivery: ${p['delivery'] ?? '-'}",
+                            style: TextStyle(
+                              color: isDark ? Colors.white60 : Colors.black54,
+                            ),
+                          ),
+                          Text(
+                            "Price: ₦${p['price'] ?? 0}",
+                            style: TextStyle(
+                              color: isDark ? Colors.white60 : Colors.black54,
+                            ),
+                          ),
+                          Text(
+                            "Receiver: ${p['receiver_name'] ?? '-'} (${p['receiver_phone'] ?? '-'})",
+                            style: TextStyle(
+                              color: isDark ? Colors.white60 : Colors.black54,
+                            ),
+                          ),
                         ],
                       ),
                       trailing: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blueAccent,
+                          backgroundColor: Colors.purple,
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 12),
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),

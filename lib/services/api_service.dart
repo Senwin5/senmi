@@ -41,7 +41,11 @@ class ApiService {
   }
 
   // 🔐 SAVE TOKEN & ROLE
-  static Future<void> saveTokenAndRole(String t, String role, String user) async {
+  static Future<void> saveTokenAndRole(
+    String t,
+    String role,
+    String user,
+  ) async {
     token = t;
     userRole = role;
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -138,7 +142,9 @@ class ApiService {
           await saveTokenAndRole(
             body['access'],
             body['role'] ?? role,
-            body['username'] ?? username ?? '', // ✅ make sure username is passed
+            body['username'] ??
+                username ??
+                '', // ✅ make sure username is passed
           );
         }
         return body;
@@ -339,41 +345,57 @@ class ApiService {
 
   static Future<dynamic> getMyPackages() async {}
   static Future<dynamic> getMyHistory() async {}
-  static Future<dynamic> getEarnings() async {}
+
+  static Future<Map<String, dynamic>> getEarnings() async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/rider-earnings/"), // ✅ FIXED URL
+        headers: headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        return {
+          "total_earnings": (data['total_earnings'] ?? 0).toDouble(),
+          "total_deliveries": data['total_deliveries'] ?? 0,
+        };
+      } else {
+        return {"total_earnings": 0, "total_deliveries": 0};
+      }
+    } catch (e) {
+      return {"total_earnings": 0, "total_deliveries": 0};
+    }
+  }
 
   // getRiderProfile
   static Future<Map<String, dynamic>> getRiderProfile() async {
-  try {
-    final response = await http.get(
-      Uri.parse("$baseUrl/rider-profile/"),
-      headers: await getAuthHeaders(),
-    );
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/rider-profile/"),
+        headers: await getAuthHeaders(),
+      );
 
- 
-    final data = jsonDecode(response.body);
+      final data = jsonDecode(response.body);
 
-    if (response.statusCode == 401) {
+      if (response.statusCode == 401) {
+        await logout();
+        return {};
+      }
 
-      await logout();
+      if (data is Map<String, dynamic>) {
+        return data;
+      }
+
+      if (data is List && data.isNotEmpty) {
+        return Map<String, dynamic>.from(data[0]);
+      }
+
+      return {};
+    } catch (e) {
       return {};
     }
-
-    if (data is Map<String, dynamic>) {
-      return data;
-    }
-
-    if (data is List && data.isNotEmpty) {
-      return Map<String, dynamic>.from(data[0]);
-    }
-
-    return {};
-  } catch (e) {
-   
-    return {};
   }
-}
-
-
 
   // ================================
   // Rider Profile Update (Static)
