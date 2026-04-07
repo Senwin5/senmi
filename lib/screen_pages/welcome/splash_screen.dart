@@ -1,26 +1,7 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:senmi/screen_pages/welcome/onboarding_screen.dart';
-import 'package:senmi/registration/auth/login.dart';
-
-// Placeholder Swipe/Home Screen
-class SwipeScreen extends StatelessWidget {
-  const SwipeScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("Swipe / Home")),
-      body: const Center(
-        child: Text(
-          "Welcome! This is your Swipe/Home screen.",
-          style: TextStyle(fontSize: 20),
-        ),
-      ),
-    );
-  }
-}
+import '../../services/api_service.dart';
+import 'onboarding_screen.dart';
+import '../../main.dart'; // ✅ IMPORTANT: route back to main app
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -30,45 +11,29 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+
   @override
   void initState() {
     super.initState();
-    _startSplashTimer();
+    startApp();
   }
 
-  void _startSplashTimer() {
-    Timer(const Duration(seconds: 3), _navigate);
-  }
+  void startApp() async {
+    await Future.delayed(const Duration(seconds: 2));
 
-  Future<void> _navigate() async {
-    if (!mounted) return;
+    await ApiService.loadToken();
 
-    final prefs = await SharedPreferences.getInstance();
-    final bool onboardingCompleted =
-        prefs.getBool('onboarding_completed') ?? false;
-
-    Widget nextPage;
-
-    if (!onboardingCompleted) {
-      // User hasn't completed onboarding
-      nextPage = const OnboardingScreen();
-    } else {
-      // Check if JWT token exists (user already logged in)
-      final String? accessToken = prefs.getString('access');
-
-      if (accessToken != null && accessToken.isNotEmpty) {
-        // Token exists → navigate to Swipe/Home screen
-        nextPage = const SwipeScreen();
-      } else {
-        // No token → go to login
-        nextPage = const LoginScreen();
-      }
-    }
-
-    if (mounted) {
+    if (ApiService.token != null) {
+      // ✅ User already logged in → go to main app (handles roles)
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => nextPage),
+        MaterialPageRoute(builder: (_) => const MyApp()),
+      );
+    } else {
+      // ❌ Not logged in → onboarding
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const OnboardingScreen()),
       );
     }
   }
@@ -76,41 +41,17 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          Image.asset(
-            'assets/images/logo.png',
-            fit: BoxFit.cover,
+      backgroundColor: const Color(0xFF5F5FFF),
+      body: const Center(
+        child: Text(
+          "SENMI",
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 32,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 2,
           ),
-          // ignore: deprecated_member_use
-          Container(color: Colors.black.withOpacity(0.3)),
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Image.asset(
-                  'assets/images/logo.png',
-                  height: 120,
-                ),
-                const SizedBox(height: 20),
-                const Text(
-                  'Misen',
-                  style: TextStyle(
-                    color: Colors.amber,
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-                const SizedBox(height: 40),
-                const CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.amber),
-                ),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

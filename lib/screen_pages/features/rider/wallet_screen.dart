@@ -81,10 +81,12 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                   bankCode: '058',
                 );
                 fetchWallet();
+                // ignore: use_build_context_synchronously
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text("Withdrawal successful")),
                 );
               } catch (e) {
+                // ignore: use_build_context_synchronously
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text("Withdrawal failed: $e")),
                 );
@@ -102,6 +104,7 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
+          // ignore: deprecated_member_use
           color: color.withOpacity(0.1),
           borderRadius: BorderRadius.circular(15),
         ),
@@ -245,6 +248,7 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       child: ListTile(
                         leading: CircleAvatar(
+                          // ignore: deprecated_member_use
                           backgroundColor: color.withOpacity(0.2),
                           child: Icon(icon, color: color),
                         ),

@@ -36,6 +36,7 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/onboarding/
 
 
 google_maps_flutter: ^2.6.0

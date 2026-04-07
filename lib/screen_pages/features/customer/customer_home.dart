@@ -235,6 +235,7 @@ class _CustomerHomeState extends State<CustomerHome> {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
+                // ignore: deprecated_member_use
                 color: Colors.black.withOpacity(0.05),
                 blurRadius: 10,
                 spreadRadius: 2,

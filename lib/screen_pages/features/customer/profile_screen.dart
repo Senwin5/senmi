@@ -34,6 +34,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
       });
     } catch (e) {
       setState(() => loading = false);
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text("Failed to load profile: $e")));
     }
@@ -42,6 +43,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
   void logout() async {
     await ApiService.logout();
     Navigator.pushAndRemoveUntil(
+      // ignore: use_build_context_synchronously
       context,
       MaterialPageRoute(builder: (_) => const LoginScreen()),
       (route) => false,
@@ -90,12 +92,14 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
 
             if (goToLogin == true) {
               Navigator.pushAndRemoveUntil(
+                // ignore: use_build_context_synchronously
                 context,
                 MaterialPageRoute(builder: (_) => const LoginScreen()),
                 (route) => false,
               );
             } else {
               Navigator.pushAndRemoveUntil(
+                // ignore: use_build_context_synchronously
                 context,
                 MaterialPageRoute(builder: (_) => const RegisterScreen()),
                 (route) => false,
@@ -118,6 +122,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
     if (await canLaunchUrl(Uri.parse(url))) {
       await launchUrl(Uri.parse(url));
     } else {
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Could not open WhatsApp")));
     }

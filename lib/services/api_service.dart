@@ -368,7 +368,7 @@ class ApiService {
 
     return {};
   } catch (e) {
-    print("❌ ERROR: $e");
+   
     return {};
   }
 }

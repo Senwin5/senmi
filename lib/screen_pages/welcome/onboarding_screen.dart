@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-// ignore: depend_on_referenced_packages
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:senmi/registration/auth/login.dart';
+import '../../registration/auth/login.dart';
+import '../../registration/auth/signup.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -10,210 +9,251 @@ class OnboardingScreen extends StatefulWidget {
   State<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen> {
-  final PageController _pageController = PageController();
-  int _currentPage = 0;
+class _OnboardingScreenState extends State<OnboardingScreen>
+    with SingleTickerProviderStateMixin {
 
-  // Forest green primary color
-  final Color primaryColor = const Color(0xFF2F855A);
+  final PageController _controller = PageController();
+  int currentPage = 0;
 
-  // Soft cream background
-  //final Color backgroundColor = const Color.fromARGB(255, 243, 253, 227);
+  late AnimationController _animController;
+  late Animation<double> _animation;
 
-  final List<Map<String, String>> onboardingData = [
+  final List<Map<String, String>> pages = [
     {
-      "image": "assets/images/onboard1.png",
-      "title": "Connect Easily",
-      "description": "Chat and connect with people seamlessly anytime."
+      "title": "Fast Delivery",
+      "desc": "Send packages across town quickly and safely.",
+      "image": "assets/onboarding/delivery1.png",
     },
     {
-      "image": "assets/images/onboard2.png",
-      "title": "Meet Your Soulmate",
-      "description": "Discover meaningful connections with people who truly understand you."
+      "title": "Real-time Tracking",
+      "desc": "Track your deliveries live anytime.",
+      "image": "assets/onboarding/delivery2.png",
     },
     {
-      "image": "assets/images/onboard3.png",
-      "title": "Grow Together",
-      "description": "Build meaningful relationships and cherish every moment."
+      "title": "Secure & Reliable",
+      "desc": "Your packages are always safe with us.",
+      "image": "assets/onboarding/delivery3.png",
     },
   ];
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      //backgroundColor: backgroundColor, // Updated background
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Skip Button
-            Align(
-              alignment: Alignment.topRight,
-              child: TextButton(
-                onPressed: _completeOnboarding,
-                child: Text(
-                  "Skip",
-                  style: TextStyle(
-                    color: primaryColor,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
+  void initState() {
+    super.initState();
 
-            // Swipeable Pages
-            Expanded(
-              child: PageView.builder(
-                controller: _pageController,
-                itemCount: onboardingData.length,
-                onPageChanged: (index) {
-                  setState(() => _currentPage = index);
-                },
-                itemBuilder: (context, index) {
-                  return _buildPage(
-                    image: onboardingData[index]['image']!,
-                    title: onboardingData[index]['title']!,
-                    description: onboardingData[index]['description']!,
-                  );
-                },
-              ),
-            ),
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
 
-            // Animated Page Indicator
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                onboardingData.length,
-                (index) => _buildDot(index),
-              ),
-            ),
-
-            const SizedBox(height: 30),
-
-            // Next / Get Started Button
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  onPressed: () {
-                    if (_currentPage == onboardingData.length - 1) {
-                      _completeOnboarding();
-                    } else {
-                      _pageController.nextPage(
-                        duration: const Duration(milliseconds: 400),
-                        curve: Curves.easeInOut,
-                      );
-                    }
-                  },
-                  child: Text(
-                    _currentPage == onboardingData.length - 1
-                        ? "Get Started"
-                        : "Next",
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 30),
-          ],
-        ),
-      ),
+    _animation = Tween<double>(begin: -10, end: 10).animate(
+      CurvedAnimation(parent: _animController, curve: Curves.easeInOut),
     );
+
+    startAutoSlide();
   }
 
-  /// Builds each onboarding page
-  Widget _buildPage({
-    required String image,
-    required String title,
-    required String description,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+  void startAutoSlide() {
+    Future.delayed(const Duration(seconds: 4), () {
+      if (_controller.hasClients) {
+        int nextPage = currentPage + 1;
+        if (nextPage < pages.length) {
+          _controller.animateToPage(
+            nextPage,
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.easeInOut,
+          );
+        }
+        startAutoSlide();
+      }
+    });
+  }
+
+  void nextPage() {
+    if (currentPage < pages.length - 1) {
+      _controller.nextPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _animController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+
+      body: Stack(
         children: [
-          // Image with border, radius, and subtle shadow
-          Container(
-            height: 260,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: primaryColor, width: 2),
-              boxShadow: [
-                BoxShadow(
-                  // ignore: deprecated_member_use
-                  color: Colors.black.withOpacity(0.15),
-                  blurRadius: 10,
-                  offset: const Offset(0, 5),
+
+          Column(
+            children: [
+
+              // 🔵 PAGES
+              Expanded(
+                child: PageView.builder(
+                  controller: _controller,
+                  itemCount: pages.length,
+                  onPageChanged: (index) {
+                    setState(() => currentPage = index);
+                  },
+                  itemBuilder: (context, index) {
+                    return Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+
+                          // ✅ ANIMATED IMAGE
+                          AnimatedBuilder(
+                            animation: _animation,
+                            builder: (context, child) {
+                              return Transform.translate(
+                                offset: Offset(0, _animation.value),
+                                child: child,
+                              );
+                            },
+                            child: Image.asset(
+                              pages[index]['image']!,
+                              height: 180,
+                            ),
+                          ),
+
+                          const SizedBox(height: 40),
+
+                          Text(
+                            pages[index]['title']!,
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF5F5FFF),
+                            ),
+                          ),
+
+                          const SizedBox(height: 15),
+
+                          Text(
+                            pages[index]['desc']!,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 15,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
-              ],
-            ),
-            clipBehavior: Clip.hardEdge,
-            child: Image.asset(image, fit: BoxFit.cover),
-          ),
-          const SizedBox(height: 40),
+              ),
 
-          // Title
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 26,
-              fontWeight: FontWeight.bold,
-              color: primaryColor, // Forest green title
-            ),
-          ),
-          const SizedBox(height: 16),
+              // 🔘 INDICATOR
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(
+                  pages.length,
+                  (index) => Container(
+                    margin: const EdgeInsets.all(4),
+                    width: currentPage == index ? 12 : 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: currentPage == index
+                          ? const Color(0xFF5F5FFF)
+                          : Colors.grey,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ),
 
-          // Description
-          Text(
-            description,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey[700],
+              const SizedBox(height: 20),
+
+              // 👉 BUTTON AREA
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: currentPage == pages.length - 1
+
+                    // ✅ LAST PAGE (LOGIN / SIGNUP)
+                    ? Column(
+                        children: [
+
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF5F5FFF),
+                                padding: const EdgeInsets.all(16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) => const LoginScreen()),
+                                );
+                              },
+                              child: const Text("Login"),
+                            ),
+                          ),
+
+                          const SizedBox(height: 10),
+
+                          TextButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) => const RegisterScreen()),
+                              );
+                            },
+                            child: const Text("Create an account"),
+                          ),
+                        ],
+                      )
+
+                    // 👉 OTHER PAGES
+                    : SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF5F5FFF),
+                            padding: const EdgeInsets.all(16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: nextPage,
+                          child: const Text("Next"),
+                        ),
+                      ),
+              ),
+            ],
+          ),
+
+          // ✅ SKIP BUTTON
+          Positioned(
+            top: 50,
+            right: 20,
+            child: TextButton(
+              onPressed: () {
+                _controller.jumpToPage(pages.length - 1);
+              },
+              child: const Text(
+                "Skip",
+                style: TextStyle(color: Colors.grey),
+              ),
             ),
           ),
         ],
       ),
-    );
-  }
-
-  /// Animated dot indicator
-  Widget _buildDot(int index) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      margin: const EdgeInsets.symmetric(horizontal: 4),
-      height: 8,
-      width: _currentPage == index ? 24 : 8,
-      decoration: BoxDecoration(
-        color: _currentPage == index ? primaryColor : const Color.fromARGB(255, 158, 158, 158),
-        borderRadius: BorderRadius.circular(12),
-      ),
-    );
-  }
-
-  /// Save onboarding completion and navigate
-  Future<void> _completeOnboarding() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('onboarding_completed', true);
-
-    if (!mounted) return;
-
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const LoginScreen()),
     );
   }
 }
