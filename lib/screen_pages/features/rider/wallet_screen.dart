@@ -11,8 +11,11 @@ class RiderWalletScreen extends StatefulWidget {
 class _RiderWalletScreenState extends State<RiderWalletScreen> {
   double balance = 0;
   double totalEarned = 0;
+  double weeklyEarned = 0;
+  double monthlyEarned = 0;
   List transactions = [];
   bool loading = true;
+  bool showBalance = true;
 
   @override
   void initState() {
@@ -20,10 +23,8 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
     fetchWallet();
   }
 
-  // 🔄 FETCH WALLET + TRANSACTIONS
   Future fetchWallet() async {
     setState(() => loading = true);
-
     try {
       final wallet = await ApiService.getWallet();
       final tx = await ApiService.getTransactions();
@@ -31,19 +32,19 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
       setState(() {
         balance = wallet['balance'];
         totalEarned = wallet['total_earned'];
+        weeklyEarned = wallet['weekly_earned'] ?? 0;
+        monthlyEarned = wallet['monthly_earned'] ?? 0;
         transactions = tx;
         loading = false;
       });
     } catch (e) {
       setState(() => loading = false);
-      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Failed to load wallet: $e")),
       );
     }
   }
 
-  // 💰 DYNAMIC WITHDRAW FUNCTION
   void withdraw() async {
     final controller = TextEditingController();
 
@@ -75,18 +76,14 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
               try {
                 await ApiService.withdraw(
                   amount: amt,
-                  accountNumber: '1234567890', // replace with actual
-                  bankCode: '058', // replace with actual
+                  accountNumber: '1234567890',
+                  bankCode: '058',
                 );
-
                 fetchWallet();
-
-                // ignore: use_build_context_synchronously
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text("Withdrawal successful")),
                 );
               } catch (e) {
-                // ignore: use_build_context_synchronously
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text("Withdrawal failed: $e")),
                 );
@@ -97,6 +94,48 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
         ],
       ),
     );
+  }
+
+  Widget statCard(String title, String amount, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Column(
+          children: [
+            Text(title, style: const TextStyle(color: Colors.black54)),
+            const SizedBox(height: 8),
+            Text(
+              amount,
+              style: TextStyle(
+                color: color,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Color getTransactionColor(String type) {
+    if (type.toLowerCase().contains("withdraw") || type.toLowerCase().contains("payment sent")) {
+      return Colors.red;
+    } else {
+      return Colors.green;
+    }
+  }
+
+  IconData getTransactionIcon(String type) {
+    if (type.toLowerCase().contains("withdraw") || type.toLowerCase().contains("payment sent")) {
+      return Icons.arrow_upward;
+    } else {
+      return Icons.arrow_downward;
+    }
   }
 
   @override
@@ -118,12 +157,23 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(20),
                 children: [
-                  // 💳 WALLET CARD
+                  // 💳 Main Wallet Card
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: Colors.green.shade700,
+                      gradient: const LinearGradient(
+                        colors: [Colors.green, Colors.greenAccent],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
                       borderRadius: BorderRadius.circular(20),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 8,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -133,13 +183,25 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                           style: TextStyle(color: Colors.white70),
                         ),
                         const SizedBox(height: 10),
-                        Text(
-                          "₦${balance.toStringAsFixed(2)}",
-                          style: const TextStyle(
-                            fontSize: 28,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              showBalance ? "₦${balance.toStringAsFixed(2)}" : "****",
+                              style: const TextStyle(
+                                fontSize: 28,
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            IconButton(
+                              icon: Icon(
+                                showBalance ? Icons.visibility : Icons.visibility_off,
+                                color: Colors.white,
+                              ),
+                              onPressed: () => setState(() => showBalance = !showBalance),
+                            )
+                          ],
                         ),
                         const SizedBox(height: 10),
                         Text(
@@ -147,18 +209,25 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                           style: const TextStyle(color: Colors.white70),
                         ),
                         const SizedBox(height: 20),
-                        ElevatedButton(
+                        ElevatedButton.icon(
                           onPressed: withdraw,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.black,
-                          ),
-                          child: const Text("Withdraw"),
+                          icon: const Icon(Icons.arrow_upward),
+                          label: const Text("Withdraw"),
+                          style: ElevatedButton.styleFrom(backgroundColor: Colors.black),
                         ),
                       ],
                     ),
                   ),
+                  const SizedBox(height: 20),
+                  // 📊 Weekly & Monthly Stats
+                  Row(
+                    children: [
+                      statCard("This Week", "₦${weeklyEarned.toStringAsFixed(2)}", Colors.blue),
+                      const SizedBox(width: 12),
+                      statCard("This Month", "₦${monthlyEarned.toStringAsFixed(2)}", Colors.orange),
+                    ],
+                  ),
                   const SizedBox(height: 30),
-                  // 📊 TRANSACTION HEADER
                   const Text(
                     "Transaction History",
                     style: TextStyle(
@@ -167,14 +236,23 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  // 📊 TRANSACTION LIST
                   ...transactions.map((tx) {
+                    final color = getTransactionColor(tx['type'] ?? '');
+                    final icon = getTransactionIcon(tx['type'] ?? '');
                     return Card(
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       child: ListTile(
-                        leading: const Icon(Icons.account_balance_wallet),
-                        title: Text("₦${tx['amount']}"),
-                        subtitle: Text(tx['type'] ?? ''),
-                        trailing: Text(tx['date'] ?? ''),
+                        leading: CircleAvatar(
+                          backgroundColor: color.withOpacity(0.2),
+                          child: Icon(icon, color: color),
+                        ),
+                        title: Text(tx['type'] ?? ''),
+                        subtitle: Text(tx['date'] ?? ''),
+                        trailing: Text(
+                          "₦${tx['amount']}",
+                          style: TextStyle(fontWeight: FontWeight.bold, color: color),
+                        ),
                       ),
                     );
                   }),

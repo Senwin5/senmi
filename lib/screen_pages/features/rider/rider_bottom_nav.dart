@@ -40,6 +40,7 @@ class _RiderSettingsScreenState extends State<RiderSettingsScreen> {
     if (await canLaunchUrl(Uri.parse(url))) {
       await launchUrl(Uri.parse(url));
     } else {
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Could not open WhatsApp")),
       );
