@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../registration/auth/login.dart';
-import '../../registration/auth/signup.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -11,7 +11,6 @@ class OnboardingScreen extends StatefulWidget {
 
 class _OnboardingScreenState extends State<OnboardingScreen>
     with SingleTickerProviderStateMixin {
-
   final PageController _controller = PageController();
   int currentPage = 0;
 
@@ -40,6 +39,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   void initState() {
     super.initState();
 
+    // Animation for images
     _animController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
@@ -74,7 +74,20 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
+    } else {
+      _completeOnboarding();
     }
+  }
+
+  // ✅ Mark onboarding as completed
+  Future<void> _completeOnboarding() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('onboarding_completed', true);
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+    );
   }
 
   @override
@@ -88,14 +101,10 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-
       body: Stack(
         children: [
-
           Column(
             children: [
-
-              // 🔵 PAGES
               Expanded(
                 child: PageView.builder(
                   controller: _controller,
@@ -109,8 +118,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-
-                          // ✅ ANIMATED IMAGE
                           AnimatedBuilder(
                             animation: _animation,
                             builder: (context, child) {
@@ -124,9 +131,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                               height: 180,
                             ),
                           ),
-
                           const SizedBox(height: 40),
-
                           Text(
                             pages[index]['title']!,
                             style: const TextStyle(
@@ -135,9 +140,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                               color: Color(0xFF5F5FFF),
                             ),
                           ),
-
                           const SizedBox(height: 15),
-
                           Text(
                             pages[index]['desc']!,
                             textAlign: TextAlign.center,
@@ -152,8 +155,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   },
                 ),
               ),
-
-              // 🔘 INDICATOR
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(
@@ -171,74 +172,28 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   ),
                 ),
               ),
-
               const SizedBox(height: 20),
-
-              // 👉 BUTTON AREA
               Padding(
                 padding: const EdgeInsets.all(20),
-                child: currentPage == pages.length - 1
-
-                    // ✅ LAST PAGE (LOGIN / SIGNUP)
-                    ? Column(
-                        children: [
-
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF5F5FFF),
-                                padding: const EdgeInsets.all(16),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (_) => const LoginScreen()),
-                                );
-                              },
-                              child: const Text("Login"),
-                            ),
-                          ),
-
-                          const SizedBox(height: 10),
-
-                          TextButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (_) => const RegisterScreen()),
-                              );
-                            },
-                            child: const Text("Create an account"),
-                          ),
-                        ],
-                      )
-
-                    // 👉 OTHER PAGES
-                    : SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF5F5FFF),
-                            padding: const EdgeInsets.all(16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          onPressed: nextPage,
-                          child: const Text("Next"),
-                        ),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF5F5FFF),
+                      padding: const EdgeInsets.all(16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
+                    ),
+                    onPressed: nextPage,
+                    child: Text(
+                      currentPage == pages.length - 1 ? "Get Started" : "Next",
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
-
-          // ✅ SKIP BUTTON
           Positioned(
             top: 50,
             right: 20,

@@ -246,7 +246,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const Text(
-                        "Senmi 🚚",
+                        "SenMi 🚚",
                         style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 16),

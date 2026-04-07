@@ -132,7 +132,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const Text(
-                        "Senmi 🚚",
+                        "SenMi 🚚",
                         style: TextStyle(
                           fontSize: 34,
                           fontWeight: FontWeight.bold,
