@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:senmi/screen_pages/features/rider/wallet_screen.dart';
 import '../../../services/api_service.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class RiderHome extends StatefulWidget {
   const RiderHome({super.key});
@@ -43,18 +45,14 @@ class _RiderHomeState extends State<RiderHome> {
 
       setState(() {
         packages = packageData;
-        walletBalance = walletData['balance'] ?? 0.0;
-
+        walletBalance = walletData['balance']?.toDouble() ?? 0.0;
         totalEarnings = (earningsData['total_earnings'] ?? 0).toDouble();
-
         totalDeliveries = earningsData['total_deliveries'] ?? 0;
-
         riderName = (username != null && username.toString().trim().isNotEmpty)
             ? username
             : (fullName != null && fullName.toString().trim().isNotEmpty)
             ? fullName
             : riderName;
-
         loading = false;
       });
     } catch (e) {
@@ -81,7 +79,31 @@ class _RiderHomeState extends State<RiderHome> {
     setState(() {
       isOnline = value;
     });
-    // You can also send this status to backend if needed
+  }
+
+  // 🔹 Navigate to Wallet and refresh after withdrawal
+  Future<void> openWallet() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const RiderWalletScreen()),
+    );
+    // Auto-refresh wallet balance after returning
+    await loadData();
+  }
+
+  // 🔹 Navigate to History and refresh on return
+  Future<void> openHistory() async {
+    // Replace this with actual history screen later
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => Scaffold(
+          appBar: AppBar(title: const Text("History")),
+          body: const Center(child: Text("History Screen Placeholder")),
+        ),
+      ),
+    );
+    await loadData();
   }
 
   @override
@@ -95,14 +117,14 @@ class _RiderHomeState extends State<RiderHome> {
           "Dashboard",
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.purple, // dark mode already purple
+        backgroundColor: Colors.purple,
         elevation: 0,
         actions: [
           Row(
             children: [
               Text(
                 isOnline ? "Online" : "Offline",
-                style: const TextStyle(color: Colors.white), // force white
+                style: const TextStyle(color: Colors.white),
               ),
               Switch(
                 value: isOnline,
@@ -116,32 +138,7 @@ class _RiderHomeState extends State<RiderHome> {
           ),
         ],
       ),
-      floatingActionButton: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          FloatingActionButton(
-            heroTag: "walletBtn",
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Navigate to Wallet")),
-              );
-            },
-            backgroundColor: Colors.purple,
-            child: const Icon(Icons.account_balance_wallet),
-          ),
-          const SizedBox(height: 12),
-          FloatingActionButton(
-            heroTag: "historyBtn",
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Navigate to History")),
-              );
-            },
-            backgroundColor: Colors.green,
-            child: const Icon(Icons.history),
-          ),
-        ],
-      ),
+    
       body: loading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
@@ -167,6 +164,8 @@ class _RiderHomeState extends State<RiderHome> {
                     _buildStatsRow(isDark),
                     const SizedBox(height: 20),
                     _buildWalletCard(isDark),
+                    const SizedBox(height: 20),
+                    _buildTotalEarningsCard(isDark),
                     const SizedBox(height: 25),
                     _buildAvailableDeliveries(isDark),
                   ],
@@ -177,10 +176,13 @@ class _RiderHomeState extends State<RiderHome> {
   }
 
   Row _buildStatsRow(bool isDark) {
+    for (var p in packages) {
+      (p['net_earning'] ?? (p['price'] ?? 0)).toDouble();
+    }
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        // Deliveries card
         Expanded(
           child: Container(
             decoration: BoxDecoration(
@@ -219,51 +221,50 @@ class _RiderHomeState extends State<RiderHome> {
           ),
         ),
         const SizedBox(width: 12),
-        // Earnings card
         Expanded(
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Colors.green, Colors.green],
-              ),
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: const [
-                BoxShadow(
-                  color: Colors.black26,
-                  blurRadius: 6,
-                  offset: Offset(0, 3),
+          child: GestureDetector(
+            onTap: openWallet,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Colors.green, Colors.green],
                 ),
-              ],
-            ),
-            padding: const EdgeInsets.symmetric(vertical: 20),
-            child: Column(
-              children: [
-                // Replace the dollar icon with Naira text
-                Container(
-                  width: 30,
-                  height: 30,
-                  alignment: Alignment.center,
-                  child: const Text(
-                    '₦',
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.black26,
+                    blurRadius: 6,
+                    offset: Offset(0, 3),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              child: Column(
+                children: [
+                  const Text(
+                    "₦",
                     style: TextStyle(
                       fontSize: 24,
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                const Text("Earnings", style: TextStyle(color: Colors.white70)),
-                const SizedBox(height: 4),
-                Text(
-                  "₦${totalEarnings.toStringAsFixed(2)}",
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                    color: Colors.white,
+                  const SizedBox(height: 8),
+                  const Text(
+                    "Earnings",
+                    style: TextStyle(color: Colors.white70),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 4),
+                  Text(
+                    "₦${walletBalance.toStringAsFixed(2)}",
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -289,6 +290,65 @@ class _RiderHomeState extends State<RiderHome> {
         trailing: Text(
           "₦${walletBalance.toStringAsFixed(2)}",
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        ),
+        onTap: openWallet, // 🔹 tap to open wallet
+      ),
+    );
+  }
+
+  Card _buildTotalEarningsCard(bool isDark) {
+    double totalPackageEarnings = 0.0;
+    for (var p in packages) {
+      totalPackageEarnings += (p['net_earning'] ?? (p['price'] ?? 0))
+          .toDouble();
+    }
+
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 4,
+      color: isDark ? Colors.deepPurple[700] : Colors.purple,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isDark ? Colors.deepPurple[900] : Colors.purple,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const FaIcon(
+                FontAwesomeIcons.nairaSign,
+                color: Colors.white,
+                size: 28,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Total Earnings from Packages",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: Colors.white70,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    "₦${totalPackageEarnings.toStringAsFixed(2)}",
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 24,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -323,6 +383,9 @@ class _RiderHomeState extends State<RiderHome> {
                 itemBuilder: (context, index) {
                   final p = packages[index];
                   final highPay = (p['price'] ?? 0) > 5000;
+                  final riderEarning = (p['net_earning'] ?? p['price'] ?? 0)
+                      .toDouble();
+
                   return Card(
                     elevation: 4,
                     shape: RoundedRectangleBorder(
@@ -368,6 +431,13 @@ class _RiderHomeState extends State<RiderHome> {
                             "Price: ₦${p['price'] ?? 0}",
                             style: TextStyle(
                               color: isDark ? Colors.white60 : Colors.black54,
+                            ),
+                          ),
+                          Text(
+                            "You Earn: ₦${riderEarning.toStringAsFixed(2)}",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.greenAccent : Colors.green,
                             ),
                           ),
                           Text(

@@ -13,6 +13,7 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
   double totalEarned = 0;
   double weeklyEarned = 0;
   double monthlyEarned = 0;
+  double estimatedCommission = 0;
   List transactions = [];
   bool loading = true;
   bool showBalance = true;
@@ -29,19 +30,25 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
       final wallet = await ApiService.getWallet();
       final tx = await ApiService.getTransactions();
 
+      // Dynamic commission: use backend value or calculate dynamically
+      double commission =
+          wallet['commission']?.toDouble() ??
+          (wallet['total_earned']?.toDouble() ?? 0) * 0.05;
+
       setState(() {
-        balance = wallet['balance'] ?? 0;
-        totalEarned = wallet['total_earned'] ?? 0;
-        weeklyEarned = wallet['weekly_earned'] ?? 0;
-        monthlyEarned = wallet['monthly_earned'] ?? 0;
+        balance = wallet['balance']?.toDouble() ?? 0;
+        totalEarned = wallet['total_earned']?.toDouble() ?? 0;
+        weeklyEarned = wallet['weekly_earned']?.toDouble() ?? 0;
+        monthlyEarned = wallet['monthly_earned']?.toDouble() ?? 0;
+        estimatedCommission = commission;
         transactions = tx;
         loading = false;
       });
     } catch (e) {
       setState(() => loading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to load wallet: $e")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Failed to load wallet: $e")));
     }
   }
 
@@ -96,7 +103,13 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
     );
   }
 
-  Widget statCard(String title, String amount, Color color, BuildContext context) {
+  Widget statCard(
+    String title,
+    double amount,
+    double commission,
+    Color color,
+    BuildContext context,
+  ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Expanded(
@@ -117,11 +130,19 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              amount,
+              "₦${amount.toStringAsFixed(2)}",
               style: TextStyle(
                 color: isDark ? Colors.white : color,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              "Commission: ₦${commission.toStringAsFixed(2)}",
+              style: TextStyle(
+                color: isDark ? Colors.white60 : Colors.black54,
+                fontSize: 12,
               ),
             ),
           ],
@@ -131,19 +152,17 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
   }
 
   Color getTransactionColor(String type) {
-    if (type.toLowerCase().contains("withdraw") || type.toLowerCase().contains("payment sent")) {
-      return Colors.red;
-    } else {
-      return Colors.green;
-    }
+    return type.toLowerCase().contains("withdraw") ||
+            type.toLowerCase().contains("payment sent")
+        ? Colors.red
+        : Colors.green;
   }
 
   IconData getTransactionIcon(String type) {
-    if (type.toLowerCase().contains("withdraw") || type.toLowerCase().contains("payment sent")) {
-      return Icons.arrow_upward;
-    } else {
-      return Icons.arrow_downward;
-    }
+    return type.toLowerCase().contains("withdraw") ||
+            type.toLowerCase().contains("payment sent")
+        ? Icons.arrow_upward
+        : Icons.arrow_downward;
   }
 
   @override
@@ -154,10 +173,7 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
       appBar: AppBar(
         title: const Text("Wallet"),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: fetchWallet,
-          ),
+          IconButton(icon: const Icon(Icons.refresh), onPressed: fetchWallet),
         ],
       ),
       body: loading
@@ -173,8 +189,6 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
                         colors: [Colors.purple, Colors.purple],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: const [
@@ -190,14 +204,18 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                       children: [
                         Text(
                           "Available Balance",
-                          style: TextStyle(color: isDark ? Colors.white70 : Colors.white70),
+                          style: TextStyle(
+                            color: isDark ? Colors.white70 : Colors.white70,
+                          ),
                         ),
                         const SizedBox(height: 10),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              showBalance ? "₦${balance.toStringAsFixed(2)}" : "****",
+                              showBalance
+                                  ? "₦${balance.toStringAsFixed(2)}"
+                                  : "****",
                               style: const TextStyle(
                                 fontSize: 28,
                                 color: Colors.white,
@@ -206,24 +224,39 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                             ),
                             IconButton(
                               icon: Icon(
-                                showBalance ? Icons.visibility : Icons.visibility_off,
+                                showBalance
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
                                 color: Colors.white,
                               ),
-                              onPressed: () => setState(() => showBalance = !showBalance),
-                            )
+                              onPressed: () =>
+                                  setState(() => showBalance = !showBalance),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 10),
                         Text(
                           "Total Earned: ₦${totalEarned.toStringAsFixed(2)}",
-                          style: TextStyle(color: isDark ? Colors.white70 : Colors.white70),
+                          style: TextStyle(
+                            color: isDark ? Colors.white70 : Colors.white70,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          "Estimated Commission: ₦${estimatedCommission.toStringAsFixed(2)}",
+                          style: TextStyle(
+                            color: isDark ? Colors.white70 : Colors.white70,
+                            fontStyle: FontStyle.italic,
+                          ),
                         ),
                         const SizedBox(height: 20),
                         ElevatedButton.icon(
                           onPressed: withdraw,
                           icon: const Icon(Icons.arrow_upward),
                           label: const Text("Withdraw"),
-                          style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                          ),
                         ),
                       ],
                     ),
@@ -232,9 +265,21 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                   // 📊 Weekly & Monthly Stats
                   Row(
                     children: [
-                      statCard("This Week", "₦${weeklyEarned.toStringAsFixed(2)}", Colors.purple, context),
+                      statCard(
+                        "This Week",
+                        weeklyEarned,
+                        weeklyEarned * (estimatedCommission / totalEarned),
+                        Colors.purple,
+                        context,
+                      ),
                       const SizedBox(width: 12),
-                      statCard("This Month", "₦${monthlyEarned.toStringAsFixed(2)}", Colors.green, context),
+                      statCard(
+                        "This Month",
+                        monthlyEarned,
+                        monthlyEarned * (estimatedCommission / totalEarned),
+                        Colors.green,
+                        context,
+                      ),
                     ],
                   ),
                   const SizedBox(height: 30),
@@ -252,7 +297,9 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                     final icon = getTransactionIcon(tx['type'] ?? '');
                     return Card(
                       elevation: 2,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                       color: isDark ? Colors.grey[900] : Colors.white,
                       child: ListTile(
                         leading: CircleAvatar(
@@ -261,15 +308,22 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                         ),
                         title: Text(
                           tx['type'] ?? '',
-                          style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+                          style: TextStyle(
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
                         ),
                         subtitle: Text(
                           tx['date'] ?? '',
-                          style: TextStyle(color: isDark ? Colors.white60 : Colors.black54),
+                          style: TextStyle(
+                            color: isDark ? Colors.white60 : Colors.black54,
+                          ),
                         ),
                         trailing: Text(
                           "₦${tx['amount']}",
-                          style: TextStyle(fontWeight: FontWeight.bold, color: color),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: color,
+                          ),
                         ),
                       ),
                     );
