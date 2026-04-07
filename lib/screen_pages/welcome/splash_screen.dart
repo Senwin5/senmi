@@ -47,9 +47,10 @@ class _SplashScreenState extends State<SplashScreen>
       vsync: this,
     )..forward();
 
-    _animation = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
-    );
+    _animation = Tween<double>(
+      begin: 0.8,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
   }
 
   void _startSplashTimer() {
@@ -104,21 +105,12 @@ class _SplashScreenState extends State<SplashScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               Image.asset(
-                'assets/splash/logo2.png',
+                'assets/splash/logo.png',
                 height: 120,
                 fit: BoxFit.contain,
               ),
               const SizedBox(height: 20),
-              const Text(
-                'SenMi',
-                style: TextStyle(
-                  color: Colors.purple,
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.2,
-                ),
-              ),
-              const SizedBox(height: 40),
+              
               const CircularProgressIndicator(
                 valueColor: AlwaysStoppedAnimation<Color>(Colors.purple),
               ),
