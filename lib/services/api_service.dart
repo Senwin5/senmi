@@ -7,7 +7,8 @@ import 'package:flutter/foundation.dart'; // ✅ For ValueNotifier
 
 class ApiService {
   // 🔥 CHANGE THIS
-  static const String baseUrl = "http://10.0.2.2:8001/api";
+  //static const String baseUrl = "http://10.0.2.2:8001/api";
+  static const String baseUrl = "http://192.168.8.254:8001/api";
 
   static String? token;
   static String? userRole; // ✅ MOVED HERE
@@ -342,27 +343,37 @@ class ApiService {
 
   // getRiderProfile
   static Future<Map<String, dynamic>> getRiderProfile() async {
+  try {
     final response = await http.get(
       Uri.parse("$baseUrl/rider-profile/"),
       headers: await getAuthHeaders(),
     );
 
+ 
     final data = jsonDecode(response.body);
 
-    // If it's already a map
-    if (data is Map<String, dynamic>) {
-      return Map<String, dynamic>.from(data);
+    if (response.statusCode == 401) {
+
+      await logout();
+      return {};
     }
 
-    // If backend mistakenly returns list
-    if (data is List) {
-      if (data.isNotEmpty && data[0] is Map) {
-        return Map<String, dynamic>.from(data[0] as Map);
-      }
+    if (data is Map<String, dynamic>) {
+      return data;
+    }
+
+    if (data is List && data.isNotEmpty) {
+      return Map<String, dynamic>.from(data[0]);
     }
 
     return {};
+  } catch (e) {
+    print("❌ ERROR: $e");
+    return {};
   }
+}
+
+
 
   // ================================
   // Rider Profile Update (Static)

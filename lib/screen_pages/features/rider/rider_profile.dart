@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:senmi/services/api_service.dart';
+import '../../../services/api_service.dart';
 import '../../../registration/auth/login.dart';
-// <-- you'll need a ChangePasswordScreen
 import 'package:senmi/widgets/custom_buttom.dart';
 
+/// Standalone Rider Profile Screen
 class RiderProfileScreen extends StatefulWidget {
   const RiderProfileScreen({super.key});
 
@@ -12,27 +12,34 @@ class RiderProfileScreen extends StatefulWidget {
 }
 
 class _RiderProfileScreenState extends State<RiderProfileScreen> {
-  Map<String, dynamic> rider = {};
+  Map<String, dynamic>? rider;
   bool loading = true;
 
   @override
   void initState() {
     super.initState();
-    loadProfile();
+    fetchProfile();
   }
 
-  Future<void> loadProfile() async {
+  Future<void> fetchProfile() async {
     setState(() => loading = true);
-    final data = await ApiService.getRiderProfile();
-
-    setState(() {
-      rider = data;
-      loading = false;
-    });
+    try {
+      final data = await ApiService.getRiderProfile();
+      setState(() {
+        rider = data;
+        loading = false;
+      });
+    } catch (e) {
+      setState(() => loading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to load profile: $e")),
+        );
+      }
+    }
   }
 
-  /// Logout
-  Future<void> logout() async {
+  void logout() async {
     await ApiService.logout();
     if (!mounted) return;
     Navigator.pushAndRemoveUntil(
@@ -42,46 +49,56 @@ class _RiderProfileScreenState extends State<RiderProfileScreen> {
     );
   }
 
-  /// Delete Account
   Future<void> deleteAccount() async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
         title: const Text("Confirm Delete"),
         content: const Text(
-            "Are you sure you want to delete your account? This action cannot be undone."),
+          "Are you sure you want to delete your account? This cannot be undone.",
+        ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text("Cancel")),
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Cancel"),
+          ),
           TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text(
-                "Delete",
-                style: TextStyle(color: Colors.red),
-              )),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Delete", style: TextStyle(color: Colors.red)),
+          ),
         ],
       ),
     );
 
     if (confirmed == true) {
-      final deleted = await ApiService.deleteUser();
-      if (deleted && mounted) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
+      try {
+        final deleted = await ApiService.deleteUser();
+        if (deleted && mounted) {
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (_) => const LoginScreen()),
             (route) => false,
           );
-        });
-      } else {
+        }
+      } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Failed to delete account")),
+            SnackBar(content: Text("Failed to delete account: $e")),
           );
         }
       }
     }
+  }
+
+  Widget _infoTile(String title, String value, {IconData? icon}) {
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      child: ListTile(
+        leading: icon != null ? Icon(icon, color: Colors.blue) : null,
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        subtitle: Text(value),
+      ),
+    );
   }
 
   @override
@@ -93,104 +110,96 @@ class _RiderProfileScreenState extends State<RiderProfileScreen> {
       ),
       body: loading
           ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: loadProfile,
-              child: ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  const SizedBox(height: 20),
-
-                  // 👤 Avatar
-                  const CircleAvatar(
-                    radius: 50,
-                    backgroundColor: Colors.grey,
-                    child: Icon(Icons.person, size: 50, color: Colors.white),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  _buildInfoTile(
-                    icon: Icons.person,
-                    title: "Full Name",
-                    value: rider['full_name'] ?? '',
-                  ),
-
-                  _buildInfoTile(
-                    icon: Icons.email,
-                    title: "Email",
-                    value: rider['email'] ?? '',
-                  ),
-
-                  _buildInfoTile(
-                    icon: Icons.phone,
-                    title: "Phone",
-                    value: rider['phone_number'] ?? '',
-                  ),
-
-                  _buildInfoTile(
-                    icon: Icons.verified,
-                    title: "Status",
-                    value: rider['status'] ?? '',
-                  ),
-
-                  _buildInfoTile(
-                    icon: Icons.badge,
-                    title: "Role",
-                    value: ApiService.userRole ?? 'rider',
-                  ),
-
-                  const SizedBox(height: 30),
-
-                  // 🔐 CHANGE PASSWORD
-                  CustomButton(
-                    text: "Change Password",
-                    onPressed: () {
-                     
-                      // Navigator.push(context, MaterialPageRoute(builder: (_) => ChangePasswordScreen()));
-                    },
-                    fullWidth: true,
+          : rider == null
+              ? const Center(child: Text("Failed to load profile"))
+              : RefreshIndicator(
+                  onRefresh: fetchProfile,
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.all(16),
-                    color: Colors.blue,
+                    child: Column(
+                      children: [
+                        CircleAvatar(
+                          radius: 50,
+                          backgroundColor: Colors.grey.shade300,
+                          backgroundImage: rider?['profile_picture'] != null
+                              ? NetworkImage(
+                                  "http://192.168.8.254:8001${rider!['profile_picture']}",
+                                )
+                              : null,
+                          child: rider?['profile_picture'] == null
+                              ? Text(
+                                  rider?['username'] != null &&
+                                          rider!['username'].isNotEmpty
+                                      ? rider!['username'][0].toUpperCase()
+                                      : "R",
+                                  style: const TextStyle(
+                                    fontSize: 40,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : null,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          rider?['username'] ?? "Rider",
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          rider?['email'] ?? "",
+                          style: const TextStyle(color: Colors.black54),
+                        ),
+                        const SizedBox(height: 24),
+
+                        _infoTile("Full Name", rider?['full_name'] ?? "",
+                            icon: Icons.person),
+                        _infoTile("Email", rider?['email'] ?? "",
+                            icon: Icons.email),
+                        _infoTile("Phone", rider?['phone_number'] ?? "",
+                            icon: Icons.phone),
+                        _infoTile("Vehicle Number", rider?['vehicle_number'] ?? "",
+                            icon: Icons.directions_car),
+                        _infoTile("Address", rider?['address'] ?? "",
+                            icon: Icons.location_on),
+                        _infoTile("City", rider?['city'] ?? "",
+                            icon: Icons.location_city),
+                        _infoTile("Status", rider?['status'] ?? "",
+                            icon: Icons.verified),
+
+                        const SizedBox(height: 24),
+
+                        CustomButton(
+                          text: "Change Password",
+                          onPressed: () {},
+                          fullWidth: true,
+                          padding: const EdgeInsets.all(16),
+                          color: Colors.blue,
+                        ),
+                        const SizedBox(height: 12),
+                        CustomButton(
+                          text: "Logout",
+                          onPressed: logout,
+                          fullWidth: true,
+                          padding: const EdgeInsets.all(16),
+                          color: Colors.red,
+                        ),
+                        const SizedBox(height: 12),
+                        CustomButton(
+                          text: "Delete Account",
+                          onPressed: deleteAccount,
+                          fullWidth: true,
+                          padding: const EdgeInsets.all(16),
+                          color: Colors.red,
+                        ),
+                      ],
+                    ),
                   ),
-
-                  const SizedBox(height: 12),
-
-                  // 🔴 LOGOUT
-                  CustomButton(
-                    text: "Logout",
-                    onPressed: logout,
-                    fullWidth: true,
-                    padding: const EdgeInsets.all(16),
-                    color: Colors.red,
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // ❌ DELETE ACCOUNT
-                  CustomButton(
-                    text: "Delete Account",
-                    onPressed: deleteAccount,
-                    fullWidth: true,
-                    padding: const EdgeInsets.all(16),
-                    color: Colors.red,
-                  ),
-                ],
-              ),
-            ),
-    );
-  }
-
-  Widget _buildInfoTile({
-    required IconData icon,
-    required String title,
-    required String value,
-  }) {
-    return Card(
-      child: ListTile(
-        leading: Icon(icon),
-        title: Text(title),
-        subtitle: Text(value),
-      ),
+                ),
     );
   }
 }
