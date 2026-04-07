@@ -613,4 +613,6 @@ class ApiService {
   static Future<dynamic> getPackage(String packageId) async {}
 
   static Future<dynamic> getUserPackages() async {}
+
+  static Future<dynamic> getCustomerProfile() async {}
 }

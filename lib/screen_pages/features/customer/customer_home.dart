@@ -12,11 +12,21 @@ class CustomerHome extends StatefulWidget {
 
 class _CustomerHomeState extends State<CustomerHome> {
   List packages = [];
+  String username = "User"; // default
 
   @override
   void initState() {
     super.initState();
+    loadUsername();
     loadPackages();
+  }
+
+  // Load username from ApiService
+  void loadUsername() async {
+    await ApiService.loadToken(); // ensures token & username are loaded
+    setState(() {
+      username = ApiService.username ?? "User";
+    });
   }
 
   // 📦 LOAD PACKAGES
@@ -30,7 +40,7 @@ class _CustomerHomeState extends State<CustomerHome> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBody: true, // ensures bottom area matches body
+      extendBody: true,
       backgroundColor: Colors.grey.shade100,
 
       body: SafeArea(
@@ -51,25 +61,23 @@ class _CustomerHomeState extends State<CustomerHome> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    "Welcome 👋",
-                    style: TextStyle(
+                  Text(
+                    "Hi $username", // 
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 18,
                     ),
                   ),
                   const SizedBox(height: 5),
                   const Text(
-                    "Send & Track Packages",
+                    "Track Packages",
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 22,
+                      fontSize: 21,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-
                   const SizedBox(height: 20),
-
                   // 🔍 SEARCH BAR
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -85,9 +93,7 @@ class _CustomerHomeState extends State<CustomerHome> {
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 20),
-
                   Center(
                     child: Image.asset(
                       "assets/images/delivery.png",
@@ -105,7 +111,6 @@ class _CustomerHomeState extends State<CustomerHome> {
               child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 children: [
-                  // 🚚 ORDER DELIVERY
                   _card(
                     icon: Icons.local_shipping,
                     title: "Order a delivery",
@@ -120,8 +125,6 @@ class _CustomerHomeState extends State<CustomerHome> {
                       ).then((_) => loadPackages());
                     },
                   ),
-
-                  // 📍 TRACK DELIVERY
                   _card(
                     icon: Icons.location_on,
                     title: "Track a delivery",
@@ -139,8 +142,6 @@ class _CustomerHomeState extends State<CustomerHome> {
                       }
                     },
                   ),
-
-                  // 📜 HISTORY
                   _card(
                     icon: Icons.history,
                     title: "Check delivery history",
@@ -148,10 +149,7 @@ class _CustomerHomeState extends State<CustomerHome> {
                         "Check your delivery history anytime to stay organized.",
                     onTap: () {},
                   ),
-
                   const SizedBox(height: 10),
-
-                  // 🔴 YOUR ORIGINAL PACKAGE LIST
                   ...packages.map((p) {
                     return Container(
                       margin: const EdgeInsets.only(bottom: 12),
@@ -200,7 +198,6 @@ class _CustomerHomeState extends State<CustomerHome> {
         ),
       ),
 
-      // ➕ FLOATING BUTTON
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color(0xFF5F5FFF),
         elevation: 6,
@@ -213,7 +210,6 @@ class _CustomerHomeState extends State<CustomerHome> {
         },
       ),
 
-      // 🟢 FIX BLACK BOTTOM AREA
       bottomNavigationBar: Container(
         height: MediaQuery.of(context).padding.bottom,
         color: Colors.grey.shade100,
@@ -221,7 +217,6 @@ class _CustomerHomeState extends State<CustomerHome> {
     );
   }
 
-  // 🔹 CARD UI
   Widget _card({
     required IconData icon,
     required String title,
@@ -240,7 +235,6 @@ class _CustomerHomeState extends State<CustomerHome> {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                // ignore: deprecated_member_use
                 color: Colors.black.withOpacity(0.05),
                 blurRadius: 10,
                 spreadRadius: 2,
@@ -285,8 +279,7 @@ class _CustomerHomeState extends State<CustomerHome> {
                   ],
                 ),
               ),
-              const Icon(Icons.arrow_forward_ios,
-                  size: 16, color: Colors.grey),
+              const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
             ],
           ),
         ),
