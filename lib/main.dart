@@ -28,9 +28,9 @@ class MyApp extends StatelessWidget {
           if (ApiService.isAdmin) {
             homeScreen = const AdminDashboard(); // Admin dashboard
           } else if (ApiService.userRole == "rider") {
-            homeScreen = const RiderBottomNav(); // Rider home
+            homeScreen = const RiderBottomNav(); // Rider 
           } else {
-            homeScreen = const CustomerBottomNav(); // Customer home
+            homeScreen = const CustomerBottomNav(); // Customer 
           }
         } else {
           homeScreen = const LoginScreen(); // Not logged in → show login
