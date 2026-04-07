@@ -39,6 +39,7 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
       });
     } catch (e) {
       setState(() => loading = false);
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Failed to load wallet: $e")),
       );

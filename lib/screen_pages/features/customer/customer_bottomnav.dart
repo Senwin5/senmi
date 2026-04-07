@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'customer_home.dart';
 import 'create_package_screen.dart';
 import 'customer_history_screen.dart';
-import 'profile_screen.dart';
+import 'package:senmi/screen_pages/features/customer/profile_screen.dart';
 import 'package:senmi/screen_pages/features/customer/track_package.dart';
 
 /// Customer Bottom Navigation
@@ -16,21 +16,24 @@ class CustomerBottomNav extends StatefulWidget {
 class _CustomerBottomNavState extends State<CustomerBottomNav> {
   int _currentIndex = 0;
 
+  // Dark mode notifier for customer profile screen
+  final ValueNotifier<bool> darkModeNotifier = ValueNotifier<bool>(false);
+
   // Example packageId for the tracking tab
   final String lastPackageId = "sample-package-id";
 
-  final List<Widget> _screens = [];
+  late final List<Widget> _screens;
 
   @override
   void initState() {
     super.initState();
-    _screens.addAll([
+    _screens = [
       CustomerHome(),
       const CreatePackageScreen(),
       const HistoryScreen(),
       TrackingScreen(packageId: lastPackageId),
-      const ProfileScreen(),
-    ]);
+      CustomerProfileScreen(darkModeNotifier: darkModeNotifier),
+    ];
   }
 
   final List<BottomNavigationBarItem> _navItems = const [
@@ -43,18 +46,29 @@ class _CustomerBottomNavState extends State<CustomerBottomNav> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: _screens[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        items: _navItems,
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white, // ✅ Fix black background
-        elevation: 8, // Optional: adds shadow
-        selectedItemColor: Colors.blue,
-        unselectedItemColor: Colors.black54,
-        onTap: (index) => setState(() => _currentIndex = index),
-      ),
+    return ValueListenableBuilder<bool>(
+      valueListenable: darkModeNotifier,
+      builder: (context, isDark, _) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData.light(),
+          darkTheme: ThemeData.dark(),
+          themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
+          home: Scaffold(
+            body: _screens[_currentIndex],
+            bottomNavigationBar: BottomNavigationBar(
+              currentIndex: _currentIndex,
+              items: _navItems,
+              type: BottomNavigationBarType.fixed,
+              backgroundColor: Colors.white,
+              elevation: 8,
+              selectedItemColor: Colors.blue,
+              unselectedItemColor: Colors.black54,
+              onTap: (index) => setState(() => _currentIndex = index),
+            ),
+          ),
+        );
+      },
     );
   }
 }

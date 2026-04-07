@@ -5,7 +5,6 @@ import 'package:senmi/screen_pages/features/rider/rider_home.dart';
 import 'package:senmi/screen_pages/features/rider/wallet_screen.dart';
 import '../../../services/api_service.dart';
 import '../../../registration/auth/login.dart';
-import 'package:senmi/widgets/custom_buttom.dart';
 import 'package:senmi/screen_pages/features/rider/rider_profile.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -137,13 +136,7 @@ class _RiderSettingsScreenState extends State<RiderSettingsScreen> {
 
                 const SizedBox(height: 16),
 
-                CustomButton(
-                  text: "Logout",
-                  onPressed: logout,
-                  fullWidth: true,
-                  padding: const EdgeInsets.all(16),
-                  color: Colors.red,
-                ),
+                
               ],
             ),
     );
