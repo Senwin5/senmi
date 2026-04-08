@@ -47,6 +47,7 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
     } catch (e) {
       setState(() => loading = false);
       ScaffoldMessenger.of(
+        // ignore: use_build_context_synchronously
         context,
       ).showSnackBar(SnackBar(content: Text("Failed to load wallet: $e")));
     }
@@ -87,10 +88,12 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                   bankCode: '058',
                 );
                 fetchWallet();
+                // ignore: use_build_context_synchronously
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text("Withdrawal successful")),
                 );
               } catch (e) {
+                // ignore: use_build_context_synchronously
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text("Withdrawal failed: $e")),
                 );
@@ -116,6 +119,7 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
+          // ignore: deprecated_member_use
           color: isDark ? color.withOpacity(0.2) : color.withOpacity(0.1),
           borderRadius: BorderRadius.circular(15),
         ),
@@ -303,6 +307,7 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                       color: isDark ? Colors.grey[900] : Colors.white,
                       child: ListTile(
                         leading: CircleAvatar(
+                          // ignore: deprecated_member_use
                           backgroundColor: color.withOpacity(0.2),
                           child: Icon(icon, color: color),
                         ),
@@ -327,7 +332,7 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                         ),
                       ),
                     );
-                  }).toList(),
+                  }),
                 ],
               ),
             ),

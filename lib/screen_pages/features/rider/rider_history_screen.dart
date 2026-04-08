@@ -109,6 +109,7 @@ class _RiderHistoryScreenState extends State<RiderHistoryScreen> {
                           margin: const EdgeInsets.symmetric(vertical: 6),
                           child: ListTile(
                             leading: CircleAvatar(
+                              // ignore: deprecated_member_use
                               backgroundColor: color.withOpacity(0.2),
                               child: Icon(icon, color: color),
                             ),

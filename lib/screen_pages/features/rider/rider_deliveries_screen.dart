@@ -69,12 +69,14 @@ class _RiderDeliveriesScreenState extends State<RiderDeliveriesScreen>
     try {
       final success = await ApiService.acceptPackage(packageId);
       if (success) {
+        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Package accepted successfully")),
         );
         await fetchAvailablePackages();
         await fetchMyPackages();
       } else {
+        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Failed to accept package")),
         );
@@ -83,6 +85,7 @@ class _RiderDeliveriesScreenState extends State<RiderDeliveriesScreen>
     } catch (e) {
       setState(() => loadingAvailable = false);
       ScaffoldMessenger.of(
+        // ignore: use_build_context_synchronously
         context,
       ).showSnackBar(SnackBar(content: Text("Error accepting package: $e")));
     }
@@ -155,6 +158,7 @@ class _RiderDeliveriesScreenState extends State<RiderDeliveriesScreen>
           margin: const EdgeInsets.symmetric(vertical: 6),
           child: ListTile(
             leading: CircleAvatar(
+              // ignore: deprecated_member_use
               backgroundColor: Colors.purple.withOpacity(0.2),
               child: const Icon(Icons.local_shipping, color: Colors.purple),
             ),
@@ -172,10 +176,10 @@ class _RiderDeliveriesScreenState extends State<RiderDeliveriesScreen>
             trailing: canAccept
                 ? ElevatedButton(
                     onPressed: () => acceptPackage(pkg['id']),
-                    child: const Text("Accept"),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.purple,
                     ),
+                    child: const Text("Accept"),
                   )
                 : Container(
                     padding: const EdgeInsets.symmetric(
@@ -183,6 +187,7 @@ class _RiderDeliveriesScreenState extends State<RiderDeliveriesScreen>
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
+                      // ignore: deprecated_member_use
                       color: statusColor.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),

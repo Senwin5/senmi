@@ -16,25 +16,35 @@ class _TrackPackageScreenState extends State<TrackPackageScreen> {
 
   double lat = 0;
   double lng = 0;
+  String status = ""; // ✅ NEW
 
   @override
   void initState() {
     super.initState();
 
-    // 🔌 CONNECT TO WEBSOCKET
+    // 🔌 CONNECT TO WEBSOCKET (✅ FIXED URL WITH YOUR IP + PORT)
     channel = WebSocketChannel.connect(
-      Uri.parse('ws://yourdomain/ws/tracking/${widget.packageId}/'),
+      Uri.parse('ws://192.168.1.129:8001/ws/tracking/${widget.packageId}/'),
     );
 
-    // 📡 LISTEN FOR LIVE LOCATION
-    channel.stream.listen((data) {
-      final parsed = jsonDecode(data);
+    // 📡 LISTEN FOR LIVE LOCATION + STATUS
+    channel.stream.listen(
+      (data) {
+        final parsed = jsonDecode(data);
 
-      setState(() {
-        lat = parsed['lat'];
-        lng = parsed['lng'];
-      });
-    });
+        setState(() {
+          lat = parsed['lat'] ?? lat;       // ✅ SAFE UPDATE
+          lng = parsed['lng'] ?? lng;       // ✅ SAFE UPDATE
+          status = parsed['status'] ?? status; // ✅ NEW
+        });
+      },
+      onError: (error) {
+        print("WebSocket error: $error");
+      },
+      onDone: () {
+        print("WebSocket closed");
+      },
+    );
   }
 
   @override
@@ -51,7 +61,7 @@ class _TrackPackageScreenState extends State<TrackPackageScreen> {
 
       body: Center(
         child: Text(
-          "📍 Lat: $lat\n📍 Lng: $lng",
+          "📍 Lat: $lat\n📍 Lng: $lng\n\n📦 Status: $status", // ✅ SHOW STATUS
           textAlign: TextAlign.center,
           style: const TextStyle(fontSize: 18),
         ),
