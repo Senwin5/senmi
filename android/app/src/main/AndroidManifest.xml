@@ -3,6 +3,9 @@
     <!-- ✅ ADD THIS -->
     <uses-permission android:name="android.permission.CAMERA"/>
 
+    <!-- ✅ ADD THIS -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
     <application
         android:label="senmi"
         android:name="${applicationName}"
@@ -33,6 +36,12 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+        <!-- ✅ ADD THIS -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="YOUR_GOOGLE_MAPS_API_KEY"/>
+
     </application>
 
     <queries>
