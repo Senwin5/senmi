@@ -159,15 +159,82 @@ class ApiService {
   // ==========================
   // 📦 CREATE PACKAGE (Customer)
   // ==========================
-  static Future<dynamic> createPackage(Map<String, dynamic> data) async {
-    final response = await http.post(
-      Uri.parse("$baseUrl/create-package/"),
-      headers: headers,
-      body: jsonEncode(data),
-    );
+  // Create a package
+  static Future<String?> createPackage(Map<String, dynamic> data) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/create-package/"), // ✅ matches your Django URL
+        headers: headers,
+        body: jsonEncode(data),
+      );
 
-    return jsonDecode(response.body);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final resData = jsonDecode(response.body);
+        // Return the package ID (assuming backend returns 'id')
+        return resData['id']?.toString();
+      } else {
+        debugPrint(
+          "Create package failed: ${response.statusCode} ${response.body}",
+        );
+        return null;
+      }
+    } catch (e) {
+      debugPrint("Error creating package: $e");
+      return null;
+    }
   }
+
+  // Fetch package by ID
+  static Future<Map<String, dynamic>?> getPackage(String packageId) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/track/$packageId/"), // ✅ matches your Django URL
+        headers: headers,
+      );
+
+      if (response.statusCode == 200) {
+        final resData = jsonDecode(response.body);
+        return resData is Map<String, dynamic> ? resData : null;
+      } else {
+        debugPrint(
+          "Get package failed: ${response.statusCode} ${response.body}",
+        );
+        return null;
+      }
+    } catch (e) {
+      debugPrint("Error fetching package: $e");
+      return null;
+    }
+  }
+
+  // Create Paystack payment link
+  static Future<String?> createPaystackPaymentLink(
+    Map<String, dynamic> data,
+  ) async {
+    try {
+      final response = await http.post(
+        Uri.parse(
+          "$baseUrl/packages/${data['package_id']}/pay/",
+        ), // ✅ matches Django InitializeReceiverPaymentView
+        headers: headers,
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode == 200) {
+        final resData = jsonDecode(response.body);
+        return resData['payment_url'];
+      } else {
+        debugPrint(
+          "Payment link creation failed: ${response.statusCode} ${response.body}",
+        );
+        return null;
+      }
+    } catch (e) {
+      debugPrint("Error creating payment link: $e");
+      return null;
+    }
+  }
+  
 
   // ==========================
   // 💳 INITIALIZE PAYMENT
@@ -238,8 +305,6 @@ class ApiService {
       return [];
     }
   }
-
-  
 
   // ==========================
   // ✅ ACCEPT PACKAGE
@@ -644,11 +709,7 @@ class ApiService {
 
   static Future<dynamic> getPaymentLink(Map<String, Object> map) async {}
 
-  static Future<dynamic> createPaystackPaymentLink(
-    Map<String, Object> map,
-  ) async {}
 
-  static Future<dynamic> getPackage(String packageId) async {}
 
   static Future<dynamic> getUserPackages() async {}
 

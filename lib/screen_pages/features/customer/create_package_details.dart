@@ -1,6 +1,9 @@
-// lib/screen_pages/features/customer/package_details_screen.dart
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
-import '../../../services/api_service.dart';
+import 'package:flutter/services.dart';
+import 'package:senmi/screen_pages/features/customer/track_package.dart';
+import 'package:senmi/services/api_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class PackageDetailsScreen extends StatefulWidget {
@@ -30,92 +33,195 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
     });
   }
 
+  // ✅ NEW: Show QR + WhatsApp
+  void _showReceiverPaymentDialog(String link, String qrCode) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Receiver Payment"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.network(qrCode, height: 150, width: 150),
+            const SizedBox(height: 10),
+            const Text("Scan QR or share link"),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              await Clipboard.setData(ClipboardData(text: link));
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Link copied")),
+              );
+            },
+            child: const Text("Copy"),
+          ),
+
+          // ✅ NEW: WhatsApp Share
+          TextButton(
+            onPressed: () async {
+              final url =
+                  "https://wa.me/?text=${Uri.encodeComponent("Pay for your delivery here: $link")}";
+              final uri = Uri.parse(url);
+              if (await canLaunchUrl(uri)) {
+                await launchUrl(uri, mode: LaunchMode.externalApplication);
+              }
+            },
+            child: const Text("WhatsApp"),
+          ),
+
+          TextButton(
+            onPressed: () async {
+              final uri = Uri.parse(link);
+              await launchUrl(uri, mode: LaunchMode.externalApplication);
+            },
+            child: const Text("Open"),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _pay(String payer) async {
     if (package == null) return;
+    double amount = package!['price']?.toDouble() ?? 0;
 
-    double amount = package!['price'] ?? 0;
     try {
-      final paymentLink = await ApiService.createPaystackPaymentLink({
+      final response = await ApiService.createPaystackPaymentLink({
         "package_id": widget.packageId,
         "amount": amount,
         "currency": "NGN",
-        "payer": payer, // "sender" or "receiver"
+        "payer": payer,
       });
 
-      if (paymentLink != null && paymentLink.isNotEmpty) {
-        final uri = Uri.parse(paymentLink);
-        if (await canLaunchUrl(uri)) {
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (response != null && response.isNotEmpty) {
+        if (payer == "receiver") {
+          // ✅ EXPECTING backend to return JSON (payment_url + qr_code)
+          final res = await ApiService.createPaystackPaymentLink({
+            "package_id": widget.packageId,
+            "amount": amount,
+            "currency": "NGN",
+            "payer": payer,
+          });
+
+          final paymentLink = res;
+          final qrCode =
+              "https://api.qrserver.com/v1/create-qr-code/?data=$paymentLink&size=200x200";
+
+          _showReceiverPaymentDialog(paymentLink!, qrCode);
         } else {
-          // ignore: use_build_context_synchronously
+          final uri = Uri.parse(response);
+          if (await canLaunchUrl(uri)) {
+            await launchUrl(uri, mode: LaunchMode.externalApplication);
+          }
+        }
+      } else {
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Could not open payment link.")));
+            const SnackBar(content: Text("Failed to get payment link")),
+          );
         }
       }
     } catch (e) {
-      // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Payment failed: $e")));
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text("Payment failed: $e")));
+      }
     }
   }
 
-  Widget _infoRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        children: [
-          Expanded(flex: 3, child: Text("$label:", style: const TextStyle(fontWeight: FontWeight.bold))),
-          Expanded(flex: 5, child: Text(value)),
-        ],
+  Widget _infoCard(String title, Map<String, String> data) {
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title,
+                style: const TextStyle(
+                    fontSize: 16, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            ...data.entries.map((e) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    children: [
+                      Expanded(
+                          flex: 3,
+                          child: Text("${e.key}:",
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold))),
+                      Expanded(flex: 5, child: Text(e.value)),
+                    ],
+                  ),
+                ))
+          ],
+        ),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    if (loading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (loading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
 
     if (package == null) {
-      return const Scaffold(
-        body: Center(child: Text("Failed to load package")),
-      );
+      return const Scaffold(body: Center(child: Text("Failed to load package")));
     }
+
+    bool paymentDone =
+        (package!['sender_paid'] ?? false) && (package!['receiver_paid'] ?? false);
 
     return Scaffold(
       appBar: AppBar(title: const Text("Package Details")),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text("Sender Info", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            _infoRow("Name", package!['sender_name'] ?? ""),
-            _infoRow("Phone", package!['sender_phone'] ?? ""),
-            const SizedBox(height: 12),
-
-            const Text("Receiver Info", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            _infoRow("Name", package!['receiver_name'] ?? ""),
-            _infoRow("Phone", package!['receiver_phone'] ?? ""),
-            const SizedBox(height: 12),
-
-            const Text("Package Info", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            _infoRow("Description", package!['description'] ?? ""),
-            _infoRow("Price", "₦${package!['price'] ?? 0}"),
-            const SizedBox(height: 12),
-
-            const Text("Locations", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            _infoRow("Pickup", package!['pickup_address'] ?? ""),
-            _infoRow("Delivery", package!['delivery_address'] ?? ""),
-            const SizedBox(height: 24),
-
+            _infoCard("Sender Info", {
+              "Name": package!['sender_name'] ?? "",
+              "Phone": package!['sender_phone'] ?? ""
+            }),
+            _infoCard("Receiver Info", {
+              "Name": package!['receiver_name'] ?? "",
+              "Phone": package!['receiver_phone'] ?? ""
+            }),
+            _infoCard("Package Info", {
+              "Description": package!['description'] ?? "",
+              "Price": "₦${package!['price'] ?? 0}"
+            }),
+            _infoCard("Locations", {
+              "Pickup": package!['pickup_address'] ?? "",
+              "Delivery": package!['delivery_address'] ?? ""
+            }),
+            const SizedBox(height: 16),
             if (!(package!['sender_paid'] ?? false))
-              ElevatedButton(
-                  onPressed: () => _pay("sender"), child: const Text("Pay as Sender")),
+              SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                      onPressed: () => _pay("sender"),
+                      child: const Text("Pay as Sender"))),
             if (!(package!['receiver_paid'] ?? false))
-              ElevatedButton(
-                  onPressed: () => _pay("receiver"), child: const Text("Pay as Receiver")),
-            if ((package!['sender_paid'] ?? false) && (package!['receiver_paid'] ?? false))
-              const Center(child: Text("Payment Completed", style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold))),
+              SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                      onPressed: () => _pay("receiver"),
+                      child: const Text("Generate Receiver Payment Link"))),
+            if (paymentDone)
+              SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                      onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) =>
+                                  TrackingScreen(packageId: widget.packageId))),
+                      child: const Text("Track Package"))),
           ],
         ),
       ),

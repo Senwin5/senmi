@@ -39,9 +39,11 @@ class _TrackPackageScreenState extends State<TrackPackageScreen> {
         });
       },
       onError: (error) {
+        // ignore: avoid_print
         print("WebSocket error: $error");
       },
       onDone: () {
+        // ignore: avoid_print
         print("WebSocket closed");
       },
     );
