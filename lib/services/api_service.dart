@@ -20,7 +20,8 @@ class ApiService {
   // ==========================
   // 🔐 HEADERS
   // ==========================
-  static Map<String, String> get headers {
+  static Future<Map<String, String>> get headers async {
+    await loadToken();
     return {
       "Content-Type": "application/json",
       if (token != null) "Authorization": "Bearer $token",
@@ -162,24 +163,24 @@ class ApiService {
   // Create a package
   static Future<String?> createPackage(Map<String, dynamic> data) async {
     try {
-      final response = await http.post(
-        Uri.parse("$baseUrl/create-package/"), // ✅ matches your Django URL
-        headers: headers,
-        body: jsonEncode(data),
-      );
+      debugPrint("🌐 API CALL STARTED");
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final resData = jsonDecode(response.body);
-        // Return the package ID (assuming backend returns 'id')
-        return resData['id']?.toString();
-      } else {
-        debugPrint(
-          "Create package failed: ${response.statusCode} ${response.body}",
-        );
-        return null;
-      }
+      final url = Uri.parse("$baseUrl/create-package/");
+
+      debugPrint("➡️ URL: $url");
+
+      final response = await http
+          .post(url, headers: await ApiService.getAuthHeaders(), body: jsonEncode(data))
+          .timeout(const Duration(seconds: 20));
+
+      debugPrint("📡 STATUS: ${response.statusCode}");
+      debugPrint("📡 BODY: ${response.body}");
+
+      final resData = jsonDecode(response.body);
+
+      return resData['package_id']?.toString();
     } catch (e) {
-      debugPrint("Error creating package: $e");
+      debugPrint("❌ API ERROR: $e");
       return null;
     }
   }
@@ -189,7 +190,7 @@ class ApiService {
     try {
       final response = await http.get(
         Uri.parse("$baseUrl/track/$packageId/"), // ✅ matches your Django URL
-        headers: headers,
+        headers: await ApiService.getAuthHeaders(),
       );
 
       if (response.statusCode == 200) {
@@ -216,7 +217,7 @@ class ApiService {
         Uri.parse(
           "$baseUrl/packages/${data['package_id']}/pay/",
         ), // ✅ matches Django InitializeReceiverPaymentView
-        headers: headers,
+        headers: await ApiService.getAuthHeaders(),
         body: jsonEncode(data),
       );
 
@@ -234,7 +235,6 @@ class ApiService {
       return null;
     }
   }
-  
 
   // ==========================
   // 💳 INITIALIZE PAYMENT
@@ -242,7 +242,7 @@ class ApiService {
   static Future<String?> initializePayment(int packageId) async {
     final response = await http.post(
       Uri.parse("$baseUrl/packages/$packageId/pay/"),
-      headers: headers,
+      headers: await ApiService.getAuthHeaders(),
     );
 
     final data = jsonDecode(response.body);
@@ -259,7 +259,7 @@ class ApiService {
   static Future<List<dynamic>> getCustomerPackages() async {
     final response = await http.get(
       Uri.parse("$baseUrl/customer/packages/"),
-      headers: headers,
+      headers: await ApiService.getAuthHeaders(),
     );
 
     return jsonDecode(response.body);
@@ -271,7 +271,7 @@ class ApiService {
   static Future<Map<String, dynamic>?> trackPackage(int packageId) async {
     final response = await http.get(
       Uri.parse("$baseUrl/packages/$packageId/track/"),
-      headers: headers,
+      headers: await ApiService.getAuthHeaders(),
     );
 
     if (response.statusCode == 200) {
@@ -289,7 +289,7 @@ class ApiService {
     try {
       final response = await http.get(
         Uri.parse("$baseUrl/packages/"),
-        headers: headers,
+        headers: await ApiService.getAuthHeaders(),
       );
 
       if (response.statusCode == 200) {
@@ -312,7 +312,7 @@ class ApiService {
   static Future<bool> acceptPackage(int packageId) async {
     final response = await http.post(
       Uri.parse("$baseUrl/packages/$packageId/accept/"),
-      headers: headers,
+      headers: await ApiService.getAuthHeaders(),
     );
 
     return response.statusCode == 200;
@@ -324,7 +324,7 @@ class ApiService {
   static Future<bool> updateStatus(int packageId, String status) async {
     final response = await http.post(
       Uri.parse("$baseUrl/packages/$packageId/update-status/"),
-      headers: headers,
+      headers: await ApiService.getAuthHeaders(),
       body: jsonEncode({"status": status}),
     );
 
@@ -341,7 +341,7 @@ class ApiService {
   ) async {
     final response = await http.post(
       Uri.parse("$baseUrl/packages/$packageId/update-location/"),
-      headers: headers,
+      headers: await ApiService.getAuthHeaders(),
       body: jsonEncode({"lat": lat, "lng": lng}),
     );
 
@@ -358,7 +358,7 @@ class ApiService {
   ) async {
     final response = await http.post(
       Uri.parse("$baseUrl/packages/$packageId/rate/"),
-      headers: headers,
+      headers: await ApiService.getAuthHeaders(),
       body: jsonEncode({"rating": rating, "comment": comment}),
     );
 
@@ -371,7 +371,7 @@ class ApiService {
   static Future<Map<String, dynamic>> getWallet() async {
     final response = await http.get(
       Uri.parse("$baseUrl/rider/wallet/"),
-      headers: headers,
+      headers: await ApiService.getAuthHeaders(),
     );
 
     final data = jsonDecode(response.body);
@@ -396,7 +396,7 @@ class ApiService {
 
     final response = await http.post(
       Uri.parse("$baseUrl/rider/wallet/withdraw/"),
-      headers: headers,
+      headers: await ApiService.getAuthHeaders(),
       body: jsonEncode({
         "amount": amount,
         "bank_account": accountNumber,
@@ -413,7 +413,7 @@ class ApiService {
   static Future<List<dynamic>> getTransactions() async {
     final response = await http.get(
       Uri.parse("$baseUrl/rider/wallet/transactions/"),
-      headers: headers,
+      headers: await ApiService.getAuthHeaders(),
     );
 
     if (response.statusCode == 200) {
@@ -431,7 +431,7 @@ class ApiService {
     try {
       final response = await http.get(
         Uri.parse("$baseUrl/rider-earnings/"), // ✅ FIXED URL
-        headers: headers,
+        headers: await ApiService.getAuthHeaders(),
       );
 
       if (response.statusCode == 200) {
@@ -627,7 +627,7 @@ class ApiService {
   static Future<Map<String, dynamic>> getRiderStatus() async {
     final res = await http.get(
       Uri.parse("$baseUrl/rider/status/"),
-      headers: headers,
+      headers: await ApiService.getAuthHeaders(),
     );
 
     return jsonDecode(res.body);
@@ -646,7 +646,7 @@ class ApiService {
         Uri.parse(
           "$baseUrl/profile/",
         ), // <-- Change if your API uses a different path
-        headers: headers, // Sends Authorization token automatically if set
+        headers: await ApiService.getAuthHeaders(), // Sends Authorization token automatically if set
       );
 
       // 3️⃣ Handle successful response
@@ -708,8 +708,6 @@ class ApiService {
   }
 
   static Future<dynamic> getPaymentLink(Map<String, Object> map) async {}
-
-
 
   static Future<dynamic> getUserPackages() async {}
 
