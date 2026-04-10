@@ -34,9 +34,6 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
     if (!_formKey.currentState!.validate()) return;
     _formKey.currentState!.save();
 
-    /// ==============================
-    /// VALIDATION: MAP SELECTION
-    /// ==============================
     if (pickupLocation == null || deliveryLocation == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -52,18 +49,15 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
 
     try {
       /// ==============================
-      /// BUILD CLEAN REQUEST PAYLOAD
+      /// ONLY BACKEND REQUIRED FIELDS
       /// ==============================
       final payload = {
-        'sender_name': senderName.trim(),
-        'sender_phone': senderPhone.trim(),
-        'receiver_name': receiverName.trim(),
-        'receiver_phone': receiverPhone.trim(),
         'description': description.trim(),
         'pickup_address': pickupAddress.trim(),
         'delivery_address': deliveryAddress.trim(),
+        'receiver_name': receiverName.trim(),
+        'receiver_phone': receiverPhone.trim(),
 
-        /// MAP COORDINATES
         'pickup_lat': pickupLocation!.latitude,
         'pickup_lng': pickupLocation!.longitude,
         'delivery_lat': deliveryLocation!.latitude,
@@ -72,19 +66,21 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
 
       debugPrint("📦 Creating package with payload: $payload");
 
-      /// ==============================
-      /// API CALL
-      /// ==============================
       final packageId = await ApiService.createPackage(payload);
+
+      debugPrint("📦 FULL RESPONSE: $packageId");
+
+      if (packageId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("❌ Package creation failed")),
+        );
+      }
 
       debugPrint("📦 Returned packageId: $packageId");
 
-      /// ==============================
-      /// SUCCESS FLOW
-      /// ==============================
       if (!mounted) return;
 
-      if (packageId != null && packageId.isNotEmpty) {
+      if (packageId != null) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -117,7 +113,6 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
     String label, {
     TextInputType type = TextInputType.text,
     Function(String?)? onSaved,
-    String? Function(String?)? validator,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -128,7 +123,6 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
           border: const OutlineInputBorder(),
         ),
         onSaved: onSaved,
-        validator: validator,
       ),
     );
   }
@@ -168,16 +162,6 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
                 key: _formKey,
                 child: Column(
                   children: [
-                    _buildTextField(
-                      "Sender Name",
-                      onSaved: (v) => senderName = v ?? '',
-                    ),
-                    _buildTextField(
-                      "Sender Phone",
-                      type: TextInputType.phone,
-                      onSaved: (v) => senderPhone = v ?? '',
-                    ),
-
                     _buildTextField(
                       "Receiver Name",
                       onSaved: (v) => receiverName = v ?? '',
@@ -228,7 +212,7 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
 }
 
 //
-// ---------------- MAP WITH SEARCH ----------------
+// ---------------- MAP PICKER ----------------
 //
 class MapPickerScreen extends StatefulWidget {
   final LatLng initialLocation;
@@ -243,9 +227,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
   GoogleMapController? mapController;
 
   final TextEditingController searchController = TextEditingController();
-
-  // 🔥 PUT YOUR GOOGLE MAPS API KEY HERE
-  final String apiKey = "AIzaSyAZQIQTDqT15t8CfFrzHh99uDJmsFs7VtA";
+  final String apiKey = "YOUR_GOOGLE_MAPS_API_KEY";
 
   @override
   void initState() {
@@ -262,13 +244,9 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
 
     if (data["status"] == "OK" && data["results"].isNotEmpty) {
       final loc = data["results"][0]["geometry"]["location"];
-
       final latLng = LatLng(loc["lat"], loc["lng"]);
 
-      setState(() {
-        selectedLocation = latLng;
-      });
-
+      setState(() => selectedLocation = latLng);
       mapController?.animateCamera(CameraUpdate.newLatLng(latLng));
     }
   }
@@ -284,12 +262,8 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
               target: selectedLocation,
               zoom: 15,
             ),
-            onMapCreated: (controller) {
-              mapController = controller;
-            },
-            onTap: (latLng) {
-              setState(() => selectedLocation = latLng);
-            },
+            onMapCreated: (controller) => mapController = controller,
+            onTap: (latLng) => setState(() => selectedLocation = latLng),
             markers: {
               Marker(
                 markerId: const MarkerId("selected"),
@@ -298,7 +272,6 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
             },
           ),
 
-          // 🔥 SEARCH BOX
           Positioned(
             top: 10,
             left: 10,
@@ -312,7 +285,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
               child: TextField(
                 controller: searchController,
                 decoration: const InputDecoration(
-                  hintText: "Search location (e.g. Ikeja, Lagos)",
+                  hintText: "Search location",
                   border: InputBorder.none,
                 ),
                 onSubmitted: searchLocation,

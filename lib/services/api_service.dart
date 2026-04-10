@@ -7,8 +7,8 @@ import 'package:flutter/foundation.dart'; // ✅ For ValueNotifier
 
 class ApiService {
   // 🔥 CHANGE THIS
-  static const String baseUrl = "http://192.168.8.252:8001/api";
-  //static const String baseUrl = "http://192.168.1.129:8001/api";
+  //static const String baseUrl = "http://192.168.8.252:8001/api";
+  static const String baseUrl = "http://192.168.1.129:8001/api";
 
   static String? token;
   static String? userRole; // ✅ MOVED HERE
@@ -83,7 +83,7 @@ class ApiService {
       token = data['access'];
       userRole = data['role'];
       username = data['username'];
-      await saveTokenAndRole(token!, userRole!, data['username']);
+      await saveTokenAndRole(token!, userRole!, data['username'] ?? '');
     }
 
     return data;
@@ -96,7 +96,9 @@ class ApiService {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
     await prefs.remove('userRole');
-    username = prefs.getString('username');
+    await prefs.remove('username');
+
+    username = null;
 
     isLoggedIn.value = false;
   }
@@ -161,29 +163,42 @@ class ApiService {
   // 📦 CREATE PACKAGE (Customer)
   // ==========================
   // Create a package
-  static Future<String?> createPackage(Map<String, dynamic> data) async {
-    try {
-      debugPrint("🌐 API CALL STARTED");
 
-      final url = Uri.parse("$baseUrl/create-package/");
 
-      debugPrint("➡️ URL: $url");
 
-      final response = await http
-          .post(url, headers: await ApiService.getAuthHeaders(), body: jsonEncode(data))
-          .timeout(const Duration(seconds: 20));
+static Future<String?> createPackage(Map<String, dynamic> data) async {
+  try {
+    final url = Uri.parse("$baseUrl/create-package/");
 
-      debugPrint("📡 STATUS: ${response.statusCode}");
-      debugPrint("📡 BODY: ${response.body}");
+    final response = await http.post(
+      url,
+      headers: {
+        ...await ApiService.getAuthHeaders(),
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode(data),
+    );
 
-      final resData = jsonDecode(response.body);
+    debugPrint("STATUS: ${response.statusCode}");
+    debugPrint("BODY: ${response.body}");
 
-      return resData['package_id']?.toString();
-    } catch (e) {
-      debugPrint("❌ API ERROR: $e");
-      return null;
+    final res = jsonDecode(response.body);
+
+    if (response.statusCode == 201) {
+      return res['package_id']?.toString();
     }
+
+    // 🔥 IMPORTANT: show backend error
+    debugPrint("❌ BACKEND ERROR: $res");
+
+    return null;
+  } catch (e) {
+    debugPrint("❌ REQUEST ERROR: $e");
+    return null;
   }
+}
+
+
 
   // Fetch package by ID
   static Future<Map<String, dynamic>?> getPackage(String packageId) async {
@@ -207,6 +222,8 @@ class ApiService {
       return null;
     }
   }
+
+
 
   // Create Paystack payment link
   static Future<String?> createPaystackPaymentLink(
@@ -235,6 +252,8 @@ class ApiService {
       return null;
     }
   }
+
+
 
   // ==========================
   // 💳 INITIALIZE PAYMENT
@@ -424,9 +443,6 @@ class ApiService {
     return [];
   }
 
-  static Future<dynamic> getMyPackages() async {}
-  static Future<dynamic> getMyHistory() async {}
-
   static Future<Map<String, dynamic>> getEarnings() async {
     try {
       final response = await http.get(
@@ -582,10 +598,7 @@ class ApiService {
     try {
       final res = await http.get(
         Uri.parse("$baseUrl/admin/riders/"),
-        headers: {
-          "Authorization": "Bearer ${ApiService.token}",
-          "Content-Type": "application/json",
-        },
+        headers: await ApiService.getAuthHeaders(),
       );
 
       if (res.statusCode == 200) {
@@ -646,7 +659,8 @@ class ApiService {
         Uri.parse(
           "$baseUrl/profile/",
         ), // <-- Change if your API uses a different path
-        headers: await ApiService.getAuthHeaders(), // Sends Authorization token automatically if set
+        headers:
+            await ApiService.getAuthHeaders(), // Sends Authorization token automatically if set
       );
 
       // 3️⃣ Handle successful response
@@ -707,9 +721,23 @@ class ApiService {
     }
   }
 
-  static Future<dynamic> getPaymentLink(Map<String, Object> map) async {}
+  static Future<dynamic> getMyPackages() async {
+    return [];
+  }
 
-  static Future<dynamic> getUserPackages() async {}
+  static Future<dynamic> getMyHistory() async {
+    return [];
+  }
 
-  static Future<dynamic> getCustomerProfile() async {}
+  static Future<dynamic> getPaymentLink(Map<String, Object> map) async {
+    return null;
+  }
+
+  static Future<dynamic> getUserPackages() async {
+    return [];
+  }
+
+  static Future<dynamic> getCustomerProfile() async {
+    return {};
+  }
 }
