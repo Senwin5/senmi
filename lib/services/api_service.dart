@@ -164,47 +164,67 @@ class ApiService {
   // ==========================
   // Create a package
 
+  static Future<String?> createPackage(Map<String, dynamic> data) async {
+    try {
+      final url = Uri.parse("$baseUrl/create-package/");
 
+      final response = await http.post(
+        url,
+        headers: {
+          ...await ApiService.getAuthHeaders(),
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode(data),
+      );
 
-static Future<String?> createPackage(Map<String, dynamic> data) async {
-  try {
-    final url = Uri.parse("$baseUrl/create-package/");
+      debugPrint("STATUS: ${response.statusCode}");
+      debugPrint("BODY: ${response.body}");
 
-    final response = await http.post(
-      url,
-      headers: {
-        ...await ApiService.getAuthHeaders(),
-        "Content-Type": "application/json",
-      },
-      body: jsonEncode(data),
-    );
+      dynamic res;
 
-    debugPrint("STATUS: ${response.statusCode}");
-    debugPrint("BODY: ${response.body}");
+      try {
+        res = jsonDecode(response.body);
+      } catch (e) {
+        debugPrint("❌ Not JSON: ${response.body}");
+        return null;
+      }
 
-    final res = jsonDecode(response.body);
+      if (response.statusCode == 201) {
+        return res['package_id']?.toString();
+      }
 
-    if (response.statusCode == 201) {
-      return res['package_id']?.toString();
+      // 🔥 IMPORTANT: show backend error
+      debugPrint("❌ BACKEND ERROR: $res");
+
+      return null;
+    } catch (e) {
+      debugPrint("❌ REQUEST ERROR: $e");
+      return null;
     }
+  }
 
-    // 🔥 IMPORTANT: show backend error
-    debugPrint("❌ BACKEND ERROR: $res");
+  static Future<Map<String, dynamic>?> getPrice(Map payload) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/calculate-price/"),
+        headers: await ApiService.getAuthHeaders(),
+        body: jsonEncode(payload),
+      );
 
-    return null;
-  } catch (e) {
-    debugPrint("❌ REQUEST ERROR: $e");
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      }
+    } catch (e) {
+      debugPrint("Price error: $e");
+    }
     return null;
   }
-}
-
-
 
   // Fetch package by ID
   static Future<Map<String, dynamic>?> getPackage(String packageId) async {
     try {
       final response = await http.get(
-        Uri.parse("$baseUrl/track/$packageId/"), // ✅ matches your Django URL
+        Uri.parse("$baseUrl/track/$packageId/"),
         headers: await ApiService.getAuthHeaders(),
       );
 
@@ -222,8 +242,6 @@ static Future<String?> createPackage(Map<String, dynamic> data) async {
       return null;
     }
   }
-
-
 
   // Create Paystack payment link
   static Future<String?> createPaystackPaymentLink(
@@ -252,8 +270,6 @@ static Future<String?> createPackage(Map<String, dynamic> data) async {
       return null;
     }
   }
-
-
 
   // ==========================
   // 💳 INITIALIZE PAYMENT

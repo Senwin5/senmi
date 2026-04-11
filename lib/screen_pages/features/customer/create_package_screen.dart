@@ -15,6 +15,10 @@ class CreatePackageScreen extends StatefulWidget {
 }
 
 class _CreatePackageScreenState extends State<CreatePackageScreen> {
+  double? estimatedPrice;
+  double? distanceKm;
+  bool calculatingPrice = false;
+
   final _formKey = GlobalKey<FormState>();
 
   String senderName = '';
@@ -62,6 +66,7 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
         'pickup_lng': pickupLocation!.longitude,
         'delivery_lat': deliveryLocation!.latitude,
         'delivery_lng': deliveryLocation!.longitude,
+        'price': estimatedPrice,
       };
 
       debugPrint("📦 Creating package with payload: $payload");
@@ -107,6 +112,39 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
         setState(() => loading = false);
       }
     }
+  }
+
+  Future<void> _calculatePrice() async {
+    if (pickupLocation == null || deliveryLocation == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Select locations first")));
+      return;
+    }
+
+    setState(() => calculatingPrice = true);
+
+    final payload = {
+      'pickup_lat': pickupLocation!.latitude,
+      'pickup_lng': pickupLocation!.longitude,
+      'delivery_lat': deliveryLocation!.latitude,
+      'delivery_lng': deliveryLocation!.longitude,
+    };
+
+    final res = await ApiService.getPrice(payload);
+
+    if (res != null) {
+      setState(() {
+        estimatedPrice = (res['price'] as num?)?.toDouble();
+        distanceKm = (res['distance_km'] as num?)?.toDouble();
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Failed to calculate price")),
+      );
+    }
+
+    setState(() => calculatingPrice = false);
   }
 
   Widget _buildTextField(
@@ -198,6 +236,40 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
                     ),
 
                     const SizedBox(height: 20),
+
+                    ElevatedButton(
+                      onPressed: calculatingPrice ? null : _calculatePrice,
+                      child: calculatingPrice
+                          ? const CircularProgressIndicator()
+                          : const Text("Calculate Price"),
+                    ),
+
+                    if (estimatedPrice != null) ...[
+                      const SizedBox(height: 20),
+
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade50,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Column(
+                          children: [
+                            Text(
+                              "Distance: ${distanceKm?.toStringAsFixed(2)} km",
+                            ),
+                            const SizedBox(height: 5),
+                            Text(
+                              "Estimated Price: ₦${estimatedPrice!.toStringAsFixed(0)}",
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
 
                     ElevatedButton(
                       onPressed: _createPackage,
