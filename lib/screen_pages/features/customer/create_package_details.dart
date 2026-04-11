@@ -26,14 +26,15 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
 
   Future<void> _fetchPackage() async {
     setState(() => loading = true);
+
     final res = await ApiService.getPackage(widget.packageId);
+
     setState(() {
-      package = res;
+      package = res ?? {};
       loading = false;
     });
   }
 
-  // ✅ NEW: Show QR + WhatsApp
   void _showReceiverPaymentDialog(String link, String qrCode) {
     showDialog(
       context: context,
@@ -58,8 +59,6 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
             },
             child: const Text("Copy"),
           ),
-
-          // ✅ NEW: WhatsApp Share
           TextButton(
             onPressed: () async {
               final url =
@@ -71,7 +70,6 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
             },
             child: const Text("WhatsApp"),
           ),
-
           TextButton(
             onPressed: () async {
               final uri = Uri.parse(link);
@@ -86,7 +84,8 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
 
   Future<void> _pay(String payer) async {
     if (package == null) return;
-    double amount = package!['price']?.toDouble() ?? 0;
+
+    double amount = (package!['price'] ?? 0).toDouble();
 
     try {
       final response = await ApiService.createPaystackPaymentLink({
@@ -98,19 +97,12 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
 
       if (response != null && response.isNotEmpty) {
         if (payer == "receiver") {
-          // ✅ EXPECTING backend to return JSON (payment_url + qr_code)
-          final res = await ApiService.createPaystackPaymentLink({
-            "package_id": widget.packageId,
-            "amount": amount,
-            "currency": "NGN",
-            "payer": payer,
-          });
+          final paymentLink = response;
 
-          final paymentLink = res;
           final qrCode =
               "https://api.qrserver.com/v1/create-qr-code/?data=$paymentLink&size=200x200";
 
-          _showReceiverPaymentDialog(paymentLink!, qrCode);
+          _showReceiverPaymentDialog(paymentLink, qrCode);
         } else {
           final uri = Uri.parse(response);
           if (await canLaunchUrl(uri)) {
@@ -142,19 +134,24 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(title,
-                style: const TextStyle(
-                    fontSize: 16, fontWeight: FontWeight.bold)),
+                style:
+                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             ...data.entries.map((e) => Padding(
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   child: Row(
                     children: [
                       Expanded(
-                          flex: 3,
-                          child: Text("${e.key}:",
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold))),
-                      Expanded(flex: 5, child: Text(e.value)),
+                        flex: 3,
+                        child: Text(
+                          "${e.key}:",
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      Expanded(
+                        flex: 5,
+                        child: Text(e.value.isEmpty ? "N/A" : e.value),
+                      ),
                     ],
                   ),
                 ))
@@ -167,15 +164,20 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     if (loading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
     }
 
-    if (package == null) {
-      return const Scaffold(body: Center(child: Text("Failed to load package")));
+    if (package == null || package!.isEmpty) {
+      return const Scaffold(
+        body: Center(child: Text("Failed to load package")),
+      );
     }
 
     bool paymentDone =
-        (package!['sender_paid'] ?? false) && (package!['receiver_paid'] ?? false);
+        (package!['sender_paid'] ?? false) &&
+        (package!['receiver_paid'] ?? false);
 
     return Scaffold(
       appBar: AppBar(title: const Text("Package Details")),
@@ -184,44 +186,56 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
         child: Column(
           children: [
             _infoCard("Sender Info", {
-              "Name": package!['sender_name'] ?? "",
-              "Phone": package!['sender_phone'] ?? ""
+              "Name": package!['sender_name'] ?? "N/A",
+              "Phone": package!['sender_phone'] ?? "N/A",
             }),
             _infoCard("Receiver Info", {
-              "Name": package!['receiver_name'] ?? "",
-              "Phone": package!['receiver_phone'] ?? ""
+              "Name": package!['receiver_name'] ?? "N/A",
+              "Phone": package!['receiver_phone'] ?? "N/A",
             }),
             _infoCard("Package Info", {
-              "Description": package!['description'] ?? "",
-              "Price": "₦${package!['price'] ?? 0}"
+              "Description": package!['description'] ?? "N/A",
+              "Price": "₦${package!['price'] ?? 0}",
             }),
             _infoCard("Locations", {
-              "Pickup": package!['pickup_address'] ?? "",
-              "Delivery": package!['delivery_address'] ?? ""
+              "Pickup": package!['pickup_address'] ?? "N/A",
+              "Delivery": package!['delivery_address'] ?? "N/A",
             }),
+
             const SizedBox(height: 16),
+
             if (!(package!['sender_paid'] ?? false))
               SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                      onPressed: () => _pay("sender"),
-                      child: const Text("Pay as Sender"))),
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => _pay("sender"),
+                  child: const Text("Pay as Sender"),
+                ),
+              ),
+
             if (!(package!['receiver_paid'] ?? false))
               SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                      onPressed: () => _pay("receiver"),
-                      child: const Text("Generate Receiver Payment Link"))),
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => _pay("receiver"),
+                  child: const Text("Generate Receiver Payment Link"),
+                ),
+              ),
+
             if (paymentDone)
               SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                      onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) =>
-                                  TrackingScreen(packageId: widget.packageId))),
-                      child: const Text("Track Package"))),
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          TrackingScreen(packageId: widget.packageId),
+                    ),
+                  ),
+                  child: const Text("Track Package"),
+                ),
+              ),
           ],
         ),
       ),
