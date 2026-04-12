@@ -18,7 +18,7 @@ class MapPickerScreen extends StatefulWidget {
 
 class _MapPickerScreenState extends State<MapPickerScreen> {
   late LatLng position;
-  String address = "Move map to select location";
+  String address = "Move map to get address";
   bool loadingAddress = false;
 
   final TextEditingController searchController = TextEditingController();
@@ -28,15 +28,31 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
   void initState() {
     super.initState();
     position = widget.initialLocation;
-    getAddress();
+
+    // ❌ DO NOT auto-fetch address (prevents Abuja default issue)
   }
 
+  // ✅ CLEAN & SAFE GET ADDRESS
   Future<void> getAddress() async {
+    if (!mounted) return;
+
     try {
       setState(() => loadingAddress = true);
 
-      List<Placemark> placemarks =
-          await placemarkFromCoordinates(position.latitude, position.longitude);
+      final placemarks = await placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+
+      if (!mounted) return;
+
+      if (placemarks.isEmpty) {
+        setState(() {
+          address = "Move map to get address";
+          loadingAddress = false;
+        });
+        return;
+      }
 
       final place = placemarks.first;
 
@@ -46,13 +62,16 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
         loadingAddress = false;
       });
     } catch (e) {
+      if (!mounted) return;
+
       setState(() {
-        address = "Unable to get address";
+        address = "Move map to get address";
         loadingAddress = false;
       });
     }
   }
 
+  // 🔍 SEARCH LOCATION
   Future<void> searchLocation(String value) async {
     if (value.isEmpty) return;
 
@@ -80,6 +99,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Pick Location")),
+
       body: Stack(
         children: [
           GoogleMap(
@@ -88,7 +108,11 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
               zoom: 14,
             ),
             onMapCreated: (c) => mapController = c,
+
+            // 📍 track movement
             onCameraMove: (pos) => position = pos.target,
+
+            // 🔥 only fetch when user stops moving
             onCameraIdle: getAddress,
           ),
 
@@ -96,6 +120,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
             child: Icon(Icons.location_pin, size: 45, color: Colors.red),
           ),
 
+          // 🔍 SEARCH BAR
           Positioned(
             top: 10,
             left: 10,
@@ -113,6 +138,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
             ),
           ),
 
+          // 📍 BOTTOM CARD
           Positioned(
             bottom: 20,
             left: 16,
@@ -125,13 +151,16 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                   children: [
                     loadingAddress
                         ? const LinearProgressIndicator()
-                        : Text(address, textAlign: TextAlign.center),
+                        : Text(
+                            address,
+                            textAlign: TextAlign.center,
+                          ),
 
                     const SizedBox(height: 10),
 
                     ElevatedButton(
                       onPressed: () {
-                        Navigator.pop(context, position); // ✅ ONLY LatLng
+                        Navigator.pop(context, position);
                       },
                       child: const Text("Confirm Location"),
                     ),
