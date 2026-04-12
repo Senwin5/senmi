@@ -44,3 +44,6 @@ flutter:
 google_maps_flutter: ^2.6.0
 geolocator: ^10.1.0
 geocoding: ^2.1.1
+
+flutter_google_places: latest
+google_maps_webservice: latest

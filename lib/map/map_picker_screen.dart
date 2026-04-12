@@ -1,115 +1,145 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geocoding/geocoding.dart';
 
-class MapScreen extends StatefulWidget {
-  const MapScreen({super.key});
+class MapPickerScreen extends StatefulWidget {
+  final LatLng initialLocation;
+
+  const MapPickerScreen({
+    super.key,
+    required this.initialLocation,
+  });
 
   @override
-  State<MapScreen> createState() => _MapScreenState();
+  State<MapPickerScreen> createState() => _MapPickerScreenState();
 }
 
-class _MapScreenState extends State<MapScreen> {
-
-  // 📍 Default position (Lagos)
-  LatLng position = const LatLng(6.5244, 3.3792);
-
-  // 🏠 Address text
+class _MapPickerScreenState extends State<MapPickerScreen> {
+  late LatLng position;
   String address = "Move map to select location";
+  bool loadingAddress = false;
 
-  // 🔄 Convert lat/lng → real address
+  final TextEditingController searchController = TextEditingController();
+  GoogleMapController? mapController;
+
+  @override
+  void initState() {
+    super.initState();
+    position = widget.initialLocation;
+    getAddress();
+  }
+
   Future<void> getAddress() async {
     try {
+      setState(() => loadingAddress = true);
+
       List<Placemark> placemarks =
-          await placemarkFromCoordinates(
-              position.latitude, position.longitude);
+          await placemarkFromCoordinates(position.latitude, position.longitude);
 
       final place = placemarks.first;
 
       setState(() {
         address =
-            "${place.street}, ${place.locality}, ${place.country}";
+            "${place.name ?? ''}, ${place.street ?? ''}, ${place.locality ?? ''}, ${place.country ?? ''}";
+        loadingAddress = false;
       });
-
     } catch (e) {
-      address = "Unable to get address";
+      setState(() {
+        address = "Unable to get address";
+        loadingAddress = false;
+      });
     }
   }
 
-  @override
-  void initState() {
-    super.initState();
+  Future<void> searchLocation(String value) async {
+    if (value.isEmpty) return;
 
-    // 📍 Get address when screen loads
-    getAddress();
+    try {
+      List<Location> locations = await locationFromAddress(value);
+      final loc = locations.first;
+
+      final newPos = LatLng(loc.latitude, loc.longitude);
+
+      setState(() => position = newPos);
+
+      mapController?.animateCamera(
+        CameraUpdate.newLatLng(newPos),
+      );
+
+      getAddress();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Location not found")),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Pick Location")),
-
       body: Stack(
         children: [
-
-          // 🗺️ MAP
           GoogleMap(
-            initialCameraPosition:
-                CameraPosition(target: position, zoom: 14),
-
-            // 👇 when user moves map
-            onCameraMove: (pos) {
-              position = pos.target;
-            },
-
-            // 👇 when user stops moving
-            onCameraIdle: () {
-              getAddress(); // update address
-            },
+            initialCameraPosition: CameraPosition(
+              target: position,
+              zoom: 14,
+            ),
+            onMapCreated: (c) => mapController = c,
+            onCameraMove: (pos) => position = pos.target,
+            onCameraIdle: getAddress,
           ),
 
-          // 📍 CENTER PIN
           const Center(
-            child: Icon(Icons.location_pin,
-                size: 40, color: Colors.red),
+            child: Icon(Icons.location_pin, size: 45, color: Colors.red),
           ),
 
-          // 📦 BOTTOM CARD
+          Positioned(
+            top: 10,
+            left: 10,
+            right: 10,
+            child: Card(
+              child: TextField(
+                controller: searchController,
+                decoration: const InputDecoration(
+                  hintText: "Search location...",
+                  border: InputBorder.none,
+                  prefixIcon: Icon(Icons.search),
+                ),
+                onSubmitted: searchLocation,
+              ),
+            ),
+          ),
+
           Positioned(
             bottom: 20,
-            left: 20,
-            right: 20,
+            left: 16,
+            right: 16,
             child: Card(
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-
-                    // 🏠 SHOW ADDRESS
-                    Text(
-                      address,
-                      textAlign: TextAlign.center,
-                    ),
+                    loadingAddress
+                        ? const LinearProgressIndicator()
+                        : Text(address, textAlign: TextAlign.center),
 
                     const SizedBox(height: 10),
 
-                    // ✅ CONFIRM BUTTON
                     ElevatedButton(
                       onPressed: () {
-                        Navigator.pop(context, {
-                          "address": address, // ✅ real address
-                          "lat": position.latitude,
-                          "lng": position.longitude,
-                        });
+                        Navigator.pop(context, position); // ✅ ONLY LatLng
                       },
                       child: const Text("Confirm Location"),
-                    )
+                    ),
                   ],
                 ),
               ),
             ),
-          )
+          ),
         ],
       ),
     );

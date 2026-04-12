@@ -3,6 +3,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:senmi/map/map_picker_screen.dart';
 import 'package:senmi/screen_pages/features/customer/create_package_details.dart';
 import 'package:senmi/services/api_service.dart';
 import 'package:http/http.dart' as http;
@@ -34,6 +35,23 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
 
   bool loading = false;
 
+  final String apiKey = "YOUR_GOOGLE_MAPS_API_KEY";
+
+  // 🔥 NEW: convert coordinates → real Lagos street address
+  Future<String> _getAddressFromLatLng(LatLng pos) async {
+    final url =
+        "https://maps.googleapis.com/maps/api/geocode/json?latlng=${pos.latitude},${pos.longitude}&key=$apiKey";
+
+    final res = await http.get(Uri.parse(url));
+    final data = jsonDecode(res.body);
+
+    if (data["status"] == "OK" && data["results"].isNotEmpty) {
+      return data["results"][0]["formatted_address"];
+    }
+
+    return "Unknown location";
+  }
+
   Future<void> _createPackage() async {
     if (!_formKey.currentState!.validate()) return;
     _formKey.currentState!.save();
@@ -49,19 +67,25 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
       return;
     }
 
+    if (pickupAddress.isEmpty && pickupLocation != null) {
+      pickupAddress =
+          "Lat: ${pickupLocation!.latitude}, Lng: ${pickupLocation!.longitude}";
+    }
+
+    if (deliveryAddress.isEmpty && deliveryLocation != null) {
+      deliveryAddress =
+          "Lat: ${deliveryLocation!.latitude}, Lng: ${deliveryLocation!.longitude}";
+    }
+
     setState(() => loading = true);
 
     try {
-      /// ==============================
-      /// ONLY BACKEND REQUIRED FIELDS
-      /// ==============================
       final payload = {
         'description': description.trim(),
         'pickup_address': pickupAddress.trim(),
         'delivery_address': deliveryAddress.trim(),
         'receiver_name': receiverName.trim(),
         'receiver_phone': receiverPhone.trim(),
-
         'pickup_lat': pickupLocation!.latitude,
         'pickup_lng': pickupLocation!.longitude,
         'delivery_lat': deliveryLocation!.latitude,
@@ -69,19 +93,7 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
         'price': estimatedPrice,
       };
 
-      debugPrint("📦 Creating package with payload: $payload");
-
       final packageId = await ApiService.createPackage(payload);
-
-      debugPrint("📦 FULL RESPONSE: $packageId");
-
-      if (packageId == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("❌ Package creation failed")),
-        );
-      }
-
-      debugPrint("📦 Returned packageId: $packageId");
 
       if (!mounted) return;
 
@@ -94,31 +106,24 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("❌ Failed to create package. Try again."),
-          ),
+          const SnackBar(content: Text("❌ Package creation failed")),
         );
       }
     } catch (e) {
-      debugPrint("❌ Create package error: $e");
-
       if (!mounted) return;
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Error: $e")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
     } finally {
-      if (mounted) {
-        setState(() => loading = false);
-      }
+      if (mounted) setState(() => loading = false);
     }
   }
 
   Future<void> _calculatePrice() async {
     if (pickupLocation == null || deliveryLocation == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Select locations first")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Select locations first")),
+      );
       return;
     }
 
@@ -138,10 +143,6 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
         estimatedPrice = (res['price'] as num?)?.toDouble();
         distanceKm = (res['distance_km'] as num?)?.toDouble();
       });
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Failed to calculate price")),
-      );
     }
 
     setState(() => calculatingPrice = false);
@@ -181,8 +182,20 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
       setState(() {
         if (isPickup) {
           pickupLocation = selected;
+
+          _getAddressFromLatLng(selected).then((value) {
+            setState(() {
+              pickupAddress = value;
+            });
+          });
         } else {
           deliveryLocation = selected;
+
+          _getAddressFromLatLng(selected).then((value) {
+            setState(() {
+              deliveryAddress = value;
+            });
+          });
         }
       });
     }
@@ -200,27 +213,32 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
                 key: _formKey,
                 child: Column(
                   children: [
-                    _buildTextField(
-                      "Receiver Name",
-                      onSaved: (v) => receiverName = v ?? '',
-                    ),
-                    _buildTextField(
-                      "Receiver Phone",
-                      type: TextInputType.phone,
-                      onSaved: (v) => receiverPhone = v ?? '',
+                    _buildTextField("Receiver Name",
+                        onSaved: (v) => receiverName = v ?? ''),
+                    _buildTextField("Receiver Phone",
+                        type: TextInputType.phone,
+                        onSaved: (v) => receiverPhone = v ?? ''),
+                    _buildTextField("Description",
+                        onSaved: (v) => description = v ?? ''),
+
+                    GestureDetector(
+                      onTap: () => _pickLocation(isPickup: true),
+                      child: AbsorbPointer(
+                        child: _buildTextField(
+                          "Pickup Address (tap to pick on map)",
+                          onSaved: (v) => pickupAddress = v ?? '',
+                        ),
+                      ),
                     ),
 
-                    _buildTextField(
-                      "Description",
-                      onSaved: (v) => description = v ?? '',
-                    ),
-                    _buildTextField(
-                      "Pickup Address",
-                      onSaved: (v) => pickupAddress = v ?? '',
-                    ),
-                    _buildTextField(
-                      "Delivery Address",
-                      onSaved: (v) => deliveryAddress = v ?? '',
+                    GestureDetector(
+                      onTap: () => _pickLocation(isPickup: false),
+                      child: AbsorbPointer(
+                        child: _buildTextField(
+                          "Delivery Address (tap to pick on map)",
+                          onSaved: (v) => deliveryAddress = v ?? '',
+                        ),
+                      ),
                     ),
 
                     const SizedBox(height: 20),
@@ -246,7 +264,6 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
 
                     if (estimatedPrice != null) ...[
                       const SizedBox(height: 20),
-
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
@@ -255,9 +272,7 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
                         ),
                         child: Column(
                           children: [
-                            Text(
-                              "Distance: ${distanceKm?.toStringAsFixed(2)} km",
-                            ),
+                            Text("Distance: ${distanceKm?.toStringAsFixed(2)} km"),
                             const SizedBox(height: 5),
                             Text(
                               "Estimated Price: ₦${estimatedPrice!.toStringAsFixed(0)}",
@@ -279,103 +294,6 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
                 ),
               ),
             ),
-    );
-  }
-}
-
-//
-// ---------------- MAP PICKER ----------------
-//
-class MapPickerScreen extends StatefulWidget {
-  final LatLng initialLocation;
-  const MapPickerScreen({super.key, required this.initialLocation});
-
-  @override
-  State<MapPickerScreen> createState() => _MapPickerScreenState();
-}
-
-class _MapPickerScreenState extends State<MapPickerScreen> {
-  late LatLng selectedLocation;
-  GoogleMapController? mapController;
-
-  final TextEditingController searchController = TextEditingController();
-  final String apiKey = "YOUR_GOOGLE_MAPS_API_KEY";
-
-  @override
-  void initState() {
-    super.initState();
-    selectedLocation = widget.initialLocation;
-  }
-
-  Future<void> searchLocation(String text) async {
-    final url =
-        "https://maps.googleapis.com/maps/api/geocode/json?address=$text&key=$apiKey";
-
-    final res = await http.get(Uri.parse(url));
-    final data = jsonDecode(res.body);
-
-    if (data["status"] == "OK" && data["results"].isNotEmpty) {
-      final loc = data["results"][0]["geometry"]["location"];
-      final latLng = LatLng(loc["lat"], loc["lng"]);
-
-      setState(() => selectedLocation = latLng);
-      mapController?.animateCamera(CameraUpdate.newLatLng(latLng));
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("Pick Location")),
-      body: Stack(
-        children: [
-          GoogleMap(
-            initialCameraPosition: CameraPosition(
-              target: selectedLocation,
-              zoom: 15,
-            ),
-            onMapCreated: (controller) => mapController = controller,
-            onTap: (latLng) => setState(() => selectedLocation = latLng),
-            markers: {
-              Marker(
-                markerId: const MarkerId("selected"),
-                position: selectedLocation,
-              ),
-            },
-          ),
-
-          Positioned(
-            top: 10,
-            left: 10,
-            right: 10,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: TextField(
-                controller: searchController,
-                decoration: const InputDecoration(
-                  hintText: "Search location",
-                  border: InputBorder.none,
-                ),
-                onSubmitted: searchLocation,
-              ),
-            ),
-          ),
-
-          Positioned(
-            bottom: 20,
-            left: 16,
-            right: 16,
-            child: ElevatedButton(
-              onPressed: () => Navigator.pop(context, selectedLocation),
-              child: const Text("Confirm Location"),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
