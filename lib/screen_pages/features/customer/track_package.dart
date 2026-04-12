@@ -17,6 +17,7 @@ class TrackingScreen extends StatefulWidget {
 
 class _TrackingScreenState extends State<TrackingScreen>
     with SingleTickerProviderStateMixin {
+
   LatLng _currentPos = const LatLng(6.5244, 3.3792);
   LatLng? _targetPos;
 
@@ -40,11 +41,9 @@ class _TrackingScreenState extends State<TrackingScreen>
   String? deliveryCode;
   final TextEditingController _codeController = TextEditingController();
 
-  // ✅ NEW STATES
   bool _isLoading = false;
   bool _isDelivered = false;
 
-  // 🔥 Shake animation controller
   late AnimationController _shakeController;
   late Animation<double> _shakeAnimation;
 
@@ -54,7 +53,7 @@ class _TrackingScreenState extends State<TrackingScreen>
 
     _shakeController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 400),
     );
 
     _shakeAnimation = Tween<double>(begin: 0, end: 10).animate(
@@ -81,7 +80,10 @@ class _TrackingScreenState extends State<TrackingScreen>
       deliveryLng = (pkg['delivery_lng'] ?? deliveryLng).toDouble();
 
       status = pkg['status'] ?? status;
+
+      // IMPORTANT: only customer sees this
       deliveryCode = pkg['delivery_code']?.toString();
+      
 
       _updateMarkers();
     });
@@ -96,17 +98,16 @@ class _TrackingScreenState extends State<TrackingScreen>
       );
 
       wsSubscription = channel!.stream.listen((data) {
-        try {
-          final parsed = jsonDecode(data);
-          double newLat = (parsed['lat'] as num).toDouble();
-          double newLng = (parsed['lng'] as num).toDouble();
-          String newStatus = parsed['status'] ?? status;
+        final parsed = jsonDecode(data);
 
-          _targetPos = LatLng(newLat, newLng);
-          status = newStatus;
+        _targetPos = LatLng(
+          (parsed['lat'] as num).toDouble(),
+          (parsed['lng'] as num).toDouble(),
+        );
 
-          if (!_ticker.isActive) _ticker.start();
-        } catch (_) {}
+        status = parsed['status'] ?? status;
+
+        if (!_ticker.isActive) _ticker.start();
       });
     } catch (_) {}
   }
@@ -117,21 +118,22 @@ class _TrackingScreenState extends State<TrackingScreen>
     _animationProgress += 0.05;
 
     if (_animationProgress >= 1.0) {
-      _animationProgress = 1.0;
+      _animationProgress = 0.0;
       _currentPos = _targetPos!;
       _targetPos = null;
       _ticker.stop();
     } else {
-      double latTween = _currentPos.latitude +
-          (_targetPos!.latitude - _currentPos.latitude) * _animationProgress;
-      double lngTween = _currentPos.longitude +
-          (_targetPos!.longitude - _currentPos.longitude) * _animationProgress;
-      _currentPos = LatLng(latTween, lngTween);
+      _currentPos = LatLng(
+        _currentPos.latitude +
+            (_targetPos!.latitude - _currentPos.latitude) * _animationProgress,
+        _currentPos.longitude +
+            (_targetPos!.longitude - _currentPos.longitude) * _animationProgress,
+      );
     }
 
-    if (_animationProgress % 0.1 < 0.05) {
+    if (mounted) {
+      setState(() {});
       _updateMarkers();
-      if (mounted) setState(() {});
     }
   }
 
@@ -157,14 +159,14 @@ class _TrackingScreenState extends State<TrackingScreen>
     mapController?.animateCamera(CameraUpdate.newLatLng(_currentPos));
   }
 
-  // =========================
-  // 🔥 DELIVERY CONFIRM LOGIC
-  // =========================
   Future<void> _confirmDelivery() async {
-    if (_isDelivered) return;
+    if (_isDelivered || _isLoading) return;
 
     final code = _codeController.text.trim();
-    if (code.isEmpty) return;
+    if (code.isEmpty) {
+      _shakeController.forward(from: 0);
+      return;
+    }
 
     setState(() => _isLoading = true);
 
@@ -186,7 +188,6 @@ class _TrackingScreenState extends State<TrackingScreen>
         ),
       );
     } else {
-      // ❌ SHAKE ANIMATION ON ERROR
       _shakeController.forward(from: 0);
 
       // ignore: use_build_context_synchronously
@@ -215,21 +216,9 @@ class _TrackingScreenState extends State<TrackingScreen>
           GoogleMap(
             initialCameraPosition:
                 CameraPosition(target: _currentPos, zoom: 15),
-            onMapCreated: (controller) => mapController = controller,
+            onMapCreated: (c) => mapController = c,
             markers: markers,
             polylines: polylines,
-          ),
-
-          Positioned(
-            top: 40,
-            left: 10,
-            child: CircleAvatar(
-              backgroundColor: Colors.white,
-              child: IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () => Navigator.pop(context),
-              ),
-            ),
           ),
 
           Positioned(
@@ -250,24 +239,29 @@ class _TrackingScreenState extends State<TrackingScreen>
                 decoration: const BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                  boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
 
-                    const Text(
-                      "Delivery Verification",
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    Text(
+                      status,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
 
                     const SizedBox(height: 10),
 
-                    Text("Status: $status"),
+                    Text("Tracking ID: ${widget.packageId}"),
 
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 5),
 
-                    Text("Delivery Code: ${deliveryCode ?? 'Not available'}"),
+                    Text(
+                      "Delivery Code: ${deliveryCode ?? 'Hidden'}",
+                      style: const TextStyle(color: Colors.orange),
+                    ),
 
                     const SizedBox(height: 15),
 
@@ -275,7 +269,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                       controller: _codeController,
                       enabled: !_isDelivered,
                       decoration: const InputDecoration(
-                        labelText: "Enter code",
+                        labelText: "Enter delivery code",
                         border: OutlineInputBorder(),
                       ),
                     ),
@@ -285,9 +279,8 @@ class _TrackingScreenState extends State<TrackingScreen>
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: _isDelivered || _isLoading
-                            ? null
-                            : _confirmDelivery,
+                        onPressed:
+                            (_isLoading || _isDelivered) ? null : _confirmDelivery,
                         child: _isLoading
                             ? const CircularProgressIndicator()
                             : const Text("Confirm Delivery"),

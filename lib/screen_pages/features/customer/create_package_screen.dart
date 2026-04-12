@@ -28,6 +28,13 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
   final pickupController = TextEditingController();
   final deliveryController = TextEditingController();
 
+  @override
+  void dispose() {
+    pickupController.dispose();
+    deliveryController.dispose();
+    super.dispose();
+  }
+
   String senderName = '';
   String senderPhone = '';
   String receiverName = '';
@@ -121,6 +128,13 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
   }
 
   Future<void> _createPackage() async {
+    if (estimatedPrice == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please calculate price first")),
+      );
+      return;
+    }
+
     if (!_formKey.currentState!.validate()) return;
     _formKey.currentState!.save();
 
@@ -146,7 +160,7 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
         'pickup_lng': pickupLocation!.longitude,
         'delivery_lat': deliveryLocation!.latitude,
         'delivery_lng': deliveryLocation!.longitude,
-        'price': estimatedPrice,
+        'price': estimatedPrice?.toStringAsFixed(2),
       };
 
       final packageId = await ApiService.createPackage(payload);
