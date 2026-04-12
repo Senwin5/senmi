@@ -737,6 +737,25 @@ class ApiService {
     }
   }
 
+  static Future<Map<String, dynamic>?> confirmDeliveryCode(
+    String packageId,
+    String code,
+  ) async {
+    final res = await http.post(
+      Uri.parse("$baseUrl/packages/$packageId/confirm-code/"),
+      headers: await ApiService.getAuthHeaders(),
+      body: jsonEncode({"delivery_code": code}),
+    );
+
+    // ✅ THIS IS WHERE IT GOES
+    if (res.statusCode == 200) {
+      return jsonDecode(res.body);
+    }
+
+    return null;
+  }
+  
+
   static Future<dynamic> getMyPackages() async {
     return [];
   }

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:senmi/screen_pages/features/customer/delivery_complete_screen.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import '../../../services/api_service.dart';
 
@@ -16,7 +17,6 @@ class TrackingScreen extends StatefulWidget {
 
 class _TrackingScreenState extends State<TrackingScreen>
     with SingleTickerProviderStateMixin {
-  // Current & target position for smooth marker animation
   LatLng _currentPos = const LatLng(6.5244, 3.3792);
   LatLng? _targetPos;
 
@@ -37,9 +37,30 @@ class _TrackingScreenState extends State<TrackingScreen>
   late Ticker _ticker;
   double _animationProgress = 0.0;
 
+  String? deliveryCode;
+  final TextEditingController _codeController = TextEditingController();
+
+  // ✅ NEW STATES
+  bool _isLoading = false;
+  bool _isDelivered = false;
+
+  // 🔥 Shake animation controller
+  late AnimationController _shakeController;
+  late Animation<double> _shakeAnimation;
+
   @override
   void initState() {
     super.initState();
+
+    _shakeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+
+    _shakeAnimation = Tween<double>(begin: 0, end: 10).animate(
+      CurvedAnimation(parent: _shakeController, curve: Curves.elasticIn),
+    );
+
     _ticker = createTicker(_onTick);
     _loadPackageInfo();
   }
@@ -53,11 +74,14 @@ class _TrackingScreenState extends State<TrackingScreen>
         (pkg['lat'] ?? _currentPos.latitude).toDouble(),
         (pkg['lng'] ?? _currentPos.longitude).toDouble(),
       );
+
       pickupLat = (pkg['pickup_lat'] ?? pickupLat).toDouble();
       pickupLng = (pkg['pickup_lng'] ?? pickupLng).toDouble();
       deliveryLat = (pkg['delivery_lat'] ?? deliveryLat).toDouble();
       deliveryLng = (pkg['delivery_lng'] ?? deliveryLng).toDouble();
+
       status = pkg['status'] ?? status;
+      deliveryCode = pkg['delivery_code']?.toString();
 
       _updateMarkers();
     });
@@ -83,21 +107,21 @@ class _TrackingScreenState extends State<TrackingScreen>
 
           if (!_ticker.isActive) _ticker.start();
         } catch (_) {}
-      }, onError: (_) {}, onDone: () {});
+      });
     } catch (_) {}
   }
 
   void _onTick(Duration elapsed) {
     if (_targetPos == null) return;
 
-    _animationProgress += 0.05; // animation speed
+    _animationProgress += 0.05;
+
     if (_animationProgress >= 1.0) {
       _animationProgress = 1.0;
       _currentPos = _targetPos!;
       _targetPos = null;
       _ticker.stop();
     } else {
-      // linear interpolation for smooth movement
       double latTween = _currentPos.latitude +
           (_targetPos!.latitude - _currentPos.latitude) * _animationProgress;
       double lngTween = _currentPos.longitude +
@@ -105,7 +129,6 @@ class _TrackingScreenState extends State<TrackingScreen>
       _currentPos = LatLng(latTween, lngTween);
     }
 
-    // update markers and UI occasionally (throttled)
     if (_animationProgress % 0.1 < 0.05) {
       _updateMarkers();
       if (mounted) setState(() {});
@@ -134,51 +157,53 @@ class _TrackingScreenState extends State<TrackingScreen>
     mapController?.animateCamera(CameraUpdate.newLatLng(_currentPos));
   }
 
+  // =========================
+  // 🔥 DELIVERY CONFIRM LOGIC
+  // =========================
+  Future<void> _confirmDelivery() async {
+    if (_isDelivered) return;
+
+    final code = _codeController.text.trim();
+    if (code.isEmpty) return;
+
+    setState(() => _isLoading = true);
+
+    final result = await ApiService.confirmDeliveryCode(
+      widget.packageId,
+      code,
+    );
+
+    setState(() => _isLoading = false);
+
+    if (result != null && result["success"] == true) {
+      setState(() => _isDelivered = true);
+
+      Navigator.pushReplacement(
+        // ignore: use_build_context_synchronously
+        context,
+        MaterialPageRoute(
+          builder: (_) => const DeliveryCompleteScreen(),
+        ),
+      );
+    } else {
+      // ❌ SHAKE ANIMATION ON ERROR
+      _shakeController.forward(from: 0);
+
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Invalid delivery code ❌")),
+      );
+    }
+  }
+
   @override
   void dispose() {
     wsSubscription?.cancel();
     channel?.sink.close();
     _ticker.dispose();
+    _codeController.dispose();
+    _shakeController.dispose();
     super.dispose();
-  }
-
-  IconData _statusIcon(String s) {
-    switch (s) {
-      case "accepted":
-        return Icons.local_shipping;
-      case "picked_up":
-        return Icons.inventory;
-      case "delivered":
-        return Icons.check_circle;
-      default:
-        return Icons.hourglass_top;
-    }
-  }
-
-  Color _statusColor(String s) {
-    switch (s) {
-      case "accepted":
-        return Colors.blue;
-      case "picked_up":
-        return Colors.orange;
-      case "delivered":
-        return Colors.green;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  String _statusText(String s) {
-    switch (s) {
-      case "accepted":
-        return "Rider on the way";
-      case "picked_up":
-        return "Package Picked Up";
-      case "delivered":
-        return "Package Delivered";
-      default:
-        return "Waiting for rider";
-    }
   }
 
   @override
@@ -186,6 +211,7 @@ class _TrackingScreenState extends State<TrackingScreen>
     return Scaffold(
       body: Stack(
         children: [
+
           GoogleMap(
             initialCameraPosition:
                 CameraPosition(target: _currentPos, zoom: 15),
@@ -193,51 +219,85 @@ class _TrackingScreenState extends State<TrackingScreen>
             markers: markers,
             polylines: polylines,
           ),
+
           Positioned(
             top: 40,
             left: 10,
             child: CircleAvatar(
               backgroundColor: Colors.white,
               child: IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: () => Navigator.pop(context)),
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => Navigator.pop(context),
+              ),
             ),
           ),
+
           Positioned(
             bottom: 0,
             left: 0,
             right: 0,
-            child: Container(
-              height: 200,
-              padding: const EdgeInsets.all(16),
-              decoration: const BoxDecoration(
+            child: AnimatedBuilder(
+              animation: _shakeController,
+              builder: (context, child) {
+                return Transform.translate(
+                  offset: Offset(_shakeAnimation.value, 0),
+                  child: child,
+                );
+              },
+              child: Container(
+                height: 320,
+                padding: const EdgeInsets.all(16),
+                decoration: const BoxDecoration(
                   color: Colors.white,
-                  borderRadius:
-                      BorderRadius.vertical(top: Radius.circular(20)),
-                  boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)]),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Center(child: Icon(Icons.drag_handle)),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Icon(_statusIcon(status), color: _statusColor(status)),
-                      const SizedBox(width: 10),
-                      Text(_statusText(status),
-                          style: const TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Text("Tracking Code: ${widget.packageId}"),
-                  const SizedBox(height: 10),
-                  Text(
-                      "Lat: ${_currentPos.latitude.toStringAsFixed(5)} | Lng: ${_currentPos.longitude.toStringAsFixed(5)}"),
-                ],
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                  boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+
+                    const Text(
+                      "Delivery Verification",
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    Text("Status: $status"),
+
+                    const SizedBox(height: 10),
+
+                    Text("Delivery Code: ${deliveryCode ?? 'Not available'}"),
+
+                    const SizedBox(height: 15),
+
+                    TextField(
+                      controller: _codeController,
+                      enabled: !_isDelivered,
+                      decoration: const InputDecoration(
+                        labelText: "Enter code",
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _isDelivered || _isLoading
+                            ? null
+                            : _confirmDelivery,
+                        child: _isLoading
+                            ? const CircularProgressIndicator()
+                            : const Text("Confirm Delivery"),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          )
+          ),
         ],
       ),
     );
