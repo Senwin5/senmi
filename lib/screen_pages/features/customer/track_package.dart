@@ -83,7 +83,6 @@ class _TrackingScreenState extends State<TrackingScreen>
 
       // IMPORTANT: only customer sees this
       deliveryCode = pkg['delivery_code']?.toString();
-      
 
       _updateMarkers();
     });
@@ -94,7 +93,8 @@ class _TrackingScreenState extends State<TrackingScreen>
   void _connectWebSocket() {
     try {
       channel = WebSocketChannel.connect(
-        Uri.parse('ws://192.168.1.129:8001/ws/tracking/${widget.packageId}/'),
+        //Uri.parse('ws://192.168.8.252:8001/ws/tracking/${widget.packageId}/'),
+        Uri.parse('ws://192.168.1.129:8001//ws/tracking/${widget.packageId}/'),
       );
 
       wsSubscription = channel!.stream.listen((data) {
