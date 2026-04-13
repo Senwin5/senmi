@@ -10,7 +10,7 @@ import 'package:senmi/services/api_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await ApiService.loadToken(); // 🔥 THIS IS CRITICAL
+  await ApiService.loadToken(); 
   runApp(MyApp());
 }
 

@@ -1,9 +1,8 @@
 // ignore_for_file: use_build_context_synchronously
 
-import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:http/http.dart' as http;
 
 import 'package:senmi/map/map_picker_screen.dart';
 import 'package:senmi/screen_pages/features/customer/create_package_details.dart';
@@ -46,21 +45,24 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
   LatLng? pickupLocation;
   LatLng? deliveryLocation;
 
-  final String apiKey = "YOUR_GOOGLE_MAPS_API_KEY";
+  final String apiKey = "AIzaSyAZQIQTDqT15t8CfFrzHh99uDJmsFs7VtA";
 
-  // 🌍 reverse geocode (optional fallback)
   Future<String> _getAddressFromLatLng(LatLng pos) async {
-    final url =
-        "https://maps.googleapis.com/maps/api/geocode/json?latlng=${pos.latitude},${pos.longitude}&key=$apiKey";
+    try {
+      final placemarks = await placemarkFromCoordinates(
+        pos.latitude,
+        pos.longitude,
+      );
 
-    final res = await http.get(Uri.parse(url));
-    final data = jsonDecode(res.body);
+      if (placemarks.isEmpty) return "Unknown location";
 
-    if (data["status"] == "OK" && data["results"].isNotEmpty) {
-      return data["results"][0]["formatted_address"];
+      final p = placemarks.first;
+
+      return "${p.name ?? ''}, ${p.street ?? ''}, ${p.locality ?? ''}, ${p.country ?? ''}";
+    } catch (e) {
+      print("PLACEMARK ERROR: $e");
+      return "Unknown location";
     }
-
-    return "Unknown location";
   }
 
   Future<void> _pickLocation({required bool isPickup}) async {
@@ -84,7 +86,7 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
 
       setState(() {
         pickupAddress = addr;
-        pickupController.text = addr; // ✅ FIX UI UPDATE
+        pickupController.text = addr;
       });
     } else {
       deliveryLocation = selected;
@@ -163,20 +165,25 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
         'price': estimatedPrice?.toStringAsFixed(2),
       };
 
-      final packageId = await ApiService.createPackage(payload);
+      //final packageId = await ApiService.createPackage(payload);
+      final res = await ApiService.createPackage(payload);
 
       if (!mounted) return;
 
-      if (packageId != null) {
+      if (res['success'] == true) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (_) => PackageDetailsScreen(packageId: packageId),
+            builder: (_) =>
+                PackageDetailsScreen(packageId: res['package_id'].toString()),
           ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("❌ Package creation failed")),
+          SnackBar(
+            content: Text("❌ ${res['error'] ?? 'Something went wrong'}"),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } catch (e) {
@@ -211,7 +218,14 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Create Package")),
+      appBar: AppBar(
+        title: const Text(
+          "Create Package",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+        elevation: 0,
+      ),
       body: loading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -219,7 +233,16 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
               child: Form(
                 key: _formKey,
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const Text(
+                      "Receiver Details",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+
                     _buildTextField(
                       "Receiver Name",
                       onSaved: (v) => receiverName = v ?? '',
@@ -229,9 +252,30 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
                       type: TextInputType.phone,
                       onSaved: (v) => receiverPhone = v ?? '',
                     ),
+
+                    const SizedBox(height: 10),
+
+                    const Text(
+                      "Package Info",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+
                     _buildTextField(
                       "Description",
                       onSaved: (v) => description = v ?? '',
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    const Text(
+                      "Locations",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
 
                     // PICKUP
@@ -260,42 +304,99 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
 
                     const SizedBox(height: 20),
 
-                    ElevatedButton(
-                      onPressed: () => _pickLocation(isPickup: true),
-                      child: const Text("Select Pickup Location"),
-                    ),
-                    ElevatedButton(
-                      onPressed: () => _pickLocation(isPickup: false),
-                      child: const Text("Select Delivery Location"),
+                    // LOCATION BUTTONS
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () => _pickLocation(isPickup: true),
+                            icon: const Icon(Icons.my_location),
+                            label: const Text("Pickup"),
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () => _pickLocation(isPickup: false),
+                            icon: const Icon(Icons.location_on),
+                            label: const Text("Delivery"),
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
 
                     const SizedBox(height: 20),
 
-                    ElevatedButton(
-                      onPressed: calculatingPrice ? null : _calculatePrice,
-                      child: calculatingPrice
-                          ? const CircularProgressIndicator()
-                          : const Text("Calculate Price"),
+                    // CALCULATE BUTTON
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: calculatingPrice ? null : _calculatePrice,
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        child: calculatingPrice
+                            ? const CircularProgressIndicator(
+                                color: Colors.white,
+                              )
+                            : const Text(
+                                "Calculate Price",
+                                style: TextStyle(fontSize: 16),
+                              ),
+                      ),
                     ),
 
                     if (estimatedPrice != null) ...[
                       const SizedBox(height: 20),
+
                       Container(
-                        padding: const EdgeInsets.all(16),
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(18),
                         decoration: BoxDecoration(
-                          color: Colors.green.shade50,
-                          borderRadius: BorderRadius.circular(10),
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.green.shade400,
+                              Colors.green.shade600,
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              // ignore: deprecated_member_use
+                              color: Colors.green.withOpacity(0.3),
+                              blurRadius: 10,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
                         ),
                         child: Column(
                           children: [
                             Text(
                               "Distance: ${distanceKm?.toStringAsFixed(2)} km",
+                              style: const TextStyle(color: Colors.white),
                             ),
+                            const SizedBox(height: 8),
                             Text(
-                              "Estimated Price: ₦${estimatedPrice!.toStringAsFixed(0)}",
+                              "₦${estimatedPrice!.toStringAsFixed(0)}",
                               style: const TextStyle(
-                                fontSize: 18,
+                                fontSize: 26,
                                 fontWeight: FontWeight.bold,
+                                color: Colors.white,
                               ),
                             ),
                           ],
@@ -303,9 +404,27 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
                       ),
                     ],
 
-                    ElevatedButton(
-                      onPressed: _createPackage,
-                      child: const Text("Create Package"),
+                    const SizedBox(height: 30),
+
+                    // CREATE BUTTON
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _createPackage,
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 18),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        child: const Text(
+                          "Create Package",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),

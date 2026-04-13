@@ -3,14 +3,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
 
 class MapPickerScreen extends StatefulWidget {
   final LatLng initialLocation;
 
-  const MapPickerScreen({
-    super.key,
-    required this.initialLocation,
-  });
+  const MapPickerScreen({super.key, required this.initialLocation});
 
   @override
   State<MapPickerScreen> createState() => _MapPickerScreenState();
@@ -18,8 +16,10 @@ class MapPickerScreen extends StatefulWidget {
 
 class _MapPickerScreenState extends State<MapPickerScreen> {
   late LatLng position;
-  String address = "Move map to get address";
+  String address = "Go to address";
   bool loadingAddress = false;
+  bool userMovedMap = false;
+  bool isFirstLoad = true;
 
   final TextEditingController searchController = TextEditingController();
   GoogleMapController? mapController;
@@ -29,10 +29,11 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
     super.initState();
     position = widget.initialLocation;
 
-    // ❌ DO NOT auto-fetch address (prevents Abuja default issue)
+    // 🔥 FORCE CLEAN START STATE (prevents Abuja/Lagos ghost address)
+    address = "Go to address";
   }
 
-  // ✅ CLEAN & SAFE GET ADDRESS
+  // ✅ CLEAN ADDRESS FETCH
   Future<void> getAddress() async {
     if (!mounted) return;
 
@@ -48,7 +49,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
 
       if (placemarks.isEmpty) {
         setState(() {
-          address = "Move map to get address";
+          address = "Go to address";
           loadingAddress = false;
         });
         return;
@@ -62,16 +63,14 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
         loadingAddress = false;
       });
     } catch (e) {
-      if (!mounted) return;
-
       setState(() {
-        address = "Move map to get address";
+        address = "Go to address";
         loadingAddress = false;
       });
     }
   }
 
-  // 🔍 SEARCH LOCATION
+  // 🔍 SEARCH LOCATION (IMPROVED ERROR UI)
   Future<void> searchLocation(String value) async {
     if (value.isEmpty) return;
 
@@ -83,14 +82,52 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
 
       setState(() => position = newPos);
 
-      mapController?.animateCamera(
-        CameraUpdate.newLatLng(newPos),
-      );
+      mapController?.animateCamera(CameraUpdate.newLatLng(newPos));
 
       getAddress();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Location not found")),
+        const SnackBar(
+          content: Text("⚠️ Location not found. Try a different search."),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  // 📍 CURRENT LOCATION (OPTIONAL BUT CLEAN)
+  Future<void> useMyLocation() async {
+    try {
+      final permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("⚠️ Location permission required"),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      final pos = await Geolocator.getCurrentPosition();
+
+      final newPos = LatLng(pos.latitude, pos.longitude);
+
+      setState(() {
+        position = newPos;
+        userMovedMap = true;
+      });
+
+      mapController?.animateCamera(CameraUpdate.newLatLng(newPos));
+
+      getAddress();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("⚠️ Could not get current location"),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
@@ -103,17 +140,27 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
       body: Stack(
         children: [
           GoogleMap(
-            initialCameraPosition: CameraPosition(
-              target: position,
-              zoom: 14,
-            ),
+            initialCameraPosition: CameraPosition(target: position, zoom: 14),
             onMapCreated: (c) => mapController = c,
 
             // 📍 track movement
-            onCameraMove: (pos) => position = pos.target,
+            onCameraMove: (pos) {
+              position = pos.target;
+              userMovedMap = true;
+            },
 
-            // 🔥 only fetch when user stops moving
-            onCameraIdle: getAddress,
+            // 🔥 FIX: prevent default auto-fetch on first load
+            onCameraIdle: () {
+              if (isFirstLoad) {
+                isFirstLoad = false;
+                return;
+              }
+
+              if (userMovedMap) {
+                getAddress();
+                userMovedMap = false;
+              }
+            },
           ),
 
           const Center(
@@ -138,6 +185,17 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
             ),
           ),
 
+          // 📍 CURRENT LOCATION BUTTON
+          Positioned(
+            bottom: 120,
+            right: 16,
+            child: FloatingActionButton(
+              heroTag: "loc",
+              onPressed: useMyLocation,
+              child: const Icon(Icons.my_location),
+            ),
+          ),
+
           // 📍 BOTTOM CARD
           Positioned(
             bottom: 20,
@@ -154,10 +212,13 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                         : Text(
                             address,
                             textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: address == "Go to address"
+                                  ? Colors.grey
+                                  : Colors.black,
+                            ),
                           ),
-
                     const SizedBox(height: 10),
-
                     ElevatedButton(
                       onPressed: () {
                         Navigator.pop(context, position);

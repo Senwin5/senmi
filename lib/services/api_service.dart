@@ -164,44 +164,43 @@ class ApiService {
   // ==========================
   // Create a package
 
-  static Future<String?> createPackage(Map<String, dynamic> data) async {
-    try {
-      final url = Uri.parse("$baseUrl/create-package/");
+static Future<Map<String, dynamic>> createPackage(Map<String, dynamic> data) async {
+  try {
+    final url = Uri.parse("$baseUrl/create-package/");
 
-      final response = await http.post(
-        url,
-        headers: {
-          ...await ApiService.getAuthHeaders(),
-          "Content-Type": "application/json",
-        },
-        body: jsonEncode(data),
-      );
+    final response = await http.post(
+      url,
+      headers: {
+        ...await ApiService.getAuthHeaders(),
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode(data),
+    );
 
-      debugPrint("STATUS: ${response.statusCode}");
-      debugPrint("BODY: ${response.body}");
+    debugPrint("STATUS: ${response.statusCode}");
+    debugPrint("BODY: ${response.body}");
 
-      dynamic res;
+    final res = jsonDecode(response.body);
 
-      try {
-        res = jsonDecode(response.body);
-      } catch (e) {
-        debugPrint("❌ Not JSON: ${response.body}");
-        return null;
-      }
-
-      if (response.statusCode == 201) {
-        return res['package_id']?.toString();
-      }
-
-      // 🔥 IMPORTANT: show backend error
-      debugPrint("❌ BACKEND ERROR: $res");
-
-      return null;
-    } catch (e) {
-      debugPrint("❌ REQUEST ERROR: $e");
-      return null;
+    if (response.statusCode == 201) {
+      return {
+        "success": true,
+        "package_id": res['package_id']?.toString(),
+      };
     }
+
+    return {
+      "success": false,
+      "error": res['error'] ?? res.toString(),
+    };
+  } catch (e) {
+    return {
+      "success": false,
+      "error": e.toString(),
+    };
   }
+}
+
 
   static Future<Map<String, dynamic>?> getPrice(Map payload) async {
     try {
