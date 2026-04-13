@@ -243,32 +243,42 @@ static Future<Map<String, dynamic>> createPackage(Map<String, dynamic> data) asy
   }
 
   // Create Paystack payment link
-  static Future<String?> createPaystackPaymentLink(
-    Map<String, dynamic> data,
-  ) async {
-    try {
-      final response = await http.post(
-        Uri.parse(
-          "$baseUrl/packages/${data['package_id']}/pay/",
-        ), // ✅ matches Django InitializeReceiverPaymentView
-        headers: await ApiService.getAuthHeaders(),
-        body: jsonEncode(data),
-      );
+static Future<Map<String, dynamic>> createPaystackPaymentLink(
+  Map<String, dynamic> data,
+) async {
+  try {
+    final response = await http.post(
+      Uri.parse("$baseUrl/packages/${data['package_id']}/pay/"),
+      headers: await ApiService.getAuthHeaders(),
+      body: jsonEncode(data),
+    );
 
-      if (response.statusCode == 200) {
-        final resData = jsonDecode(response.body);
-        return resData['payment_url'];
-      } else {
-        debugPrint(
-          "Payment link creation failed: ${response.statusCode} ${response.body}",
-        );
-        return null;
-      }
-    } catch (e) {
-      debugPrint("Error creating payment link: $e");
-      return null;
+    debugPrint("PAYMENT STATUS: ${response.statusCode}");
+    debugPrint("PAYMENT BODY: ${response.body}");
+
+    final decoded = jsonDecode(response.body);
+
+    if (response.statusCode == 200) {
+      return {
+        "success": true,
+        "payment_url": decoded["payment_url"],
+      };
     }
+
+    // 👇 THIS IS WHAT YOU WERE MISSING (REAL ERROR)
+    return {
+      "success": false,
+      "error": decoded is Map
+          ? decoded["error"] ?? decoded.toString()
+          : decoded.toString(),
+    };
+  } catch (e) {
+    return {
+      "success": false,
+      "error": e.toString(),
+    };
   }
+}
 
   // ==========================
   // 💳 INITIALIZE PAYMENT

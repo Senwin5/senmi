@@ -170,18 +170,19 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
 
       if (!mounted) return;
 
-      if (res['success'] == true) {
+      if (res['success'] == true && res['package_id'] != null) {
+        final packageId = res['package_id'].toString();
+
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (_) =>
-                PackageDetailsScreen(packageId: res['package_id'].toString()),
+            builder: (_) => PackageDetailsScreen(packageId: packageId),
           ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("❌ ${res['error'] ?? 'Something went wrong'}"),
+            content: Text("❌ ${res['error'] ?? 'Package creation failed'}"),
             backgroundColor: Colors.red,
           ),
         );

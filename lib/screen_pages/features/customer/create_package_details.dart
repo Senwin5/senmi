@@ -53,9 +53,9 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
             onPressed: () async {
               await Clipboard.setData(ClipboardData(text: link));
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Link copied")),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text("Link copied")));
             },
             child: const Text("Copy"),
           ),
@@ -85,7 +85,7 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
   Future<void> _pay(String payer) async {
     if (package == null) return;
 
-    double amount = (package!['price'] ?? 0).toDouble();
+    double amount = double.tryParse(package!['price'].toString()) ?? 0.0;
 
     try {
       final response = await ApiService.createPaystackPaymentLink({
@@ -95,16 +95,16 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
         "payer": payer,
       });
 
-      if (response != null && response.isNotEmpty) {
+      if (response["success"] == true) {
+        final link = response["payment_url"];
+
         if (payer == "receiver") {
-          final paymentLink = response;
-
           final qrCode =
-              "https://api.qrserver.com/v1/create-qr-code/?data=$paymentLink&size=200x200";
+              "https://api.qrserver.com/v1/create-qr-code/?data=$link&size=200x200";
 
-          _showReceiverPaymentDialog(paymentLink, qrCode);
+          _showReceiverPaymentDialog(link, qrCode);
         } else {
-          final uri = Uri.parse(response);
+          final uri = Uri.parse(link);
           if (await canLaunchUrl(uri)) {
             await launchUrl(uri, mode: LaunchMode.externalApplication);
           }
@@ -112,14 +112,15 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Failed to get payment link")),
+            SnackBar(content: Text(response["error"] ?? "Payment failed")),
           );
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text("Payment failed: $e")));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Payment error: $e")));
       }
     }
   }
@@ -133,28 +134,31 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title,
-                style:
-                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            Text(
+              title,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 8),
-            ...data.entries.map((e) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        flex: 3,
-                        child: Text(
-                          "${e.key}:",
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
+            ...data.entries.map(
+              (e) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: Text(
+                        "${e.key}:",
+                        style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
-                      Expanded(
-                        flex: 5,
-                        child: Text(e.value.isEmpty ? "N/A" : e.value),
-                      ),
-                    ],
-                  ),
-                ))
+                    ),
+                    Expanded(
+                      flex: 5,
+                      child: Text(e.value.isEmpty ? "N/A" : e.value),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -164,9 +168,7 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     if (loading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     if (package == null || package!.isEmpty) {
