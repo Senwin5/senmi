@@ -23,7 +23,6 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
 
   final _formKey = GlobalKey<FormState>();
 
-  // ✅ controllers (REAL FIX)
   final pickupController = TextEditingController();
   final deliveryController = TextEditingController();
 
@@ -86,14 +85,12 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
 
       setState(() {
         pickupAddress = addr;
-        //pickupController.text = addr;
-        setState(() {
-          pickupAddress = addr;
-          pickupController.value = TextEditingValue(
-            text: addr,
-            selection: TextSelection.collapsed(offset: addr.length),
-          );
-        });
+
+        // FIXED: removed nested setState
+        pickupController.value = TextEditingValue(
+          text: addr,
+          selection: TextSelection.collapsed(offset: addr.length),
+        );
       });
     } else {
       deliveryLocation = selected;
@@ -102,23 +99,21 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
 
       setState(() {
         deliveryAddress = addr;
-        //deliveryController.text = addr; // ✅ FIX UI
-        setState(() {
-          deliveryAddress = addr;
-          deliveryController.value = TextEditingValue(
-            text: addr,
-            selection: TextSelection.collapsed(offset: addr.length),
-          );
-        });
+
+        // FIXED: removed nested setState
+        deliveryController.value = TextEditingValue(
+          text: addr,
+          selection: TextSelection.collapsed(offset: addr.length),
+        );
       });
     }
   }
 
   Future<void> _calculatePrice() async {
     if (pickupLocation == null || deliveryLocation == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Select locations first")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Select locations first")),
+      );
       return;
     }
 
@@ -179,7 +174,6 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
         'price': estimatedPrice?.toStringAsFixed(2),
       };
 
-      //final packageId = await ApiService.createPackage(payload);
       final res = await ApiService.createPackage(payload);
 
       if (!mounted) return;
@@ -202,9 +196,9 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Error: $e")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
     } finally {
       if (mounted) setState(() => loading = false);
     }
@@ -250,13 +244,8 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      "Receiver Details",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    const Text("Receiver Details",
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
 
                     _buildTextField(
                       "Receiver Name",
@@ -270,13 +259,8 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
 
                     const SizedBox(height: 10),
 
-                    const Text(
-                      "Package Info",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    const Text("Package Info",
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
 
                     _buildTextField(
                       "Description",
@@ -285,15 +269,9 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
 
                     const SizedBox(height: 10),
 
-                    const Text(
-                      "Locations",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    const Text("Locations",
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
 
-                    // PICKUP
                     GestureDetector(
                       onTap: () => _pickLocation(isPickup: true),
                       child: AbsorbPointer(
@@ -305,7 +283,6 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
                       ),
                     ),
 
-                    // DELIVERY
                     GestureDetector(
                       onTap: () => _pickLocation(isPickup: false),
                       child: AbsorbPointer(
@@ -319,101 +296,31 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
 
                     const SizedBox(height: 20),
 
-                    // LOCATION BUTTONS
-                    Row(
-                      children: [
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: () => _pickLocation(isPickup: true),
-                            icon: const Icon(Icons.my_location),
-                            label: const Text("Pickup"),
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: () => _pickLocation(isPickup: false),
-                            icon: const Icon(Icons.location_on),
-                            label: const Text("Delivery"),
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // CALCULATE BUTTON
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: calculatingPrice ? null : _calculatePrice,
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
                         child: calculatingPrice
-                            ? const CircularProgressIndicator(
-                                color: Colors.white,
-                              )
-                            : const Text(
-                                "Calculate Price",
-                                style: TextStyle(fontSize: 16),
-                              ),
+                            ? const CircularProgressIndicator(color: Colors.white)
+                            : const Text("Calculate Price"),
                       ),
                     ),
 
                     if (estimatedPrice != null) ...[
                       const SizedBox(height: 20),
-
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(18),
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
-                            colors: [
-                              Colors.green.shade400,
-                              Colors.green.shade600,
-                            ],
+                            colors: [Colors.green, Colors.greenAccent],
                           ),
                           borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              // ignore: deprecated_member_use
-                              color: Colors.green.withOpacity(0.3),
-                              blurRadius: 10,
-                              offset: const Offset(0, 5),
-                            ),
-                          ],
                         ),
                         child: Column(
                           children: [
-                            Text(
-                              "Distance: ${distanceKm?.toStringAsFixed(2)} km",
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              "₦${estimatedPrice!.toStringAsFixed(0)}",
-                              style: const TextStyle(
-                                fontSize: 26,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
+                            Text("Distance: ${distanceKm?.toStringAsFixed(2)} km"),
+                            Text("₦${estimatedPrice!.toStringAsFixed(0)}"),
                           ],
                         ),
                       ),
@@ -421,24 +328,11 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
 
                     const SizedBox(height: 30),
 
-                    // CREATE BUTTON
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: _createPackage,
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 18),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
-                        child: const Text(
-                          "Create Package",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        child: const Text("Create Package"),
                       ),
                     ),
                   ],
