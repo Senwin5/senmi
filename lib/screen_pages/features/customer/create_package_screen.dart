@@ -86,7 +86,14 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
 
       setState(() {
         pickupAddress = addr;
-        pickupController.text = addr;
+        //pickupController.text = addr;
+        setState(() {
+          pickupAddress = addr;
+          pickupController.value = TextEditingValue(
+            text: addr,
+            selection: TextSelection.collapsed(offset: addr.length),
+          );
+        });
       });
     } else {
       deliveryLocation = selected;
@@ -95,7 +102,14 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
 
       setState(() {
         deliveryAddress = addr;
-        deliveryController.text = addr; // ✅ FIX UI UPDATE
+        //deliveryController.text = addr; // ✅ FIX UI
+        setState(() {
+          deliveryAddress = addr;
+          deliveryController.value = TextEditingValue(
+            text: addr,
+            selection: TextSelection.collapsed(offset: addr.length),
+          );
+        });
       });
     }
   }

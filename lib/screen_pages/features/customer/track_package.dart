@@ -82,7 +82,11 @@ class _TrackingScreenState extends State<TrackingScreen>
       status = pkg['status'] ?? status;
 
       // IMPORTANT: only customer sees this
-      deliveryCode = pkg['delivery_code']?.toString();
+      if (pkg['delivery_code'] != null) {
+        deliveryCode = pkg['delivery_code'].toString();
+      } else {
+        deliveryCode = null;
+      }
 
       _updateMarkers();
     });

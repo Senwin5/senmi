@@ -164,43 +164,35 @@ class ApiService {
   // ==========================
   // Create a package
 
-static Future<Map<String, dynamic>> createPackage(Map<String, dynamic> data) async {
-  try {
-    final url = Uri.parse("$baseUrl/create-package/");
+  static Future<Map<String, dynamic>> createPackage(
+    Map<String, dynamic> data,
+  ) async {
+    try {
+      final url = Uri.parse("$baseUrl/create-package/");
 
-    final response = await http.post(
-      url,
-      headers: {
-        ...await ApiService.getAuthHeaders(),
-        "Content-Type": "application/json",
-      },
-      body: jsonEncode(data),
-    );
+      final response = await http.post(
+        url,
+        headers: {
+          ...await ApiService.getAuthHeaders(),
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode(data),
+      );
 
-    debugPrint("STATUS: ${response.statusCode}");
-    debugPrint("BODY: ${response.body}");
+      debugPrint("STATUS: ${response.statusCode}");
+      debugPrint("BODY: ${response.body}");
 
-    final res = jsonDecode(response.body);
+      final res = jsonDecode(response.body);
 
-    if (response.statusCode == 201) {
-      return {
-        "success": true,
-        "package_id": res['package_id']?.toString(),
-      };
+      if (response.statusCode == 201) {
+        return {"success": true, "package_id": res['package_id']?.toString()};
+      }
+
+      return {"success": false, "error": res['error'] ?? res.toString()};
+    } catch (e) {
+      return {"success": false, "error": e.toString()};
     }
-
-    return {
-      "success": false,
-      "error": res['error'] ?? res.toString(),
-    };
-  } catch (e) {
-    return {
-      "success": false,
-      "error": e.toString(),
-    };
   }
-}
-
 
   static Future<Map<String, dynamic>?> getPrice(Map payload) async {
     try {
@@ -243,42 +235,36 @@ static Future<Map<String, dynamic>> createPackage(Map<String, dynamic> data) asy
   }
 
   // Create Paystack payment link
-static Future<Map<String, dynamic>> createPaystackPaymentLink(
-  Map<String, dynamic> data,
-) async {
-  try {
-    final response = await http.post(
-      Uri.parse("$baseUrl/packages/${data['package_id']}/pay/"),
-      headers: await ApiService.getAuthHeaders(),
-      body: jsonEncode(data),
-    );
+  static Future<Map<String, dynamic>> createPaystackPaymentLink(
+    Map<String, dynamic> data,
+  ) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/packages/${data['package_id']}/pay/"),
+        headers: await ApiService.getAuthHeaders(),
+        body: jsonEncode(data),
+      );
 
-    debugPrint("PAYMENT STATUS: ${response.statusCode}");
-    debugPrint("PAYMENT BODY: ${response.body}");
+      debugPrint("PAYMENT STATUS: ${response.statusCode}");
+      debugPrint("PAYMENT BODY: ${response.body}");
 
-    final decoded = jsonDecode(response.body);
+      final decoded = jsonDecode(response.body);
 
-    if (response.statusCode == 200) {
+      if (response.statusCode == 200) {
+        return {"success": true, "payment_url": decoded["payment_url"]};
+      }
+
+      // 👇 THIS IS WHAT YOU WERE MISSING (REAL ERROR)
       return {
-        "success": true,
-        "payment_url": decoded["payment_url"],
+        "success": false,
+        "error": decoded is Map
+            ? decoded["error"] ?? decoded.toString()
+            : decoded.toString(),
       };
+    } catch (e) {
+      return {"success": false, "error": e.toString()};
     }
-
-    // 👇 THIS IS WHAT YOU WERE MISSING (REAL ERROR)
-    return {
-      "success": false,
-      "error": decoded is Map
-          ? decoded["error"] ?? decoded.toString()
-          : decoded.toString(),
-    };
-  } catch (e) {
-    return {
-      "success": false,
-      "error": e.toString(),
-    };
   }
-}
 
   // ==========================
   // 💳 INITIALIZE PAYMENT
@@ -306,7 +292,20 @@ static Future<Map<String, dynamic>> createPaystackPaymentLink(
       headers: await ApiService.getAuthHeaders(),
     );
 
-    return jsonDecode(response.body);
+    final data = jsonDecode(response.body);
+
+    // ✅ HANDLE MAP RESPONSE SAFELY
+    if (data is List) {
+      return data;
+    }
+
+    if (data is Map<String, dynamic>) {
+      // try common keys
+      if (data['data'] is List) return data['data'];
+      if (data['results'] is List) return data['results'];
+    }
+
+    return [];
   }
 
   // ==========================
@@ -314,7 +313,7 @@ static Future<Map<String, dynamic>> createPaystackPaymentLink(
   // ==========================
   static Future<Map<String, dynamic>?> trackPackage(int packageId) async {
     final response = await http.get(
-      Uri.parse("$baseUrl/packages/$packageId/track/"),
+      Uri.parse("$baseUrl/track/$packageId/"),
       headers: await ApiService.getAuthHeaders(),
     );
 
@@ -324,8 +323,8 @@ static Future<Map<String, dynamic>> createPaystackPaymentLink(
     return null;
   }
 
-  // 🚚 AVAILABLE PACKAGES (RIDER) - FIXED
 
+  // AVAILABLE PACKAGES (RIDER) - FIXED
   static Future<List<dynamic>> getAvailablePackages() async {
     await loadToken(); // Ensure token is loaded
     if (token == null) return [];
@@ -350,8 +349,9 @@ static Future<Map<String, dynamic>> createPaystackPaymentLink(
     }
   }
 
+
   // ==========================
-  // ✅ ACCEPT PACKAGE
+  // ACCEPT PACKAGE
   // ==========================
   static Future<bool> acceptPackage(int packageId) async {
     final response = await http.post(
@@ -763,7 +763,6 @@ static Future<Map<String, dynamic>> createPaystackPaymentLink(
 
     return null;
   }
-  
 
   static Future<dynamic> getMyPackages() async {
     return [];
