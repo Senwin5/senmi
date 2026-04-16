@@ -65,7 +65,7 @@ class _RiderHomeState extends State<RiderHome> {
     }
   }
 
-  void accept(int id) async {
+  void accept(String id) async {
     bool success = await ApiService.acceptPackage(id);
     if (success && mounted) {
       ScaffoldMessenger.of(

@@ -64,7 +64,7 @@ class _RiderDeliveriesScreenState extends State<RiderDeliveriesScreen>
     }
   }
 
-  Future<void> acceptPackage(int packageId) async {
+  Future<void> acceptPackage(String packageId) async {
     setState(() => loadingAvailable = true);
     try {
       final success = await ApiService.acceptPackage(packageId);

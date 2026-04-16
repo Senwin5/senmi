@@ -212,24 +212,24 @@ class ApiService {
   }
 
   // Fetch package by ID
-  static Future<Map<String, dynamic>?> getPackage(String packageId) async {
+  static Future<Map<String, dynamic>?> getPackage(String id) async {
     try {
-      final response = await http.get(
-        Uri.parse("$baseUrl/track/$packageId/"),
-        headers: await ApiService.getAuthHeaders(),
+      final res = await http.get(
+        Uri.parse("$baseUrl/packages/$id/"),
+        headers: await getAuthHeaders(),
       );
 
-      if (response.statusCode == 200) {
-        final resData = jsonDecode(response.body);
-        return resData is Map<String, dynamic> ? resData : null;
-      } else {
-        debugPrint(
-          "Get package failed: ${response.statusCode} ${response.body}",
-        );
-        return null;
+      debugPrint("GET PACKAGE STATUS: ${res.statusCode}");
+      debugPrint("GET PACKAGE BODY: ${res.body}");
+
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        return data is Map<String, dynamic> ? data : null;
       }
+
+      return null;
     } catch (e) {
-      debugPrint("Error fetching package: $e");
+      debugPrint("getPackage error: $e");
       return null;
     }
   }
@@ -269,7 +269,7 @@ class ApiService {
   // ==========================
   // 💳 INITIALIZE PAYMENT
   // ==========================
-  static Future<String?> initializePayment(int packageId) async {
+  static Future<String?> initializePayment(String packageId) async {
     final response = await http.post(
       Uri.parse("$baseUrl/packages/$packageId/pay/"),
       headers: await ApiService.getAuthHeaders(),
@@ -287,20 +287,24 @@ class ApiService {
   // 📦 CUSTOMER PACKAGES
   // ==========================
   static Future<List<dynamic>> getCustomerPackages() async {
+    await loadToken(); // 🔥 IMPORTANT FIX
+
     final response = await http.get(
       Uri.parse("$baseUrl/customer/packages/"),
       headers: await ApiService.getAuthHeaders(),
     );
 
+    debugPrint("STATUS → ${response.statusCode}");
+    debugPrint("BODY → ${response.body}");
+
     final data = jsonDecode(response.body);
 
-    // ✅ HANDLE MAP RESPONSE SAFELY
     if (data is List) {
       return data;
     }
 
     if (data is Map<String, dynamic>) {
-      // try common keys
+      if (data['packages'] is List) return data['packages']; // 🔥 IMPORTANT
       if (data['data'] is List) return data['data'];
       if (data['results'] is List) return data['results'];
     }
@@ -311,7 +315,7 @@ class ApiService {
   // ==========================
   // 📍 TRACK PACKAGE
   // ==========================
-  static Future<Map<String, dynamic>?> trackPackage(int packageId) async {
+  static Future<Map<String, dynamic>?> trackPackage(String packageId) async {
     final response = await http.get(
       Uri.parse("$baseUrl/track/$packageId/"),
       headers: await ApiService.getAuthHeaders(),
@@ -322,7 +326,6 @@ class ApiService {
     }
     return null;
   }
-
 
   // AVAILABLE PACKAGES (RIDER) - FIXED
   static Future<List<dynamic>> getAvailablePackages() async {
@@ -349,11 +352,10 @@ class ApiService {
     }
   }
 
-
   // ==========================
   // ACCEPT PACKAGE
   // ==========================
-  static Future<bool> acceptPackage(int packageId) async {
+  static Future<bool> acceptPackage(String packageId) async {
     final response = await http.post(
       Uri.parse("$baseUrl/packages/$packageId/accept/"),
       headers: await ApiService.getAuthHeaders(),
@@ -365,7 +367,7 @@ class ApiService {
   // ==========================
   // 🔄 UPDATE DELIVERY STATUS
   // ==========================
-  static Future<bool> updateStatus(int packageId, String status) async {
+  static Future<bool> updateStatus(String packageId, String status) async {
     final response = await http.post(
       Uri.parse("$baseUrl/packages/$packageId/update-status/"),
       headers: await ApiService.getAuthHeaders(),
@@ -379,7 +381,7 @@ class ApiService {
   // 📍 UPDATE LOCATION (RIDER)
   // ==========================
   static Future<bool> updateLocation(
-    int packageId,
+    String packageId,
     double lat,
     double lng,
   ) async {
@@ -396,8 +398,8 @@ class ApiService {
   // ⭐ RATE RIDER
   // ==========================
   static Future<bool> rateRider(
-    int packageId,
-    int rating,
+    String packageId,
+    String rating,
     String comment,
   ) async {
     final response = await http.post(

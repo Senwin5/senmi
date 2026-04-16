@@ -28,12 +28,13 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
     setState(() => loading = true);
 
     final res = await ApiService.getPackage(widget.packageId);
-
+  
     setState(() {
-      package = res ?? {};
+      package = res;
       loading = false;
     });
   }
+  
 
   void _showReceiverPaymentDialog(String link, String qrCode) {
     showDialog(
