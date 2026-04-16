@@ -59,7 +59,6 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
 
       return "${p.name ?? ''}, ${p.street ?? ''}, ${p.locality ?? ''}, ${p.country ?? ''}";
     } catch (e) {
-    
       return "Unknown location";
     }
   }
@@ -111,9 +110,9 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
 
   Future<void> _calculatePrice() async {
     if (pickupLocation == null || deliveryLocation == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Select locations first")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Select locations first")));
       return;
     }
 
@@ -181,7 +180,7 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
       if (res['success'] == true && res['package_id'] != null) {
         final packageId = res['package_id'].toString();
 
-        Navigator.pushReplacement(
+        Navigator.push(
           context,
           MaterialPageRoute(
             builder: (_) => PackageDetailsScreen(packageId: packageId),
@@ -196,9 +195,9 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Error: $e")));
     } finally {
       if (mounted) setState(() => loading = false);
     }
@@ -234,6 +233,20 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
         ),
         centerTitle: true,
         elevation: 0,
+
+        leading: IconButton(
+          icon: Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade200,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(Icons.arrow_back_ios_new, size: 18),
+          ),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
       ),
       body: loading
           ? const Center(child: CircularProgressIndicator())
@@ -244,8 +257,13 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text("Receiver Details",
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    const Text(
+                      "Receiver Details",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
 
                     _buildTextField(
                       "Receiver Name",
@@ -259,8 +277,13 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
 
                     const SizedBox(height: 10),
 
-                    const Text("Package Info",
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    const Text(
+                      "Package Info",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
 
                     _buildTextField(
                       "Description",
@@ -269,8 +292,13 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
 
                     const SizedBox(height: 10),
 
-                    const Text("Locations",
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    const Text(
+                      "Locations",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
 
                     GestureDetector(
                       onTap: () => _pickLocation(isPickup: true),
@@ -301,7 +329,9 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
                       child: ElevatedButton(
                         onPressed: calculatingPrice ? null : _calculatePrice,
                         child: calculatingPrice
-                            ? const CircularProgressIndicator(color: Colors.white)
+                            ? const CircularProgressIndicator(
+                                color: Colors.white,
+                              )
                             : const Text("Calculate Price"),
                       ),
                     ),
@@ -319,7 +349,9 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
                         ),
                         child: Column(
                           children: [
-                            Text("Distance: ${distanceKm?.toStringAsFixed(2)} km"),
+                            Text(
+                              "Distance: ${distanceKm?.toStringAsFixed(2)} km",
+                            ),
                             Text("₦${estimatedPrice!.toStringAsFixed(0)}"),
                           ],
                         ),

@@ -9,10 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 class PackageDetailsScreen extends StatefulWidget {
   final String packageId;
 
-  const PackageDetailsScreen({
-    required this.packageId,
-    super.key,
-  });
+  const PackageDetailsScreen({required this.packageId, super.key});
 
   @override
   State<PackageDetailsScreen> createState() => _PackageDetailsScreenState();
@@ -32,14 +29,12 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
     setState(() => loading = true);
 
     final res = await ApiService.getPackage(widget.packageId);
-    
-  
+
     setState(() {
       package = res;
       loading = false;
     });
   }
-  
 
   void _showReceiverPaymentDialog(String link, String qrCode) {
     showDialog(
@@ -188,7 +183,22 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
         (package!['receiver_paid'] ?? false);
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Package Details")),
+      appBar: AppBar(
+        title: const Text("Package Details"),
+        leading: IconButton(
+          icon: Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade200,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(Icons.arrow_back_ios_new, size: 18),
+          ),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
