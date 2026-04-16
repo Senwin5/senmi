@@ -59,7 +59,7 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
 
       return "${p.name ?? ''}, ${p.street ?? ''}, ${p.locality ?? ''}, ${p.country ?? ''}";
     } catch (e) {
-      print("PLACEMARK ERROR: $e");
+    
       return "Unknown location";
     }
   }

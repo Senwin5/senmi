@@ -8,7 +8,11 @@ import 'package:url_launcher/url_launcher.dart';
 
 class PackageDetailsScreen extends StatefulWidget {
   final String packageId;
-  const PackageDetailsScreen({required this.packageId, super.key});
+
+  const PackageDetailsScreen({
+    required this.packageId,
+    super.key,
+  });
 
   @override
   State<PackageDetailsScreen> createState() => _PackageDetailsScreenState();
@@ -28,6 +32,7 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
     setState(() => loading = true);
 
     final res = await ApiService.getPackage(widget.packageId);
+    
   
     setState(() {
       package = res;

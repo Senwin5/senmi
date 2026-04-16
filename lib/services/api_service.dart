@@ -7,8 +7,8 @@ import 'package:flutter/foundation.dart'; // ✅ For ValueNotifier
 
 class ApiService {
   // 🔥 CHANGE THIS
-  //static const String baseUrl = "http://192.168.8.252:8001/api";
-  static const String baseUrl = "http://192.168.1.129:8001/api";
+  static const String baseUrl = "http://192.168.8.252:8001/api";
+  //static const String baseUrl = "http://192.168.1.129:8001/api";
 
   static String? token;
   static String? userRole; // ✅ MOVED HERE
@@ -212,25 +212,43 @@ class ApiService {
   }
 
   // Fetch package by ID
-  static Future<Map<String, dynamic>?> getPackage(String id) async {
+static Future<dynamic> getPackage(String packageId) async {
+  await loadToken();
+
+  final response = await http.get(
+    Uri.parse("$baseUrl/packages/$packageId/"),
+    headers: await ApiService.getAuthHeaders(),
+  );
+
+  return jsonDecode(response.body);
+}
+
+  static Future<List<dynamic>> getMyOrders() async {
+    await loadToken();
+
     try {
-      final res = await http.get(
-        Uri.parse("$baseUrl/packages/$id/"),
-        headers: await getAuthHeaders(),
+      final response = await http.get(
+        Uri.parse("$baseUrl/my-orders/"),
+        headers: await ApiService.getAuthHeaders(),
       );
 
-      debugPrint("GET PACKAGE STATUS: ${res.statusCode}");
-      debugPrint("GET PACKAGE BODY: ${res.body}");
+      debugPrint("MY ORDERS STATUS → ${response.statusCode}");
+      debugPrint("MY ORDERS BODY → ${response.body}");
 
-      if (res.statusCode == 200) {
-        final data = jsonDecode(res.body);
-        return data is Map<String, dynamic> ? data : null;
+      final data = jsonDecode(response.body);
+
+      if (data is List) return data;
+
+      if (data is Map<String, dynamic>) {
+        if (data['results'] is List) return data['results'];
+        if (data['data'] is List) return data['data'];
+        if (data['packages'] is List) return data['packages'];
       }
 
-      return null;
+      return [];
     } catch (e) {
-      debugPrint("getPackage error: $e");
-      return null;
+      debugPrint("getMyOrders error: $e");
+      return [];
     }
   }
 
@@ -767,10 +785,6 @@ class ApiService {
   }
 
   static Future<dynamic> getMyPackages() async {
-    return [];
-  }
-
-  static Future<dynamic> getMyHistory() async {
     return [];
   }
 

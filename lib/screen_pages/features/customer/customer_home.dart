@@ -1,6 +1,7 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:senmi/screen_pages/features/customer/customer_history_screen.dart';
 import 'package:senmi/screen_pages/features/customer/track_package.dart';
 import '../../../services/api_service.dart';
 import 'create_package_screen.dart';
@@ -161,7 +162,14 @@ class _CustomerHomeState extends State<CustomerHome> {
                           title: "Check delivery history",
                           subtitle:
                               "Check your delivery history anytime to stay organized.",
-                          onTap: () {},
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const HistoryScreen(),
+                              ),
+                            ).then((_) => loadPackages());
+                          },
                         ),
 
                         const SizedBox(height: 10),

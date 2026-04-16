@@ -27,7 +27,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   void fetchPackages() async {
     try {
-      final res = await ApiService.getCustomerPackages();
+      final res = await ApiService.getMyOrders();
       setState(() {
         packages = res;
         loading = false;
@@ -126,12 +126,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
-  // ✅ FIXED: now inside class
-
   void payNow(dynamic package) {
     final id = package['package_id'] ?? package['id'];
-
-    print("Sending ID → $id");
 
     if (id == null) {
       ScaffoldMessenger.of(
@@ -154,94 +150,108 @@ class _HistoryScreenState extends State<HistoryScreen> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    return SafeArea(
-      child: Scaffold(
-        body: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 10),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("History"),
+        centerTitle: false,
+        elevation: 0,
+        toolbarHeight: 90, // 🔥 gives breathing space
+      ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 10),
 
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
                 children: [
-                  Text(
-                    "History",
-                    style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    "Track all your deliveries",
-                    style: TextStyle(color: Colors.grey),
-                  ),
+                  filterChip("All"),
+                  filterChip("Pending"),
+                  filterChip("Paid"),
+                  filterChip("Delivered"),
                 ],
               ),
             ),
+          ),
 
-            const SizedBox(height: 14),
+          const SizedBox(height: 14),
 
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    filterChip("All"),
-                    filterChip("Pending"),
-                    filterChip("Paid"),
-                    filterChip("Delivered"),
-                  ],
-                ),
-              ),
-            ),
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.all(12),
+              itemCount: filteredPackages.length,
+              itemBuilder: (context, index) {
+                final package = filteredPackages[index];
+                final status = (package['status'] ?? "pending").toString();
 
-            const SizedBox(height: 14),
-
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.all(12),
-                itemCount: filteredPackages.length,
-                itemBuilder: (context, index) {
-                  final package = filteredPackages[index];
-                  final status = (package['status'] ?? "pending").toString();
-
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.all(14),
+                    title: Text(
+                      package['description'] ?? "Package",
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.all(14),
-                      title: Text(
-                        package['description'] ?? "Package",
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 6),
-                          Text("₦${package['price']}"),
-
-                          if (status == "pending")
-                            TextButton(
-                              onPressed: () => payNow(package),
-                              child: const Text("Pay Now"),
-                            ),
-                        ],
-                      ),
-                      trailing: statusBadge(status),
-
-                      // optional but keeps old flow
-                      onTap: () => payNow(package),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 6),
+                        Text("₦${package['price']}"),
+                      ],
                     ),
-                  );
-                },
-              ),
+
+                    // 🔥 FIXED: Pay Now UNDER Pending badge (same trailing area)
+                    trailing: status == "pending"
+                        ? Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              statusBadge(status),
+
+                              const SizedBox(height: 6),
+
+                              InkWell(
+                                onTap: () => payNow(package),
+                                borderRadius: BorderRadius.circular(20),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical:
+                                        3, // 🔥 reduced height to prevent overflow
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: primaryPurple.withOpacity(0.12),
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(color: primaryPurple),
+                                  ),
+                                  child: const Text(
+                                    "PAY NOW",
+                                    style: TextStyle(
+                                      color: Color(0xFF6C2BD9),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                      height: 1, // 🔥 keeps text compact
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          )
+                        : statusBadge(status),
+                    onTap: () => payNow(package),
+                  ),
+                );
+              },
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
