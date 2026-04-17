@@ -87,15 +87,9 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
     if (package == null) return;
 
     try {
-      
       final response = await ApiService.createPaystackPaymentLink({
         "package_id": widget.packageId,
         "payer": payer,
-
-        if (payer == "receiver")
-          "receiver_email": package!['receiver_email'] ?? "",
-
-        if (payer == "sender") "sender_email": package!['sender_email'] ?? "",
       });
 
       if (response["success"] == true) {

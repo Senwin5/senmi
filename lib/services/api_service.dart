@@ -269,8 +269,6 @@ class ApiService {
     Map<String, dynamic> data,
   ) async {
     try {
-      // ❌ REMOVE EMAIL VALIDATION (not needed)
-
       final response = await http.post(
         Uri.parse("$baseUrl/packages/${data['package_id']}/pay/"),
         headers: await ApiService.getAuthHeaders(),
@@ -280,7 +278,16 @@ class ApiService {
       debugPrint("PAYMENT STATUS: ${response.statusCode}");
       debugPrint("PAYMENT BODY: ${response.body}");
 
-      final decoded = jsonDecode(response.body);
+      // ✅ SAFE DECODE (IMPORTANT)
+      dynamic decoded;
+      try {
+        decoded = jsonDecode(response.body);
+      } catch (e) {
+        return {
+          "success": false,
+          "error": "Server returned non-JSON: ${response.body}",
+        };
+      }
 
       if (response.statusCode == 200) {
         return {"success": true, "payment_url": decoded["payment_url"]};
