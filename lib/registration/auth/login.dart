@@ -23,9 +23,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool loading = false;
 
-  // ✅ NEW: password visibility toggle
-  bool obscurePassword = true;
-
+  // =========================
+  // 🔑 LOGIN FUNCTION
+  // =========================
   void login() async {
     setState(() => loading = true);
 
@@ -38,6 +38,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (res.containsKey("access")) {
       try {
+        // ADMIN
         if (ApiService.isAdmin) {
           Navigator.pushReplacement(
             context,
@@ -46,12 +47,15 @@ class _LoginScreenState extends State<LoginScreen> {
           return;
         }
 
+        // RIDER
         if (ApiService.userRole == "rider") {
           Map<String, dynamic> statusRes = {};
           try {
             statusRes = await ApiService.getRiderStatus();
           } catch (e) {
+            // fallback to pending screen if API fails
             Navigator.pushReplacement(
+              // ignore: use_build_context_synchronously
               context,
               MaterialPageRoute(builder: (_) => const RiderPendingScreen()),
             );
@@ -60,6 +64,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
           if (statusRes['status'] == "no_profile") {
             Navigator.pushReplacement(
+              // ignore: use_build_context_synchronously
               context,
               MaterialPageRoute(builder: (_) => const RiderCompleteProfile()),
             );
@@ -68,6 +73,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
           if (statusRes['status'] == "pending") {
             Navigator.pushReplacement(
+              // ignore: use_build_context_synchronously
               context,
               MaterialPageRoute(builder: (_) => const RiderPendingScreen()),
             );
@@ -75,6 +81,7 @@ class _LoginScreenState extends State<LoginScreen> {
           }
 
           if (statusRes['status'] == "rejected") {
+            // ignore: use_build_context_synchronously
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(statusRes['rejection_reason'] ?? "Rejected"),
@@ -85,6 +92,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
           if (statusRes['status'] == "approved") {
             Navigator.pushReplacement(
+              // ignore: use_build_context_synchronously
               context,
               MaterialPageRoute(builder: (_) => const RiderBottomNav()),
             );
@@ -92,7 +100,9 @@ class _LoginScreenState extends State<LoginScreen> {
           }
         }
 
+        // CUSTOMER
         Navigator.pushReplacement(
+          // ignore: use_build_context_synchronously
           context,
           MaterialPageRoute(builder: (_) => const CustomerBottomNav()),
         );
@@ -125,6 +135,101 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  // =========================
+  // 🚀 AUTO LOGIN CHECK
+  // =========================
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      setState(() => loading = true);
+      await ApiService.loadToken();
+
+      if (!mounted) return;
+
+      if (ApiService.token == null) {
+        setState(() => loading = false);
+        return;
+      }
+
+      try {
+        // ADMIN
+        if (ApiService.isAdmin) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const AdminDashboard()),
+          );
+          return;
+        }
+
+        // RIDER
+        if (ApiService.userRole == "rider") {
+          Map<String, dynamic> statusRes = {};
+          try {
+            statusRes = await ApiService.getRiderStatus();
+          } catch (e) {
+            Navigator.pushReplacement(
+              // ignore: use_build_context_synchronously
+              context,
+              MaterialPageRoute(builder: (_) => const RiderPendingScreen()),
+            );
+            return;
+          }
+
+          if (statusRes['status'] == "no_profile") {
+            Navigator.pushReplacement(
+              // ignore: use_build_context_synchronously
+              context,
+              MaterialPageRoute(builder: (_) => const RiderCompleteProfile()),
+            );
+            return;
+          }
+
+          if (statusRes['status'] == "pending") {
+            Navigator.pushReplacement(
+              // ignore: use_build_context_synchronously
+              context,
+              MaterialPageRoute(builder: (_) => const RiderPendingScreen()),
+            );
+            return;
+          }
+
+          if (statusRes['status'] == "rejected") {
+            // ignore: use_build_context_synchronously
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(statusRes['rejection_reason'] ?? "Rejected"),
+              ),
+            );
+            return;
+          }
+
+          if (statusRes['status'] == "approved") {
+            Navigator.pushReplacement(
+              // ignore: use_build_context_synchronously
+              context,
+              MaterialPageRoute(builder: (_) => const RiderHome()),
+            );
+            return;
+          }
+        }
+
+        // CUSTOMER
+        Navigator.pushReplacement(
+          // ignore: use_build_context_synchronously
+          context,
+          MaterialPageRoute(builder: (_) => const CustomerHome()),
+        );
+      } finally {
+        if (mounted) setState(() => loading = false);
+      }
+    });
+  }
+
+  // =========================
+  // 🎨 UI
+  // =========================
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -135,9 +240,9 @@ class _LoginScreenState extends State<LoginScreen> {
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Card(
-                elevation: 8,
+                elevation: 6,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(16),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(24),
@@ -145,84 +250,42 @@ class _LoginScreenState extends State<LoginScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const Text(
-                        "SenMi 🏍️",
+                        "SenMi 🚚",
                         style: TextStyle(
-                          fontSize: 30,
+                          fontSize: 32,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 16),
                       const Text(
-                        "Fast delivery. Trusted riders.",
-                        style: TextStyle(color: Colors.white60),
+                        "Sign in to continue",
+                        style: TextStyle(fontSize: 16, color: Colors.grey),
                       ),
-                      const SizedBox(height: 30),
-
-                      // EMAIL
+                      const SizedBox(height: 32),
                       TextField(
                         controller: emailController,
                         keyboardType: TextInputType.emailAddress,
                         decoration: InputDecoration(
                           labelText: "Email",
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14),
+                            borderRadius: BorderRadius.circular(12),
                           ),
                           prefixIcon: const Icon(Icons.email),
                         ),
                       ),
-
                       const SizedBox(height: 16),
-
-                      // PASSWORD WITH EYE 👁
                       TextField(
                         controller: passwordController,
-                        obscureText: obscurePassword,
+                        obscureText: true,
                         decoration: InputDecoration(
                           labelText: "Password",
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14),
+                            borderRadius: BorderRadius.circular(12),
                           ),
                           prefixIcon: const Icon(Icons.lock),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              obscurePassword
-                                  ? Icons.visibility_off
-                                  : Icons.visibility,
-                            ),
-                            onPressed: () {
-                              setState(() {
-                                obscurePassword = !obscurePassword;
-                              });
-                            },
-                          ),
                         ),
                       ),
-
-                      const SizedBox(height: 10),
-
-                      // 🔥 FORGOT PASSWORD (STATIC FOR NOW)
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: GestureDetector(
-                          onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("Forgot password coming soon 🔐"),
-                              ),
-                            );
-                          },
-                          child: const Text(
-                            "Forgot password?",
-                            style: TextStyle(
-                              color: Colors.blue,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ),
-
                       const SizedBox(height: 24),
-
                       CustomButton(
                         text: "Login",
                         onPressed: login,
@@ -230,9 +293,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         color: Colors.blue,
                       ),
-
                       const SizedBox(height: 16),
-
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -262,7 +323,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ),
-
           if (loading)
             Container(
               color: Colors.black45,
