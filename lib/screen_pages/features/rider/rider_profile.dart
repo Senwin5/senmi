@@ -132,8 +132,8 @@ class _RiderProfileScreenState extends State<RiderProfileScreen> {
                           backgroundColor: Colors.blue.shade200,
                           backgroundImage: rider!['profile_picture'] != null
                               ? NetworkImage(
-                                  //"http://192.168.8.252:8001${rider!['profile_picture']}",
-                                  "http://192.168.1.129:8001${rider!['profile_picture']}",
+                                  "http://192.168.8.252:8001${rider!['profile_picture']}",
+                                  //"http://192.168.1.129:8001${rider!['profile_picture']}",
                                 )
                               : null,
                           child: rider!['profile_picture'] == null

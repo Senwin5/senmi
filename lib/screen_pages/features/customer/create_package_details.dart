@@ -75,6 +75,14 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
             onPressed: () async {
               final uri = Uri.parse(link);
               await launchUrl(uri, mode: LaunchMode.externalApplication);
+              await Future.delayed(const Duration(seconds: 3));
+              await _fetchPackage();
+
+              if (!(package?['is_paid'] ?? false)) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Payment cancelled")),
+                );
+              }
             },
             child: const Text("Open"),
           ),

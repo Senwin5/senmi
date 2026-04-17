@@ -7,8 +7,8 @@ import 'package:flutter/foundation.dart'; // ✅ For ValueNotifier
 
 class ApiService {
   // 🔥 CHANGE THIS
-  //static const String baseUrl = "http://192.168.8.252:8001/api";
-  static const String baseUrl = "http://192.168.1.129:8001/api";
+  static const String baseUrl = "http://192.168.8.252:8001/api";
+  //static const String baseUrl = "http://192.168.1.129:8001/api";
 
   static String? token;
   static String? refreshToken;
