@@ -9,7 +9,9 @@ import 'package:senmi/screen_pages/features/customer/create_package_details.dart
 import 'package:senmi/services/api_service.dart';
 
 class CreatePackageScreen extends StatefulWidget {
-  const CreatePackageScreen({super.key});
+  final bool fromHome;
+
+  const CreatePackageScreen({super.key, this.fromHome = false});
 
   @override
   State<CreatePackageScreen> createState() => _CreatePackageScreenState();
@@ -233,20 +235,7 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
         ),
         centerTitle: true,
         elevation: 0,
-
-        leading: IconButton(
-          icon: Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade200,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(Icons.arrow_back_ios_new, size: 18),
-          ),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
+        //automaticallyImplyLeading: true,
       ),
       body: loading
           ? const Center(child: CircularProgressIndicator())

@@ -7,11 +7,12 @@ import 'package:flutter/foundation.dart'; // ✅ For ValueNotifier
 
 class ApiService {
   // 🔥 CHANGE THIS
-  static const String baseUrl = "http://192.168.8.252:8001/api";
-  //static const String baseUrl = "http://192.168.1.129:8001/api";
+  //static const String baseUrl = "http://192.168.8.252:8001/api";
+  static const String baseUrl = "http://192.168.1.129:8001/api";
 
   static String? token;
-  static String? userRole; // ✅ MOVED HERE
+  static String? refreshToken;
+  static String? userRole;
   static String? username;
 
   // ✅ Track login state
@@ -31,13 +32,15 @@ class ApiService {
   static bool get isAdmin => userRole == "admin";
 
   static Future<Map<String, String>> getAuthHeaders() async {
+    await loadToken();
+
     if (token == null) {
-      await loadToken(); // 🔥 ensures token is always loaded
+      return {"Content-Type": "application/json"};
     }
 
     return {
       "Content-Type": "application/json",
-      if (token != null) "Authorization": "Bearer $token",
+      "Authorization": "Bearer $token",
     };
   }
 
@@ -60,9 +63,12 @@ class ApiService {
   // 🔐 LOAD TOKEN & ROLE
   static Future<void> loadToken() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
+
     token = prefs.getString('token');
+    refreshToken = prefs.getString('refresh'); // 🔥 ADD THIS LINE
     userRole = prefs.getString('userRole');
     username = prefs.getString('username');
+
     isLoggedIn.value = token != null && userRole != null;
   }
 
@@ -81,8 +87,14 @@ class ApiService {
 
     if (res.statusCode == 200) {
       token = data['access'];
+      refreshToken = data['refresh'];
       userRole = data['role'];
       username = data['username'];
+
+      // ✅ ADD THIS (DO NOT REMOVE ANYTHING ABOVE)
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString('refresh', data['refresh']);
+
       await saveTokenAndRole(token!, userRole!, data['username'] ?? '');
     }
 
@@ -212,16 +224,16 @@ class ApiService {
   }
 
   // Fetch package by ID
-static Future<dynamic> getPackage(String packageId) async {
-  await loadToken();
+  static Future<dynamic> getPackage(String packageId) async {
+    await loadToken();
 
-  final response = await http.get(
-    Uri.parse("$baseUrl/packages/$packageId/"),
-    headers: await ApiService.getAuthHeaders(),
-  );
+    final response = await http.get(
+      Uri.parse("$baseUrl/packages/$packageId/"),
+      headers: await ApiService.getAuthHeaders(),
+    );
 
-  return jsonDecode(response.body);
-}
+    return jsonDecode(response.body);
+  }
 
   static Future<List<dynamic>> getMyOrders() async {
     await loadToken();
@@ -257,6 +269,8 @@ static Future<dynamic> getPackage(String packageId) async {
     Map<String, dynamic> data,
   ) async {
     try {
+      // ❌ REMOVE EMAIL VALIDATION (not needed)
+
       final response = await http.post(
         Uri.parse("$baseUrl/packages/${data['package_id']}/pay/"),
         headers: await ApiService.getAuthHeaders(),
@@ -272,7 +286,6 @@ static Future<dynamic> getPackage(String packageId) async {
         return {"success": true, "payment_url": decoded["payment_url"]};
       }
 
-      // 👇 THIS IS WHAT YOU WERE MISSING (REAL ERROR)
       return {
         "success": false,
         "error": decoded is Map
@@ -288,17 +301,26 @@ static Future<dynamic> getPackage(String packageId) async {
   // 💳 INITIALIZE PAYMENT
   // ==========================
   static Future<String?> initializePayment(String packageId) async {
-    final response = await http.post(
-      Uri.parse("$baseUrl/packages/$packageId/pay/"),
-      headers: await ApiService.getAuthHeaders(),
-    );
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/packages/$packageId/pay/"),
+        headers: await ApiService.getAuthHeaders(),
+      );
 
-    final data = jsonDecode(response.body);
+      debugPrint("INIT PAYMENT: ${response.statusCode}");
+      debugPrint("INIT BODY: ${response.body}");
 
-    if (response.statusCode == 200) {
-      return data['payment_url'];
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return data['payment_url'];
+      }
+
+      return null;
+    } catch (e) {
+      debugPrint("Payment init error: $e");
+      return null;
     }
-    return null;
   }
 
   // ==========================
@@ -782,6 +804,28 @@ static Future<dynamic> getPackage(String packageId) async {
     }
 
     return null;
+  }
+
+  static Future<bool> refreshAccessToken() async {
+    if (refreshToken == null) return false;
+
+    final res = await http.post(
+      Uri.parse("$baseUrl/token/refresh/"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"refresh": refreshToken}),
+    );
+
+    if (res.statusCode == 200) {
+      final data = jsonDecode(res.body);
+      token = data['access'];
+
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString('token', token!);
+
+      return true;
+    }
+
+    return false;
   }
 
   static Future<dynamic> getMyPackages() async {

@@ -86,14 +86,16 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
   Future<void> _pay(String payer) async {
     if (package == null) return;
 
-    double amount = double.tryParse(package!['price'].toString()) ?? 0.0;
-
     try {
+      
       final response = await ApiService.createPaystackPaymentLink({
         "package_id": widget.packageId,
-        "amount": amount,
-        "currency": "NGN",
         "payer": payer,
+
+        if (payer == "receiver")
+          "receiver_email": package!['receiver_email'] ?? "",
+
+        if (payer == "sender") "sender_email": package!['sender_email'] ?? "",
       });
 
       if (response["success"] == true) {
@@ -111,18 +113,14 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
           }
         }
       } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(response["error"] ?? "Payment failed")),
-          );
-        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(response["error"] ?? "Payment failed")),
+        );
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Payment error: $e")));
-      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Payment error: $e")));
     }
   }
 
