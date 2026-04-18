@@ -16,7 +16,8 @@ class TrackingScreen extends StatefulWidget {
 }
 
 class _TrackingScreenState extends State<TrackingScreen>
-    with SingleTickerProviderStateMixin {
+    //with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
 
   LatLng _currentPos = const LatLng(6.5244, 3.3792);
   LatLng? _targetPos;
@@ -98,7 +99,7 @@ class _TrackingScreenState extends State<TrackingScreen>
     try {
       channel = WebSocketChannel.connect(
         //Uri.parse('ws://192.168.8.252:8001/ws/tracking/${widget.packageId}/'),
-        Uri.parse('ws://192.168.1.129:8001//ws/tracking/${widget.packageId}/'),
+        Uri.parse('wss://cottage-molar-unguarded.ngrok-free.dev/ws/tracking/${widget.packageId}/'),
       );
 
       wsSubscription = channel!.stream.listen((data) {

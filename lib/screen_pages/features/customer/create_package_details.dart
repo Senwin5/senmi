@@ -95,48 +95,48 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
     );
   }
 
- Future<void> _pay(String payer) async {
-  if (isPaying) return;
+  Future<void> _pay(String payer) async {
+    if (isPaying) return;
 
-  setState(() => isPaying = true);
+    setState(() => isPaying = true);
 
-  try {
-    final result = await ApiService.createPaystackPaymentLink({
-      "package_id": widget.packageId,
-      "payer": payer,
-    });
+    try {
+      final result = await ApiService.createPaystackPaymentLink({
+        "package_id": widget.packageId,
+        "payer": payer,
+      });
 
-    // 👇 THIS IS WHERE YOU PASTE IT
-    if (result["already_paid"] == true) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Already paid for this package")),
-      );
+      // 👇 THIS IS WHERE YOU PASTE IT
+      if (result["already_paid"] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Already paid for this package")),
+        );
 
-      await _fetchPackage();
-      return;
-    }
-
-    if (result["success"] == true) {
-      final link = result["payment_url"];
-
-      if (payer == "receiver") {
-        final qrCode =
-            "https://api.qrserver.com/v1/create-qr-code/?data=$link&size=200x200";
-
-        _showReceiverPaymentDialog(link, qrCode);
-      } else {
-        final uri = Uri.parse(link);
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
+        await _fetchPackage();
+        return;
       }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result["error"] ?? "Payment failed")),
-      );
+
+      if (result["success"] == true) {
+        final link = result["payment_url"];
+
+        if (payer == "receiver") {
+          final qrCode =
+              "https://api.qrserver.com/v1/create-qr-code/?data=$link&size=200x200";
+
+          _showReceiverPaymentDialog(link, qrCode);
+        } else {
+          final uri = Uri.parse(link);
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result["error"] ?? "Payment failed")),
+        );
+      }
+    } finally {
+      setState(() => isPaying = false);
     }
-  } finally {
-    setState(() => isPaying = false);
   }
-}
 
   Widget _infoCard(String title, Map<String, String> data) {
     return Card(
