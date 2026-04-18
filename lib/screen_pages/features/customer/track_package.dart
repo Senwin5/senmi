@@ -9,16 +9,20 @@ import '../../../services/api_service.dart';
 
 class TrackingScreen extends StatefulWidget {
   final String packageId;
-  const TrackingScreen({super.key, required this.packageId});
+
+  const TrackingScreen({
+    super.key,
+    required this.packageId,
+  });
 
   @override
   State<TrackingScreen> createState() => _TrackingScreenState();
 }
 
 class _TrackingScreenState extends State<TrackingScreen>
-    //with SingleTickerProviderStateMixin {
-    with TickerProviderStateMixin {
-
+        //with SingleTickerProviderStateMixin {
+        with
+        TickerProviderStateMixin {
   LatLng _currentPos = const LatLng(6.5244, 3.3792);
   LatLng? _targetPos;
 
@@ -99,7 +103,9 @@ class _TrackingScreenState extends State<TrackingScreen>
     try {
       channel = WebSocketChannel.connect(
         //Uri.parse('ws://192.168.8.252:8001/ws/tracking/${widget.packageId}/'),
-        Uri.parse('wss://cottage-molar-unguarded.ngrok-free.dev/ws/tracking/${widget.packageId}/'),
+        Uri.parse(
+          'wss://cottage-molar-unguarded.ngrok-free.dev/ws/tracking/${widget.packageId}/',
+        ),
       );
 
       wsSubscription = channel!.stream.listen((data) {
@@ -132,7 +138,8 @@ class _TrackingScreenState extends State<TrackingScreen>
         _currentPos.latitude +
             (_targetPos!.latitude - _currentPos.latitude) * _animationProgress,
         _currentPos.longitude +
-            (_targetPos!.longitude - _currentPos.longitude) * _animationProgress,
+            (_targetPos!.longitude - _currentPos.longitude) *
+                _animationProgress,
       );
     }
 
@@ -175,10 +182,7 @@ class _TrackingScreenState extends State<TrackingScreen>
 
     setState(() => _isLoading = true);
 
-    final result = await ApiService.confirmDeliveryCode(
-      widget.packageId,
-      code,
-    );
+    final result = await ApiService.confirmDeliveryCode(widget.packageId, code);
 
     setState(() => _isLoading = false);
 
@@ -188,17 +192,16 @@ class _TrackingScreenState extends State<TrackingScreen>
       Navigator.pushReplacement(
         // ignore: use_build_context_synchronously
         context,
-        MaterialPageRoute(
-          builder: (_) => const DeliveryCompleteScreen(),
-        ),
+        MaterialPageRoute(builder: (_) => const DeliveryCompleteScreen()),
       );
     } else {
       _shakeController.forward(from: 0);
 
       // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Invalid delivery code ❌")),
-      );
+      ScaffoldMessenger.of(
+        // ignore: use_build_context_synchronously
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Invalid delivery code ❌")));
     }
   }
 
@@ -217,10 +220,11 @@ class _TrackingScreenState extends State<TrackingScreen>
     return Scaffold(
       body: Stack(
         children: [
-
           GoogleMap(
-            initialCameraPosition:
-                CameraPosition(target: _currentPos, zoom: 15),
+            initialCameraPosition: CameraPosition(
+              target: _currentPos,
+              zoom: 15,
+            ),
             onMapCreated: (c) => mapController = c,
             markers: markers,
             polylines: polylines,
@@ -248,7 +252,6 @@ class _TrackingScreenState extends State<TrackingScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-
                     Text(
                       status,
                       style: const TextStyle(
@@ -284,8 +287,9 @@ class _TrackingScreenState extends State<TrackingScreen>
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed:
-                            (_isLoading || _isDelivered) ? null : _confirmDelivery,
+                        onPressed: (_isLoading || _isDelivered)
+                            ? null
+                            : _confirmDelivery,
                         child: _isLoading
                             ? const CircularProgressIndicator()
                             : const Text("Confirm Delivery"),

@@ -17,6 +17,9 @@ class _CustomerHomeState extends State<CustomerHome> {
   List packages = [];
   String username = "User"; // default
 
+  // ✅ ADDED (controller)
+  TextEditingController trackController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
@@ -40,13 +43,41 @@ class _CustomerHomeState extends State<CustomerHome> {
     });
   }
 
+  // ✅ ADDED (tracking function)
+  void trackPackage() async {
+    String trackNumber = trackController.text.trim();
+
+    if (trackNumber.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Enter tracking number")));
+      return;
+    }
+    final result = await ApiService.searchPackage(trackNumber);
+
+    if (result == null) {
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("❌ Tracking code not found")),
+      );
+      return;
+    }
+
+    Navigator.push(
+      // ignore: use_build_context_synchronously
+      context,
+      MaterialPageRoute(
+        builder: (_) => TrackingScreen(packageId: result['package_id']),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       extendBody: true,
       backgroundColor: Colors.grey.shade100,
 
-      // ✅ FIX START (prevents overflow)
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -88,18 +119,33 @@ class _CustomerHomeState extends State<CustomerHome> {
                           ),
                           const SizedBox(height: 20),
 
+                          // ✅ FIXED TEXTFIELD (removed const + added controller properly)
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12),
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(14),
                             ),
-                            child: const TextField(
+                            child: TextField(
+                              controller: trackController,
                               decoration: InputDecoration(
                                 hintText: "Enter track number",
                                 border: InputBorder.none,
-                                icon: Icon(Icons.search, color: Colors.grey),
+                                icon: const Icon(
+                                  Icons.search,
+                                  color: Colors.grey,
+                                ),
+                                suffixIcon: IconButton(
+                                  icon: const Icon(
+                                    Icons.search,
+                                    color: Colors.grey,
+                                  ),
+                                  onPressed: trackPackage,
+                                ),
                               ),
+                              onSubmitted: (value) {
+                                trackPackage();
+                              },
                             ),
                           ),
 
@@ -108,7 +154,7 @@ class _CustomerHomeState extends State<CustomerHome> {
                           Center(
                             child: Image.asset(
                               "assets/images/delivery.png",
-                              height: 150, // ✅ reduced to prevent overflow
+                              height: 150,
                             ),
                           ),
                         ],
@@ -145,11 +191,15 @@ class _CustomerHomeState extends State<CustomerHome> {
                               "Track your delivery in real-time from pickup to drop-off.",
                           onTap: () {
                             if (packages.isNotEmpty) {
+                              final pkg = packages[0];
+
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder: (_) => TrackingScreen(
-                                    packageId: packages[0]['id'].toString(),
+                                    packageId:
+                                        pkg['package_id'] ??
+                                        pkg['id'].toString(),
                                   ),
                                 ),
                               );
@@ -172,58 +222,7 @@ class _CustomerHomeState extends State<CustomerHome> {
                           },
                         ),
 
-                        const SizedBox(height: 10),
-
-                        ...packages.map((p) {
-                          final id = p['id']?.toString() ?? '';
-                          final status = p['status']?.toString() ?? 'pending';
-                          final price = p['price']?.toString() ?? '0';
-                          final desc =
-                              p['description']?.toString() ?? 'No description';
-
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            child: Card(
-                              elevation: 3,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: ListTile(
-                                contentPadding: const EdgeInsets.all(12),
-
-                                title: Text(
-                                  desc,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-
-                                subtitle: Text(
-                                  "Status: $status",
-                                  style: TextStyle(color: Colors.grey.shade600),
-                                ),
-
-                                trailing: Text(
-                                  "₦$price",
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.green,
-                                  ),
-                                ),
-
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) =>
-                                          TrackingScreen(packageId: id),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                          );
-                        }),
+                        const SizedBox(height: 30),
                       ],
                     ),
                   ],
@@ -234,7 +233,6 @@ class _CustomerHomeState extends State<CustomerHome> {
         ),
       ),
 
-      // ✅ FIX END
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color(0xFF5F5FFF),
         elevation: 6,

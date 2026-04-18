@@ -31,6 +31,7 @@ class _CustomerBottomNavState extends State<CustomerBottomNav> {
       CustomerHome(),
       const CreatePackageScreen(),
       const HistoryScreen(),
+      //TrackingScreen(packageId: lastPackageId),
       TrackingScreen(packageId: lastPackageId),
       CustomerProfileScreen(darkModeNotifier: darkModeNotifier),
     ];

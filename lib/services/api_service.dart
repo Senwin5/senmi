@@ -316,8 +316,6 @@ class ApiService {
     }
   }
 
-
-
   // ==========================
   // 💳 INITIALIZE PAYMENT
   // ==========================
@@ -410,6 +408,27 @@ class ApiService {
     } catch (e) {
       debugPrint("Error fetching available packages: $e");
       return [];
+    }
+  }
+
+  static Future<Map<String, dynamic>?> searchPackage(String query) async {
+    try {
+      final res = await http.get(
+        Uri.parse("$baseUrl/packages/search/?q=${Uri.encodeComponent(query)}"),
+        headers: await getAuthHeaders(),
+      );
+
+      debugPrint("SEARCH STATUS: ${res.statusCode}");
+      debugPrint("SEARCH BODY: ${res.body}");
+
+      if (res.statusCode == 200) {
+        return jsonDecode(res.body);
+      }
+
+      return null;
+    } catch (e) {
+      debugPrint("searchPackage error: $e");
+      return null;
     }
   }
 
