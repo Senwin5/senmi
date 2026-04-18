@@ -1,72 +1,45 @@
+// ignore_for_file: use_build_context_synchronously, deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:senmi/registration/auth/login.dart';
 import 'package:senmi/services/api_service.dart';
-import 'package:senmi/widgets/custom_buttom.dart';
-import 'package:url_launcher/url_launcher.dart';
 
-class CustomerProfileScreen extends StatefulWidget {
+class ProfileSettingsScreen extends StatelessWidget {
+  final Map<String, dynamic> user;
   final ValueNotifier<bool> darkModeNotifier;
-  const CustomerProfileScreen({super.key, required this.darkModeNotifier});
 
-  @override
-  State<CustomerProfileScreen> createState() => _CustomerProfileScreenState();
-}
+  const ProfileSettingsScreen({
+    super.key,
+    required this.user,
+    required this.darkModeNotifier,
+  });
 
-class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
-  bool loading = true;
-  bool notificationsEnabled = true;
-  Map<String, dynamic>? user;
-  String? errorMessage;
-
-  @override
-  void initState() {
-    super.initState();
-    fetchUser();
+  /// ✅ SAFE DATA GETTERS (this fixes your issue)
+  String get username {
+    return (user['username'] ??
+            user['name'] ??
+            user['user']?['username'] ??
+            "")
+        .toString();
   }
 
-  Future<void> fetchUser() async {
-    setState(() {
-      loading = true;
-      errorMessage = null;
-    });
-
-    await ApiService.loadToken(); // Ensure token is loaded
-
-    if (ApiService.token == null) {
-      setState(() {
-        loading = false;
-        errorMessage = "Not logged in";
-      });
-      return;
-    }
-
-    try {
-      final res = await ApiService.getUserProfile();
-      if (!mounted) return;
-
-      if (res == null) {
-        setState(() {
-          loading = false;
-          errorMessage = "Failed to load profile";
-        });
-      } else {
-        setState(() {
-          user = res;
-          loading = false;
-        });
-      }
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        loading = false;
-        errorMessage = "Error loading profile: $e";
-      });
-    }
+  String get email {
+    return (user['email'] ??
+            user['user']?['email'] ??
+            "")
+        .toString();
   }
 
-  void logout() async {
+  String get phone {
+    return (user['phone_number'] ??
+            user['phone'] ??
+            user['user']?['phone_number'] ??
+            "")
+        .toString();
+  }
+
+  void logout(BuildContext context) async {
     await ApiService.logout();
-    if (!mounted) return;
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -74,180 +47,182 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
     );
   }
 
-  Future<void> deleteAccount() async {
-    final confirmed = await showDialog<bool>(
+  Future<void> deleteAccount(BuildContext context) async {
+    final confirmed = await showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Confirm Delete"),
-        content: const Text(
-            "Are you sure you want to delete your account? This action cannot be undone."),
+      builder: (_) => AlertDialog(
+        title: const Text("Delete Account"),
+        content: const Text("Are you sure?"),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Cancel")),
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text("Cancel")),
           TextButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text("Delete", style: TextStyle(color: Colors.red))),
+              child: const Text("Delete",
+                  style: TextStyle(color: Colors.red))),
         ],
       ),
     );
 
     if (confirmed != true) return;
 
-    try {
-      final deleted = await ApiService.deleteUser();
-      if (!mounted) return;
+    await ApiService.deleteUser();
 
-      if (deleted) {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
-          (route) => false,
-        );
-      } else {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text("Failed to delete account")));
-      }
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Failed to delete account: $e")));
-    }
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (route) => false,
+    );
   }
 
-  void openWhatsApp() async {
-    const phone = "+2347016087680";
-    final url = "https://wa.me/$phone";
-    if (await canLaunchUrl(Uri.parse(url))) {
-      await launchUrl(Uri.parse(url));
-    } else {
-      // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Could not open WhatsApp")));
-    }
-  }
-
-  Widget _infoCard(String title, String value, {IconData? icon}) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 2,
-      margin: const EdgeInsets.symmetric(vertical: 8),
+  Widget _tile({
+    required IconData icon,
+    required String title,
+    String? subtitle,
+    VoidCallback? onTap,
+    Color? iconColor,
+  }) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.grey.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(14),
+      ),
       child: ListTile(
-        leading: icon != null ? Icon(icon, color: Colors.blue) : null,
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text(value, style: const TextStyle(color: Colors.black87)),
+        leading: Icon(icon, color: iconColor ?? Colors.blue),
+        title: Text(title,
+            style: const TextStyle(fontWeight: FontWeight.w600)),
+        subtitle: subtitle != null && subtitle.isNotEmpty
+            ? Text(subtitle)
+            : null,
+        trailing: onTap != null
+            ? const Icon(Icons.arrow_forward_ios, size: 16)
+            : null,
+        onTap: onTap,
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    if (loading) {
-      return Scaffold(
-        appBar: AppBar(title: const Text("Profile"), centerTitle: true),
-        body: const Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    if (errorMessage != null) {
-      return Scaffold(
-        appBar: AppBar(title: const Text("Profile"), centerTitle: true),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(errorMessage!, style: const TextStyle(fontSize: 16)),
-              const SizedBox(height: 20),
-              ElevatedButton(onPressed: fetchUser, child: const Text("Retry")),
-            ],
-          ),
-        ),
-      );
-    }
+    final safeUsername = username.isNotEmpty ? username : "User";
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Profile"), centerTitle: true),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            CircleAvatar(
-              radius: 50,
-              backgroundColor: Colors.blue,
-              child: Text(
-                user?['username']?.isNotEmpty == true
-                    ? user!['username'][0].toUpperCase()
-                    : "U",
-                style: const TextStyle(fontSize: 40, color: Colors.white),
+      appBar: AppBar(
+        title: const Text("Profile Settings"),
+        centerTitle: true,
+        elevation: 0,
+      ),
+      body: ListView(
+        padding: const EdgeInsets.only(top: 16, bottom: 20),
+        children: [
+          /// 🔵 HEADER
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Colors.blue, Colors.lightBlueAccent],
               ),
+              borderRadius: BorderRadius.circular(16),
             ),
-            const SizedBox(height: 12),
-            Text(user?['username'] ?? "User",
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center),
-            const SizedBox(height: 20),
-            _infoCard("Email", user?['email'] ?? "No email", icon: Icons.email),
-            _infoCard("Phone", user?['phone_number'] ?? "No phone", icon: Icons.phone),
-            _infoCard("Username", user?['username'] ?? "No username", icon: Icons.person),
-            const SizedBox(height: 20),
-            CustomButton(
-              text: "Change Password",
-              onPressed: () {},
-              fullWidth: true,
-              padding: const EdgeInsets.all(16),
-              color: Colors.blue,
+            child: Column(
+              children: [
+                CircleAvatar(
+                  radius: 30,
+                  backgroundColor: Colors.white,
+                  child: Text(
+                    safeUsername.isNotEmpty
+                        ? safeUsername[0].toUpperCase()
+                        : "U",
+                    style: const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  safeUsername,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                if (email.isNotEmpty)
+                  Text(
+                    email,
+                    style: const TextStyle(color: Colors.white70),
+                  ),
+              ],
             ),
-            const SizedBox(height: 12),
-            CustomButton(
-              text: "Logout",
-              onPressed: logout,
-              fullWidth: true,
-              padding: const EdgeInsets.all(16),
-              color: Colors.red,
+          ),
+
+          const SizedBox(height: 20),
+
+          /// 📌 USER INFO
+          _tile(
+            icon: Icons.person,
+            title: "Username",
+            subtitle: safeUsername,
+          ),
+
+          _tile(
+            icon: Icons.email,
+            title: "Email",
+            subtitle: email,
+          ),
+
+          _tile(
+            icon: Icons.phone,
+            title: "Phone Number",
+            subtitle: phone,
+          ),
+
+          const SizedBox(height: 10),
+          const Divider(),
+
+          /// 🔐 ACTIONS
+          _tile(
+            icon: Icons.lock,
+            title: "Change Password",
+            iconColor: Colors.orange,
+            onTap: () {},
+          ),
+
+          _tile(
+            icon: Icons.logout,
+            title: "Logout",
+            iconColor: Colors.red,
+            onTap: () => logout(context),
+          ),
+
+          _tile(
+            icon: Icons.delete,
+            title: "Delete Account",
+            iconColor: Colors.red,
+            onTap: () => deleteAccount(context),
+          ),
+
+          const Divider(),
+
+          /// 🌙 DARK MODE
+          SwitchListTile(
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 20),
+            secondary: const Icon(Icons.dark_mode),
+            title: const Text(
+              "Dark Mode",
+              style: TextStyle(fontWeight: FontWeight.w600),
             ),
-            const SizedBox(height: 12),
-            CustomButton(
-              text: "Delete Account",
-              onPressed: deleteAccount,
-              fullWidth: true,
-              padding: const EdgeInsets.all(16),
-              color: Colors.red,
-            ),
-            const SizedBox(height: 20),
-            ListTile(
-              leading: const Icon(Icons.chat),
-              title: const Text("Chat Me"),
-              trailing: const Icon(Icons.arrow_forward_ios),
-              onTap: openWhatsApp,
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.support_agent),
-              title: const Text("Support"),
-              trailing: const Icon(Icons.arrow_forward_ios),
-              onTap: () {},
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.question_answer),
-              title: const Text("FAQ"),
-              trailing: const Icon(Icons.arrow_forward_ios),
-              onTap: () {},
-            ),
-            const Divider(),
-            SwitchListTile(
-              secondary: const Icon(Icons.notifications),
-              title: const Text("Notifications"),
-              value: notificationsEnabled,
-              onChanged: (val) => setState(() => notificationsEnabled = val),
-            ),
-            const Divider(),
-            SwitchListTile(
-              secondary: const Icon(Icons.dark_mode),
-              title: const Text("Dark Mode"),
-              value: widget.darkModeNotifier.value,
-              onChanged: (val) => widget.darkModeNotifier.value = val,
-            ),
-          ],
-        ),
+            value: darkModeNotifier.value,
+            onChanged: (val) => darkModeNotifier.value = val,
+          ),
+        ],
       ),
     );
   }

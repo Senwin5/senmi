@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'customer_home.dart';
 import 'create_package_screen.dart';
 import 'customer_history_screen.dart';
-import 'package:senmi/screen_pages/features/customer/profile_screen.dart';
+import 'package:senmi/screen_pages/features/customer/account_profile_screen.dart';
 import 'package:senmi/screen_pages/features/customer/track_package.dart';
 
 /// Customer Bottom Navigation
@@ -42,7 +42,7 @@ class _CustomerBottomNavState extends State<CustomerBottomNav> {
     BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: "Orders"),
     BottomNavigationBarItem(icon: Icon(Icons.history), label: "History"),
     BottomNavigationBarItem(icon: Icon(Icons.local_shipping), label: "Track"),
-    BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
+    BottomNavigationBarItem(icon: Icon(Icons.person), label: "Account"),
   ];
 
   @override
