@@ -18,6 +18,7 @@ class PackageDetailsScreen extends StatefulWidget {
 class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
   Map<String, dynamic>? package;
   bool loading = true;
+  bool isPaying = false;
 
   @override
   void initState() {
@@ -66,6 +67,7 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
                   "https://wa.me/?text=${Uri.encodeComponent("Pay for your delivery here: $link")}";
               final uri = Uri.parse(url);
               if (await canLaunchUrl(uri)) {
+                //await launchUrl(uri, mode: LaunchMode.externalApplication);
                 await launchUrl(uri, mode: LaunchMode.externalApplication);
               }
             },
@@ -74,9 +76,11 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
           TextButton(
             onPressed: () async {
               final uri = Uri.parse(link);
+              //await launchUrl(uri, mode: LaunchMode.externalApplication);
               await launchUrl(uri, mode: LaunchMode.externalApplication);
               await Future.delayed(const Duration(seconds: 3));
               await _fetchPackage();
+              setState(() {});
 
               if (!(package?['is_paid'] ?? false)) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -91,40 +95,48 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
     );
   }
 
-  Future<void> _pay(String payer) async {
-    if (package == null) return;
+ Future<void> _pay(String payer) async {
+  if (isPaying) return;
 
-    try {
-      final response = await ApiService.createPaystackPaymentLink({
-        "package_id": widget.packageId,
-        "payer": payer,
-      });
+  setState(() => isPaying = true);
 
-      if (response["success"] == true) {
-        final link = response["payment_url"];
+  try {
+    final result = await ApiService.createPaystackPaymentLink({
+      "package_id": widget.packageId,
+      "payer": payer,
+    });
 
-        if (payer == "receiver") {
-          final qrCode =
-              "https://api.qrserver.com/v1/create-qr-code/?data=$link&size=200x200";
+    // 👇 THIS IS WHERE YOU PASTE IT
+    if (result["already_paid"] == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Already paid for this package")),
+      );
 
-          _showReceiverPaymentDialog(link, qrCode);
-        } else {
-          final uri = Uri.parse(link);
-          if (await canLaunchUrl(uri)) {
-            await launchUrl(uri, mode: LaunchMode.externalApplication);
-          }
-        }
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(response["error"] ?? "Payment failed")),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Payment error: $e")));
+      await _fetchPackage();
+      return;
     }
+
+    if (result["success"] == true) {
+      final link = result["payment_url"];
+
+      if (payer == "receiver") {
+        final qrCode =
+            "https://api.qrserver.com/v1/create-qr-code/?data=$link&size=200x200";
+
+        _showReceiverPaymentDialog(link, qrCode);
+      } else {
+        final uri = Uri.parse(link);
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result["error"] ?? "Payment failed")),
+      );
+    }
+  } finally {
+    setState(() => isPaying = false);
   }
+}
 
   Widget _infoCard(String title, Map<String, String> data) {
     return Card(
@@ -178,9 +190,10 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
       );
     }
 
-    bool paymentDone =
-        (package!['sender_paid'] ?? false) &&
-        (package!['receiver_paid'] ?? false);
+    bool paymentDone = package!['is_paid'] == true;
+    //bool paymentDone =
+    //(package!['sender_paid'] ?? false) &&
+    //(package!['receiver_paid'] ?? false);
 
     return Scaffold(
       appBar: AppBar(
@@ -222,7 +235,8 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
 
             const SizedBox(height: 16),
 
-            if (!(package!['sender_paid'] ?? false))
+            //if (!(package!['sender_paid'] ?? false))
+            if (package!['is_paid'] != true)
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -231,7 +245,8 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
                 ),
               ),
 
-            if (!(package!['receiver_paid'] ?? false))
+            //if (!(package!['receiver_paid'] ?? false))
+            if (package!['is_paid'] != true)
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(

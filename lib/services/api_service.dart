@@ -7,7 +7,8 @@ import 'package:flutter/foundation.dart'; // ✅ For ValueNotifier
 
 class ApiService {
   // 🔥 CHANGE THIS
-  static const String baseUrl = "http://192.168.8.252:8001/api";
+  static const String baseUrl =
+      "https://cottage-molar-unguarded.ngrok-free.dev/api";
   //static const String baseUrl = "http://192.168.1.129:8001/api";
 
   static String? token;
@@ -269,40 +270,53 @@ class ApiService {
     Map<String, dynamic> data,
   ) async {
     try {
-      final response = await http.post(
-        Uri.parse("$baseUrl/packages/${data['package_id']}/pay/"),
-        headers: await ApiService.getAuthHeaders(),
-        body: jsonEncode(data),
-      );
+      final response = await http
+          .post(
+            Uri.parse("$baseUrl/packages/${data['package_id']}/pay/"),
+            headers: await ApiService.getAuthHeaders(),
+            body: jsonEncode(data),
+          )
+          .timeout(const Duration(seconds: 20));
 
-      debugPrint("PAYMENT STATUS: ${response.statusCode}");
-      debugPrint("PAYMENT BODY: ${response.body}");
+      debugPrint("PAYSTACK STATUS: ${response.statusCode}");
+      debugPrint("PAYSTACK BODY: ${response.body}");
 
-      // ✅ SAFE DECODE (IMPORTANT)
       dynamic decoded;
       try {
         decoded = jsonDecode(response.body);
       } catch (e) {
         return {
           "success": false,
-          "error": "Server returned non-JSON: ${response.body}",
+          "error": "Invalid JSON from server: ${response.body}",
         };
       }
 
       if (response.statusCode == 200) {
-        return {"success": true, "payment_url": decoded["payment_url"]};
+        if (decoded["payment_url"] != null) {
+          return {"success": true, "payment_url": decoded["payment_url"]};
+        }
+
+        if (decoded["message"] == "Package already paid") {
+          return {
+            "success": true,
+            "already_paid": true,
+            "message": decoded["message"],
+          };
+        }
       }
 
       return {
         "success": false,
         "error": decoded is Map
-            ? decoded["error"] ?? decoded.toString()
+            ? decoded["error"] ?? "Payment failed"
             : decoded.toString(),
       };
     } catch (e) {
       return {"success": false, "error": e.toString()};
     }
   }
+
+
 
   // ==========================
   // 💳 INITIALIZE PAYMENT

@@ -25,7 +25,9 @@ class _TrackPackageScreenState extends State<TrackPackageScreen> {
     // 🔌 CONNECT TO WEBSOCKET (✅ FIXED URL WITH YOUR IP + PORT)
     channel = WebSocketChannel.connect(
       //Uri.parse('ws://192.168.1.129:8001/ws/tracking/${widget.packageId}/'),
-      Uri.parse('ws://192.168.8.252:8001/ws/tracking/${widget.packageId}/'),
+      //Uri.parse('ws://192.168.8.252:8001/ws/tracking/${widget.packageId}/'),
+      Uri.parse('wss://cottage-molar-unguarded.ngrok-free.dev/ws/tracking/${widget.packageId}/'),
+      
     );
 
     // 📡 LISTEN FOR LIVE LOCATION + STATUS
