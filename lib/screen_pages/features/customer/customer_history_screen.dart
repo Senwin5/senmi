@@ -26,14 +26,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   void fetchPackages() async {
+    setState(() => loading = true); // 🔥 add this
+
     try {
       final res = await ApiService.getMyOrders();
+
       setState(() {
         packages = res;
         loading = false;
       });
     } catch (e) {
       setState(() => loading = false);
+
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text("Failed to load packages: $e")));
@@ -155,7 +159,20 @@ class _HistoryScreenState extends State<HistoryScreen> {
         title: const Text("History"),
         centerTitle: false,
         elevation: 0,
-        toolbarHeight: 90, // 🔥 gives breathing space
+        toolbarHeight: 90,
+
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () async {
+              setState(() => loading = true);
+              fetchPackages();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("History refreshed")),
+              );
+            },
+          ),
+        ],
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:senmi/screen_pages/features/customer/customer_history_screen.dart';
-import 'package:senmi/screen_pages/features/customer/track_package.dart';
+import 'package:senmi/screen_pages/features/customer/customer_track_package.dart';
 import '../../../services/api_service.dart';
 import 'create_package_screen.dart';
 

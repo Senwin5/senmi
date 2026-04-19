@@ -1,7 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
-import 'package:senmi/screen_pages/features/customer/profile_screen.dart';
+import 'package:senmi/screen_pages/features/customer/customerprofile_screen.dart';
 import 'package:senmi/services/api_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 

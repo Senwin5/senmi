@@ -27,6 +27,29 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
 
   final pickupController = TextEditingController();
   final deliveryController = TextEditingController();
+  
+  void _resetForm() {
+    setState(() {
+      // Clear text fields
+      pickupController.clear();
+      deliveryController.clear();
+
+      // Reset variables
+      receiverName = '';
+      receiverPhone = '';
+      description = '';
+      pickupAddress = '';
+      deliveryAddress = '';
+
+      pickupLocation = null;
+      deliveryLocation = null;
+
+      estimatedPrice = null;
+      distanceKm = null;
+    });
+
+    _formKey.currentState?.reset();
+  }
 
   @override
   void dispose() {
@@ -235,7 +258,19 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
         ),
         centerTitle: true,
         elevation: 0,
-        //automaticallyImplyLeading: true,
+
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () {
+              _resetForm();
+
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text("Form cleared")));
+            },
+          ),
+        ],
       ),
       body: loading
           ? const Center(child: CircularProgressIndicator())

@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:senmi/screen_pages/features/customer/track_package.dart';
+import 'package:senmi/screen_pages/features/customer/customer_track_package.dart';
 import 'package:senmi/services/api_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -211,6 +211,20 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
             Navigator.pop(context);
           },
         ),
+
+        // 👇 ADD THIS PART
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () async {
+              await _fetchPackage();
+
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text("Refreshed")));
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),

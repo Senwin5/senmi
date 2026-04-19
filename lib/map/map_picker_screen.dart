@@ -22,6 +22,20 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
   bool userMovedMap = false;
   bool isFirstLoad = true;
 
+  Future<void> _refreshMap() async {
+    setState(() {
+      position = widget.initialLocation;
+      address = "Go to address";
+      loadingAddress = false;
+      userMovedMap = false;
+      isFirstLoad = true;
+    });
+
+    await mapController?.animateCamera(CameraUpdate.newLatLng(position));
+
+    await getAddress();
+  }
+
   final TextEditingController searchController = TextEditingController();
   GoogleMapController? mapController;
 
@@ -103,9 +117,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
 
       setState(() => position = newPos);
 
-      await mapController?.animateCamera(
-        CameraUpdate.newLatLng(newPos),
-      );
+      await mapController?.animateCamera(CameraUpdate.newLatLng(newPos));
 
       await getAddress();
 
@@ -149,9 +161,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
         userMovedMap = true;
       });
 
-      await mapController?.animateCamera(
-        CameraUpdate.newLatLng(newPos),
-      );
+      await mapController?.animateCamera(CameraUpdate.newLatLng(newPos));
 
       await getAddress();
     } catch (e) {
@@ -167,7 +177,21 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Pick Location")),
+      appBar: AppBar(
+        title: const Text("Pick Location"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () async {
+              await _refreshMap();
+
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text("Map refreshed")));
+            },
+          ),
+        ],
+      ),
 
       body: Stack(
         children: [
