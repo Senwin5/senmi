@@ -27,7 +27,7 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
 
   final pickupController = TextEditingController();
   final deliveryController = TextEditingController();
-  
+
   void _resetForm() {
     setState(() {
       // Clear text fields
@@ -82,7 +82,19 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
 
       final p = placemarks.first;
 
-      return "${p.name ?? ''}, ${p.street ?? ''}, ${p.locality ?? ''}, ${p.country ?? ''}";
+      final street = [
+        p.thoroughfare, // main street name
+        p.subThoroughfare, // house number
+      ].where((e) => e != null && e.isNotEmpty).join(" ");
+
+      final address = [
+        if (street.isNotEmpty) street,
+        p.locality,
+        p.administrativeArea,
+        p.country,
+      ].where((e) => e != null && e.isNotEmpty).join(", ");
+
+      return address.isEmpty ? "Unknown location" : address;
     } catch (e) {
       return "Unknown location";
     }
@@ -187,8 +199,8 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
     try {
       final payload = {
         'description': description.trim(),
-        'pickup_address': pickupAddress,
-        'delivery_address': deliveryAddress,
+        'pickup_address': pickupController.text,
+        'delivery_address': deliveryController.text,
         'receiver_name': receiverName.trim(),
         'receiver_phone': receiverPhone.trim(),
         'pickup_lat': pickupLocation!.latitude,
@@ -330,7 +342,6 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
                         child: _buildTextField(
                           "Pickup Address",
                           controller: pickupController,
-                          onSaved: (v) => pickupAddress = v ?? '',
                         ),
                       ),
                     ),
@@ -341,7 +352,6 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
                         child: _buildTextField(
                           "Delivery Address",
                           controller: deliveryController,
-                          onSaved: (v) => deliveryAddress = v ?? '',
                         ),
                       ),
                     ),
