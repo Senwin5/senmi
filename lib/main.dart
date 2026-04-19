@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: Colors.black,
         cardColor: Colors.grey[900],
       ),
-      home: const SplashScreen(), // ✅ ALWAYS START HERE
+      home: const SplashScreen(), 
     );
   }
 }

@@ -41,7 +41,6 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
 
   Timer? _debounce;
 
-  // 🔥 FIX FLAG (prevents auto-search conflicts)
   bool isAutoSearching = false;
 
   @override
@@ -58,7 +57,6 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
     super.dispose();
   }
 
-  // ✅ CLEAN ADDRESS FETCH (UNCHANGED LOGIC, JUST SAFER)
   Future<void> getAddress() async {
     if (!mounted) return;
 
@@ -95,7 +93,6 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
     }
   }
 
-  // 🔍 FIXED SEARCH (THIS WAS YOUR MAIN BUG SOURCE)
   Future<void> searchLocation(String value) async {
     final query = value.trim();
 
@@ -125,7 +122,6 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
     } catch (e) {
       isAutoSearching = false;
 
-      // 🔥 ONLY show error for manual search
       if (query.length > 5) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -137,7 +133,6 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
     }
   }
 
-  // 📍 CURRENT LOCATION (UNCHANGED)
   Future<void> useMyLocation() async {
     try {
       final permission = await Geolocator.requestPermission();
@@ -177,8 +172,12 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surface,
+
       appBar: AppBar(
         title: const Text("Pick Location"),
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -221,24 +220,26 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
             child: Icon(Icons.location_pin, size: 45, color: Colors.red),
           ),
 
-          // 🔍 SEARCH BAR (STRUCTURE UNCHANGED)
           Positioned(
             top: 10,
             left: 10,
             right: 10,
             child: Card(
+              color: Theme.of(context).colorScheme.surface,
               child: Row(
                 children: [
                   Expanded(
                     child: TextField(
                       controller: searchController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         hintText: "Search location...",
                         border: InputBorder.none,
-                        prefixIcon: Icon(Icons.search),
+                        prefixIcon: const Icon(Icons.search),
+                        hintStyle: TextStyle(
+                          color: Theme.of(context).hintColor,
+                        ),
                       ),
 
-                      // 🔥 FIXED onChanged (NO MORE FAKE ERRORS)
                       onChanged: (value) {
                         if (isAutoSearching) return;
 
@@ -299,6 +300,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
             left: 16,
             right: 16,
             child: Card(
+              color: Theme.of(context).colorScheme.surface,
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Column(
@@ -310,9 +312,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                             address,
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              color: address == "Go to address"
-                                  ? Colors.grey
-                                  : Colors.black,
+                              color: Theme.of(context).colorScheme.onSurface,
                             ),
                           ),
                     const SizedBox(height: 10),

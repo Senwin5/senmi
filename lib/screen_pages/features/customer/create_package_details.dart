@@ -19,6 +19,7 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
   Map<String, dynamic>? package;
   bool loading = true;
   bool isPaying = false;
+  bool isDeleting = false; // ✅ ADDED
 
   @override
   void initState() {
@@ -35,6 +36,62 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
       package = res;
       loading = false;
     });
+  }
+
+  // ✅ ADDED: DELETE FUNCTION
+  Future<void> _deletePackage() async {
+    if (isDeleting) return;
+
+    setState(() => isDeleting = true);
+
+    try {
+      final res = await ApiService.deletePackage(widget.packageId);
+
+      final isSuccess = res["success"] == true;
+
+      if (!mounted) return;
+
+      if (isSuccess) {
+        // 👇 return result to previous screen FIRST
+        Navigator.pop(context, true);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(res["error"] ?? "Delete failed")),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Something went wrong")));
+    } finally {
+      if (mounted) {
+        setState(() => isDeleting = false);
+      }
+    }
+  }
+
+  // ✅ ADDED: CONFIRM DIALOG
+  void _confirmDelete() {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Delete Package"),
+        content: const Text("Are you sure you want to delete this package?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _deletePackage();
+            },
+            child: const Text("Delete", style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showReceiverPaymentDialog(String link, String qrCode) {
@@ -67,7 +124,6 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
                   "https://wa.me/?text=${Uri.encodeComponent("Pay for your delivery here: $link")}";
               final uri = Uri.parse(url);
               if (await canLaunchUrl(uri)) {
-                //await launchUrl(uri, mode: LaunchMode.externalApplication);
                 await launchUrl(uri, mode: LaunchMode.externalApplication);
               }
             },
@@ -76,7 +132,6 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
           TextButton(
             onPressed: () async {
               final uri = Uri.parse(link);
-              //await launchUrl(uri, mode: LaunchMode.externalApplication);
               await launchUrl(uri, mode: LaunchMode.externalApplication);
               await Future.delayed(const Duration(seconds: 3));
               await _fetchPackage();
@@ -106,7 +161,6 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
         "payer": payer,
       });
 
-      // 👇 THIS IS WHERE YOU PASTE IT
       if (result["already_paid"] == true) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Already paid for this package")),
@@ -191,41 +245,28 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
     }
 
     bool paymentDone = package!['is_paid'] == true;
-    //bool paymentDone =
-    //(package!['sender_paid'] ?? false) &&
-    //(package!['receiver_paid'] ?? false);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text("Details"),
         leading: IconButton(
-          icon: Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade200,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(Icons.arrow_back_ios_new, size: 18),
-          ),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          icon: const Icon(Icons.arrow_back_ios_new),
+          onPressed: () => Navigator.pop(context),
         ),
 
-        // 👇 ADD THIS PART
+        // ✅ UPDATED ACTIONS (refresh + delete)
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () async {
-              await _fetchPackage();
+          IconButton(icon: const Icon(Icons.refresh), onPressed: _fetchPackage),
 
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(const SnackBar(content: Text("Refreshed")));
-            },
+          IconButton(
+            icon: isDeleting
+                ? const CircularProgressIndicator()
+                : const Icon(Icons.delete, color: Colors.red),
+            onPressed: _confirmDelete,
           ),
         ],
       ),
+
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -249,7 +290,6 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
 
             const SizedBox(height: 16),
 
-            //if (!(package!['sender_paid'] ?? false))
             if (package!['is_paid'] != true)
               SizedBox(
                 width: double.infinity,
@@ -259,7 +299,6 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
                 ),
               ),
 
-            //if (!(package!['receiver_paid'] ?? false))
             if (package!['is_paid'] != true)
               SizedBox(
                 width: double.infinity,

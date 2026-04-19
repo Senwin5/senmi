@@ -868,6 +868,21 @@ class ApiService {
     return false;
   }
 
+  static Future<Map<String, dynamic>> deletePackage(String packageId) async {
+    final response = await http.delete(
+      Uri.parse("$baseUrl/packages/$packageId/delete/"),
+      headers: await getAuthHeaders(),
+    );
+
+    final body = jsonDecode(response.body);
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return body;
+    } else {
+      throw Exception(body['error'] ?? 'Delete failed');
+    }
+  }
+
   static Future<dynamic> getMyPackages() async {
     return [];
   }

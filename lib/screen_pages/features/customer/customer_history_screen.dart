@@ -136,7 +136,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
-  void payNow(dynamic package) {
+  Future<void> payNow(dynamic package) async {
     final id = package['package_id'] ?? package['id'];
 
     if (id == null) {
@@ -146,12 +146,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
       return;
     }
 
-    Navigator.push(
+    final result = await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => PackageDetailsScreen(packageId: id.toString().trim()),
-      ),
+      MaterialPageRoute(builder: (_) => PackageDetailsScreen(packageId: id)),
     );
+
+    if (result == true) {
+      fetchPackages(); // 🔥 THIS refreshes list
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Package deleted successfully")),
+      );
+    }
   }
 
   @override
