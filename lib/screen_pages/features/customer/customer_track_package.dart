@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -10,19 +12,14 @@ import '../../../services/api_service.dart';
 class TrackingScreen extends StatefulWidget {
   final String packageId;
 
-  const TrackingScreen({
-    super.key,
-    required this.packageId,
-  });
+  const TrackingScreen({super.key, required this.packageId});
 
   @override
   State<TrackingScreen> createState() => _TrackingScreenState();
 }
 
 class _TrackingScreenState extends State<TrackingScreen>
-        //with SingleTickerProviderStateMixin {
-        with
-        TickerProviderStateMixin {
+    with TickerProviderStateMixin {
   LatLng _currentPos = const LatLng(6.5244, 3.3792);
   LatLng? _targetPos;
 
@@ -86,7 +83,6 @@ class _TrackingScreenState extends State<TrackingScreen>
 
       status = pkg['status'] ?? status;
 
-      // IMPORTANT: only customer sees this
       if (pkg['delivery_code'] != null) {
         deliveryCode = pkg['delivery_code'].toString();
       } else {
@@ -102,7 +98,6 @@ class _TrackingScreenState extends State<TrackingScreen>
   void _connectWebSocket() {
     try {
       channel = WebSocketChannel.connect(
-        //Uri.parse('ws://192.168.8.252:8001/ws/tracking/${widget.packageId}/'),
         Uri.parse(
           'wss://cottage-molar-unguarded.ngrok-free.dev/ws/tracking/${widget.packageId}/',
         ),
@@ -190,16 +185,13 @@ class _TrackingScreenState extends State<TrackingScreen>
       setState(() => _isDelivered = true);
 
       Navigator.pushReplacement(
-        // ignore: use_build_context_synchronously
         context,
         MaterialPageRoute(builder: (_) => const DeliveryCompleteScreen()),
       );
     } else {
       _shakeController.forward(from: 0);
 
-      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(
-        // ignore: use_build_context_synchronously
         context,
       ).showSnackBar(const SnackBar(content: Text("Invalid delivery code ❌")));
     }
@@ -217,6 +209,8 @@ class _TrackingScreenState extends State<TrackingScreen>
 
   @override
   Widget build(BuildContext context) {
+    final bg = Theme.of(context).cardColor;
+
     return Scaffold(
       body: Stack(
         children: [
@@ -245,9 +239,11 @@ class _TrackingScreenState extends State<TrackingScreen>
               child: Container(
                 height: 320,
                 padding: const EdgeInsets.all(16),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                decoration: BoxDecoration(
+                  color: bg,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(20),
+                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

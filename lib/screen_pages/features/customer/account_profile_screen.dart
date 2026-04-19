@@ -190,6 +190,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
             /// PROFILE SETTINGS (RESTORED LINK 🔥)
             Container(
               decoration: BoxDecoration(
+                // ignore: deprecated_member_use
                 color: Colors.grey.withOpacity(0.08),
                 borderRadius: BorderRadius.circular(14),
               ),
