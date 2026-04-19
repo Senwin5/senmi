@@ -6,11 +6,9 @@ import 'package:senmi/screen_pages/features/customer/customer_bottomnav.dart';
 import 'package:senmi/screen_pages/features/rider/rider_bottom_nav.dart';
 import 'package:senmi/services/api_service.dart';
 
-
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await ApiService.loadToken(); 
+  await ApiService.loadToken();
   runApp(MyApp());
 }
 

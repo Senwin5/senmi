@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:senmi/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'onboarding_screen.dart';
-import '../../registration/auth/login.dart';
 
 // Placeholder Swipe/Home Screen
 class SwipeScreen extends StatelessWidget {
@@ -62,22 +62,14 @@ class _SplashScreenState extends State<SplashScreen>
 
     final prefs = await SharedPreferences.getInstance();
 
-    // ✅ If onboarding_completed is not set, show onboarding
-    final bool onboardingCompleted =
-        prefs.getBool('onboarding_completed') ?? false;
+    final onboardingCompleted = prefs.getBool('onboarding_completed') ?? false;
 
     Widget nextPage;
 
     if (!onboardingCompleted) {
       nextPage = const OnboardingScreen();
     } else {
-      final String? accessToken = prefs.getString('access');
-
-      if (accessToken != null && accessToken.isNotEmpty) {
-        nextPage = const SwipeScreen(); // User already logged in
-      } else {
-        nextPage = const LoginScreen(); // User not logged in
-      }
+      nextPage = const MyApp(); // let main.dart handle auth
     }
 
     if (mounted) {
@@ -110,7 +102,7 @@ class _SplashScreenState extends State<SplashScreen>
                 fit: BoxFit.contain,
               ),
               const SizedBox(height: 20),
-              
+
               const CircularProgressIndicator(
                 valueColor: AlwaysStoppedAnimation<Color>(Colors.purple),
               ),
