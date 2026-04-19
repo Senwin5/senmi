@@ -1,10 +1,13 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:senmi/main.dart';
+import 'package:senmi/screen_pages/admin/admin_dashboard.dart';
+import 'package:senmi/screen_pages/features/customer/customer_bottomnav.dart';
+import 'package:senmi/screen_pages/features/rider/rider_bottom_nav.dart';
+import 'package:senmi/registration/auth/login.dart';
+import 'package:senmi/screen_pages/welcome/onboarding_screen.dart';
+import 'package:senmi/services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'onboarding_screen.dart';
 
-// Placeholder Swipe/Home Screen
 class SwipeScreen extends StatelessWidget {
   const SwipeScreen({super.key});
 
@@ -57,21 +60,36 @@ class _SplashScreenState extends State<SplashScreen>
     Timer(const Duration(seconds: 3), _navigate);
   }
 
+  // ✅ FIXED NAVIGATION LOGIC
   Future<void> _navigate() async {
     if (!mounted) return;
 
     final prefs = await SharedPreferences.getInstance();
-
     final onboardingCompleted = prefs.getBool('onboarding_completed') ?? false;
 
     Widget nextPage;
 
+    // 1. ONBOARDING CHECK
     if (!onboardingCompleted) {
       nextPage = const OnboardingScreen();
     } else {
-      nextPage = const MyApp(); // let main.dart handle auth
+      // 2. LOGIN CHECK
+      await ApiService.loadToken();
+
+      if (ApiService.token != null) {
+        if (ApiService.isAdmin) {
+          nextPage = const AdminDashboard();
+        } else if (ApiService.userRole == "rider") {
+          nextPage = const RiderBottomNav();
+        } else {
+          nextPage = const CustomerBottomNav();
+        }
+      } else {
+        nextPage = const LoginScreen();
+      }
     }
 
+    // 3. NAVIGATE
     if (mounted) {
       Navigator.pushReplacement(
         context,
@@ -89,7 +107,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // Clean background
+      backgroundColor: Colors.white,
       body: Center(
         child: ScaleTransition(
           scale: _animation,
@@ -102,7 +120,6 @@ class _SplashScreenState extends State<SplashScreen>
                 fit: BoxFit.contain,
               ),
               const SizedBox(height: 20),
-
               const CircularProgressIndicator(
                 valueColor: AlwaysStoppedAnimation<Color>(Colors.purple),
               ),
