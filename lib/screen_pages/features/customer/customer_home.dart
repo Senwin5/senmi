@@ -76,7 +76,8 @@ class _CustomerHomeState extends State<CustomerHome> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBody: true,
-      backgroundColor: Colors.grey.shade100,
+      //backgroundColor: Colors.grey.shade100,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
 
       body: SafeArea(
         child: LayoutBuilder(
@@ -103,8 +104,9 @@ class _CustomerHomeState extends State<CustomerHome> {
                         children: [
                           Text(
                             "Hi $username",
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              //color: Colors.white,
+                              color: Theme.of(context).cardColor,
                               fontSize: 18,
                             ),
                           ),
@@ -247,7 +249,8 @@ class _CustomerHomeState extends State<CustomerHome> {
 
       bottomNavigationBar: Container(
         height: MediaQuery.of(context).padding.bottom,
-        color: Colors.grey.shade100,
+        //color: Colors.grey.shade100,
+        color: Theme.of(context).scaffoldBackgroundColor,
       ),
     );
   }
@@ -266,11 +269,13 @@ class _CustomerHomeState extends State<CustomerHome> {
         child: Ink(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.black.withOpacity(0.4)
+                    : Colors.black.withOpacity(0.05),
                 blurRadius: 10,
                 spreadRadius: 2,
                 offset: const Offset(0, 4),

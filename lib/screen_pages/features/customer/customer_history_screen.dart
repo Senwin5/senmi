@@ -26,7 +26,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   void fetchPackages() async {
-    setState(() => loading = true); // 🔥 add this
+    setState(() => loading = true);
 
     try {
       final res = await ApiService.getMyOrders();
@@ -111,17 +111,23 @@ class _HistoryScreenState extends State<HistoryScreen> {
         margin: const EdgeInsets.only(right: 10),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? primaryPurple : Colors.white,
+          color: isSelected
+              ? primaryPurple
+              : Theme.of(context).cardColor, // ✅ FIX
           borderRadius: BorderRadius.circular(30),
           border: Border.all(
-            color: isSelected ? primaryPurple : Colors.grey.shade300,
+            color: isSelected
+                ? primaryPurple
+                : Theme.of(context).dividerColor, // ✅ FIX
             width: 1.2,
           ),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.white : Colors.black87,
+            color: isSelected
+                ? Colors.white
+                : Theme.of(context).textTheme.bodyMedium?.color,
             fontWeight: FontWeight.w600,
             fontSize: 13,
           ),
@@ -155,11 +161,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
     }
 
     return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor, // ✅ FIX
+
       appBar: AppBar(
         title: const Text("History"),
         centerTitle: false,
         elevation: 0,
         toolbarHeight: 90,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor, // ✅ FIX
+        surfaceTintColor: Colors.transparent,
 
         actions: [
           IconButton(
@@ -167,6 +177,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             onPressed: () async {
               setState(() => loading = true);
               fetchPackages();
+
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text("History refreshed")),
               );
@@ -174,6 +185,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           ),
         ],
       ),
+
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -207,24 +219,41 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 return Container(
                   margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor, // ✅ FIX
                     borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.black.withOpacity(0.4)
+                            : Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                      ),
+                    ],
                   ),
                   child: ListTile(
                     contentPadding: const EdgeInsets.all(14),
                     title: Text(
                       package['description'] ?? "Package",
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
+                      ),
                     ),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const SizedBox(height: 6),
-                        Text("₦${package['price']}"),
+                        Text(
+                          "₦${package['price']}",
+                          style: TextStyle(
+                            color: Theme.of(
+                              context,
+                            ).textTheme.bodyMedium?.color,
+                          ),
+                        ),
                       ],
                     ),
 
-                    // 🔥 FIXED: Pay Now UNDER Pending badge (same trailing area)
                     trailing: status == "pending"
                         ? Column(
                             mainAxisSize: MainAxisSize.min,
@@ -240,8 +269,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 10,
-                                    vertical:
-                                        3, // 🔥 reduced height to prevent overflow
+                                    vertical: 3,
                                   ),
                                   decoration: BoxDecoration(
                                     color: primaryPurple.withOpacity(0.12),
@@ -254,7 +282,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                       color: Color(0xFF6C2BD9),
                                       fontWeight: FontWeight.bold,
                                       fontSize: 12,
-                                      height: 1, // 🔥 keeps text compact
+                                      height: 1,
                                     ),
                                   ),
                                 ),
@@ -262,6 +290,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             ],
                           )
                         : statusBadge(status),
+
                     onTap: () => payNow(package),
                   ),
                 );

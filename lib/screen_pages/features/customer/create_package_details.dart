@@ -197,7 +197,7 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Package Details"),
+        title: const Text("Details"),
         leading: IconButton(
           icon: Container(
             padding: const EdgeInsets.all(6),

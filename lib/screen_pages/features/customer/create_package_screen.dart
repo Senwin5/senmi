@@ -6,6 +6,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import 'package:senmi/map/map_picker_screen.dart';
 import 'package:senmi/screen_pages/features/customer/create_package_details.dart';
+import 'package:senmi/screen_pages/features/customer/customer_history_screen.dart';
 import 'package:senmi/services/api_service.dart';
 
 class CreatePackageScreen extends StatefulWidget {
@@ -30,11 +31,9 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
 
   void _resetForm() {
     setState(() {
-      // Clear text fields
       pickupController.clear();
       deliveryController.clear();
 
-      // Reset variables
       receiverName = '';
       receiverPhone = '';
       description = '';
@@ -83,8 +82,8 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
       final p = placemarks.first;
 
       final street = [
-        p.thoroughfare, // main street name
-        p.subThoroughfare, // house number
+        p.thoroughfare,
+        p.subThoroughfare,
       ].where((e) => e != null && e.isNotEmpty).join(" ");
 
       final address = [
@@ -122,7 +121,6 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
       setState(() {
         pickupAddress = addr;
 
-        // FIXED: removed nested setState
         pickupController.value = TextEditingValue(
           text: addr,
           selection: TextSelection.collapsed(offset: addr.length),
@@ -136,7 +134,6 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
       setState(() {
         deliveryAddress = addr;
 
-        // FIXED: removed nested setState
         deliveryController.value = TextEditingValue(
           text: addr,
           selection: TextSelection.collapsed(offset: addr.length),
@@ -270,20 +267,11 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
         ),
         centerTitle: true,
         elevation: 0,
-
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () {
-              _resetForm();
-
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(const SnackBar(content: Text("Form cleared")));
-            },
-          ),
+          IconButton(icon: const Icon(Icons.refresh), onPressed: _resetForm),
         ],
       ),
+
       body: loading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -293,6 +281,59 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // 🔥 ONLY ADDITION (ORDER + HISTORY UI)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            _resetForm();
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.deepPurple,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Text(
+                              "Order",
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
+                        ),
+
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const HistoryScreen(),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.grey,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Text(
+                              "History",
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 10),
+
                     const Text(
                       "Receiver Details",
                       style: TextStyle(
@@ -376,7 +417,7 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
                         width: double.infinity,
                         padding: const EdgeInsets.all(18),
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
+                          gradient: const LinearGradient(
                             colors: [Colors.green, Colors.greenAccent],
                           ),
                           borderRadius: BorderRadius.circular(16),

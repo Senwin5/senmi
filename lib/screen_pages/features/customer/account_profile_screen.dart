@@ -2,8 +2,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:senmi/screen_pages/features/customer/customer_profile_screen.dart';
+
 import 'package:senmi/services/api_service.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class CustomerProfileScreen extends StatefulWidget {
   final ValueNotifier<bool> darkModeNotifier;
@@ -19,7 +21,9 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
   Map<String, dynamic>? user;
   String? errorMessage;
 
-  /// ✅ SAFE USERNAME
+  String appVersion = "Loading...";
+
+  /// SAFE USERNAME
   String get username =>
       (user?['username'] ?? user?['name'] ?? user?['user']?['username'] ?? "")
           .toString();
@@ -28,6 +32,17 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
   void initState() {
     super.initState();
     fetchUser();
+    loadAppVersion();
+  }
+
+  Future<void> loadAppVersion() async {
+    final info = await PackageInfo.fromPlatform();
+
+    if (!mounted) return;
+
+    setState(() {
+      appVersion = "${info.version}+${info.buildNumber}";
+    });
   }
 
   Future<void> fetchUser() async {
@@ -78,6 +93,29 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
     }
   }
 
+  void showTerms() {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Terms & Conditions"),
+        content: const SingleChildScrollView(
+          child: Text(
+            "1. We deliver packages safely.\n"
+            "2. Users must provide correct information.\n"
+            "3. We are not responsible for incorrect addresses.\n\n"
+            "More terms can be added here...",
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Close"),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final safeUsername = username.isNotEmpty ? username : "User";
@@ -106,12 +144,12 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Profile"), centerTitle: true),
+      appBar: AppBar(title: const Text("Account"), centerTitle: true),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            /// 🔵 HEADER
+            /// HEADER
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -149,19 +187,15 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
 
             const SizedBox(height: 20),
 
-            /// ⚙️ PROFILE SETTINGS ENTRY (IMPORTANT)
+            /// PROFILE SETTINGS (RESTORED LINK 🔥)
             Container(
               decoration: BoxDecoration(
-                // ignore: deprecated_member_use
                 color: Colors.grey.withOpacity(0.08),
                 borderRadius: BorderRadius.circular(14),
               ),
               child: ListTile(
                 leading: const Icon(Icons.settings, color: Colors.blue),
-                title: const Text(
-                  "Profile Settings",
-                  style: TextStyle(fontWeight: FontWeight.w600),
-                ),
+                title: const Text("Profile Details"),
                 subtitle: const Text("Manage account, security & privacy"),
                 trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                 onTap: () {
@@ -180,16 +214,17 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
 
             const SizedBox(height: 20),
 
-            /// 📞 SUPPORT SECTION
+            /// SUPPORT
             _tile(Icons.chat, "Chat Me", openWhatsApp),
             _divider(),
             _tile(Icons.support_agent, "Support", () {}),
+            _divider(),
+            _tile(Icons.description, "Terms & Conditions", showTerms),
             _divider(),
             _tile(Icons.question_answer, "FAQ", () {}),
 
             const SizedBox(height: 10),
 
-            /// ⚙️ SETTINGS
             SwitchListTile(
               secondary: const Icon(Icons.notifications),
               title: const Text("Notifications"),
@@ -203,13 +238,21 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
               value: widget.darkModeNotifier.value,
               onChanged: (val) => widget.darkModeNotifier.value = val,
             ),
+
+            const SizedBox(height: 30),
+
+            Center(
+              child: Text(
+                "Version $appVersion",
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  /// 🔹 CLEAN TILE
   Widget _tile(IconData icon, String title, VoidCallback onTap) {
     return ListTile(
       leading: Icon(icon),

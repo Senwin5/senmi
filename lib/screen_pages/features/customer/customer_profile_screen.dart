@@ -16,18 +16,12 @@ class ProfileSettingsScreen extends StatelessWidget {
 
   /// ✅ SAFE DATA GETTERS (this fixes your issue)
   String get username {
-    return (user['username'] ??
-            user['name'] ??
-            user['user']?['username'] ??
-            "")
+    return (user['username'] ?? user['name'] ?? user['user']?['username'] ?? "")
         .toString();
   }
 
   String get email {
-    return (user['email'] ??
-            user['user']?['email'] ??
-            "")
-        .toString();
+    return (user['email'] ?? user['user']?['email'] ?? "").toString();
   }
 
   String get phone {
@@ -53,16 +47,16 @@ class ProfileSettingsScreen extends StatelessWidget {
       builder: (_) => AlertDialog(
         title: const Text("Delete Account"),
         content: const Text("Are you sure?"),
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text("Cancel")),
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Cancel"),
+          ),
           TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text("Delete",
-                  style: TextStyle(color: Colors.red))),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Delete", style: TextStyle(color: Colors.red)),
+          ),
         ],
       ),
     );
@@ -93,8 +87,7 @@ class ProfileSettingsScreen extends StatelessWidget {
       ),
       child: ListTile(
         leading: Icon(icon, color: iconColor ?? Colors.blue),
-        title: Text(title,
-            style: const TextStyle(fontWeight: FontWeight.w600)),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
         subtitle: subtitle != null && subtitle.isNotEmpty
             ? Text(subtitle)
             : null,
@@ -112,7 +105,7 @@ class ProfileSettingsScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Profile Settings"),
+        title: const Text("Profile Details"),
         centerTitle: true,
         elevation: 0,
       ),
@@ -139,9 +132,10 @@ class ProfileSettingsScreen extends StatelessWidget {
                         ? safeUsername[0].toUpperCase()
                         : "U",
                     style: const TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue),
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -154,10 +148,7 @@ class ProfileSettingsScreen extends StatelessWidget {
                   ),
                 ),
                 if (email.isNotEmpty)
-                  Text(
-                    email,
-                    style: const TextStyle(color: Colors.white70),
-                  ),
+                  Text(email, style: const TextStyle(color: Colors.white70)),
               ],
             ),
           ),
@@ -165,23 +156,11 @@ class ProfileSettingsScreen extends StatelessWidget {
           const SizedBox(height: 20),
 
           /// 📌 USER INFO
-          _tile(
-            icon: Icons.person,
-            title: "Username",
-            subtitle: safeUsername,
-          ),
+          _tile(icon: Icons.person, title: "Username", subtitle: safeUsername),
 
-          _tile(
-            icon: Icons.email,
-            title: "Email",
-            subtitle: email,
-          ),
+          _tile(icon: Icons.email, title: "Email", subtitle: email),
 
-          _tile(
-            icon: Icons.phone,
-            title: "Phone Number",
-            subtitle: phone,
-          ),
+          _tile(icon: Icons.phone, title: "Phone Number", subtitle: phone),
 
           const SizedBox(height: 10),
           const Divider(),
@@ -212,8 +191,7 @@ class ProfileSettingsScreen extends StatelessWidget {
 
           /// 🌙 DARK MODE
           SwitchListTile(
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 20),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 20),
             secondary: const Icon(Icons.dark_mode),
             title: const Text(
               "Dark Mode",
