@@ -5,8 +5,8 @@ import 'package:geocoding/geocoding.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import 'package:senmi/map/map_picker_screen.dart';
-import 'package:senmi/screen_pages/features/customer/create_package_details.dart';
-import 'package:senmi/screen_pages/features/customer/customer_history_screen.dart';
+import 'package:senmi/screen_pages/features/customer/customer_create/create_package_details.dart';
+import 'package:senmi/screen_pages/features/customer/customer_history/customer_history_screen.dart';
 import 'package:senmi/services/api_service.dart';
 
 class CreatePackageScreen extends StatefulWidget {

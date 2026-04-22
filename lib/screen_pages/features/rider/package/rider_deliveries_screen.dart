@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../services/api_service.dart';
+import '../../../../services/api_service.dart';
 
 class RiderDeliveriesScreen extends StatefulWidget {
   const RiderDeliveriesScreen({super.key});
@@ -52,20 +52,29 @@ class _RiderDeliveriesScreenState extends State<RiderDeliveriesScreen>
 
   Future<void> fetchMyPackages() async {
     setState(() => loadingMyPackages = true);
+
     try {
-      final pkgs = await ApiService.getMyPackages();
+      final res = await ApiService.getMyPackages();
+
+      List allPackages = [
+        ...res["accepted"],
+        ...res["in_transit"],
+        ...res["delivered"],
+      ];
+
       setState(() {
-        myPackages = pkgs;
+        myPackages = allPackages;
         loadingMyPackages = false;
       });
     } catch (e) {
       setState(() => loadingMyPackages = false);
-      debugPrint("Fetch my packages error: $e");
+      debugPrint("fetchMyPackages error: $e");
     }
   }
 
   Future<void> acceptPackage(String packageId) async {
-    setState(() => loadingAvailable = true);
+    //setState(() => loadingAvailable = true);
+    setState(() => loadingAvailable = false);
     try {
       final success = await ApiService.acceptPackage(packageId);
       if (success) {
@@ -175,7 +184,14 @@ class _RiderDeliveriesScreenState extends State<RiderDeliveriesScreen>
             ),
             trailing: canAccept
                 ? ElevatedButton(
-                    onPressed: () => acceptPackage(pkg['id']),
+                    onPressed: () {
+                      final id = pkg['id']?.toString();
+                      if (id != null) {
+                        acceptPackage(id);
+                      } else {
+                        debugPrint("Package ID missing: $pkg");
+                      }
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.purple,
                     ),

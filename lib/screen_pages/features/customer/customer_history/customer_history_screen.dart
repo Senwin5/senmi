@@ -1,8 +1,8 @@
 // ignore_for_file: use_build_context_synchronously, deprecated_member_use
 
 import 'package:flutter/material.dart';
-import 'package:senmi/screen_pages/features/customer/create_package_details.dart';
-import '../../../services/api_service.dart';
+import 'package:senmi/screen_pages/features/customer/customer_create/create_package_details.dart';
+import '../../../../services/api_service.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});

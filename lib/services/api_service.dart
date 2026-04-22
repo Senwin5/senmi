@@ -9,7 +9,7 @@ class ApiService {
   // 🔥 CHANGE THIS
   static const String baseUrl =
       "https://cottage-molar-unguarded.ngrok-free.dev/api";
-  //static const String baseUrl = "http://192.168.1.129:8001/api";
+  //static const String baseUrl = "http://192.168.8.252:8001/api";
 
   static String? token;
   static String? refreshToken;
@@ -399,8 +399,28 @@ class ApiService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        // Defensive: ensure a List
-        return data is List ? data : [];
+
+        // ✅ FIX: handle Django pagination (results)
+        if (data is Map<String, dynamic>) {
+          if (data['results'] is List) {
+            return data['results'];
+          }
+
+          if (data['data'] is List) {
+            return data['data'];
+          }
+
+          if (data['packages'] is List) {
+            return data['packages'];
+          }
+        }
+
+        // fallback for raw list response
+        if (data is List) {
+          return data;
+        }
+
+        return [];
       } else {
         debugPrint("getAvailablePackages failed: ${response.statusCode}");
         return [];
@@ -728,10 +748,7 @@ class ApiService {
       final url = Uri.parse("$baseUrl/review-rider/$riderId/");
       final res = await http.post(
         url,
-        headers: {
-          "Authorization": "Bearer $token",
-          "Content-Type": "application/json",
-        },
+        headers: await ApiService.getAuthHeaders(),
         body: jsonEncode({
           "status": status.toLowerCase(),
           "rejection_reason": reason.trim(),
@@ -792,38 +809,26 @@ class ApiService {
     }
   }
 
-  // DELETE USER ACCOUNT
   static Future<bool> deleteUser() async {
-    if (token == null) return false;
+    await loadToken();
 
-    try {
-      final uri = Uri.parse("$baseUrl/profile/delete/"); // your endpoint
+    if (token == null) {
+      print("NO TOKEN FOUND");
+      return false;
+    }   
 
+    try { 
       final res = await http.delete(
-        uri,
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer $token",
-        },
+        Uri.parse("$baseUrl/api/profile/hard-delete/"),
+        headers: {"Authorization": "Bearer $token"},
       );
 
-      // Debugging
-      debugPrint("DELETE ${uri.toString()} returned ${res.statusCode}");
-      debugPrint("Response body: ${res.body}");
+      print("🚀 STATUS → ${res.statusCode}");
+      print("🚀 BODY → ${res.body}");
 
-      if (res.statusCode == 200 || res.statusCode == 204) {
-        debugPrint("User deleted successfully!");
-        return true;
-      } else if (res.statusCode == 401) {
-        debugPrint("Unauthorized! Logging out...");
-        await logout();
-        return false;
-      } else {
-        debugPrint("Delete failed with status ${res.statusCode}");
-        return false;
-      }
+      return res.statusCode == 200 || res.statusCode == 204;
     } catch (e) {
-      debugPrint("Error deleting user: $e");
+      print("DELETE ERROR → $e");
       return false;
     }
   }
@@ -883,9 +888,44 @@ class ApiService {
     }
   }
 
-  static Future<dynamic> getMyPackages() async {
-    return [];
+static Future<Map<String, dynamic>> getMyPackages() async {
+  await loadToken();
+
+  try {
+    final response = await http.get(
+      Uri.parse("$baseUrl/rider/packages/"),
+      headers: await ApiService.getAuthHeaders(),
+    );
+
+    debugPrint("MY PACKAGES STATUS → ${response.statusCode}");
+    debugPrint("MY PACKAGES BODY → ${response.body}");
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+
+      if (data is Map<String, dynamic>) {
+        return {
+          "accepted": data["accepted"] ?? [],
+          "in_transit": data["in_transit"] ?? [],
+          "delivered": data["delivered"] ?? [],
+        };
+      }
+    }
+
+    return {
+      "accepted": [],
+      "in_transit": [],
+      "delivered": [],
+    };
+  } catch (e) {
+    debugPrint("getMyPackages error: $e");
+    return {
+      "accepted": [],
+      "in_transit": [],
+      "delivered": [],
+    };
   }
+}
 
   static Future<dynamic> getPaymentLink(Map<String, Object> map) async {
     return null;

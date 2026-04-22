@@ -4,7 +4,6 @@ import 'package:senmi/screen_pages/welcome/splash_screen.dart';
 import 'package:senmi/services/api_service.dart';
 
 
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await ApiService.loadToken();
@@ -12,7 +11,7 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({super.key}); 
 
   @override
   Widget build(BuildContext context) {

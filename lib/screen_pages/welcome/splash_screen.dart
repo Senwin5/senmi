@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:senmi/screen_pages/admin/admin_dashboard.dart';
-import 'package:senmi/screen_pages/features/customer/customer_bottomnav.dart';
-import 'package:senmi/screen_pages/features/rider/rider_bottom_nav.dart';
+import 'package:senmi/screen_pages/features/customer/customer_home_bottom/customer_bottomnav.dart';
+import 'package:senmi/screen_pages/features/rider/rider_home_bottom/rider_bottom_nav.dart';
 import 'package:senmi/registration/auth/login.dart';
 import 'package:senmi/screen_pages/welcome/onboarding_screen.dart';
 import 'package:senmi/services/api_service.dart';

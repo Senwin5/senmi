@@ -5,9 +5,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:senmi/screen_pages/features/customer/delivery_complete_screen.dart';
+import 'package:senmi/screen_pages/features/customer/customer_create/delivery_complete_screen.dart';
+import 'package:senmi/services/api_service.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
-import '../../../services/api_service.dart';
+
 
 class TrackingScreen extends StatefulWidget {
   final String packageId;
@@ -99,7 +100,8 @@ class _TrackingScreenState extends State<TrackingScreen>
     try {
       channel = WebSocketChannel.connect(
         Uri.parse(
-          'wss://cottage-molar-unguarded.ngrok-free.dev/ws/tracking/${widget.packageId}/',
+          //'ws://192.168.8.252:8001/ws/tracking/sample-package-id/'
+          'wss://cottage-molar-unguarded.ngrok-free.dev/ws/tracking/sample-package-id/'
         ),
       );
 

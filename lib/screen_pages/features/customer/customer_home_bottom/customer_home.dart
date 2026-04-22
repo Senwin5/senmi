@@ -1,10 +1,10 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
-import 'package:senmi/screen_pages/features/customer/customer_history_screen.dart';
-import 'package:senmi/screen_pages/features/customer/customer_track_package.dart';
-import '../../../services/api_service.dart';
-import 'create_package_screen.dart';
+import 'package:senmi/screen_pages/features/customer/customer_history/customer_history_screen.dart';
+import 'package:senmi/screen_pages/features/customer/customer_track/customer_track_package.dart';
+import '../../../../services/api_service.dart';
+import '../customer_create/create_package_screen.dart';
 
 class CustomerHome extends StatefulWidget {
   const CustomerHome({super.key});

@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:senmi/screen_pages/admin/admin_dashboard.dart';
-import 'package:senmi/screen_pages/features/customer/customer_bottomnav.dart';
-import 'package:senmi/screen_pages/features/rider/rider_bottom_nav.dart';
+import 'package:senmi/screen_pages/features/customer/customer_home_bottom/customer_bottomnav.dart';
+import 'package:senmi/screen_pages/features/rider/rider_home_bottom/rider_bottom_nav.dart';
 import 'package:senmi/widgets/custom_buttom.dart';
 import '../../services/api_service.dart';
-import '../../screen_pages/features/customer/customer_home.dart';
-import '../../screen_pages/features/rider/rider_home.dart';
+import '../../screen_pages/features/customer/customer_home_bottom/customer_home.dart';
+import '../../screen_pages/features/rider/rider_home_bottom/rider_home.dart';
 import '../auth/signup.dart';
-import '../../screen_pages/features/rider/rider_complete_profile.dart';
-import '../../screen_pages/features/rider/rider_pending_screen.dart';
+import '../../screen_pages/features/rider/pending_rider_review/rider_complete_profile.dart';
+import '../../screen_pages/features/rider/pending_rider_review/rider_pending_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});

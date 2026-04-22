@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:senmi/screen_pages/features/rider/rider_pending_screen.dart';
+import 'package:senmi/screen_pages/features/rider/pending_rider_review/rider_pending_screen.dart';
 import 'package:senmi/services/api_service.dart';
 
 class RiderCompleteProfile extends StatefulWidget {

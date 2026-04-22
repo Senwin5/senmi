@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:senmi/services/api_service.dart';
-import '../../../registration/auth/login.dart';
+import '../../../../registration/auth/login.dart';
 import 'package:senmi/widgets/custom_buttom.dart';
 
 class RiderProfileScreen extends StatefulWidget {

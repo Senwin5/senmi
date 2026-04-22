@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:senmi/screen_pages/features/rider/wallet_screen.dart';
-import '../../../services/api_service.dart';
+import 'package:senmi/screen_pages/features/rider/rider_wallet/wallet_screen.dart';
+import '../../../../services/api_service.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class RiderHome extends StatefulWidget {

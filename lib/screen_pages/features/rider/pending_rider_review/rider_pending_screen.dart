@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:senmi/screen_pages/features/rider/rider_bottom_nav.dart';
-import '../../../services/api_service.dart';
-import '../../../registration/auth/login.dart';
-import '../../features/rider/rider_complete_profile.dart';
+import 'package:senmi/screen_pages/features/rider/rider_home_bottom/rider_bottom_nav.dart';
+import '../../../../services/api_service.dart';
+import '../../../../registration/auth/login.dart';
+import 'rider_complete_profile.dart';
 
 class RiderPendingScreen extends StatefulWidget {
   const RiderPendingScreen({super.key});

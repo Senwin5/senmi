@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:senmi/screen_pages/features/customer/customer_bottomnav.dart';
-import 'package:senmi/screen_pages/features/rider/rider_complete_profile.dart';
+import 'package:senmi/screen_pages/features/customer/customer_home_bottom/customer_bottomnav.dart';
+import 'package:senmi/screen_pages/features/rider/pending_rider_review/rider_complete_profile.dart';
 import 'package:senmi/widgets/custom_buttom.dart';
 import '../../services/api_service.dart';
 import '../auth/login.dart';
@@ -12,10 +12,12 @@ class RegisterScreen extends StatefulWidget {
   State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
+bool _obscurePassword = true;
+
 class _RegisterScreenState extends State<RegisterScreen> {
   final email = TextEditingController();
   final username = TextEditingController();
-  final phone = TextEditingController(); 
+  final phone = TextEditingController();
   final password = TextEditingController();
 
   String role = "customer"; // default
@@ -25,7 +27,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void dispose() {
     email.dispose();
     username.dispose();
-    phone.dispose(); 
+    phone.dispose();
     password.dispose();
     super.dispose();
   }
@@ -35,9 +37,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         username.text.isEmpty ||
         phone.text.isEmpty ||
         password.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please fill all fields")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Please fill all fields")));
       return;
     }
 
@@ -55,11 +57,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     // ✅ If backend returned access token
     if (res.containsKey("access") && res['access'] != null) {
-      await ApiService.saveTokenAndRole(
-        res['access'],
-        role,
-        username.text, 
-      );
+      await ApiService.saveTokenAndRole(res['access'], role, username.text);
 
       if (role == "rider") {
         Navigator.pushReplacement(
@@ -106,9 +104,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       }
 
       // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      ScaffoldMessenger.of(
+        // ignore: use_build_context_synchronously
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
     }
   }
 
@@ -186,13 +185,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       // ✅ Password
                       TextField(
                         controller: password,
-                        obscureText: true,
+                        obscureText: _obscurePassword,
                         decoration: InputDecoration(
                           labelText: "Password",
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
                           ),
                           prefixIcon: const Icon(Icons.lock),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _obscurePassword = !_obscurePassword;
+                              });
+                            },
+                          ),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -209,9 +220,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           underline: const SizedBox(),
                           items: const [
                             DropdownMenuItem(
-                                value: "customer", child: Text("Customer")),
+                              value: "customer",
+                              child: Text("Customer"),
+                            ),
                             DropdownMenuItem(
-                                value: "rider", child: Text("Rider")),
+                              value: "rider",
+                              child: Text("Rider"),
+                            ),
                           ],
                           onChanged: (val) {
                             if (val != null) setState(() => role = val);
@@ -236,7 +251,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               Navigator.pushReplacement(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (_) => const LoginScreen()),
+                                  builder: (_) => const LoginScreen(),
+                                ),
                               );
                             },
                             child: const Text(
@@ -246,7 +262,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                          )
+                          ),
                         ],
                       ),
                     ],

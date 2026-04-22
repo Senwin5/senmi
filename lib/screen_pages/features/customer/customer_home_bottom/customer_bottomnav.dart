@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'customer_home.dart';
-import 'create_package_screen.dart';
-import 'customer_history_screen.dart';
-import 'package:senmi/screen_pages/features/customer/account_profile_screen.dart';
-import 'package:senmi/screen_pages/features/customer/customer_track_package.dart';
+import '../customer_create/create_package_screen.dart';
+import '../customer_history/customer_history_screen.dart';
+import 'package:senmi/screen_pages/features/customer/customer_profiles/account_profile_screen.dart';
+import 'package:senmi/screen_pages/features/customer/customer_track/customer_track_package.dart';
 
 /// Customer Bottom Navigation
 class CustomerBottomNav extends StatefulWidget {

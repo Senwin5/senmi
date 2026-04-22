@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:senmi/screen_pages/features/rider/rider_deliveries_screen.dart';
-import 'package:senmi/screen_pages/features/rider/rider_history_screen.dart';
-import 'package:senmi/screen_pages/features/rider/rider_home.dart';
-import 'package:senmi/screen_pages/features/rider/wallet_screen.dart';
-import '../../../services/api_service.dart';
-import '../../../registration/auth/login.dart';
-import 'package:senmi/screen_pages/features/rider/rider_profile.dart';
+import 'package:senmi/screen_pages/features/rider/rider_package/rider_deliveries_screen.dart';
+import 'package:senmi/screen_pages/features/rider/rider_history/rider_history_screen.dart';
+import 'package:senmi/screen_pages/features/rider/rider_home_bottom/rider_home.dart';
+import 'package:senmi/screen_pages/features/rider/rider_wallet/wallet_screen.dart';
+import '../../../../services/api_service.dart';
+import '../../../../registration/auth/login.dart';
+import 'package:senmi/screen_pages/features/rider/rider_profile/rider_profile.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// Rider Settings Screen (Functional + Dark Mode)
