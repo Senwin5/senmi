@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:senmi/screen_pages/features/rider/rider_package/rider_package_detail.dart';
 import '../../../../services/api_service.dart';

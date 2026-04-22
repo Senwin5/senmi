@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import '../../../../services/api_service.dart';
 
@@ -157,7 +159,7 @@ class _RiderDeliveriesScreenState extends State<RiderDeliveriesScreen>
             break;
           case 'picked_up':
             statusColor = Colors.blue;
-            statusText = 'On the way';
+            statusText = 'On the way to delivery';
             break;
           case 'delivered':
             statusColor = Colors.green;

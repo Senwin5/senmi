@@ -235,9 +235,6 @@ static Future<dynamic> getPackage(String packageId) async {
     headers: await ApiService.getAuthHeaders(),
   );
 
-  print("STATUS: ${res.statusCode}");
-  print("BODY: ${res.body}");
-
   if (res.statusCode == 200) {
     if (res.body.isEmpty) {
       throw Exception("Empty response from server");
@@ -827,7 +824,7 @@ static Future<dynamic> getPackage(String packageId) async {
     await loadToken();
 
     if (token == null) {
-      print("NO TOKEN FOUND");
+    
       return false;
     }
 
@@ -837,12 +834,10 @@ static Future<dynamic> getPackage(String packageId) async {
         headers: {"Authorization": "Bearer $token"},
       );
 
-      print("🚀 STATUS → ${res.statusCode}");
-      print("🚀 BODY → ${res.body}");
-
+    
       return res.statusCode == 200 || res.statusCode == 204;
     } catch (e) {
-      print("DELETE ERROR → $e");
+      
       return false;
     }
   }
