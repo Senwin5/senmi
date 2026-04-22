@@ -55,7 +55,7 @@ class _RiderDeliveriesScreenState extends State<RiderDeliveriesScreen>
 
     try {
       final res = await ApiService.getMyPackages();
-        debugPrint("MY PACKAGES RESPONSE: $res");
+      debugPrint("MY PACKAGES RESPONSE: $res");
 
       List allPackages = [
         ...res["accepted"],
@@ -108,7 +108,6 @@ class _RiderDeliveriesScreenState extends State<RiderDeliveriesScreen>
       setState(() => loadingAvailable = false);
     }
   }
-  
 
   Widget buildPackageList(
     List packages,
@@ -152,11 +151,11 @@ class _RiderDeliveriesScreenState extends State<RiderDeliveriesScreen>
         String statusText;
 
         switch (status.toLowerCase()) {
-          case 'pending':
+          case 'accepted':
             statusColor = Colors.orange;
-            statusText = 'Pending';
+            statusText = 'Accepted';
             break;
-          case 'on the way':
+          case 'picked_up':
             statusColor = Colors.blue;
             statusText = 'On the way';
             break;
@@ -195,36 +194,49 @@ class _RiderDeliveriesScreenState extends State<RiderDeliveriesScreen>
             trailing: canAccept
                 ? ElevatedButton(
                     onPressed: () {
-                      //final id = pkg['id']?.toString();
                       final id = pkg['package_id']?.toString();
-                      if (id != null) {
-                        acceptPackage(id);
-                      } else {
-                        debugPrint("Package ID missing: $pkg");
-                      }
+                      if (id != null) acceptPackage(id);
                     },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.purple,
-                    ),
                     child: const Text("Accept"),
                   )
-                : Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      // ignore: deprecated_member_use
-                      color: statusColor.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      statusText,
-                      style: TextStyle(
-                        color: statusColor,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                : Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // ✅ START DELIVERY
+                      if (status.toLowerCase() == 'accepted')
+                        ElevatedButton(
+                          onPressed: () async {
+                            final id = pkg['package_id']?.toString();
+                            if (id != null) {
+                              final ok = await ApiService.updateStatus(
+                                id,
+                                "picked_up", // ✅ correct
+                              );
+                              if (ok) fetchMyPackages();
+                            }
+                          },
+                          child: const Text("Start"),
+                        ),
+
+                      // ✅ COMPLETE DELIVERY
+                      if (status.toLowerCase() == 'picked_up')
+                        ElevatedButton(
+                          onPressed: () async {
+                            final id = pkg['package_id']?.toString();
+                            if (id != null) {
+                              final ok = await ApiService.updateStatus(
+                                id,
+                                "delivered", // ✅ correct
+                              );
+                              if (ok) fetchMyPackages();
+                            }
+                          },
+                          child: const Text("Deliver"),
+                        ),
+
+                      if (status.toLowerCase() == 'delivered')
+                        const Text("Completed"),
+                    ],
                   ),
           ),
         );

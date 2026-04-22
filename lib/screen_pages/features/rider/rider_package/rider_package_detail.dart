@@ -149,19 +149,74 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
             // ✅ ACCEPT BUTTON
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
-                onPressed: accepting ? null : accept,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.purple,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                child: Text(
-                  accepting ? "Accepting..." : "Accept Package",
-                  style: const TextStyle(fontSize: 16),
-                ),
+              child: Builder(
+                builder: (_) {
+                  final status = (package?['status'] ?? '').toLowerCase();
+
+                  // 🔵 ACCEPT PACKAGE
+                  if (status == 'pending') {
+                    return ElevatedButton(
+                      onPressed: accepting ? null : accept,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.purple,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: Text(
+                        accepting ? "Accepting..." : "Accept Package",
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                    );
+                  }
+
+                  // 🟡 START DELIVERY
+                  if (status == 'accepted') {
+                    return ElevatedButton(
+                      onPressed: () async {
+                        final success = await ApiService.updateStatus(
+                          widget.packageId,
+                          "picked_up", // ✅ correct value
+                        );
+
+                        if (success) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Delivery started")),
+                          );
+                          loadPackage(); // 🔄 refresh UI
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: const Text(
+                        "Start Delivery",
+                        style: TextStyle(fontSize: 16),
+                      ),
+                    );
+                  }
+
+                  // 🟢 DELIVERED / IN TRANSIT
+                  return ElevatedButton(
+                    onPressed: null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.grey,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    child: Text(
+                      status == 'picked_up'
+                          ? "On the way"
+                          : status == 'delivered'
+                          ? "Delivered"
+                          : "Processing",
+                    ),
+                  );
+                },
               ),
             ),
           ],

@@ -225,16 +225,30 @@ class ApiService {
   }
 
   // Fetch package by ID
-  static Future<dynamic> getPackage(String packageId) async {
-    await loadToken();
+static Future<dynamic> getPackage(String packageId) async {
+  await loadToken();
 
-    final response = await http.get(
-      Uri.parse("$baseUrl/packages/$packageId/"),
-      headers: await ApiService.getAuthHeaders(),
-    );
+  final url = Uri.parse("$baseUrl/packages/$packageId/");
 
-    return jsonDecode(response.body);
+  final res = await http.get(
+    url,
+    headers: await ApiService.getAuthHeaders(),
+  );
+
+  print("STATUS: ${res.statusCode}");
+  print("BODY: ${res.body}");
+
+  if (res.statusCode == 200) {
+    if (res.body.isEmpty) {
+      throw Exception("Empty response from server");
+    }
+    return jsonDecode(res.body);
+  } else {
+    throw Exception("Failed: ${res.statusCode} - ${res.body}");
   }
+}
+
+
 
   static Future<List<dynamic>> getMyOrders() async {
     await loadToken();
@@ -888,44 +902,36 @@ class ApiService {
     }
   }
 
-static Future<Map<String, dynamic>> getMyPackages() async {
-  await loadToken();
+  static Future<Map<String, dynamic>> getMyPackages() async {
+    await loadToken();
 
-  try {
-    final response = await http.get(
-      Uri.parse("$baseUrl/rider/my-packages/"),
-      headers: await ApiService.getAuthHeaders(),
-    );
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/rider/my-packages/"),
+        headers: await ApiService.getAuthHeaders(),
+      );
 
-    debugPrint("MY PACKAGES STATUS → ${response.statusCode}");
-    debugPrint("MY PACKAGES BODY → ${response.body}");
+      debugPrint("MY PACKAGES STATUS → ${response.statusCode}");
+      debugPrint("MY PACKAGES BODY → ${response.body}");
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
 
-      if (data is Map<String, dynamic>) {
-        return {
-          "accepted": data["accepted"] ?? [],
-          "in_transit": data["in_transit"] ?? [],
-          "delivered": data["delivered"] ?? [],
-        };
+        if (data is Map<String, dynamic>) {
+          return {
+            "accepted": data["accepted"] ?? [],
+            "in_transit": data["in_transit"] ?? [],
+            "delivered": data["delivered"] ?? [],
+          };
+        }
       }
-    }
 
-    return {
-      "accepted": [],
-      "in_transit": [],
-      "delivered": [],
-    };
-  } catch (e) {
-    debugPrint("getMyPackages error: $e");
-    return {
-      "accepted": [],
-      "in_transit": [],
-      "delivered": [],
-    };
+      return {"accepted": [], "in_transit": [], "delivered": []};
+    } catch (e) {
+      debugPrint("getMyPackages error: $e");
+      return {"accepted": [], "in_transit": [], "delivered": []};
+    }
   }
-}
 
   static Future<dynamic> getPaymentLink(Map<String, Object> map) async {
     return null;
