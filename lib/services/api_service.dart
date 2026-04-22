@@ -815,9 +815,9 @@ class ApiService {
     if (token == null) {
       print("NO TOKEN FOUND");
       return false;
-    }   
+    }
 
-    try { 
+    try {
       final res = await http.delete(
         Uri.parse("$baseUrl/api/profile/hard-delete/"),
         headers: {"Authorization": "Bearer $token"},
@@ -893,7 +893,7 @@ static Future<Map<String, dynamic>> getMyPackages() async {
 
   try {
     final response = await http.get(
-      Uri.parse("$baseUrl/rider/packages/"),
+      Uri.parse("$baseUrl/rider/my-packages/"),
       headers: await ApiService.getAuthHeaders(),
     );
 

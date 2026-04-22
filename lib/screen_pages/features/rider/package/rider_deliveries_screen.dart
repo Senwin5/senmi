@@ -55,6 +55,7 @@ class _RiderDeliveriesScreenState extends State<RiderDeliveriesScreen>
 
     try {
       final res = await ApiService.getMyPackages();
+        debugPrint("MY PACKAGES RESPONSE: $res");
 
       List allPackages = [
         ...res["accepted"],
@@ -73,32 +74,41 @@ class _RiderDeliveriesScreenState extends State<RiderDeliveriesScreen>
   }
 
   Future<void> acceptPackage(String packageId) async {
-    //setState(() => loadingAvailable = true);
-    setState(() => loadingAvailable = false);
+    setState(() => loadingAvailable = true);
+
     try {
       final success = await ApiService.acceptPackage(packageId);
+
       if (success) {
-        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Package accepted successfully")),
         );
-        await fetchAvailablePackages();
-        await fetchMyPackages();
+
+        // 🔥 INSTANT UI UPDATE (NO FULL REFRESH FIRST)
+        setState(() {
+          availablePackages.removeWhere(
+            (pkg) =>
+                //(pkg['id']?.toString() == packageId) ||
+                (pkg['package_id']?.toString() == packageId),
+          );
+        });
+
+        // 🔄 then sync backend quietly
+        fetchMyPackages();
       } else {
-        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Failed to accept package")),
         );
-        setState(() => loadingAvailable = false);
       }
     } catch (e) {
-      setState(() => loadingAvailable = false);
       ScaffoldMessenger.of(
-        // ignore: use_build_context_synchronously
         context,
       ).showSnackBar(SnackBar(content: Text("Error accepting package: $e")));
+    } finally {
+      setState(() => loadingAvailable = false);
     }
   }
+  
 
   Widget buildPackageList(
     List packages,
@@ -172,20 +182,21 @@ class _RiderDeliveriesScreenState extends State<RiderDeliveriesScreen>
               child: const Icon(Icons.local_shipping, color: Colors.purple),
             ),
             title: Text(
-              pkg['title'] ?? 'Unnamed Package',
+              pkg['package_id'] ?? 'Unnamed Package',
               style: TextStyle(
                 color: isDark ? Colors.white : Colors.black87,
                 fontWeight: FontWeight.bold,
               ),
             ),
             subtitle: Text(
-              pkg['pickup_address'] ?? 'No pickup info',
+              pkg['pickup'] ?? 'No pickup info',
               style: TextStyle(color: isDark ? Colors.white60 : Colors.black54),
             ),
             trailing: canAccept
                 ? ElevatedButton(
                     onPressed: () {
-                      final id = pkg['id']?.toString();
+                      //final id = pkg['id']?.toString();
+                      final id = pkg['package_id']?.toString();
                       if (id != null) {
                         acceptPackage(id);
                       } else {

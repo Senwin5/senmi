@@ -4,6 +4,7 @@ import 'package:senmi/screen_pages/welcome/splash_screen.dart';
 import 'package:senmi/services/api_service.dart';
 
 
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await ApiService.loadToken();
