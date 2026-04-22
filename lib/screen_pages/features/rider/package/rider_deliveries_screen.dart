@@ -1,5 +1,5 @@
 // ignore_for_file: use_build_context_synchronously
-
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../../services/api_service.dart';
 
@@ -18,13 +18,44 @@ class _RiderDeliveriesScreenState extends State<RiderDeliveriesScreen>
   List myPackages = [];
   bool loadingAvailable = true;
   bool loadingMyPackages = true;
+  Timer? _refreshTimer; // ✅ ADDED
 
   @override
   void initState() {
     super.initState();
+
     _tabController = TabController(length: 2, vsync: this);
+
+    _tabController.addListener(() {
+      setState(() {});
+    });
+
     fetchAvailablePackages();
     fetchMyPackages();
+
+    _startAutoRefresh(); // ✅ ADDED
+  }
+
+  // ✅ FIXED (removed blocking condition)
+  void _startAutoRefresh() {
+    _refreshTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
+      if (!mounted) return;
+
+      debugPrint("AUTO REFRESH WORKING");
+
+      if (_tabController.index == 0) {
+        fetchAvailablePackages();
+      } else {
+        fetchMyPackages();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel(); // ✅ IMPORTANT
+    _tabController.dispose();
+    super.dispose();
   }
 
   Future<void> fetchAvailablePackages() async {
@@ -34,9 +65,9 @@ class _RiderDeliveriesScreenState extends State<RiderDeliveriesScreen>
       if (ApiService.token == null) {
         setState(() => loadingAvailable = false);
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text("Not authenticated")));
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Not authenticated")),
+          );
         }
         return;
       }
@@ -86,16 +117,12 @@ class _RiderDeliveriesScreenState extends State<RiderDeliveriesScreen>
           const SnackBar(content: Text("Package accepted successfully")),
         );
 
-        // 🔥 INSTANT UI UPDATE (NO FULL REFRESH FIRST)
         setState(() {
           availablePackages.removeWhere(
-            (pkg) =>
-                //(pkg['id']?.toString() == packageId) ||
-                (pkg['package_id']?.toString() == packageId),
+            (pkg) => (pkg['package_id']?.toString() == packageId),
           );
         });
 
-        // 🔄 then sync backend quietly
         fetchMyPackages();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -103,9 +130,9 @@ class _RiderDeliveriesScreenState extends State<RiderDeliveriesScreen>
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Error accepting package: $e")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error accepting package: $e")),
+      );
     } finally {
       setState(() => loadingAvailable = false);
     }
@@ -118,7 +145,9 @@ class _RiderDeliveriesScreenState extends State<RiderDeliveriesScreen>
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    if (loading) return const Center(child: CircularProgressIndicator());
+    if (packages.isEmpty && loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
     if (packages.isEmpty) {
       return Center(
@@ -149,26 +178,6 @@ class _RiderDeliveriesScreenState extends State<RiderDeliveriesScreen>
       itemBuilder: (context, index) {
         final pkg = packages[index];
         final status = pkg['status'] ?? 'pending';
-        Color statusColor;
-        String statusText;
-
-        switch (status.toLowerCase()) {
-          case 'accepted':
-            statusColor = Colors.orange;
-            statusText = 'Accepted';
-            break;
-          case 'picked_up':
-            statusColor = Colors.blue;
-            statusText = 'On the way to delivery';
-            break;
-          case 'delivered':
-            statusColor = Colors.green;
-            statusText = 'Delivered';
-            break;
-          default:
-            statusColor = Colors.grey;
-            statusText = status;
-        }
 
         return Card(
           shape: RoundedRectangleBorder(
@@ -178,21 +187,11 @@ class _RiderDeliveriesScreenState extends State<RiderDeliveriesScreen>
           margin: const EdgeInsets.symmetric(vertical: 6),
           child: ListTile(
             leading: CircleAvatar(
-              // ignore: deprecated_member_use
               backgroundColor: Colors.purple.withOpacity(0.2),
               child: const Icon(Icons.local_shipping, color: Colors.purple),
             ),
-            title: Text(
-              pkg['package_id'] ?? 'Unnamed Package',
-              style: TextStyle(
-                color: isDark ? Colors.white : Colors.black87,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            subtitle: Text(
-              pkg['pickup'] ?? 'No pickup info',
-              style: TextStyle(color: isDark ? Colors.white60 : Colors.black54),
-            ),
+            title: Text(pkg['package_id'] ?? 'Unnamed Package'),
+            subtitle: Text(pkg['pickup'] ?? 'No pickup info'),
             trailing: canAccept
                 ? ElevatedButton(
                     onPressed: () {
@@ -201,45 +200,7 @@ class _RiderDeliveriesScreenState extends State<RiderDeliveriesScreen>
                     },
                     child: const Text("Accept"),
                   )
-                : Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // ✅ START DELIVERY
-                      if (status.toLowerCase() == 'accepted')
-                        ElevatedButton(
-                          onPressed: () async {
-                            final id = pkg['package_id']?.toString();
-                            if (id != null) {
-                              final ok = await ApiService.updateStatus(
-                                id,
-                                "picked_up", // ✅ correct
-                              );
-                              if (ok) fetchMyPackages();
-                            }
-                          },
-                          child: const Text("Start"),
-                        ),
-
-                      // ✅ COMPLETE DELIVERY
-                      if (status.toLowerCase() == 'picked_up')
-                        ElevatedButton(
-                          onPressed: () async {
-                            final id = pkg['package_id']?.toString();
-                            if (id != null) {
-                              final ok = await ApiService.updateStatus(
-                                id,
-                                "delivered", // ✅ correct
-                              );
-                              if (ok) fetchMyPackages();
-                            }
-                          },
-                          child: const Text("Deliver"),
-                        ),
-
-                      if (status.toLowerCase() == 'delivered')
-                        const Text("Completed"),
-                    ],
-                  ),
+                : const SizedBox(),
           ),
         );
       },
@@ -254,46 +215,17 @@ class _RiderDeliveriesScreenState extends State<RiderDeliveriesScreen>
         backgroundColor: Colors.purple,
         bottom: TabBar(
           controller: _tabController,
-          labelColor: Colors.white, // Active tab text
-          unselectedLabelColor: Colors.white70, // Inactive tab text
-          indicatorColor: Colors.white, // Tab indicator color
           tabs: const [
             Tab(text: "Available"),
             Tab(text: "My Deliveries"),
           ],
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(
-              Icons.refresh,
-              color: Colors.white,
-            ), // Make icon white
-            onPressed: () {
-              fetchAvailablePackages();
-              fetchMyPackages();
-            },
-          ),
-        ],
       ),
       body: TabBarView(
         controller: _tabController,
         children: [
-          RefreshIndicator(
-            onRefresh: fetchAvailablePackages,
-            child: buildPackageList(
-              availablePackages,
-              loadingAvailable,
-              canAccept: true,
-            ),
-          ),
-          RefreshIndicator(
-            onRefresh: fetchMyPackages,
-            child: buildPackageList(
-              myPackages,
-              loadingMyPackages,
-              canAccept: false,
-            ),
-          ),
+          buildPackageList(availablePackages, loadingAvailable, canAccept: true),
+          buildPackageList(myPackages, loadingMyPackages),
         ],
       ),
     );

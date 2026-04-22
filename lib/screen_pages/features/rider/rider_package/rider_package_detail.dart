@@ -63,7 +63,7 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    if (loading) {
+    if (package == null && loading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
@@ -78,8 +78,26 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Package Details"),
+        title: const Text("Details", style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.purple,
+        actions: [
+          loading
+              ? const Padding(
+                  padding: EdgeInsets.all(12),
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  ),
+                )
+              : IconButton(
+                  icon: const Icon(Icons.refresh),
+                  onPressed: loadPackage,
+                ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -148,133 +166,133 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
 
             // ✅ ACCEPT BUTTON
             SizedBox(
-  width: double.infinity,
-  child: Builder(
-    builder: (_) {
-      final status = (package?['status'] ?? '').toLowerCase();
-
-      // 🔵 ACCEPT PACKAGE
-      if (status == 'pending') {
-        return ElevatedButton(
-          onPressed: accepting ? null : accept,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.purple,
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-          child: Text(
-            accepting ? "Accepting..." : "Accept Package",
-            style: const TextStyle(fontSize: 16),
-          ),
-        );
-      }
-
-      // 🟡 START DELIVERY (go pick up package)
-      if (status == 'accepted') {
-        return ElevatedButton(
-          onPressed: () async {
-            final success = await ApiService.updateStatus(
-              widget.packageId,
-              "picked_up",
-            );
-
-            if (success) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Package picked up")),
-              );
-              loadPackage();
-            }
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.orange,
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-          child: const Text(
-            "Start Delivery",
-            style: TextStyle(fontSize: 16),
-          ),
-        );
-      }
-
-      // 🟢 IN TRANSIT (after pickup)
-      if (status == 'picked_up') {
-        return Column(
-          children: [
-            SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  
-                },
-                child: const Text("Track Delivery"),
-              ),
-            ),
-            const SizedBox(height: 10),
+              child: Builder(
+                builder: (_) {
+                  final status = (package?['status'] ?? '').toLowerCase();
 
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  final phone = package?['receiver_phone'];
-                 
-                  debugPrint("Call: $phone");
-                },
-                child: const Text("Call Receiver"),
-              ),
-            ),
-            const SizedBox(height: 10),
-
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () async {
-                  final success = await ApiService.updateStatus(
-                    widget.packageId,
-                    "delivered",
-                  );
-
-                  if (success) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Package delivered")),
+                  // 🔵 ACCEPT PACKAGE
+                  if (status == 'paid') {
+                    return ElevatedButton(
+                      onPressed: accepting ? null : accept,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.purple,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: Text(
+                        accepting ? "Accepting..." : "Accept Package",
+                        style: const TextStyle(fontSize: 16),
+                      ),
                     );
-                    loadPackage();
                   }
+
+                  // 🟡 START DELIVERY (go pick up package)
+                  if (status == 'accepted') {
+                    return ElevatedButton(
+                      onPressed: () async {
+                        final success = await ApiService.updateStatus(
+                          widget.packageId,
+                          "picked_up",
+                        );
+
+                        if (success) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Package picked up")),
+                          );
+                          loadPackage();
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: const Text(
+                        "Start Delivery",
+                        style: TextStyle(fontSize: 16),
+                      ),
+                    );
+                  }
+
+                  // 🟢 IN TRANSIT (after pickup)
+                  if (status == 'picked_up') {
+                    return Column(
+                      children: [
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {},
+                            child: const Text("Track Delivery"),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              final phone = package?['receiver_phone'];
+
+                              debugPrint("Call: $phone");
+                            },
+                            child: const Text("Call Receiver"),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              final success = await ApiService.updateStatus(
+                                widget.packageId,
+                                "delivered",
+                              );
+
+                              if (success) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text("Package delivered"),
+                                  ),
+                                );
+                                loadPackage();
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green,
+                            ),
+                            child: const Text("Mark as Delivered"),
+                          ),
+                        ),
+                      ],
+                    );
+                  }
+
+                  // 🟢 FINAL STATE
+                  if (status == 'delivered') {
+                    return ElevatedButton(
+                      onPressed: null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: const Text("Delivered"),
+                    );
+                  }
+
+                  // ⚪ FALLBACK
+                  return ElevatedButton(
+                    onPressed: null,
+                    child: Text("Unknown: $status"),
+                  );
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                ),
-                child: const Text("Mark as Delivered"),
               ),
             ),
-          ],
-        );
-      }
-
-      // 🟢 FINAL STATE
-      if (status == 'delivered') {
-        return ElevatedButton(
-          onPressed: null,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.green,
-            padding: const EdgeInsets.symmetric(vertical: 14),
-          ),
-          child: const Text("Delivered"),
-        );
-      }
-
-      // ⚪ FALLBACK
-      return ElevatedButton(
-        onPressed: null,
-        child: const Text("Processing"),
-      );
-    },
-  ),
-),
           ],
         ),
       ),
