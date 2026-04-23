@@ -5,7 +5,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:geolocator/geolocator.dart'; // ✅ ADDED
+import 'package:geolocator/geolocator.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../services/api_service.dart';
 
 class RiderTrackScreen extends StatefulWidget {
@@ -24,14 +25,14 @@ class _RiderTrackScreenState extends State<RiderTrackScreen> {
   double deliveryLng = 3.3792;
 
   String status = "On the way...";
+  String deliveryAddress = "Loading address...";
 
   GoogleMapController? mapController;
   Set<Marker> markers = {};
 
   WebSocketChannel? channel;
   StreamSubscription? wsSubscription;
-
-  StreamSubscription<Position>? _positionStream; // ✅ ADDED
+  StreamSubscription<Position>? _positionStream;
 
   final TextEditingController _codeController = TextEditingController();
 
@@ -42,11 +43,11 @@ class _RiderTrackScreenState extends State<RiderTrackScreen> {
     super.initState();
     _loadPackage();
     _connectWebSocket();
-    _startLocationTracking(); // ✅ ADDED
+    _startLocationTracking();
   }
 
   // =========================
-  // 📍 LOCATION TRACKING
+  // 📍 GPS TRACKING
   // =========================
   void _startLocationTracking() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -72,11 +73,14 @@ class _RiderTrackScreenState extends State<RiderTrackScreen> {
             _updateMarkers();
           });
 
-          // 🔥 SEND TO BACKEND
+          // send to backend
           await ApiService.updateLocation(widget.packageId, lat, lng);
         });
   }
 
+  // =========================
+  // 📦 LOAD PACKAGE
+  // =========================
   Future<void> _loadPackage() async {
     final pkg = await ApiService.getPackage(widget.packageId);
     if (pkg == null) return;
@@ -90,12 +94,17 @@ class _RiderTrackScreenState extends State<RiderTrackScreen> {
       deliveryLat = (pkg['delivery_lat'] ?? deliveryLat).toDouble();
       deliveryLng = (pkg['delivery_lng'] ?? deliveryLng).toDouble();
 
+      deliveryAddress = pkg['delivery_address'] ?? "No address available";
+
       status = pkg['status'] ?? status;
 
       _updateMarkers();
     });
   }
 
+  // =========================
+  // 🔌 WEBSOCKET (STATUS ONLY)
+  // =========================
   void _connectWebSocket() {
     channel = WebSocketChannel.connect(
       Uri.parse(
@@ -107,18 +116,15 @@ class _RiderTrackScreenState extends State<RiderTrackScreen> {
       final parsed = jsonDecode(data);
 
       setState(() {
-        _currentPos = LatLng(
-          (parsed['lat'] as num).toDouble(),
-          (parsed['lng'] as num).toDouble(),
-        );
-
+        // ❌ DO NOT update position here
         status = parsed['status'] ?? status;
-
-        _updateMarkers();
       });
     });
   }
 
+  // =========================
+  // 📍 MARKERS
+  // =========================
   void _updateMarkers() {
     markers = {
       Marker(markerId: const MarkerId('rider'), position: _currentPos),
@@ -132,6 +138,23 @@ class _RiderTrackScreenState extends State<RiderTrackScreen> {
     mapController?.animateCamera(CameraUpdate.newLatLng(_currentPos));
   }
 
+  // =========================
+  // 🧭 OPEN GOOGLE MAPS
+  // =========================
+  Future<void> _openMap() async {
+    final url =
+        "https://www.google.com/maps/dir/?api=1&destination=$deliveryLat,$deliveryLng";
+
+    final uri = Uri.parse(url);
+
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  // =========================
+  // 🔐 CONFIRM DELIVERY
+  // =========================
   Future<void> _submitCode() async {
     final code = _codeController.text.trim();
 
@@ -163,13 +186,16 @@ class _RiderTrackScreenState extends State<RiderTrackScreen> {
 
   @override
   void dispose() {
-    _positionStream?.cancel(); // ✅ IMPORTANT
+    _positionStream?.cancel();
     wsSubscription?.cancel();
     channel?.sink.close();
     _codeController.dispose();
     super.dispose();
   }
 
+  // =========================
+  // 🖥 UI
+  // =========================
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -193,8 +219,13 @@ class _RiderTrackScreenState extends State<RiderTrackScreen> {
             left: 0,
             right: 0,
             child: Container(
-              padding: const EdgeInsets.all(16),
-              height: 260,
+              padding: EdgeInsets.only(
+                left: 16,
+                right: 16,
+                top: 16,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+              ),
+              //height: 320,
               decoration: const BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -214,7 +245,29 @@ class _RiderTrackScreenState extends State<RiderTrackScreen> {
 
                   Text("Package: ${widget.packageId}"),
 
-                  const SizedBox(height: 15),
+                  const SizedBox(height: 10),
+
+                  const Text(
+                    "Deliver to:",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+
+                  Text(
+                    deliveryAddress,
+                    style: const TextStyle(color: Colors.grey),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _openMap,
+                      child: const Text("Navigate"),
+                    ),
+                  ),
+
+                  const SizedBox(height: 10),
 
                   TextField(
                     controller: _codeController,
