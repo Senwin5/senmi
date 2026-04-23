@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
+import 'package:senmi/screen_pages/features/rider/rider_track/rider_track_screen.dart';
 import 'package:senmi/services/api_service.dart';
 import 'package:geolocator/geolocator.dart';
 import 'dart:async';
@@ -13,20 +14,49 @@ class RiderPackageDetailScreen extends StatefulWidget {
   @override
   State<RiderPackageDetailScreen> createState() =>
       _RiderPackageDetailScreenState();
-      
 }
 
+// ❌ you placed this outside before → keep but we’ll use inside safely
 StreamSubscription<Position>? _positionStream;
+
 class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
   Map<String, dynamic>? package;
   bool loading = true;
   bool accepting = false;
-  
+
+  // 🔥 START TRACKING FUNCTION
+  void startLiveTracking() {
+    _positionStream =
+        Geolocator.getPositionStream(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.high,
+            distanceFilter: 10,
+          ),
+        ).listen((pos) {
+          ApiService.updateLocation(
+            widget.packageId,
+            pos.latitude,
+            pos.longitude,
+          );
+        });
+  }
+
+  // 🔥 STOP TRACKING
+  void stopTracking() {
+    _positionStream?.cancel();
+  }
 
   @override
   void initState() {
     super.initState();
     loadPackage();
+  }
+
+  // 🔥 CLEANUP
+  @override
+  void dispose() {
+    stopTracking();
+    super.dispose();
   }
 
   // ✅ SAFE NUMBER PARSER
@@ -76,7 +106,6 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
       return const Scaffold(body: Center(child: Text("Package not found")));
     }
 
-    // ✅ CORRECT VALUES FROM BACKEND
     final riderEarning = _toDouble(package!['rider_earning']);
     final commission = _toDouble(package!['commission']);
     final price = _toDouble(package!['price']);
@@ -108,7 +137,6 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // 🔥 TOP CARD (ONLY RIDER EARNING)
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
@@ -137,26 +165,22 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
 
             const SizedBox(height: 16),
 
-            // 📦 PACKAGE INFO
             _card("Package Info", [
               _row("Package ID", package!['package_id']),
               _row("Description", package!['description']),
               _row("Total Price", "₦${price.toStringAsFixed(2)}"),
             ]),
 
-            // 👤 RECEIVER INFO
             _card("Receiver Info", [
               _row("Name", package!['receiver_name']),
               _row("Phone", package!['receiver_phone']),
             ]),
 
-            // 📍 LOCATIONS
             _card("Locations", [
               _row("Pickup", package!['pickup_address']),
               _row("Delivery", package!['delivery_address']),
             ]),
 
-            // 💰 EARNINGS BREAKDOWN (CORRECT)
             _card("Earnings Breakdown", [
               _row(
                 "Rider Earning",
@@ -169,14 +193,12 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
 
             const SizedBox(height: 20),
 
-            // ✅ ACCEPT BUTTON
             SizedBox(
               width: double.infinity,
               child: Builder(
                 builder: (_) {
                   final status = (package?['status'] ?? '').toLowerCase();
 
-                  // 🔵 ACCEPT PACKAGE
                   if (status == 'paid') {
                     return ElevatedButton(
                       onPressed: accepting ? null : accept,
@@ -194,7 +216,7 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
                     );
                   }
 
-                  // 🟡 START DELIVERY (go pick up package)
+                  // 🔥 START DELIVERY + START GPS
                   if (status == 'accepted') {
                     return ElevatedButton(
                       onPressed: () async {
@@ -204,9 +226,13 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
                         );
 
                         if (success) {
+                          await Geolocator.requestPermission();
+                          startLiveTracking(); // 🔥 HERE
+
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text("Package picked up")),
                           );
+
                           loadPackage();
                         }
                       },
@@ -224,14 +250,23 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
                     );
                   }
 
-                  // 🟢 IN TRANSIT (after pickup)
+                  // 🟢 IN TRANSIT
                   if (status == 'picked_up') {
                     return Column(
                       children: [
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => RiderTrackScreen(
+                                    packageId: widget.packageId,
+                                  ),
+                                ),
+                              );
+                            },
                             child: const Text("Track Delivery"),
                           ),
                         ),
@@ -242,7 +277,6 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
                           child: ElevatedButton(
                             onPressed: () {
                               final phone = package?['receiver_phone'];
-
                               debugPrint("Call: $phone");
                             },
                             child: const Text("Call Receiver"),
@@ -260,11 +294,14 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
                               );
 
                               if (success) {
+                                stopTracking(); // 🔥 STOP HERE
+
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
                                     content: Text("Package delivered"),
                                   ),
                                 );
+
                                 loadPackage();
                               }
                             },
@@ -278,7 +315,6 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
                     );
                   }
 
-                  // 🟢 FINAL STATE
                   if (status == 'delivered') {
                     return ElevatedButton(
                       onPressed: null,
@@ -290,7 +326,6 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
                     );
                   }
 
-                  // ⚪ FALLBACK
                   return ElevatedButton(
                     onPressed: null,
                     child: Text("Unknown: $status"),
@@ -304,7 +339,6 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
     );
   }
 
-  // 🔹 CARD
   Widget _card(String title, List<Widget> children) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -327,7 +361,6 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
     );
   }
 
-  // 🔹 ROW
   Widget _row(String label, dynamic value, {bool isHighlight = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
