@@ -54,7 +54,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
         case "Pending":
           return status == "pending";
         case "Paid":
-          return status == "paid";
+          //return status == "paid";
+          return status == "paid" ||
+              status == "accepted" ||
+              status == "in_transit" ||
+              status == "picked_up";
         case "Delivered":
           return status == "delivered";
         default:
@@ -69,6 +73,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
         return Colors.orange;
       case "paid":
         return primaryPurple;
+      case "accepted":
+        return Colors.blue; // 👈 ADD
+      case "picked_up":
+        return Colors.orange;
       case "delivered":
         return Colors.green;
       default:
@@ -97,13 +105,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
-  Widget filterChip(String label) {
+  Widget filterChip(String label, {String? display}) {
     final isSelected = selectedFilter == label;
 
     return GestureDetector(
       onTap: () {
         setState(() {
-          selectedFilter = label;
+          selectedFilter = label; // still "Paid"
         });
       },
       child: AnimatedContainer(
@@ -111,19 +119,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
         margin: const EdgeInsets.only(right: 10),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected
-              ? primaryPurple
-              : Theme.of(context).cardColor, // ✅ FIX
+          color: isSelected ? primaryPurple : Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(30),
           border: Border.all(
-            color: isSelected
-                ? primaryPurple
-                : Theme.of(context).dividerColor, // ✅ FIX
+            color: isSelected ? primaryPurple : Theme.of(context).dividerColor,
             width: 1.2,
           ),
         ),
         child: Text(
-          label,
+          display ?? label, // 👈 THIS is what user sees
           style: TextStyle(
             color: isSelected
                 ? Colors.white
@@ -205,7 +209,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 children: [
                   filterChip("All"),
                   filterChip("Pending"),
-                  filterChip("Paid"),
+                  filterChip("Paid", display: "Active"),
+                  //filterChip("Paid"),
                   filterChip("Delivered"),
                 ],
               ),

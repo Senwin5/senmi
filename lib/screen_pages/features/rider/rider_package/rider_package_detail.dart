@@ -2,6 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:senmi/services/api_service.dart';
+import 'package:geolocator/geolocator.dart';
+import 'dart:async';
 
 class RiderPackageDetailScreen extends StatefulWidget {
   final String packageId;
@@ -11,12 +13,15 @@ class RiderPackageDetailScreen extends StatefulWidget {
   @override
   State<RiderPackageDetailScreen> createState() =>
       _RiderPackageDetailScreenState();
+      
 }
 
+StreamSubscription<Position>? _positionStream;
 class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
   Map<String, dynamic>? package;
   bool loading = true;
   bool accepting = false;
+  
 
   @override
   void initState() {
