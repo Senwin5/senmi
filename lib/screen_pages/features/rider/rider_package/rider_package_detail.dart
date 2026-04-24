@@ -8,8 +8,13 @@ import 'dart:async';
 
 class RiderPackageDetailScreen extends StatefulWidget {
   final String packageId;
+  final bool hasActiveDelivery; // ✅ ADD THIS
 
-  const RiderPackageDetailScreen({super.key, required this.packageId});
+  const RiderPackageDetailScreen({
+    super.key,
+    required this.packageId,
+    required this.hasActiveDelivery, // ✅ ADD THIS
+  });
 
   @override
   State<RiderPackageDetailScreen> createState() =>
@@ -201,7 +206,22 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
 
                   if (status == 'paid') {
                     return ElevatedButton(
-                      onPressed: accepting ? null : accept,
+                      onPressed: accepting
+                          ? null
+                          : () {
+                              if (widget.hasActiveDelivery) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      "⚠ Finish your current delivery first",
+                                      style: TextStyle(color: Colors.red),
+                                    ),
+                                  ),
+                                );
+                                return;
+                              }
+                              accept();
+                            },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.purple,
                         padding: const EdgeInsets.symmetric(vertical: 14),

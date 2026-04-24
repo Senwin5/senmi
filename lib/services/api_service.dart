@@ -225,27 +225,22 @@ class ApiService {
   }
 
   // Fetch package by ID
-static Future<dynamic> getPackage(String packageId) async {
-  await loadToken();
+  static Future<dynamic> getPackage(String packageId) async {
+    await loadToken();
 
-  final url = Uri.parse("$baseUrl/packages/$packageId/");
+    final url = Uri.parse("$baseUrl/packages/$packageId/");
 
-  final res = await http.get(
-    url,
-    headers: await ApiService.getAuthHeaders(),
-  );
+    final res = await http.get(url, headers: await ApiService.getAuthHeaders());
 
-  if (res.statusCode == 200) {
-    if (res.body.isEmpty) {
-      throw Exception("Empty response from server");
+    if (res.statusCode == 200) {
+      if (res.body.isEmpty) {
+        throw Exception("Empty response from server");
+      }
+      return jsonDecode(res.body);
+    } else {
+      throw Exception("Failed: ${res.statusCode} - ${res.body}");
     }
-    return jsonDecode(res.body);
-  } else {
-    throw Exception("Failed: ${res.statusCode} - ${res.body}");
   }
-}
-
-
 
   static Future<List<dynamic>> getMyOrders() async {
     await loadToken();
@@ -824,7 +819,6 @@ static Future<dynamic> getPackage(String packageId) async {
     await loadToken();
 
     if (token == null) {
-    
       return false;
     }
 
@@ -834,10 +828,8 @@ static Future<dynamic> getPackage(String packageId) async {
         headers: {"Authorization": "Bearer $token"},
       );
 
-    
       return res.statusCode == 200 || res.statusCode == 204;
     } catch (e) {
-      
       return false;
     }
   }
@@ -847,12 +839,14 @@ static Future<dynamic> getPackage(String packageId) async {
     String code,
   ) async {
     final res = await http.post(
-      Uri.parse("$baseUrl/packages/$packageId/confirm-code/"),
+      Uri.parse("$baseUrl/packages/$packageId/update-status/"), // ✅ FIXED
       headers: await ApiService.getAuthHeaders(),
-      body: jsonEncode({"delivery_code": code}),
+      body: jsonEncode({
+        "status": "delivered", // ✅ REQUIRED
+        "delivery_code": code, // ✅ REQUIRED
+      }),
     );
 
-    // ✅ THIS IS WHERE IT GOES
     if (res.statusCode == 200) {
       return jsonDecode(res.body);
     }

@@ -16,13 +16,13 @@ class _RiderDeliveriesScreenState extends State<RiderDeliveriesScreen>
   late TabController _tabController;
 
   List availablePackages = [];
-
   List acceptedPackages = [];
   List inTransitPackages = [];
   List deliveredPackages = [];
 
   bool loadingAvailable = true;
   bool loadingMyPackages = true;
+  bool hasActiveDelivery = false;
 
   @override
   void initState() {
@@ -64,12 +64,19 @@ class _RiderDeliveriesScreenState extends State<RiderDeliveriesScreen>
       final res = await ApiService.getMyPackages();
 
       setState(() {
-        acceptedPackages =
-            List<Map<String, dynamic>>.from(res['accepted'] ?? []);
-        inTransitPackages =
-            List<Map<String, dynamic>>.from(res['in_transit'] ?? []);
-        deliveredPackages =
-            List<Map<String, dynamic>>.from(res['delivered'] ?? []);
+        acceptedPackages = List<Map<String, dynamic>>.from(
+          res['accepted'] ?? [],
+        );
+        inTransitPackages = List<Map<String, dynamic>>.from(
+          res['in_transit'] ?? [],
+        );
+        deliveredPackages = List<Map<String, dynamic>>.from(
+          res['delivered'] ?? [],
+        );
+        // 🔥 ADD THIS LINE
+        hasActiveDelivery =
+            acceptedPackages.isNotEmpty || inTransitPackages.isNotEmpty;
+
         loadingMyPackages = false;
       });
     } catch (e) {
@@ -95,11 +102,9 @@ class _RiderDeliveriesScreenState extends State<RiderDeliveriesScreen>
         final p = packages[index];
 
         final price = _toDouble(p['price'] ?? p['net_earning']);
-        final riderEarning =
-            _toDouble(p['rider_earning'] ?? p['net_earning']);
+        final riderEarning = _toDouble(p['rider_earning'] ?? p['net_earning']);
 
-        final status =
-            (p['status'] ?? 'pending').toString().toLowerCase();
+        final status = (p['status'] ?? 'pending').toString().toLowerCase();
 
         Color statusColor;
         switch (status) {
@@ -119,14 +124,15 @@ class _RiderDeliveriesScreenState extends State<RiderDeliveriesScreen>
 
         return GestureDetector(
           onTap: () async {
-            final packageId =
-                (p['package_id'] ?? p['id']).toString();
+            final packageId = (p['package_id'] ?? p['id']).toString();
 
             final result = await Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) =>
-                    RiderPackageDetailScreen(packageId: packageId),
+                builder: (_) => RiderPackageDetailScreen(
+                  packageId: packageId,
+                  hasActiveDelivery: hasActiveDelivery,
+                ),
               ),
             );
 
@@ -142,10 +148,7 @@ class _RiderDeliveriesScreenState extends State<RiderDeliveriesScreen>
               color: isDark ? Colors.grey[900] : Colors.white,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 8,
-                ),
+                BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8),
               ],
             ),
             child: Column(
