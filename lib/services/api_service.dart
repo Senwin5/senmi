@@ -479,7 +479,6 @@ class ApiService {
       headers: await ApiService.getAuthHeaders(),
       body: jsonEncode({"status": status}),
     );
-
     return response.statusCode == 200;
   }
 
