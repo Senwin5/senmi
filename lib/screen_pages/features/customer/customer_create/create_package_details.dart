@@ -258,12 +258,18 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
         actions: [
           IconButton(icon: const Icon(Icons.refresh), onPressed: _fetchPackage),
 
-          IconButton(
-            icon: isDeleting
-                ? const CircularProgressIndicator()
-                : const Icon(Icons.delete, color: Colors.red),
-            onPressed: _confirmDelete,
-          ),
+          // ❌ hide delete if paid
+          if (!paymentDone)
+            IconButton(
+              icon: isDeleting
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.delete, color: Colors.red),
+              onPressed: _confirmDelete,
+            ),
         ],
       ),
 
