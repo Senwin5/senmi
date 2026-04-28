@@ -5,10 +5,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:senmi/screen_pages/features/customer/customer_create/delivery_complete_screen.dart';
+//import 'package:senmi/screen_pages/features/customer/customer_create/delivery_complete_screen.dart';
 import 'package:senmi/services/api_service.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
-
 
 class TrackingScreen extends StatefulWidget {
   final String packageId;
@@ -43,9 +42,6 @@ class _TrackingScreenState extends State<TrackingScreen>
 
   String? deliveryCode;
   final TextEditingController _codeController = TextEditingController();
-
-  bool _isLoading = false;
-  bool _isDelivered = false;
 
   late AnimationController _shakeController;
   late Animation<double> _shakeAnimation;
@@ -100,8 +96,8 @@ class _TrackingScreenState extends State<TrackingScreen>
     try {
       channel = WebSocketChannel.connect(
         Uri.parse(
-          //'wss://cottage-molar-unguarded.ngrok-free.dev/ws/tracking/sample-package-id/'
-          'wss://cottage-molar-unguarded.ngrok-free.dev/ws/tracking/${widget.packageId}/'
+          //'wss://cottage-molar-unguarded.ngrok-free.dev/ws/tracking/${widget.packageId}/',
+          'ws://192.168.8.252:8000/ws/tracking/${widget.packageId}/'
         ),
       );
 
@@ -168,37 +164,6 @@ class _TrackingScreenState extends State<TrackingScreen>
     mapController?.animateCamera(CameraUpdate.newLatLng(_currentPos));
   }
 
-  Future<void> _confirmDelivery() async {
-    if (_isDelivered || _isLoading) return;
-
-    final code = _codeController.text.trim();
-    if (code.isEmpty) {
-      _shakeController.forward(from: 0);
-      return;
-    }
-
-    setState(() => _isLoading = true);
-
-    final result = await ApiService.confirmDeliveryCode(widget.packageId, code);
-
-    setState(() => _isLoading = false);
-
-    if (result != null && result["success"] == true) {
-      setState(() => _isDelivered = true);
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const DeliveryCompleteScreen()),
-      );
-    } else {
-      _shakeController.forward(from: 0);
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Invalid delivery code ❌")));
-    }
-  }
-
   @override
   void dispose() {
     wsSubscription?.cancel();
@@ -239,7 +204,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                 );
               },
               child: Container(
-                height: 320,
+                height: 190,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: bg,
@@ -253,7 +218,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                     Text(
                       status,
                       style: const TextStyle(
-                        fontSize: 18,
+                        fontSize: 25,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -265,32 +230,12 @@ class _TrackingScreenState extends State<TrackingScreen>
                     const SizedBox(height: 5),
 
                     Text(
-                      "Delivery Code: ${deliveryCode ?? 'Hidden'}",
-                      style: const TextStyle(color: Colors.orange),
-                    ),
-
-                    const SizedBox(height: 15),
-
-                    TextField(
-                      controller: _codeController,
-                      enabled: !_isDelivered,
-                      decoration: const InputDecoration(
-                        labelText: "Enter delivery code",
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: (_isLoading || _isDelivered)
-                            ? null
-                            : _confirmDelivery,
-                        child: _isLoading
-                            ? const CircularProgressIndicator()
-                            : const Text("Confirm Delivery"),
+                      deliveryCode != null
+                          ? "Delivery Code: $deliveryCode"
+                          : "Delivery code will appear when rider is near",
+                      style: const TextStyle(
+                        color: Colors.orange,
+                        fontSize: 18,
                       ),
                     ),
                   ],

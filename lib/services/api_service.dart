@@ -7,9 +7,9 @@ import 'package:flutter/foundation.dart'; // ✅ For ValueNotifier
 
 class ApiService {
   // 🔥 CHANGE THIS
-  static const String baseUrl =
-      "https://cottage-molar-unguarded.ngrok-free.dev/api";
   //static const String baseUrl = "http://192.168.8.252:8001/api";
+  static const String baseUrl = "https://cottage-molar-unguarded.ngrok-free.dev/api";
+      
 
   static String? token;
   static String? refreshToken;
@@ -823,7 +823,7 @@ class ApiService {
 
     try {
       final res = await http.delete(
-        Uri.parse("$baseUrl/api/profile/hard-delete/"),
+        Uri.parse("$baseUrl/profile/hard-delete/"),
         headers: {"Authorization": "Bearer $token"},
       );
 
