@@ -8,8 +8,8 @@ import 'package:flutter/foundation.dart'; // ✅ For ValueNotifier
 class ApiService {
   // 🔥 CHANGE THIS
   //static const String baseUrl = "http://192.168.8.252:8001/api";
-  static const String baseUrl = "https://cottage-molar-unguarded.ngrok-free.dev/api";
-      
+  static const String baseUrl =
+      "https://cottage-molar-unguarded.ngrok-free.dev/api";
 
   static String? token;
   static String? refreshToken;
@@ -536,7 +536,7 @@ class ApiService {
   // ==========================
   // 💸 WITHDRAW
   // ==========================
-  static Future<dynamic> withdraw({
+  static Future<bool> withdraw({
     required double amount,
     required String accountNumber,
     required String bankCode,
@@ -555,7 +555,49 @@ class ApiService {
       }),
     );
 
-    return jsonDecode(response.body);
+    final data = jsonDecode(response.body);
+
+    debugPrint("WITHDRAW STATUS: ${response.statusCode}");
+    debugPrint("WITHDRAW BODY: $data");
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return true;
+    } else {
+      throw Exception(data['error'] ?? "Withdrawal failed");
+    }
+  }
+
+  static Future<List> getBanks() async {
+    final res = await http.get(
+      Uri.parse("$baseUrl/banks/"),
+      headers: await getAuthHeaders(),
+    );
+
+    final data = jsonDecode(res.body);
+
+    return data['data']; // ✅ IMPORTANT
+  }
+
+  static Future<String> resolveAccount({
+    required String accountNumber,
+    required String bankCode,
+  }) async {
+    final res = await http.post(
+      Uri.parse("$baseUrl/rider/resolve-account/"),
+      headers: await getAuthHeaders(),
+      body: jsonEncode({
+        "account_number": accountNumber,
+        "bank_code": bankCode,
+      }),
+    );
+
+    final data = jsonDecode(res.body);
+
+    if (res.statusCode == 200) {
+      return data['account_name'];
+    } else {
+      throw Exception(data['error'] ?? "Failed to verify account");
+    }
   }
 
   // ==========================
