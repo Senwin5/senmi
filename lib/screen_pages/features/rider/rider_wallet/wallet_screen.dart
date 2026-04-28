@@ -39,7 +39,6 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
         balance = wallet['balance']?.toDouble() ?? 0;
         totalEarned = (earningsData['total_earnings'] ?? 0).toDouble();
 
-        // ✅ FIX: handle null / wrong key safely
         totalDeliveries =
             (earningsData['total_deliveries'] ??
                     earningsData['deliveries'] ??
@@ -68,9 +67,14 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
     String? selectedBankCode;
     bool isLoading = false;
 
-    // 🔹 Fetch banks first
     try {
       banks = await ApiService.getBanks();
+
+      // ✅ FIX: ensure all bank codes are strings
+      banks = banks.map((b) {
+        b['code'] = b['code'].toString();
+        return b;
+      }).toList();
     } catch (e) {
       ScaffoldMessenger.of(
         context,
@@ -79,8 +83,6 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
     }
 
     showModalBottomSheet(
-      // ignore: duplicate_ignore
-      // ignore: use_build_context_synchronously
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
@@ -106,7 +108,6 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
 
                   const SizedBox(height: 15),
 
-                  // 💰 Amount
                   TextField(
                     controller: amountController,
                     keyboardType: TextInputType.number,
@@ -118,7 +119,6 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
 
                   const SizedBox(height: 10),
 
-                  // 🏦 Account Number
                   TextField(
                     controller: accountController,
                     keyboardType: TextInputType.number,
@@ -129,14 +129,13 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
 
                   const SizedBox(height: 10),
 
-                  // 🏦 Bank Dropdown
                   DropdownButtonFormField<String>(
                     hint: const Text("Select Bank"),
                     initialValue: selectedBankCode,
                     isExpanded: true,
                     items: banks.map<DropdownMenuItem<String>>((bank) {
                       return DropdownMenuItem(
-                        value: bank['code'],
+                        value: bank['code'].toString(), // ✅ FIX
                         child: Text(
                           bank['name'],
                           overflow: TextOverflow.ellipsis,
@@ -152,12 +151,10 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
 
                   const SizedBox(height: 20),
 
-                  // 🔄 Loading
                   if (isLoading) const CircularProgressIndicator(),
 
                   const SizedBox(height: 10),
 
-                  // 🚀 Withdraw Button
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -184,7 +181,8 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                                 await ApiService.withdraw(
                                   amount: amt,
                                   accountNumber: accountController.text,
-                                  bankCode: selectedBankCode!,
+                                  bankCode: selectedBankCode!
+                                      .toString(), // ✅ FIX
                                 );
 
                                 if (!mounted) return;
@@ -228,6 +226,7 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
     String? selectedBankCode;
     String? accountName;
     bool verifying = false;
+    bool loading = false;
 
     showDialog(
       context: context,
@@ -243,7 +242,6 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                     keyboardType: TextInputType.number,
                     decoration: const InputDecoration(labelText: "Amount"),
                   ),
-
                   TextField(
                     controller: accountController,
                     keyboardType: TextInputType.number,
@@ -257,7 +255,7 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                         try {
                           final name = await ApiService.resolveAccount(
                             accountNumber: value,
-                            bankCode: selectedBankCode!,
+                            bankCode: selectedBankCode!.toString(), // ✅ FIX
                           );
 
                           setStateDialog(() {
@@ -273,16 +271,18 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                       }
                     },
                   ),
-
                   const SizedBox(height: 10),
-
                   DropdownButtonFormField<String>(
+                    isExpanded: true,
                     hint: const Text("Select Bank"),
-                    initialValue: selectedBankCode,
+                    value: selectedBankCode,
                     items: banks.map<DropdownMenuItem<String>>((bank) {
                       return DropdownMenuItem(
-                        value: bank['code'],
-                        child: Text(bank['name']),
+                        value: bank['code'].toString(), // ✅ FIX
+                        child: Text(
+                          bank['name'],
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       );
                     }).toList(),
                     onChanged: (val) {
@@ -292,17 +292,14 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                       });
                     },
                   ),
-
                   const SizedBox(height: 10),
-
                   if (verifying) const CircularProgressIndicator(),
-
                   if (accountName != null)
                     Text(
                       accountName!,
                       style: const TextStyle(
-                        fontWeight: FontWeight.bold,
                         color: Colors.green,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                 ],
@@ -314,39 +311,48 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                 child: const Text("Cancel"),
               ),
               ElevatedButton(
-                onPressed: () async {
-                  final amt = double.tryParse(amountController.text) ?? 0;
+                onPressed: loading
+                    ? null
+                    : () async {
+                        final amt = double.tryParse(amountController.text) ?? 0;
 
-                  if (amt <= 0 ||
-                      accountController.text.isEmpty ||
-                      selectedBankCode == null ||
-                      accountName == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Complete all fields")),
-                    );
-                    return;
-                  }
+                        if (amt <= 0 ||
+                            accountController.text.isEmpty ||
+                            selectedBankCode == null ||
+                            accountName == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Complete all fields"),
+                            ),
+                          );
+                          return;
+                        }
 
-                  Navigator.pop(context);
+                        setStateDialog(() => loading = true);
 
-                  try {
-                    await ApiService.withdraw(
-                      amount: amt,
-                      accountNumber: accountController.text,
-                      bankCode: selectedBankCode!,
-                    );
+                        try {
+                          await ApiService.withdraw(
+                            amount: amt,
+                            accountNumber: accountController.text,
+                            bankCode: selectedBankCode!.toString(), // ✅ FIX
+                          );
 
-                    fetchWallet();
+                          Navigator.pop(context);
+                          fetchWallet();
 
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Withdrawal successful")),
-                    );
-                  } catch (e) {
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(SnackBar(content: Text("Error: $e")));
-                  }
-                },
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Withdrawal successful"),
+                            ),
+                          );
+                        } catch (e) {
+                          setStateDialog(() => loading = false);
+
+                          ScaffoldMessenger.of(
+                            context,
+                          ).showSnackBar(SnackBar(content: Text("Error: $e")));
+                        }
+                      },
                 child: const Text("Withdraw"),
               ),
             ],
@@ -381,7 +387,6 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
           IconButton(icon: const Icon(Icons.refresh), onPressed: fetchWallet),
         ],
       ),
-
       body: loading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
@@ -390,7 +395,6 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                 physics: const AlwaysScrollableScrollPhysics(),
                 child: Column(
                   children: [
-                    // 🔵 HEADER
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(20),
@@ -410,7 +414,6 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                             style: TextStyle(color: Colors.white70),
                           ),
                           const SizedBox(height: 10),
-
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -436,16 +439,12 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                               ),
                             ],
                           ),
-
                           const SizedBox(height: 10),
-
                           Text(
                             "Total Earned: ₦${totalEarned.toStringAsFixed(2)}",
                             style: const TextStyle(color: Colors.white70),
                           ),
-
                           const SizedBox(height: 20),
-
                           ElevatedButton.icon(
                             onPressed: balance <= 0 ? null : withdraw,
                             icon: const Icon(Icons.arrow_upward),
@@ -457,10 +456,7 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                         ],
                       ),
                     ),
-
                     const SizedBox(height: 20),
-
-                    // 🚚 DELIVERIES + 💰 PER DELIVERY (RiderHome style)
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Row(
@@ -509,9 +505,7 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                               ),
                             ),
                           ),
-
                           const SizedBox(width: 12),
-
                           Expanded(
                             child: Container(
                               decoration: BoxDecoration(
@@ -561,10 +555,7 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                         ],
                       ),
                     ),
-
                     const SizedBox(height: 25),
-
-                    // 📜 TRANSACTIONS
                     ListView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
@@ -581,7 +572,6 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                           ),
                           child: ListTile(
                             leading: CircleAvatar(
-                              // ignore: deprecated_member_use
                               backgroundColor: color.withOpacity(0.2),
                               child: Icon(icon, color: color),
                             ),
@@ -598,7 +588,6 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                         );
                       },
                     ),
-
                     const SizedBox(height: 30),
                   ],
                 ),
