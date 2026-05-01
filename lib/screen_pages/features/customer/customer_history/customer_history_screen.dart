@@ -175,7 +175,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
       appBar: AppBar(
         title: const Text("History"),
-        centerTitle: false,
+        centerTitle: true,
         elevation: 0,
         toolbarHeight: 90,
         backgroundColor: Theme.of(context).appBarTheme.backgroundColor, // ✅ FIX

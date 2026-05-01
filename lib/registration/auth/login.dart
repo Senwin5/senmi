@@ -5,8 +5,6 @@ import 'package:senmi/screen_pages/features/customer/customer_home_bottom/custom
 import 'package:senmi/screen_pages/features/rider/rider_home_bottom/rider_bottom_nav.dart';
 import 'package:senmi/widgets/custom_buttom.dart';
 import '../../services/api_service.dart';
-import '../../screen_pages/features/customer/customer_home_bottom/customer_home.dart';
-import '../../screen_pages/features/rider/rider_home_bottom/rider_home.dart';
 import '../auth/signup.dart';
 import '../../screen_pages/features/rider/pending_rider_review/rider_complete_profile.dart';
 import '../../screen_pages/features/rider/pending_rider_review/rider_pending_screen.dart';
@@ -148,9 +146,16 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => loading = true);
       await ApiService.loadToken();
 
-      if (!mounted) return;
-
       if (ApiService.token == null) {
+        setState(() => loading = false);
+        return;
+      }
+
+      // Try refreshing expired token
+      final refreshed = await ApiService.refreshAccessToken();
+
+      if (!refreshed) {
+        await ApiService.logout();
         setState(() => loading = false);
         return;
       }
@@ -159,6 +164,7 @@ class _LoginScreenState extends State<LoginScreen> {
         // ADMIN
         if (ApiService.isAdmin) {
           Navigator.pushReplacement(
+            // ignore: use_build_context_synchronously
             context,
             MaterialPageRoute(builder: (_) => const AdminBottomNav()),
           );
@@ -211,7 +217,7 @@ class _LoginScreenState extends State<LoginScreen> {
             Navigator.pushReplacement(
               // ignore: use_build_context_synchronously
               context,
-              MaterialPageRoute(builder: (_) => const RiderHome()),
+              MaterialPageRoute(builder: (_) => const RiderBottomNav()),
             );
             return;
           }
@@ -221,7 +227,7 @@ class _LoginScreenState extends State<LoginScreen> {
         Navigator.pushReplacement(
           // ignore: use_build_context_synchronously
           context,
-          MaterialPageRoute(builder: (_) => const CustomerHome()),
+          MaterialPageRoute(builder: (_) => const CustomerBottomNav()),
         );
       } finally {
         if (mounted) setState(() => loading = false);

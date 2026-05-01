@@ -92,12 +92,44 @@ class _TrackingScreenState extends State<TrackingScreen>
     _connectWebSocket();
   }
 
+  Widget _step(String title, bool active) {
+    return Column(
+      children: [
+        Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            color: active ? Colors.deepPurple : Colors.grey.shade300,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            active ? Icons.check : Icons.circle,
+            color: Colors.white,
+            size: 20,
+          ),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          width: 55,
+          child: Text(
+            title,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 11,
+              color: active ? Colors.black : Colors.grey,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   void _connectWebSocket() {
     try {
       channel = WebSocketChannel.connect(
         Uri.parse(
           //'wss://cottage-molar-unguarded.ngrok-free.dev/ws/tracking/${widget.packageId}/',
-          'ws://192.168.8.252:8000/ws/tracking/${widget.packageId}/'
+          'ws://192.168.8.252:8000/ws/tracking/${widget.packageId}/',
         ),
       );
 
@@ -204,41 +236,113 @@ class _TrackingScreenState extends State<TrackingScreen>
                 );
               },
               child: Container(
-                height: 190,
-                padding: const EdgeInsets.all(16),
+                height: 350,
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: bg,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(20),
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      status,
-                      style: const TextStyle(
-                        fontSize: 25,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    Text("Tracking ID: ${widget.packageId}"),
-
-                    const SizedBox(height: 5),
-
-                    Text(
-                      deliveryCode != null
-                          ? "Delivery Code: $deliveryCode"
-                          : "Delivery code will appear when rider is near",
-                      style: const TextStyle(
-                        color: Colors.orange,
-                        fontSize: 18,
-                      ),
+                  borderRadius: BorderRadius.circular(32),
+                  boxShadow: [
+                    BoxShadow(
+                      // ignore: deprecated_member_use
+                      color: Colors.black.withOpacity(.18),
+                      blurRadius: 35,
+                      spreadRadius: 2,
+                      offset: const Offset(0, 12),
                     ),
                   ],
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 50,
+                          height: 5,
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade400,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 18),
+
+                      Text(
+                        "Tracking Details",
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      Text(
+                        "Waybill no.",
+                        style: TextStyle(color: Colors.grey.shade600),
+                      ),
+
+                      Text(
+                        widget.packageId,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 17,
+                        ),
+                      ),
+
+                      const SizedBox(height: 25),
+
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _step(
+                            "Accepted",
+                            status == "accepted" ||
+                                status == "picked_up" ||
+                                status == "delivered",
+                          ),
+                          _step(
+                            "Picked Up",
+                            status == "picked_up" || status == "delivered",
+                          ),
+                          _step("Delivered", status == "delivered"),
+                        ],
+                      ),
+
+                      const SizedBox(height: 25),
+
+                      Row(
+                        children: [
+                          Icon(Icons.local_shipping, color: Colors.deepPurple),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              status,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 0),
+
+                      Text(
+                        deliveryCode != null
+                            ? "Delivery Code: $deliveryCode"
+                            : "Delivery code will appear when rider is near",
+                        style: TextStyle(
+                          color: deliveryCode != null
+                              ? Colors.green
+                              : Colors.orange,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

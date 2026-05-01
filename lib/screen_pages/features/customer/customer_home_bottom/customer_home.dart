@@ -93,7 +93,7 @@ class _CustomerHomeState extends State<CustomerHome> {
                       padding: const EdgeInsets.all(16),
                       decoration: const BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [Color(0xFF5F5FFF), Color(0xFF7B61FF)],
+                          colors: [Colors.deepPurple, Colors.deepPurpleAccent],
                         ),
                         borderRadius: BorderRadius.vertical(
                           bottom: Radius.circular(25),
@@ -236,7 +236,7 @@ class _CustomerHomeState extends State<CustomerHome> {
       ),
 
       floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFF5F5FFF),
+        backgroundColor: Colors.deepPurple,
         elevation: 6,
         child: const Icon(Icons.add, color: Colors.white),
         onPressed: () {
@@ -287,10 +287,10 @@ class _CustomerHomeState extends State<CustomerHome> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEEF0FF),
+                  color: const Color(0xFFEDE7F6),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: const Color(0xFF5F5FFF)),
+                child: Icon(icon, color: Colors.deepPurple),
               ),
               const SizedBox(width: 16),
               Expanded(

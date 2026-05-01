@@ -114,13 +114,18 @@ class ApiService {
   // ✅ LOGOUT
   static Future<void> logout() async {
     token = null;
+    refreshToken = null;
     userRole = null;
+    username = null;
+    isAdminUser = false;
+
     SharedPreferences prefs = await SharedPreferences.getInstance();
+
     await prefs.remove('token');
+    await prefs.remove('refresh');
     await prefs.remove('userRole');
     await prefs.remove('username');
-
-    username = null;
+    await prefs.remove('is_admin');
 
     isLoggedIn.value = false;
   }

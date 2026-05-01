@@ -63,7 +63,7 @@ class _CustomerBottomNavState extends State<CustomerBottomNav> {
               type: BottomNavigationBarType.fixed,
               backgroundColor: Colors.white,
               elevation: 8,
-              selectedItemColor: Colors.blue,
+              selectedItemColor: Colors.deepPurple,
               unselectedItemColor: Colors.black54,
               onTap: (index) => setState(() => _currentIndex = index),
             ),
