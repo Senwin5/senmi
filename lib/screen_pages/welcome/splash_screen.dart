@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:senmi/screen_pages/admin/admin_dashboard.dart';
+import 'package:senmi/screen_pages/admin/admin_home_screen.dart';
 import 'package:senmi/screen_pages/features/customer/customer_home_bottom/customer_bottomnav.dart';
 import 'package:senmi/screen_pages/features/rider/rider_home_bottom/rider_bottom_nav.dart';
 import 'package:senmi/registration/auth/login.dart';
@@ -78,7 +78,7 @@ class _SplashScreenState extends State<SplashScreen>
 
       if (ApiService.token != null) {
         if (ApiService.isAdmin) {
-          nextPage = const AdminDashboard();
+          nextPage = const AdminBottomNav();
         } else if (ApiService.userRole == "rider") {
           nextPage = const RiderBottomNav();
         } else {

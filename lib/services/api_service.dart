@@ -15,6 +15,7 @@ class ApiService {
   static String? refreshToken;
   static String? userRole;
   static String? username;
+  static bool isAdminUser = false;
 
   // ✅ Track login state
   static ValueNotifier<bool> isLoggedIn = ValueNotifier(false);
@@ -30,7 +31,8 @@ class ApiService {
     };
   }
 
-  static bool get isAdmin => userRole == "admin";
+  //static bool get isAdmin => userRole == "admin";
+  static bool get isAdmin => isAdminUser;
 
   static Future<Map<String, String>> getAuthHeaders() async {
     await loadToken();
@@ -69,6 +71,7 @@ class ApiService {
     refreshToken = prefs.getString('refresh'); // 🔥 ADD THIS LINE
     userRole = prefs.getString('userRole');
     username = prefs.getString('username');
+    isAdminUser = prefs.getBool('is_admin') ?? false;
 
     isLoggedIn.value = token != null && userRole != null;
   }
@@ -92,9 +95,15 @@ class ApiService {
       userRole = data['role'];
       username = data['username'];
 
-      // ✅ ADD THIS (DO NOT REMOVE ANYTHING ABOVE)
+      // ✅ ADD THIS LINE
+      isAdminUser = data['is_admin'] ?? false;
+
       SharedPreferences prefs = await SharedPreferences.getInstance();
+
       await prefs.setString('refresh', data['refresh']);
+
+      // ✅ ADD THIS LINE
+      await prefs.setBool('is_admin', isAdminUser);
 
       await saveTokenAndRole(token!, userRole!, data['username'] ?? '');
     }
@@ -776,7 +785,16 @@ class ApiService {
       );
 
       if (res.statusCode == 200) {
-        return jsonDecode(res.body);
+        final data = jsonDecode(res.body);
+
+        // ✅ HANDLE PAGINATION
+        if (data is Map<String, dynamic>) {
+          if (data['results'] is List) return data['results'];
+        }
+
+        if (data is List) return data;
+
+        return [];
       } else {
         return [];
       }

@@ -275,7 +275,7 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                   DropdownButtonFormField<String>(
                     isExpanded: true,
                     hint: const Text("Select Bank"),
-                    value: selectedBankCode,
+                    initialValue: selectedBankCode,
                     items: banks.map<DropdownMenuItem<String>>((bank) {
                       return DropdownMenuItem(
                         value: bank['code'].toString(), // ✅ FIX
@@ -572,6 +572,7 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                           ),
                           child: ListTile(
                             leading: CircleAvatar(
+                              // ignore: deprecated_member_use
                               backgroundColor: color.withOpacity(0.2),
                               child: Icon(icon, color: color),
                             ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:senmi/screen_pages/admin/admin_dashboard.dart';
+//import 'package:senmi/screen_pages/admin/admin_dashboard.dart';
+import 'package:senmi/screen_pages/admin/admin_home_screen.dart';
 import 'package:senmi/screen_pages/features/customer/customer_home_bottom/customer_bottomnav.dart';
 import 'package:senmi/screen_pages/features/rider/rider_home_bottom/rider_bottom_nav.dart';
 import 'package:senmi/widgets/custom_buttom.dart';
@@ -43,7 +44,7 @@ class _LoginScreenState extends State<LoginScreen> {
         if (ApiService.isAdmin) {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (_) => const AdminDashboard()),
+            MaterialPageRoute(builder: (_) => const AdminBottomNav()),
           );
           return;
         }
@@ -159,7 +160,7 @@ class _LoginScreenState extends State<LoginScreen> {
         if (ApiService.isAdmin) {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (_) => const AdminDashboard()),
+            MaterialPageRoute(builder: (_) => const AdminBottomNav()),
           );
           return;
         }
@@ -251,7 +252,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const Text(
-                        "SenMi 🏍",
+                        "Senmi 🏍",
                         style: TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.bold,

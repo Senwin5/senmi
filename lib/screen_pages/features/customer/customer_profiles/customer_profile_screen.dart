@@ -31,16 +31,16 @@ class ProfileSettingsScreen extends StatelessWidget {
   Future<void> deleteAccount(BuildContext context) async {
     final confirm = await showDialog(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text("Delete Account"),
         content: const Text("This action cannot be undone"),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(dialogContext, false),
             child: const Text("Cancel"),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(dialogContext, true),
             child: const Text("Delete", style: TextStyle(color: Colors.red)),
           ),
         ],
@@ -60,12 +60,10 @@ class ProfileSettingsScreen extends StatelessWidget {
       return;
     }
 
-    // 🔥 STEP 1: logout FIRST
     await ApiService.logout();
 
     if (!context.mounted) return;
 
-    // 🔥 STEP 2: navigate safely
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => const LoginScreen()),
