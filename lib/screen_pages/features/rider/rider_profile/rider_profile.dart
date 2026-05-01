@@ -31,9 +31,9 @@ class _RiderProfileScreenState extends State<RiderProfileScreen> {
     } catch (e) {
       setState(() => loading = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to load profile: $e")),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Failed to load profile: $e")));
       }
     }
   }
@@ -50,44 +50,52 @@ class _RiderProfileScreenState extends State<RiderProfileScreen> {
   Future<void> deleteAccount() async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text("Confirm Delete"),
         content: const Text(
           "Are you sure you want to delete your account? This cannot be undone.",
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(dialogContext, false),
             child: const Text("Cancel"),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text(
-              "Delete",
-              style: TextStyle(color: Colors.red),
-            ),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text("Delete", style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
     );
 
-    if (confirmed == true) {
-      try {
-        final deleted = await ApiService.deleteUser();
-        if (deleted && mounted) {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (_) => const LoginScreen()),
-            (route) => false,
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Failed to delete account: $e")),
-          );
-        }
+    if (confirmed != true) return;
+
+    try {
+      final deleted = await ApiService.deleteUser();
+
+      if (!mounted) return;
+
+      if (deleted) {
+        await ApiService.logout();
+
+        if (!mounted) return;
+
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          (route) => false,
+        );
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Delete failed ❌")));
       }
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Failed to delete account: $e")));
     }
   }
 
@@ -117,100 +125,123 @@ class _RiderProfileScreenState extends State<RiderProfileScreen> {
       body: loading
           ? const Center(child: CircularProgressIndicator())
           : rider == null
-              ? const Center(child: Text("Failed to load profile"))
-              : RefreshIndicator(
-                  onRefresh: fetchRider,
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(16),
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        // Avatar
-                        CircleAvatar(
-                          radius: 55,
-                          backgroundColor: Colors.blue.shade200,
-                          backgroundImage: rider!['profile_picture'] != null
-                              ? NetworkImage(
-                                  //"http://192.168.8.252:8001${rider!['profile_picture']}",
-                                  //"http://192.168.1.129:8001${rider!['profile_picture']}",
-                                  ApiService.baseUrl.replaceAll('/api', '') + rider!['profile_picture']
-                                )
-                              : null,
-                          child: rider!['profile_picture'] == null
-                              ? Text(
-                                  rider!['username'] != null &&
-                                          rider!['username'].isNotEmpty
-                                      ? rider!['username'][0].toUpperCase()
-                                      : "R",
-                                  style: const TextStyle(
-                                      fontSize: 40, color: Colors.white),
-                                )
-                              : null,
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          rider!['username'] ?? "Rider",
-                          style: const TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          rider!['email'] ?? "",
-                          style: const TextStyle(color: Colors.black54),
-                        ),
-                        const SizedBox(height: 24),
-
-                        // Profile Info Cards
-                        _buildProfileCard("Full Name", rider!['full_name'] ?? "",
-                            icon: Icons.person),
-                        _buildProfileCard("Email", rider!['email'] ?? "",
-                            icon: Icons.email),
-                        _buildProfileCard(
-                            "Phone", rider!['phone_number'] ?? "",
-                            icon: Icons.phone),
-                        _buildProfileCard(
-                            "Vehicle Number", rider!['vehicle_number'] ?? "",
-                            icon: Icons.directions_car),
-                        _buildProfileCard("Address", rider!['address'] ?? "",
-                            icon: Icons.location_on),
-                        _buildProfileCard("City", rider!['city'] ?? "",
-                            icon: Icons.location_city),
-                        _buildProfileCard("Status", rider!['status'] ?? "",
-                            icon: Icons.verified),
-
-                        const SizedBox(height: 24),
-
-                        // Buttons
-                        CustomButton(
-                          text: "Change Password",
-                          onPressed: () {},
-                          fullWidth: true,
-                          padding: const EdgeInsets.all(16),
-                          color: Colors.blue,
-                        ),
-                        const SizedBox(height: 12),
-                        CustomButton(
-                          text: "Logout",
-                          onPressed: logout,
-                          fullWidth: true,
-                          padding: const EdgeInsets.all(16),
-                          color: Colors.red,
-                        ),
-                        const SizedBox(height: 12),
-                        CustomButton(
-                          text: "Delete Account",
-                          onPressed: deleteAccount,
-                          fullWidth: true,
-                          padding: const EdgeInsets.all(16),
-                          color: Colors.red,
-                        ),
-                      ],
+          ? const Center(child: Text("Failed to load profile"))
+          : RefreshIndicator(
+              onRefresh: fetchRider,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Avatar
+                    CircleAvatar(
+                      radius: 55,
+                      backgroundColor: Colors.blue.shade200,
+                      backgroundImage: rider!['profile_picture'] != null
+                          ? NetworkImage(
+                              //"http://192.168.8.252:8001${rider!['profile_picture']}",
+                              //"http://192.168.1.129:8001${rider!['profile_picture']}",
+                              ApiService.baseUrl.replaceAll('/api', '') +
+                                  rider!['profile_picture'],
+                            )
+                          : null,
+                      child: rider!['profile_picture'] == null
+                          ? Text(
+                              rider!['username'] != null &&
+                                      rider!['username'].isNotEmpty
+                                  ? rider!['username'][0].toUpperCase()
+                                  : "R",
+                              style: const TextStyle(
+                                fontSize: 40,
+                                color: Colors.white,
+                              ),
+                            )
+                          : null,
                     ),
-                  ),
+                    const SizedBox(height: 12),
+                    Text(
+                      rider!['username'] ?? "Rider",
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      rider!['email'] ?? "",
+                      style: const TextStyle(color: Colors.black54),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Profile Info Cards
+                    _buildProfileCard(
+                      "Full Name",
+                      rider!['full_name'] ?? "",
+                      icon: Icons.person,
+                    ),
+                    _buildProfileCard(
+                      "Email",
+                      rider!['email'] ?? "",
+                      icon: Icons.email,
+                    ),
+                    _buildProfileCard(
+                      "Phone",
+                      rider!['phone_number'] ?? "",
+                      icon: Icons.phone,
+                    ),
+                    _buildProfileCard(
+                      "Vehicle Number",
+                      rider!['vehicle_number'] ?? "",
+                      icon: Icons.directions_car,
+                    ),
+                    _buildProfileCard(
+                      "Address",
+                      rider!['address'] ?? "",
+                      icon: Icons.location_on,
+                    ),
+                    _buildProfileCard(
+                      "City",
+                      rider!['city'] ?? "",
+                      icon: Icons.location_city,
+                    ),
+                    _buildProfileCard(
+                      "Status",
+                      rider!['status'] ?? "",
+                      icon: Icons.verified,
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Buttons
+                    CustomButton(
+                      text: "Change Password",
+                      onPressed: () {},
+                      fullWidth: true,
+                      padding: const EdgeInsets.all(16),
+                      color: Colors.blue,
+                    ),
+                    const SizedBox(height: 12),
+                    CustomButton(
+                      text: "Logout",
+                      onPressed: logout,
+                      fullWidth: true,
+                      padding: const EdgeInsets.all(16),
+                      color: Colors.red,
+                    ),
+                    const SizedBox(height: 12),
+                    CustomButton(
+                      text: "Delete Account",
+                      onPressed: deleteAccount,
+                      fullWidth: true,
+                      padding: const EdgeInsets.all(16),
+                      color: Colors.red,
+                    ),
+                  ],
                 ),
+              ),
+            ),
     );
   }
 }
