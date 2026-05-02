@@ -173,7 +173,7 @@ class _CustomerHomeState extends State<CustomerHome> {
                       children: [
                         _card(
                           icon: Icons.local_shipping,
-                          title: "Order a delivery",
+                          title: "Create a Package",
                           subtitle:
                               "We'll pick it up and deliver it across town quickly.",
                           onTap: () {

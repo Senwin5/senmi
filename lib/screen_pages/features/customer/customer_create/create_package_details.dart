@@ -28,14 +28,29 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
   }
 
   Future<void> _fetchPackage() async {
+    if (!mounted) return;
+
     setState(() => loading = true);
 
-    final res = await ApiService.getPackage(widget.packageId);
+    try {
+      final res = await ApiService.getPackage(widget.packageId);
 
-    setState(() {
-      package = res;
-      loading = false;
-    });
+      if (!mounted) return;
+
+      setState(() {
+        package = res;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Failed to refresh package")));
+    } finally {
+      if (mounted) {
+        setState(() => loading = false);
+      }
+    }
   }
 
   // ✅ ADDED: DELETE FUNCTION

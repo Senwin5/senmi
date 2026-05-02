@@ -5,7 +5,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-//import 'package:senmi/screen_pages/features/customer/customer_create/delivery_complete_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:senmi/services/api_service.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
@@ -46,6 +46,20 @@ class _TrackingScreenState extends State<TrackingScreen>
   late AnimationController _shakeController;
   late Animation<double> _shakeAnimation;
 
+  Future<void> callRider(String phone) async {
+    final Uri url = Uri.parse("tel:$phone");
+
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url);
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Cannot make call")));
+    }
+  }
+
+  String? riderPhone;
+
   @override
   void initState() {
     super.initState();
@@ -79,6 +93,7 @@ class _TrackingScreenState extends State<TrackingScreen>
       deliveryLng = (pkg['delivery_lng'] ?? deliveryLng).toDouble();
 
       status = pkg['status'] ?? status;
+      riderPhone = pkg['rider_phone'];
 
       if (pkg['delivery_code'] != null) {
         deliveryCode = pkg['delivery_code'].toString();
@@ -321,7 +336,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                               status,
                               style: const TextStyle(
                                 fontSize: 18,
-                                fontWeight: FontWeight.w700,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ),
@@ -341,6 +356,22 @@ class _TrackingScreenState extends State<TrackingScreen>
                           fontWeight: FontWeight.w600,
                         ),
                       ),
+                      const SizedBox(height: 16),
+
+                      if (riderPhone != null &&
+                          (status == "accepted" || status == "picked_up"))
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: () => callRider(riderPhone!),
+                            icon: const Icon(Icons.call),
+                            label: const Text("Call Rider"),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.deepPurple,
+                              foregroundColor: Colors.white,
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 ),
