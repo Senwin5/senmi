@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:senmi/screen_pages/features/rider/rider_package/rider_deliveries_screen.dart';
 import 'package:senmi/screen_pages/features/rider/rider_wallet/wallet_screen.dart';
 import '../../../../services/api_service.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -412,6 +413,14 @@ class _RiderHomeState extends State<RiderHome> {
               Icons.inventory,
               Colors.blue,
               isDark,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const RiderDeliveriesScreen(),
+                  ),
+                );
+              },
             ),
             _metricCard(
               "Rating",
@@ -442,10 +451,7 @@ class _RiderHomeState extends State<RiderHome> {
             child: ListTile(
               leading: const Icon(Icons.check_circle, color: Colors.green),
               title: Text(p['description'] ?? "Delivery"),
-              subtitle: Text(
-                "₦${p['price'] ?? 0}",
-              ),
-              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              subtitle: Text("₦${p['price'] ?? 0}"),
             ),
           );
         }),
@@ -458,34 +464,38 @@ class _RiderHomeState extends State<RiderHome> {
     String value,
     IconData icon,
     Color color,
-    bool isDark,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.grey[900] : Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 6)],
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: color),
-          const SizedBox(height: 6),
-          Text(
-            value,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 12,
-              color: isDark ? Colors.white60 : Colors.black54,
+    bool isDark, {
+    VoidCallback? onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: isDark ? Colors.grey[900] : Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 6)],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: color),
+            const SizedBox(height: 6),
+            Text(
+              value,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
             ),
-          ),
-        ],
+            const SizedBox(height: 4),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12,
+                color: isDark ? Colors.white60 : Colors.black54,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -267,7 +267,33 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
                   if (status == 'accepted') {
                     return Column(
                       children: [
-                        // 🚀 Start Delivery
+                        // 📞 CALL CUSTOMER
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              final phone =
+                                  package?['sender_phone']; // 👈 from backend
+                              if (phone != null) {
+                                callNumber(phone);
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      "Customer phone not available",
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                            ),
+                            child: const Text("Call Customer"),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
@@ -291,38 +317,13 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
                               }
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.orange,
+                              backgroundColor: Colors.deepPurple,
                               padding: const EdgeInsets.symmetric(vertical: 14),
                             ),
-                            child: const Text("Start Delivery"),
-                          ),
-                        ),
-
-                        const SizedBox(height: 10),
-
-                        // 📞 CALL CUSTOMER
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              final phone =
-                                  package?['sender_phone']; // 👈 from backend
-                              if (phone != null) {
-                                callNumber(phone);
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      "Customer phone not available",
-                                    ),
-                                  ),
-                                );
-                              }
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue,
+                            child: const Text(
+                              "Start Delivery",
+                              style: TextStyle(color: Colors.white),
                             ),
-                            child: const Text("Call Customer"),
                           ),
                         ),
                         const SizedBox(height: 10),
@@ -335,6 +336,7 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
                                 context: context,
                                 builder: (dialogContext) => AlertDialog(
                                   title: const Text("Cancel Delivery"),
+
                                   content: const Text(
                                     "Are you sure you want to cancel?",
                                   ),
@@ -370,14 +372,20 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
                                   );
 
                                   //loadPackage(); // refresh screen
-                                  Navigator.pop(context, true); // go back and trigger refresh
+                                  Navigator.pop(
+                                    context,
+                                    true,
+                                  ); // go back and trigger refresh
                                 }
                               }
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.red,
                             ),
-                            child: const Text("Cancel Delivery"),
+                            child: const Text(
+                              "Cancel Delivery",
+                              style: TextStyle(color: Colors.white),
+                            ),
                           ),
                         ),
                       ],
