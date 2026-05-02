@@ -19,6 +19,9 @@ class _RiderHomeState extends State<RiderHome> {
   String riderName = "Rider"; // default
   bool isOnline = true; // Rider availability
 
+  double riderRating = 0.0;
+  int ratingCount = 0;
+
   @override
   void initState() {
     super.initState();
@@ -39,6 +42,8 @@ class _RiderHomeState extends State<RiderHome> {
       final walletData = await ApiService.getWallet();
       final earningsData = await ApiService.getEarnings();
       final riderProfile = await ApiService.getRiderProfile();
+      final rating = riderProfile['rating'];
+      final count = riderProfile['rating_count'];
 
       final username = riderProfile['username'];
       final fullName = riderProfile['full_name'];
@@ -48,11 +53,16 @@ class _RiderHomeState extends State<RiderHome> {
         walletBalance = walletData['balance']?.toDouble() ?? 0.0;
         totalEarnings = (earningsData['total_earnings'] ?? 0).toDouble();
         totalDeliveries = earningsData['total_deliveries'] ?? 0;
+
+        riderRating = (rating ?? 0).toDouble();
+        ratingCount = count ?? 0;
+
         riderName = (username != null && username.toString().trim().isNotEmpty)
             ? username
             : (fullName != null && fullName.toString().trim().isNotEmpty)
             ? fullName
             : riderName;
+
         loading = false;
       });
     } catch (e) {
@@ -138,7 +148,7 @@ class _RiderHomeState extends State<RiderHome> {
           ),
         ],
       ),
-    
+
       body: loading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
@@ -167,7 +177,7 @@ class _RiderHomeState extends State<RiderHome> {
                     const SizedBox(height: 20),
                     _buildTotalEarningsCard(isDark),
                     const SizedBox(height: 25),
-                    _buildAvailableDeliveries(isDark),
+                    _buildPerformanceSection(isDark),
                   ],
                 ),
               ),
@@ -329,7 +339,7 @@ class _RiderHomeState extends State<RiderHome> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    "Total Earnings from Packages",
+                    "Total Available Packages",
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
@@ -354,119 +364,129 @@ class _RiderHomeState extends State<RiderHome> {
     );
   }
 
-  Widget _buildAvailableDeliveries(bool isDark) {
+  Widget _buildPerformanceSection(bool isDark) {
+    final completedToday = totalDeliveries;
+    // ignore: unused_local_variable
+    final earningsToday = walletBalance;
+    final avgTime = "30 mins";
+    final availablePackages = packages.length;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          "Available Deliveries",
+          "Performance",
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
             color: isDark ? Colors.white : Colors.black87,
           ),
         ),
-        const SizedBox(height: 10),
-        packages.isEmpty
-            ? Center(
-                child: Text(
-                  "No deliveries available at the moment",
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: isDark ? Colors.white60 : Colors.black54,
-                  ),
-                ),
-              )
-            : ListView.builder(
-                physics: const NeverScrollableScrollPhysics(),
-                shrinkWrap: true,
-                itemCount: packages.length,
-                itemBuilder: (context, index) {
-                  final p = packages[index];
-                  final highPay = (p['price'] ?? 0) > 5000;
-                  final riderEarning = (p['net_earning'] ?? p['price'] ?? 0)
-                      .toDouble();
+        const SizedBox(height: 14),
 
-                  return Card(
-                    elevation: 4,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    margin: const EdgeInsets.symmetric(vertical: 6),
-                    color: isDark
-                        ? Colors.grey[900]
-                        : highPay
-                        ? Colors.yellow.shade50
-                        : Colors.white,
-                    shadowColor: Colors.black26,
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      title: Text(
-                        p['description'] ?? "",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          color: isDark ? Colors.white : Colors.black87,
-                        ),
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 4),
-                          Text(
-                            "Pickup: ${p['pickup'] ?? '-'}",
-                            style: TextStyle(
-                              color: isDark ? Colors.white60 : Colors.black54,
-                            ),
-                          ),
-                          Text(
-                            "Delivery: ${p['delivery'] ?? '-'}",
-                            style: TextStyle(
-                              color: isDark ? Colors.white60 : Colors.black54,
-                            ),
-                          ),
-                          Text(
-                            "Price: ₦${p['price'] ?? 0}",
-                            style: TextStyle(
-                              color: isDark ? Colors.white60 : Colors.black54,
-                            ),
-                          ),
-                          Text(
-                            "You Earn: ₦${riderEarning.toStringAsFixed(2)}",
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: isDark ? Colors.greenAccent : Colors.green,
-                            ),
-                          ),
-                          Text(
-                            "Receiver: ${p['receiver_name'] ?? '-'} (${p['receiver_phone'] ?? '-'})",
-                            style: TextStyle(
-                              color: isDark ? Colors.white60 : Colors.black54,
-                            ),
-                          ),
-                        ],
-                      ),
-                      trailing: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.purple,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        onPressed: () => accept(p['id']),
-                        child: const Text("Accept"),
-                      ),
-                    ),
-                  );
-                },
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: 1.35,
+          children: [
+            _metricCard(
+              "Completed Today",
+              completedToday.toString(),
+              Icons.local_shipping,
+              Colors.deepPurple,
+              isDark,
+            ),
+
+            _metricCard(
+              "Avg Delivery Time",
+              avgTime,
+              Icons.timer,
+              Colors.orange,
+              isDark,
+            ),
+            _metricCard(
+              "Packages Available",
+              availablePackages.toString(),
+              Icons.inventory,
+              Colors.blue,
+              isDark,
+            ),
+            _metricCard(
+              "Rating",
+              "⭐ ${riderRating.toStringAsFixed(1)} ($ratingCount)",
+              Icons.star,
+              Colors.amber,
+              isDark,
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 24),
+
+        Text(
+          "Recent Package",
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : Colors.black87,
+          ),
+        ),
+
+        const SizedBox(height: 10),
+
+        ...List.generate(packages.take(1).length, (index) {
+          final p = packages[index];
+
+          return Card(
+            child: ListTile(
+              leading: const Icon(Icons.check_circle, color: Colors.green),
+              title: Text(p['description'] ?? "Delivery"),
+              subtitle: Text(
+                "₦${p['price'] ?? 0}",
               ),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            ),
+          );
+        }),
       ],
+    );
+  }
+
+  Widget _metricCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+    bool isDark,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.grey[900] : Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 6)],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: color),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12,
+              color: isDark ? Colors.white60 : Colors.black54,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
