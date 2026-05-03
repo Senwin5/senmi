@@ -259,7 +259,9 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
       );
     }
 
-    bool paymentDone = package!['is_paid'] == true;
+    final status = (package?['status'] ?? '').toString().toLowerCase();
+
+    final paymentDone = package?['is_paid'] == true;
 
     return Scaffold(
       appBar: AppBar(
@@ -329,7 +331,18 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
                 ),
               ),
 
-            if (paymentDone)
+            if (status == 'delivered')
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                  ),
+                  child: const Text("Delivered"),
+                ),
+              )
+            else if (paymentDone)
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
