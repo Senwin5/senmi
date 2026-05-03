@@ -259,13 +259,39 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
     TextEditingController? controller,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 10),
       child: TextFormField(
         controller: controller,
         keyboardType: type,
+        style: const TextStyle(
+          color: Colors.black,
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+        ),
         decoration: InputDecoration(
           labelText: label,
-          border: const OutlineInputBorder(),
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 18,
+            vertical: 18,
+          ),
+          labelStyle: const TextStyle(
+            color: Colors.black54,
+            fontWeight: FontWeight.w600,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: BorderSide(color: Colors.grey.shade200),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: const BorderSide(color: Colors.deepPurple, width: 2),
+          ),
         ),
         onSaved: onSaved,
       ),
@@ -275,15 +301,25 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF7F8FC),
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.black87),
         title: const Text(
           "Create Package",
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 24,
+            color: Colors.black87,
+          ),
         ),
-        centerTitle: true,
-        elevation: 0,
         actions: [
-          IconButton(icon: const Icon(Icons.refresh), onPressed: _refreshPage),
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded),
+            onPressed: _refreshPage,
+          ),
         ],
       ),
 
@@ -294,173 +330,205 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.all(16),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // 🔥 ONLY ADDITION (ORDER + HISTORY UI)
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          GestureDetector(
-                            onTap: () {
-                              _resetForm();
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.deepPurple,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Text(
-                                "Order",
-                                style: TextStyle(color: Colors.white),
+                child: Container(
+                  padding: const EdgeInsets.all(22),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(28),
+                    boxShadow: [
+                      BoxShadow(
+                        // ignore: deprecated_member_use
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 20,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // 🔥 ONLY ADDITION (ORDER + HISTORY UI)
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            GestureDetector(
+                              onTap: () {
+                                _resetForm();
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: [
+                                      Color(0xFF6A11CB),
+                                      Color(0xFF8E2DE2),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(14),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      // ignore: deprecated_member_use
+                                      color: Colors.deepPurple.withOpacity(
+                                        0.25,
+                                      ),
+                                      blurRadius: 12,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: const Text(
+                                  "Order",
+                                  style: TextStyle(color: Colors.white),
+                                ),
                               ),
                             ),
-                          ),
 
-                          GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const HistoryScreen(),
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const HistoryScreen(),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
                                 ),
-                              );
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Text(
+                                  "History",
+                                  style: TextStyle(color: Colors.white),
+                                ),
                               ),
-                              decoration: BoxDecoration(
-                                color: Colors.grey,
-                                borderRadius: BorderRadius.circular(8),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 10),
+
+                        const Text(
+                          "Receiver Details",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+
+                        _buildTextField(
+                          "Receiver Name",
+                          onSaved: (v) => receiverName = v ?? '',
+                        ),
+                        _buildTextField(
+                          "Receiver Phone",
+                          type: TextInputType.phone,
+                          onSaved: (v) => receiverPhone = v ?? '',
+                        ),
+
+                        const SizedBox(height: 10),
+
+                        const Text(
+                          "Package Info",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+
+                        _buildTextField(
+                          "Description",
+                          onSaved: (v) => description = v ?? '',
+                        ),
+
+                        const SizedBox(height: 10),
+
+                        const Text(
+                          "Locations",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+
+                        GestureDetector(
+                          onTap: () => _pickLocation(isPickup: true),
+                          child: AbsorbPointer(
+                            child: _buildTextField(
+                              "Pickup Address",
+                              controller: pickupController,
+                            ),
+                          ),
+                        ),
+
+                        GestureDetector(
+                          onTap: () => _pickLocation(isPickup: false),
+                          child: AbsorbPointer(
+                            child: _buildTextField(
+                              "Delivery Address",
+                              controller: deliveryController,
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: calculatingPrice
+                                ? null
+                                : _calculatePrice,
+                            child: calculatingPrice
+                                ? const CircularProgressIndicator(
+                                    color: Colors.white,
+                                  )
+                                : const Text("Calculate Price"),
+                          ),
+                        ),
+
+                        if (estimatedPrice != null) ...[
+                          const SizedBox(height: 20),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(18),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Colors.green, Colors.greenAccent],
                               ),
-                              child: const Text(
-                                "History",
-                                style: TextStyle(color: Colors.white),
-                              ),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Column(
+                              children: [
+                                Text(
+                                  "Distance: ${distanceKm?.toStringAsFixed(2)} km",
+                                ),
+                                Text("₦${estimatedPrice!.toStringAsFixed(0)}"),
+                              ],
                             ),
                           ),
                         ],
-                      ),
 
-                      const SizedBox(height: 10),
+                        const SizedBox(height: 30),
 
-                      const Text(
-                        "Receiver Details",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-
-                      _buildTextField(
-                        "Receiver Name",
-                        onSaved: (v) => receiverName = v ?? '',
-                      ),
-                      _buildTextField(
-                        "Receiver Phone",
-                        type: TextInputType.phone,
-                        onSaved: (v) => receiverPhone = v ?? '',
-                      ),
-
-                      const SizedBox(height: 10),
-
-                      const Text(
-                        "Package Info",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-
-                      _buildTextField(
-                        "Description",
-                        onSaved: (v) => description = v ?? '',
-                      ),
-
-                      const SizedBox(height: 10),
-
-                      const Text(
-                        "Locations",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-
-                      GestureDetector(
-                        onTap: () => _pickLocation(isPickup: true),
-                        child: AbsorbPointer(
-                          child: _buildTextField(
-                            "Pickup Address",
-                            controller: pickupController,
-                          ),
-                        ),
-                      ),
-
-                      GestureDetector(
-                        onTap: () => _pickLocation(isPickup: false),
-                        child: AbsorbPointer(
-                          child: _buildTextField(
-                            "Delivery Address",
-                            controller: deliveryController,
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: calculatingPrice ? null : _calculatePrice,
-                          child: calculatingPrice
-                              ? const CircularProgressIndicator(
-                                  color: Colors.white,
-                                )
-                              : const Text("Calculate Price"),
-                        ),
-                      ),
-
-                      if (estimatedPrice != null) ...[
-                        const SizedBox(height: 20),
-                        Container(
+                        SizedBox(
                           width: double.infinity,
-                          padding: const EdgeInsets.all(18),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Colors.green, Colors.greenAccent],
-                            ),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Column(
-                            children: [
-                              Text(
-                                "Distance: ${distanceKm?.toStringAsFixed(2)} km",
-                              ),
-                              Text("₦${estimatedPrice!.toStringAsFixed(0)}"),
-                            ],
+                          child: ElevatedButton(
+                            onPressed: _createPackage,
+                            child: const Text("Create Package"),
                           ),
                         ),
                       ],
-
-                      const SizedBox(height: 30),
-
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _createPackage,
-                          child: const Text("Create Package"),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),

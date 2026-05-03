@@ -287,7 +287,7 @@ class _CustomerHomeState extends State<CustomerHome> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEDE7F6),
+                  color: const Color(0xFFF7F8FC),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(icon, color: Colors.deepPurple),
