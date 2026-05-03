@@ -49,6 +49,12 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
         });
   }
 
+  void goHomeAfterDelivery() {
+    if (!mounted) return;
+
+    Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+
   // 🔥 STOP TRACKING
   void stopTracking() {
     _positionStream?.cancel();
@@ -455,6 +461,10 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
                     }
 
                     if (status == 'delivered') {
+                      Future.delayed(const Duration(seconds: 5), () {
+                        goHomeAfterDelivery();
+                      });
+
                       return ElevatedButton(
                         onPressed: null,
                         style: ElevatedButton.styleFrom(

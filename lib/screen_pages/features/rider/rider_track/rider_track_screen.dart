@@ -200,8 +200,12 @@ class _RiderTrackScreenState extends State<RiderTrackScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Delivery Tracking"),
+        title: const Text(
+          "Delivery Tracking",
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: Colors.deepPurple,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Stack(
         children: [
@@ -288,7 +292,10 @@ class _RiderTrackScreenState extends State<RiderTrackScreen> {
                       ),
                       child: _isLoading
                           ? const CircularProgressIndicator()
-                          : const Text("Confirm Delivery"),
+                          : const Text(
+                              "Confirm Delivery",
+                              style: TextStyle(color: Colors.white),
+                            ),
                     ),
                   ),
                 ],

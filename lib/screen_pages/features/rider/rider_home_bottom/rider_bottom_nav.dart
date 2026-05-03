@@ -60,74 +60,88 @@ class _RiderBottomNavState extends State<RiderBottomNav> {
 
           theme: ThemeData(
             brightness: Brightness.light,
-            primaryColor: Colors.deepPurple,
-            scaffoldBackgroundColor: const Color(0xFFF8F9FD),
+            primarySwatch: Colors.deepPurple,
+            scaffoldBackgroundColor: const Color(0xFFF6F8FC),
+
             appBarTheme: const AppBarTheme(
               backgroundColor: Colors.white,
               foregroundColor: Colors.black,
-              elevation: 0.5,
+              elevation: 0,
+              centerTitle: true,
+            ),
+
+            cardTheme: CardThemeData(
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18),
+              ),
             ),
           ),
 
           darkTheme: ThemeData(
             brightness: Brightness.dark,
-            primaryColor: Colors.deepPurple,
-            scaffoldBackgroundColor: const Color(0xFF121212),
-            cardColor: const Color(0xFF1E1E1E),
+            primarySwatch: Colors.deepPurple,
+            scaffoldBackgroundColor: const Color(0xFF0F1117),
+
             appBarTheme: const AppBarTheme(
-              backgroundColor: Color(0xFF1A1A1A),
+              backgroundColor: Color(0xFF161B22),
               foregroundColor: Colors.white,
-              elevation: 0.5,
+              elevation: 0,
+              centerTitle: true,
             ),
+
+            cardColor: const Color(0xFF1C2128),
           ),
 
           themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
 
           home: Scaffold(
-            body: _screens[_currentIndex],
+            body: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 250),
+              child: _screens[_currentIndex],
+            ),
 
             bottomNavigationBar: Container(
+              margin: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(22),
-                  topRight: Radius.circular(22),
-                ),
+                color: isDark ? const Color(0xFF161B22) : Colors.white,
+                borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
                     // ignore: deprecated_member_use
-                    color: Colors.black.withOpacity(0.08),
-                    blurRadius: 12,
-                    offset: const Offset(0, -3),
+                    color: Colors.black.withOpacity(0.10),
+                    blurRadius: 24,
+                    offset: const Offset(0, 8),
                   ),
                 ],
               ),
 
               child: ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(22),
-                  topRight: Radius.circular(22),
-                ),
+                borderRadius: BorderRadius.circular(24),
                 child: BottomNavigationBar(
                   currentIndex: _currentIndex,
                   items: _navItems,
                   type: BottomNavigationBarType.fixed,
 
-                  backgroundColor: isDark
-                      ? const Color(0xFF1A1A1A)
-                      : Colors.white,
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
 
                   selectedItemColor: Colors.deepPurple,
-                  unselectedItemColor: isDark ? Colors.white54 : Colors.grey,
+                  unselectedItemColor: isDark
+                      ? Colors.white38
+                      : Colors.grey.shade500,
 
                   selectedLabelStyle: const TextStyle(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w700,
                     fontSize: 12,
                   ),
 
-                  unselectedLabelStyle: const TextStyle(fontSize: 11),
+                  unselectedLabelStyle: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                  ),
 
-                  elevation: 0,
+                  showUnselectedLabels: true,
 
                   onTap: (index) {
                     setState(() {

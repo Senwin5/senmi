@@ -60,8 +60,12 @@ class _RiderHistoryScreenState extends State<RiderHistoryScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Transaction History"),
+        title: const Text(
+          "Transaction History",
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: Colors.deepPurple,
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
