@@ -128,7 +128,7 @@ class _RiderHomeState extends State<RiderHome> {
           "Dashboard",
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.purple,
+        backgroundColor: Colors.deepPurple,
         elevation: 0,
         actions: [
           Row(
@@ -140,9 +140,9 @@ class _RiderHomeState extends State<RiderHome> {
               Switch(
                 value: isOnline,
                 onChanged: toggleOnlineStatus,
-                activeThumbColor: Colors.green,
+                activeThumbColor: const Color.fromARGB(255, 54, 96, 56),
                 inactiveThumbColor: Colors.white,
-                activeTrackColor: Colors.greenAccent,
+                activeTrackColor: Color.fromARGB(255, 73, 135, 76),
                 inactiveTrackColor: Colors.white24,
               ),
             ],
@@ -198,7 +198,7 @@ class _RiderHomeState extends State<RiderHome> {
           child: Container(
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Colors.purple, Colors.purple],
+                colors: [Colors.deepPurple, Colors.deepPurple],
               ),
               borderRadius: BorderRadius.circular(12),
               boxShadow: const [
@@ -238,7 +238,10 @@ class _RiderHomeState extends State<RiderHome> {
             child: Container(
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Colors.green, Colors.green],
+                  colors: [
+                    Color.fromARGB(255, 73, 135, 76),
+                    Color.fromARGB(255, 54, 96, 56),
+                  ],
                 ),
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: const [
@@ -291,7 +294,7 @@ class _RiderHomeState extends State<RiderHome> {
       child: ListTile(
         leading: Icon(
           Icons.account_balance_wallet,
-          color: isDark ? Colors.purple : Colors.blueAccent,
+          color: isDark ? Colors.deepPurple : Colors.blueAccent,
           size: 28,
         ),
         title: const Text(
@@ -317,7 +320,7 @@ class _RiderHomeState extends State<RiderHome> {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       elevation: 4,
-      color: isDark ? Colors.deepPurple[700] : Colors.purple,
+      color: isDark ? Colors.deepPurple[700] : Colors.deepPurple,
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Row(
@@ -325,7 +328,7 @@ class _RiderHomeState extends State<RiderHome> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: isDark ? Colors.deepPurple[900] : Colors.purple,
+                color: isDark ? Colors.deepPurple[900] : Colors.deepPurple,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const FaIcon(

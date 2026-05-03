@@ -229,11 +229,14 @@ class _RiderDeliveriesScreenState extends State<RiderDeliveriesScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Deliveries"),
-        backgroundColor: Colors.purple,
+        title: const Text("Packages", style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.deepPurple,
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
+          labelColor: Colors.white, // ACTIVE tab text color
+          unselectedLabelColor: Colors.white70, // INACTIVE tab text color
+          indicatorColor: Colors.white, // underline indicator
           tabs: const [
             Tab(text: "Available"),
             Tab(text: "Accepted"),
