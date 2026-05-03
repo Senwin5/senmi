@@ -201,7 +201,7 @@ class _RiderTrackScreenState extends State<RiderTrackScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Delivery Tracking"),
-        backgroundColor: Colors.purple,
+        backgroundColor: Colors.deepPurple,
       ),
       body: Stack(
         children: [
@@ -284,7 +284,7 @@ class _RiderTrackScreenState extends State<RiderTrackScreen> {
                     child: ElevatedButton(
                       onPressed: _isLoading ? null : _submitCode,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
+                        backgroundColor: Color.fromARGB(255, 73, 135, 76),
                       ),
                       child: _isLoading
                           ? const CircularProgressIndicator()

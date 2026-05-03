@@ -41,7 +41,7 @@ class _RiderHistoryScreenState extends State<RiderHistoryScreen> {
         type.toLowerCase().contains("payment sent")) {
       return Colors.red;
     } else {
-      return Colors.green;
+      return Color.fromARGB(255, 73, 135, 76);
     }
   }
 
@@ -61,7 +61,7 @@ class _RiderHistoryScreenState extends State<RiderHistoryScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Transaction History"),
-        backgroundColor: Colors.purple,
+        backgroundColor: Colors.deepPurple,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),

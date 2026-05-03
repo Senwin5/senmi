@@ -138,7 +138,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                             style: const TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF5F5FFF),
+                              color: Colors.deepPurple,
                             ),
                           ),
                           const SizedBox(height: 15),
@@ -166,7 +166,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     height: 8,
                     decoration: BoxDecoration(
                       color: currentPage == index
-                          ? const Color(0xFF5F5FFF)
+                          ? Colors.deepPurple
                           : Colors.grey,
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -180,7 +180,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   width: double.infinity,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF5F5FFF),
+                      backgroundColor: Colors.deepPurple,
                       padding: const EdgeInsets.all(16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -202,10 +202,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
               onPressed: () {
                 _controller.jumpToPage(pages.length - 1);
               },
-              child: const Text(
-                "Skip",
-                style: TextStyle(color: Colors.grey),
-              ),
+              child: const Text("Skip", style: TextStyle(color: Colors.grey)),
             ),
           ),
         ],

@@ -135,7 +135,8 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Details", style: TextStyle(color: Colors.white)),
-        backgroundColor: Colors.purple,
+        backgroundColor: Colors.deepPurple,
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           loading
               ? const Padding(
@@ -155,314 +156,324 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
                 ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: isDark ? Colors.grey[900] : Colors.purple,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                children: [
-                  const Text(
-                    "You Earn",
-                    style: TextStyle(color: Colors.white70),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    "₦${riderEarning.toStringAsFixed(2)}",
-                    style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+      body: RefreshIndicator(
+        onRefresh: loadPackage,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(), // 🔥 important
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.grey[900] : Colors.deepPurple,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  children: [
+                    const Text(
+                      "You Earn",
+                      style: TextStyle(color: Colors.white70),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 8),
+                    Text(
+                      "₦${riderEarning.toStringAsFixed(2)}",
+                      style: const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
 
-            const SizedBox(height: 16),
+              const SizedBox(height: 16),
 
-            _card("Package Info", [
-              _row("Package ID", package!['package_id']),
-              _row("Description", package!['description']),
-              _row("Total Price", "₦${price.toStringAsFixed(2)}"),
-            ]),
+              _card("Package Info", [
+                _row("Package ID", package!['package_id']),
+                _row("Description", package!['description']),
+                _row("Total Price", "₦${price.toStringAsFixed(2)}"),
+              ]),
 
-            _card("Receiver Info", [
-              _row("Name", package!['receiver_name']),
-              _row("Phone", package!['receiver_phone']),
-            ]),
+              _card("Receiver Info", [
+                _row("Name", package!['receiver_name']),
+                _row("Phone", package!['receiver_phone']),
+              ]),
 
-            _card("Locations", [
-              _row("Pickup", package!['pickup_address']),
-              _row("Delivery", package!['delivery_address']),
-            ]),
+              _card("Locations", [
+                _row("Pickup", package!['pickup_address']),
+                _row("Delivery", package!['delivery_address']),
+              ]),
 
-            _card("Earnings Breakdown", [
-              _row(
-                "Rider Earning",
-                "₦${riderEarning.toStringAsFixed(2)}",
-                isHighlight: true,
-              ),
-              _row("App Commission", "₦${commission.toStringAsFixed(2)}"),
-              _row("Customer Paid", "₦${price.toStringAsFixed(2)}"),
-            ]),
+              _card("Earnings Breakdown", [
+                _row(
+                  "Rider Earning",
+                  "₦${riderEarning.toStringAsFixed(2)}",
+                  isHighlight: true,
+                ),
+                _row("App Commission", "₦${commission.toStringAsFixed(2)}"),
+                _row("Customer Paid", "₦${price.toStringAsFixed(2)}"),
+              ]),
 
-            const SizedBox(height: 20),
+              const SizedBox(height: 20),
 
-            SizedBox(
-              width: double.infinity,
-              child: Builder(
-                builder: (_) {
-                  final status = (package?['status'] ?? '').toLowerCase();
+              SizedBox(
+                width: double.infinity,
+                child: Builder(
+                  builder: (_) {
+                    final status = (package?['status'] ?? '').toLowerCase();
 
-                  if (status == 'paid') {
-                    return ElevatedButton(
-                      onPressed: accepting
-                          ? null
-                          : () {
-                              if (widget.hasActiveDelivery) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      "⚠ Finish your current delivery first",
-                                      style: TextStyle(color: Colors.red),
+                    if (status == 'paid') {
+                      return ElevatedButton(
+                        onPressed: accepting
+                            ? null
+                            : () {
+                                if (widget.hasActiveDelivery) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        "⚠ Finish your current delivery first",
+                                        style: TextStyle(color: Colors.red),
+                                      ),
                                     ),
-                                  ),
-                                );
-                                return;
-                              }
-                              accept();
-                            },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.purple,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      child: Text(
-                        accepting ? "Accepting..." : "Accept Package",
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                    );
-                  }
-
-                  // 🔥 START DELIVERY + START GPS
-                  if (status == 'cancelled') {
-                    return ElevatedButton(
-                      onPressed: null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      child: const Text("Cancelled"),
-                    );
-                  }
-                  if (status == 'accepted') {
-                    return Column(
-                      children: [
-                        // 📞 CALL CUSTOMER
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              final phone =
-                                  package?['sender_phone']; // 👈 from backend
-                              if (phone != null) {
-                                callNumber(phone);
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      "Customer phone not available",
-                                    ),
-                                  ),
-                                );
-                              }
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                            ),
-                            child: const Text("Call Customer"),
+                                  );
+                                  return;
+                                }
+                                accept();
+                              },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.deepPurple,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        const SizedBox(height: 10),
-
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () async {
-                              final success = await ApiService.updateStatus(
-                                widget.packageId,
-                                "picked_up",
-                              );
-
-                              if (success) {
-                                await Geolocator.requestPermission();
-                                startLiveTracking();
-
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text("Package picked up"),
-                                  ),
-                                );
-
-                                loadPackage();
-                              }
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.deepPurple,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                            ),
-                            child: const Text(
-                              "Start Delivery",
-                              style: TextStyle(color: Colors.white),
-                            ),
+                        child: Text(
+                          accepting ? "Accepting..." : "Accept Package",
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.white,
                           ),
                         ),
-                        const SizedBox(height: 10),
+                      );
+                    }
 
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () async {
-                              final confirm = await showDialog(
-                                context: context,
-                                builder: (dialogContext) => AlertDialog(
-                                  title: const Text("Cancel Delivery"),
-
-                                  content: const Text(
-                                    "Are you sure you want to cancel?",
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.of(
-                                        dialogContext,
-                                      ).pop(false),
-                                      child: const Text("No"),
+                    // 🔥 START DELIVERY + START GPS
+                    if (status == 'cancelled') {
+                      return ElevatedButton(
+                        onPressed: null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        child: const Text("Cancelled"),
+                      );
+                    }
+                    if (status == 'accepted') {
+                      return Column(
+                        children: [
+                          // 📞 CALL CUSTOMER
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                final phone =
+                                    package?['sender_phone']; // 👈 from backend
+                                if (phone != null) {
+                                  callNumber(phone);
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        "Customer phone not available",
+                                      ),
                                     ),
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.of(dialogContext).pop(true),
-                                      child: const Text("Yes"),
-                                    ),
-                                  ],
-                                ),
-                              );
+                                  );
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                              ),
+                              child: const Text("Call Customer"),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
 
-                              if (confirm == true) {
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () async {
                                 final success = await ApiService.updateStatus(
                                   widget.packageId,
-                                  "cancelled",
+                                  "picked_up",
                                 );
 
                                 if (success) {
-                                  stopTracking();
+                                  await Geolocator.requestPermission();
+                                  startLiveTracking();
 
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                      content: Text("Package cancelled"),
+                                      content: Text("Package picked up"),
                                     ),
                                   );
 
-                                  //loadPackage(); // refresh screen
-                                  Navigator.pop(
-                                    context,
-                                    true,
-                                  ); // go back and trigger refresh
+                                  loadPackage();
                                 }
-                              }
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red,
-                            ),
-                            child: const Text(
-                              "Cancel Delivery",
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ),
-                        ),
-                      ],
-                    );
-                  }
-
-                  // 🟢 IN TRANSIT
-                  if (status == 'picked_up') {
-                    return Column(
-                      children: [
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => RiderTrackScreen(
-                                    packageId: widget.packageId,
-                                  ),
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.deepPurple,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
                                 ),
-                              );
-                            },
-                            child: const Text("Track Delivery"),
+                              ),
+                              child: const Text(
+                                "Start Delivery",
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 10),
+                          const SizedBox(height: 10),
 
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              final phone = package?['receiver_phone'];
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () async {
+                                final confirm = await showDialog(
+                                  context: context,
+                                  builder: (dialogContext) => AlertDialog(
+                                    title: const Text("Cancel Delivery"),
 
-                              if (phone == null || phone.toString().isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      "Receiver phone not available",
+                                    content: const Text(
+                                      "Are you sure you want to cancel?",
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.of(
+                                          dialogContext,
+                                        ).pop(false),
+                                        child: const Text("No"),
+                                      ),
+                                      TextButton(
+                                        onPressed: () => Navigator.of(
+                                          dialogContext,
+                                        ).pop(true),
+                                        child: const Text("Yes"),
+                                      ),
+                                    ],
+                                  ),
+                                );
+
+                                if (confirm == true) {
+                                  final success = await ApiService.updateStatus(
+                                    widget.packageId,
+                                    "cancelled",
+                                  );
+
+                                  if (success) {
+                                    stopTracking();
+
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text("Package cancelled"),
+                                      ),
+                                    );
+
+                                    //loadPackage(); // refresh screen
+                                    Navigator.pop(
+                                      context,
+                                      true,
+                                    ); // go back and trigger refresh
+                                  }
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red,
+                              ),
+                              child: const Text(
+                                "Cancel Delivery",
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    }
+
+                    // 🟢 IN TRANSIT
+                    if (status == 'picked_up') {
+                      return Column(
+                        children: [
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => RiderTrackScreen(
+                                      packageId: widget.packageId,
                                     ),
                                   ),
                                 );
-                                return;
-                              }
-
-                              callNumber(phone);
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
+                              },
+                              child: const Text("Track Delivery"),
                             ),
-                            child: const Text("Call Receiver"),
                           ),
-                        ),
-                        const SizedBox(height: 10),
-                      ],
-                    );
-                  }
+                          const SizedBox(height: 10),
 
-                  if (status == 'delivered') {
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                final phone = package?['receiver_phone'];
+
+                                if (phone == null || phone.toString().isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        "Receiver phone not available",
+                                      ),
+                                    ),
+                                  );
+                                  return;
+                                }
+
+                                callNumber(phone);
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                              ),
+                              child: const Text("Call Receiver"),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                        ],
+                      );
+                    }
+
+                    if (status == 'delivered') {
+                      return ElevatedButton(
+                        onPressed: null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        child: const Text("Delivered"),
+                      );
+                    }
+
                     return ElevatedButton(
                       onPressed: null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      child: const Text("Delivered"),
+                      child: Text("Unknown: $status"),
                     );
-                  }
-
-                  return ElevatedButton(
-                    onPressed: null,
-                    child: Text("Unknown: $status"),
-                  );
-                },
+                  },
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -508,7 +519,7 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
               value?.toString() ?? "-",
               style: TextStyle(
                 fontWeight: isHighlight ? FontWeight.bold : FontWeight.normal,
-                color: isHighlight ? Colors.green : null,
+                color: isHighlight ? Color.fromARGB(255, 73, 135, 76) : null,
               ),
             ),
           ),

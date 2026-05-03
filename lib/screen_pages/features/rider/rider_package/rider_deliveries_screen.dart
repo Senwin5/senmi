@@ -33,6 +33,11 @@ class _RiderDeliveriesScreenState extends State<RiderDeliveriesScreen>
     fetchMyPackages();
   }
 
+  // ✅ ADDED: refresh function
+  Future<void> _refreshAll() async {
+    await Future.wait([fetchAvailablePackages(), fetchMyPackages()]);
+  }
+
   double _toDouble(dynamic value) {
     if (value == null) return 0.0;
     if (value is double) return value;
@@ -73,7 +78,6 @@ class _RiderDeliveriesScreenState extends State<RiderDeliveriesScreen>
         deliveredPackages = List<Map<String, dynamic>>.from(
           res['delivered'] ?? [],
         );
-        // 🔥 ADD THIS LINE
         hasActiveDelivery =
             acceptedPackages.isNotEmpty || inTransitPackages.isNotEmpty;
 
@@ -90,138 +94,152 @@ class _RiderDeliveriesScreenState extends State<RiderDeliveriesScreen>
     if (loading) {
       return const Center(child: CircularProgressIndicator());
     }
-
     if (packages.isEmpty) {
-      return const Center(child: Text("No packages found"));
+      return RefreshIndicator(
+        onRefresh: _refreshAll,
+        child: ListView(
+          children: const [
+            SizedBox(height: 200),
+            Center(child: Text("No packages found")),
+          ],
+        ),
+      );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: packages.length,
-      itemBuilder: (context, index) {
-        final p = packages[index];
+    return RefreshIndicator(
+      onRefresh: _refreshAll,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: packages.length,
+        itemBuilder: (context, index) {
+          final p = packages[index];
 
-        final price = _toDouble(p['price'] ?? p['net_earning']);
-        final riderEarning = _toDouble(p['rider_earning'] ?? p['net_earning']);
+          final price = _toDouble(p['price'] ?? p['net_earning']);
+          final riderEarning = _toDouble(
+            p['rider_earning'] ?? p['net_earning'],
+          );
 
-        final status = (p['status'] ?? 'pending').toString().toLowerCase();
+          final status = (p['status'] ?? 'pending').toString().toLowerCase();
 
-        Color statusColor;
-        switch (status) {
-          case 'accepted':
-            statusColor = Colors.orange;
-            break;
-          case 'picked_up':
-          case 'in_transit':
-            statusColor = Colors.blue;
-            break;
-          case 'delivered':
-            statusColor = Colors.green;
-            break;
-          default:
-            statusColor = Colors.grey;
-        }
+          Color statusColor;
+          switch (status) {
+            case 'accepted':
+              statusColor = Colors.orange;
+              break;
+            case 'picked_up':
+            case 'in_transit':
+              statusColor = Colors.blue;
+              break;
+            case 'delivered':
+              statusColor = Color.fromARGB(255, 73, 135, 76);
+              break;
+            default:
+              statusColor = Colors.deepPurple;
+          }
 
-        return GestureDetector(
-          onTap: () async {
-            final packageId = (p['package_id'] ?? p['id']).toString();
+          return GestureDetector(
+            onTap: () async {
+              final packageId = (p['package_id'] ?? p['id']).toString();
 
-            final result = await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => RiderPackageDetailScreen(
-                  packageId: packageId,
-                  hasActiveDelivery: hasActiveDelivery,
-                ),
-              ),
-            );
-
-            if (result == true) {
-              fetchAvailablePackages();
-              fetchMyPackages();
-            }
-          },
-          child: Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: isDark ? Colors.grey[900] : Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        p['package_id'] ?? p['id'] ?? "No ID",
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                        ),
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        status.toUpperCase(),
-                        style: TextStyle(
-                          color: statusColor,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 10),
-
-                /// ✅ FIXED PICKUP DISPLAY (THIS WAS YOUR ISSUE)
-                Text(
-                  "Pickup: ${p['pickup'] ?? p['pickup_address'] ?? 'Not available'}",
-                  style: TextStyle(
-                    color: isDark ? Colors.white60 : Colors.black54,
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => RiderPackageDetailScreen(
+                    packageId: packageId,
+                    hasActiveDelivery: hasActiveDelivery,
                   ),
                 ),
+              );
 
-                const SizedBox(height: 10),
+              if (result == true) {
+                fetchAvailablePackages();
+                fetchMyPackages();
+              }
+            },
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isDark ? Colors.grey[900] : Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 8,
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          p['package_id'] ?? p['id'] ?? "No ID",
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: statusColor.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          status.toUpperCase(),
+                          style: TextStyle(
+                            color: statusColor,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
 
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "₦${price.toStringAsFixed(2)}",
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+                  const SizedBox(height: 10),
+
+                  Text(
+                    "Pickup: ${p['pickup'] ?? p['pickup_address'] ?? 'Not available'}",
+                    style: TextStyle(
+                      color: isDark ? Colors.white60 : Colors.black54,
                     ),
-                    Text(
-                      "Earn: ₦${riderEarning.toStringAsFixed(2)}",
-                      style: const TextStyle(
-                        color: Colors.green,
-                        fontWeight: FontWeight.bold,
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "₦${price.toStringAsFixed(2)}",
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                      Text(
+                        "Earn: ₦${riderEarning.toStringAsFixed(2)}",
+                        style: const TextStyle(
+                          color: Color.fromARGB(255, 73, 135, 76),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 
@@ -231,12 +249,21 @@ class _RiderDeliveriesScreenState extends State<RiderDeliveriesScreen>
       appBar: AppBar(
         title: const Text("Packages", style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.deepPurple,
+
+        // ✅ ADDED: refresh icon
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.white),
+            onPressed: _refreshAll,
+          ),
+        ],
+
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
-          labelColor: Colors.white, // ACTIVE tab text color
-          unselectedLabelColor: Colors.white70, // INACTIVE tab text color
-          indicatorColor: Colors.white, // underline indicator
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
+          indicatorColor: Colors.white,
           tabs: const [
             Tab(text: "Available"),
             Tab(text: "Accepted"),

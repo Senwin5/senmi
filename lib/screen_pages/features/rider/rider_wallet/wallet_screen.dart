@@ -381,8 +381,9 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text("Wallet"),
+        title: const Text("Wallet", style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.deepPurple,
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(icon: const Icon(Icons.refresh), onPressed: fetchWallet),
         ],
@@ -400,7 +401,7 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                       padding: const EdgeInsets.all(20),
                       decoration: const BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [Colors.deepPurple, Colors.deepPurpleAccent],
+                          colors: [Colors.deepPurple, Colors.deepPurple],
                         ),
                         borderRadius: BorderRadius.vertical(
                           bottom: Radius.circular(25),
@@ -448,7 +449,10 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                           ElevatedButton.icon(
                             onPressed: balance <= 0 ? null : withdraw,
                             icon: const Icon(Icons.arrow_upward),
-                            label: const Text("Withdraw"),
+                            label: const Text(
+                              "Withdraw",
+                              style: TextStyle(color: Colors.white),
+                            ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.green,
                             ),

@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: Colors.black,
         cardColor: Colors.grey[900],
-      ),  
+      ),
       home: const SplashScreen(),
     );
   }

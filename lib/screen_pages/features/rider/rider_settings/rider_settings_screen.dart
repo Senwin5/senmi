@@ -109,7 +109,10 @@ class _RiderSettingsScreenState extends State<RiderSettingsScreen> {
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [Colors.deepPurple, Colors.blue],
+                      colors: [
+                        Color.fromARGB(255, 134, 76, 234),
+                        Colors.deepPurple,
+                      ],
                     ),
                     borderRadius: BorderRadius.circular(18),
                   ),
