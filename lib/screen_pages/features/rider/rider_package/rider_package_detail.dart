@@ -32,6 +32,8 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
   bool loading = true;
   bool accepting = false;
 
+  String? errorMessage;
+
   // 🔥 START TRACKING FUNCTION
   void startLiveTracking() {
     _positionStream =
@@ -83,14 +85,24 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
   }
 
   Future<void> loadPackage() async {
-    setState(() => loading = true);
-
-    final res = await ApiService.getPackage(widget.packageId);
-
     setState(() {
-      package = res;
-      loading = false;
+      loading = true;
+      errorMessage = null;
     });
+
+    try {
+      final res = await ApiService.getPackage(widget.packageId);
+
+      setState(() {
+        package = res;
+        loading = false;
+      });
+    } catch (e) {
+      setState(() {
+        loading = false;
+        errorMessage = "Unable to load package details";
+      });
+    }
   }
 
   Future<void> callNumber(String phone) async {
@@ -130,8 +142,39 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    if (package == null) {
-      return const Scaffold(body: Center(child: Text("Package not found")));
+    if (errorMessage != null) {
+      return Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.cloud_off, size: 80, color: Colors.deepPurple),
+                const SizedBox(height: 20),
+                Text(
+                  errorMessage!,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  "Check your internet connection and try again",
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton.icon(
+                  onPressed: loadPackage,
+                  icon: const Icon(Icons.refresh),
+                  label: const Text("Retry"),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
     }
 
     final riderEarning = _toDouble(package!['rider_earning']);

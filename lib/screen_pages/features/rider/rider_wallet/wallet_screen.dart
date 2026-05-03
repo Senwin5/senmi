@@ -18,6 +18,7 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
   List transactions = [];
   bool loading = true;
   bool showBalance = true;
+  String? errorMessage;
 
   @override
   void initState() {
@@ -26,7 +27,10 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
   }
 
   Future fetchWallet() async {
-    setState(() => loading = true);
+    setState(() {
+      loading = true;
+      errorMessage = null;
+    });
 
     try {
       final wallet = await ApiService.getWallet();
@@ -52,10 +56,10 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
     } catch (e) {
       if (!mounted) return;
 
-      setState(() => loading = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Failed to load wallet: $e")));
+      setState(() {
+        loading = false;
+        errorMessage = "Couldn't load wallet";
+      });
     }
   }
 
@@ -378,6 +382,54 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (errorMessage != null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text("Wallet", style: TextStyle(color: Colors.white)),
+          backgroundColor: Colors.deepPurple,
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.account_balance_wallet_outlined,
+                  size: 80,
+                  color: Colors.deepPurple,
+                ),
+                const SizedBox(height: 20),
+
+                Text(
+                  errorMessage!,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+
+                const SizedBox(height: 10),
+
+                const Text(
+                  "Check your internet connection and try again",
+                  textAlign: TextAlign.center,
+                ),
+
+                const SizedBox(height: 20),
+
+                ElevatedButton.icon(
+                  onPressed: fetchWallet,
+                  icon: const Icon(Icons.refresh),
+                  label: const Text("Retry"),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(

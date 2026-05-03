@@ -68,10 +68,38 @@ class _RiderHomeState extends State<RiderHome> {
       });
     } catch (e) {
       setState(() => loading = false);
+
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Error loading data: $e")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.all(16),
+            backgroundColor: Colors.deepPurple,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            content: Row(
+              children: const [
+                Icon(Icons.wifi_off_rounded, color: Colors.white),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    "Unable to load dashboard.\nCheck your connection and try again.",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            action: SnackBarAction(
+              label: "Retry",
+              textColor: Colors.white,
+              onPressed: loadData,
+            ),
+          ),
+        );
       }
     }
   }
