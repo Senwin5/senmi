@@ -523,7 +523,10 @@ class ApiService {
   ) async {
     final response = await http.post(
       Uri.parse("$baseUrl/packages/$packageId/rate/"),
-      headers: await ApiService.getAuthHeaders(),
+      headers: {
+        ...(await ApiService.getAuthHeaders()),
+        "Content-Type": "application/json",
+      },
       body: jsonEncode({"rating": rating, "comment": comment}),
     );
 

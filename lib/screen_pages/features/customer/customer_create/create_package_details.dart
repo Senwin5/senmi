@@ -19,7 +19,8 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
   Map<String, dynamic>? package;
   bool loading = true;
   bool isPaying = false;
-  bool isDeleting = false; // ✅ ADDED
+  bool isDeleting = false;
+  bool hasRated = false;
 
   @override
   void initState() {
@@ -51,6 +52,91 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
         setState(() => loading = false);
       }
     }
+  }
+
+  void _showRateDialog() {
+    int selectedRating = 5;
+    final commentController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (_) => StatefulBuilder(
+        builder: (context, setStateDialog) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: const Text("Rate Rider"),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(5, (index) {
+                    return IconButton(
+                      icon: Icon(
+                        index < selectedRating ? Icons.star : Icons.star_border,
+                        color: Colors.amber,
+                        size: 32,
+                      ),
+                      onPressed: () {
+                        setStateDialog(() {
+                          selectedRating = index + 1;
+                        });
+                      },
+                    );
+                  }),
+                ),
+
+                const SizedBox(height: 12),
+
+                TextField(
+                  controller: commentController,
+                  maxLines: 3,
+                  decoration: InputDecoration(
+                    hintText: "Leave a comment",
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("Cancel"),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  final success = await ApiService.rateRider(
+                    widget.packageId,
+                    selectedRating.toString(),
+                    commentController.text,
+                  );
+                  if (success) {
+                    setState(() => hasRated = true);
+                  }
+
+                  Navigator.pop(context);
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        success
+                            ? "Rating submitted successfully"
+                            : "Failed to submit rating",
+                      ),
+                    ),
+                  );
+                },
+                child: const Text("Submit"),
+              ),
+            ],
+          );
+        },
+      ),
+    );
   }
 
   // ✅ ADDED: DELETE FUNCTION
@@ -331,16 +417,35 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
                 ),
               ),
 
-            if (status == 'delivered')
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
+            if (status == 'delivered' && !hasRated)
+              Column(
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                      ),
+                      child: const Text("Delivered"),
+                    ),
                   ),
-                  child: const Text("Delivered"),
-                ),
+
+                  const SizedBox(height: 12),
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.star),
+                      label: const Text("Rate Rider"),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.deepPurple,
+                        foregroundColor: Colors.white,
+                      ),
+                      onPressed: _showRateDialog,
+                    ),
+                  ),
+                ],
               )
             else if (paymentDone)
               SizedBox(
