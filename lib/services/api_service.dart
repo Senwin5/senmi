@@ -514,8 +514,8 @@ class ApiService {
   }
 
   // ==========================
-  // ⭐ RATE RIDER
-  // ==========================
+  // RATE RIDER
+  
   static Future<bool> rateRider(
     String packageId,
     String rating,
