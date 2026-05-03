@@ -50,6 +50,10 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
     _formKey.currentState?.reset();
   }
 
+  Future<void> _refreshPage() async {
+    _resetForm();
+  }
+
   @override
   void dispose() {
     pickupController.dispose();
@@ -223,8 +227,19 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("❌ ${res['error'] ?? 'Package creation failed'}"),
-            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.all(16),
+            backgroundColor: Colors.deepPurple,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+            content: Text(
+              "Please complete all required fields",
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         );
       }
@@ -268,181 +283,185 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
         centerTitle: true,
         elevation: 0,
         actions: [
-          IconButton(icon: const Icon(Icons.refresh), onPressed: _resetForm),
+          IconButton(icon: const Icon(Icons.refresh), onPressed: _refreshPage),
         ],
       ),
 
       body: loading
           ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // 🔥 ONLY ADDITION (ORDER + HISTORY UI)
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        GestureDetector(
-                          onTap: () {
-                            _resetForm();
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.deepPurple,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Text(
-                              "Order",
-                              style: TextStyle(color: Colors.white),
+          : RefreshIndicator(
+              onRefresh: _refreshPage,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(16),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 🔥 ONLY ADDITION (ORDER + HISTORY UI)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              _resetForm();
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.deepPurple,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Text(
+                                "Order",
+                                style: TextStyle(color: Colors.white),
+                              ),
                             ),
                           ),
-                        ),
 
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const HistoryScreen(),
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const HistoryScreen(),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
                               ),
-                            );
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
+                              decoration: BoxDecoration(
+                                color: Colors.grey,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Text(
+                                "History",
+                                style: TextStyle(color: Colors.white),
+                              ),
                             ),
-                            decoration: BoxDecoration(
-                              color: Colors.grey,
-                              borderRadius: BorderRadius.circular(8),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 10),
+
+                      const Text(
+                        "Receiver Details",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+
+                      _buildTextField(
+                        "Receiver Name",
+                        onSaved: (v) => receiverName = v ?? '',
+                      ),
+                      _buildTextField(
+                        "Receiver Phone",
+                        type: TextInputType.phone,
+                        onSaved: (v) => receiverPhone = v ?? '',
+                      ),
+
+                      const SizedBox(height: 10),
+
+                      const Text(
+                        "Package Info",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+
+                      _buildTextField(
+                        "Description",
+                        onSaved: (v) => description = v ?? '',
+                      ),
+
+                      const SizedBox(height: 10),
+
+                      const Text(
+                        "Locations",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+
+                      GestureDetector(
+                        onTap: () => _pickLocation(isPickup: true),
+                        child: AbsorbPointer(
+                          child: _buildTextField(
+                            "Pickup Address",
+                            controller: pickupController,
+                          ),
+                        ),
+                      ),
+
+                      GestureDetector(
+                        onTap: () => _pickLocation(isPickup: false),
+                        child: AbsorbPointer(
+                          child: _buildTextField(
+                            "Delivery Address",
+                            controller: deliveryController,
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: calculatingPrice ? null : _calculatePrice,
+                          child: calculatingPrice
+                              ? const CircularProgressIndicator(
+                                  color: Colors.white,
+                                )
+                              : const Text("Calculate Price"),
+                        ),
+                      ),
+
+                      if (estimatedPrice != null) ...[
+                        const SizedBox(height: 20),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(18),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Colors.green, Colors.greenAccent],
                             ),
-                            child: const Text(
-                              "History",
-                              style: TextStyle(color: Colors.white),
-                            ),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Column(
+                            children: [
+                              Text(
+                                "Distance: ${distanceKm?.toStringAsFixed(2)} km",
+                              ),
+                              Text("₦${estimatedPrice!.toStringAsFixed(0)}"),
+                            ],
                           ),
                         ),
                       ],
-                    ),
 
-                    const SizedBox(height: 10),
+                      const SizedBox(height: 30),
 
-                    const Text(
-                      "Receiver Details",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-
-                    _buildTextField(
-                      "Receiver Name",
-                      onSaved: (v) => receiverName = v ?? '',
-                    ),
-                    _buildTextField(
-                      "Receiver Phone",
-                      type: TextInputType.phone,
-                      onSaved: (v) => receiverPhone = v ?? '',
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    const Text(
-                      "Package Info",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-
-                    _buildTextField(
-                      "Description",
-                      onSaved: (v) => description = v ?? '',
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    const Text(
-                      "Locations",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-
-                    GestureDetector(
-                      onTap: () => _pickLocation(isPickup: true),
-                      child: AbsorbPointer(
-                        child: _buildTextField(
-                          "Pickup Address",
-                          controller: pickupController,
-                        ),
-                      ),
-                    ),
-
-                    GestureDetector(
-                      onTap: () => _pickLocation(isPickup: false),
-                      child: AbsorbPointer(
-                        child: _buildTextField(
-                          "Delivery Address",
-                          controller: deliveryController,
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: calculatingPrice ? null : _calculatePrice,
-                        child: calculatingPrice
-                            ? const CircularProgressIndicator(
-                                color: Colors.white,
-                              )
-                            : const Text("Calculate Price"),
-                      ),
-                    ),
-
-                    if (estimatedPrice != null) ...[
-                      const SizedBox(height: 20),
-                      Container(
+                      SizedBox(
                         width: double.infinity,
-                        padding: const EdgeInsets.all(18),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Colors.green, Colors.greenAccent],
-                          ),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Column(
-                          children: [
-                            Text(
-                              "Distance: ${distanceKm?.toStringAsFixed(2)} km",
-                            ),
-                            Text("₦${estimatedPrice!.toStringAsFixed(0)}"),
-                          ],
+                        child: ElevatedButton(
+                          onPressed: _createPackage,
+                          child: const Text("Create Package"),
                         ),
                       ),
                     ],
-
-                    const SizedBox(height: 30),
-
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _createPackage,
-                        child: const Text("Create Package"),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
