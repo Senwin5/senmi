@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:senmi/services/api_service.dart';
 import '../../../../registration/auth/login.dart';
@@ -14,7 +16,7 @@ class RiderDetailsProfile extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
-        leading: icon != null ? Icon(icon, color: Colors.blue) : null,
+        leading: icon != null ? Icon(icon, color: Colors.deepPurple) : null,
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Text(value),
       ),
@@ -79,11 +81,12 @@ class RiderDetailsProfile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F2F2),
+      //backgroundColor: const Color(0xFFF2F2F2),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text("Rider Profile"),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+        foregroundColor: Theme.of(context).textTheme.bodyLarge?.color,
         elevation: 1,
       ),
       body: SingleChildScrollView(
@@ -93,7 +96,7 @@ class RiderDetailsProfile extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 55,
-              backgroundColor: Colors.blue.shade200,
+              backgroundColor: Colors.deepPurple,
               backgroundImage: rider!['profile_picture'] != null
                   ? NetworkImage(
                       ApiService.baseUrl.replaceAll('/api', '') +
@@ -105,10 +108,10 @@ class RiderDetailsProfile extends StatelessWidget {
 
             Text(
               rider!['username'] ?? "Rider",
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: Colors.black87,
+                color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
             ),
 
@@ -116,7 +119,9 @@ class RiderDetailsProfile extends StatelessWidget {
 
             Text(
               rider!['email'] ?? "",
-              style: const TextStyle(color: Colors.black54),
+              style: TextStyle(
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+              ),
             ),
 
             const SizedBox(height: 24),

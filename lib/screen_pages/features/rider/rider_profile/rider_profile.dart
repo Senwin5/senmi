@@ -35,11 +35,11 @@ class _RiderProfileScreenState extends State<RiderProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F2F2),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text("Rider Profile"),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+        foregroundColor: Theme.of(context).textTheme.bodyLarge?.color,
         elevation: 1,
       ),
       body: loading
@@ -61,7 +61,7 @@ class _RiderProfileScreenState extends State<RiderProfileScreen> {
                   children: [
                     CircleAvatar(
                       radius: 55,
-                      backgroundColor: Colors.blue.shade200,
+                      backgroundColor: Colors.deepPurple,
                       backgroundImage: rider!['profile_picture'] != null
                           ? NetworkImage(
                               ApiService.baseUrl.replaceAll('/api', '') +
@@ -92,7 +92,7 @@ class _RiderProfileScreenState extends State<RiderProfileScreen> {
                     const SizedBox(height: 8),
                     const Text(
                       "Tap to view full profile",
-                      style: TextStyle(color: Colors.blue),
+                      style: TextStyle(color: Colors.deepPurple),
                     ),
                   ],
                 ),
