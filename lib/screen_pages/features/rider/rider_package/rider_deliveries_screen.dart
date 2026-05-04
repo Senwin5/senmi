@@ -249,6 +249,7 @@ class _RiderDeliveriesScreenState extends State<RiderDeliveriesScreen>
       appBar: AppBar(
         title: const Text("Packages", style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.deepPurple,
+        iconTheme: const IconThemeData(color: Colors.white),
 
         // ✅ ADDED: refresh icon
         actions: [

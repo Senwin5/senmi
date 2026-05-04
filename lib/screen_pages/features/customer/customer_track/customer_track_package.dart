@@ -59,6 +59,9 @@ class _TrackingScreenState extends State<TrackingScreen>
   }
 
   String? riderPhone;
+  String? riderName;
+  String? riderImage;
+  String? vehicleNumber;
 
   @override
   void initState() {
@@ -94,6 +97,9 @@ class _TrackingScreenState extends State<TrackingScreen>
 
       status = pkg['status'] ?? status;
       riderPhone = pkg['rider_phone'];
+      riderName = pkg['rider_name'];
+      riderImage = pkg['rider_profile_picture'];
+      vehicleNumber = pkg['vehicle_number'];
 
       if (pkg['delivery_code'] != null) {
         deliveryCode = pkg['delivery_code'].toString();
@@ -360,17 +366,62 @@ class _TrackingScreenState extends State<TrackingScreen>
 
                       if (riderPhone != null &&
                           (status == "accepted" || status == "picked_up"))
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton.icon(
-                            onPressed: () => callRider(riderPhone!),
-                            icon: const Icon(Icons.call),
-                            label: const Text("Call Rider"),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.deepPurple,
-                              foregroundColor: Colors.white,
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                CircleAvatar(
+                                  radius: 25,
+                                  backgroundImage: riderImage != null
+                                      ? NetworkImage(riderImage!)
+                                      : null,
+                                  child: riderImage == null
+                                      ? const Icon(Icons.person)
+                                      : null,
+                                ),
+
+                                const SizedBox(width: 12),
+
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        riderName ?? "Rider",
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                      Text(
+                                        vehicleNumber ?? "No vehicle number",
+                                        style: const TextStyle(
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
+
+                            const SizedBox(height: 10),
+
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                onPressed: () => callRider(riderPhone!),
+                                icon: const Icon(Icons.call),
+                                label: const Text("Call Rider"),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.deepPurple,
+                                  foregroundColor: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                     ],
                   ),
