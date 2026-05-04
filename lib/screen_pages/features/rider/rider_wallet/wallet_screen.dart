@@ -15,10 +15,14 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
   double totalEarned = 0;
   int totalDeliveries = 0;
 
-  List transactions = [];
+  List<Map<String, dynamic>> transactions = [];
+
   bool loading = true;
   bool showBalance = true;
   String? errorMessage;
+
+  double get avgEarning =>
+      totalDeliveries == 0 ? 0 : totalEarned / totalDeliveries;
 
   @override
   void initState() {
@@ -40,7 +44,7 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
       if (!mounted) return;
 
       setState(() {
-        balance = wallet['balance']?.toDouble() ?? 0;
+        balance = (wallet['balance'] ?? 0).toDouble();
         totalEarned = (earningsData['total_earnings'] ?? 0).toDouble();
 
         totalDeliveries =
@@ -50,7 +54,7 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                     0)
                 .toInt();
 
-        transactions = tx;
+        transactions = List<Map<String, dynamic>>.from(tx);
         loading = false;
       });
     } catch (e) {
@@ -73,8 +77,6 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
 
     try {
       banks = await ApiService.getBanks();
-
-      // ✅ FIX: ensure all bank codes are strings
       banks = banks.map((b) {
         b['code'] = b['code'].toString();
         return b;
@@ -89,9 +91,6 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
       builder: (_) => StatefulBuilder(
         builder: (context, setStateDialog) {
           return Padding(
@@ -101,119 +100,106 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
               right: 16,
               top: 20,
             ),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                    "Withdraw",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  "Withdraw",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+
+                const SizedBox(height: 15),
+
+                TextField(
+                  controller: amountController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: "Amount",
+                    prefixText: "₦ ",
                   ),
+                ),
 
-                  const SizedBox(height: 15),
-
-                  TextField(
-                    controller: amountController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: "Amount",
-                      prefixText: "₦ ",
-                    ),
+                TextField(
+                  controller: accountController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: "Account Number",
                   ),
+                ),
 
-                  const SizedBox(height: 10),
+                DropdownButtonFormField<String>(
+                  hint: const Text("Select Bank"),
+                  items: banks.map<DropdownMenuItem<String>>((bank) {
+                    return DropdownMenuItem(
+                      value: bank['code'],
+                      child: Text(bank['name']),
+                    );
+                  }).toList(),
+                  onChanged: (val) => selectedBankCode = val,
+                ),
 
-                  TextField(
-                    controller: accountController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: "Account Number",
-                    ),
+                const SizedBox(height: 20),
+
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: isLoading
+                        ? null
+                        : () async {
+                            final amt =
+                                double.tryParse(amountController.text) ?? 0;
+
+                            if (amt <= 0 ||
+                                accountController.text.isEmpty ||
+                                selectedBankCode == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("Fill all fields"),
+                                ),
+                              );
+                              return;
+                            }
+
+                            if (amt > balance) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("Insufficient balance"),
+                                ),
+                              );
+                              return;
+                            }
+
+                            setStateDialog(() => isLoading = true);
+
+                            try {
+                              await ApiService.withdraw(
+                                amount: amt,
+                                accountNumber: accountController.text,
+                                bankCode: selectedBankCode!,
+                              );
+
+                              if (!mounted) return;
+
+                              Navigator.pop(context);
+                              fetchWallet();
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("Withdrawal successful"),
+                                ),
+                              );
+                            } catch (e) {
+                              setStateDialog(() => isLoading = false);
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text("Error: $e")),
+                              );
+                            }
+                          },
+                    child: const Text("Withdraw"),
                   ),
-
-                  const SizedBox(height: 10),
-
-                  DropdownButtonFormField<String>(
-                    hint: const Text("Select Bank"),
-                    initialValue: selectedBankCode,
-                    isExpanded: true,
-                    items: banks.map<DropdownMenuItem<String>>((bank) {
-                      return DropdownMenuItem(
-                        value: bank['code'].toString(), // ✅ FIX
-                        child: Text(
-                          bank['name'],
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      );
-                    }).toList(),
-                    onChanged: (val) {
-                      setStateDialog(() {
-                        selectedBankCode = val;
-                      });
-                    },
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  if (isLoading) const CircularProgressIndicator(),
-
-                  const SizedBox(height: 10),
-
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: isLoading
-                          ? null
-                          : () async {
-                              final amt =
-                                  double.tryParse(amountController.text) ?? 0;
-
-                              if (amt <= 0 ||
-                                  accountController.text.isEmpty ||
-                                  selectedBankCode == null) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text("Fill all fields correctly"),
-                                  ),
-                                );
-                                return;
-                              }
-
-                              setStateDialog(() => isLoading = true);
-
-                              try {
-                                await ApiService.withdraw(
-                                  amount: amt,
-                                  accountNumber: accountController.text,
-                                  bankCode: selectedBankCode!
-                                      .toString(), // ✅ FIX
-                                );
-
-                                if (!mounted) return;
-
-                                Navigator.pop(context);
-                                fetchWallet();
-
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text("Withdrawal successful"),
-                                  ),
-                                );
-                              } catch (e) {
-                                setStateDialog(() => isLoading = false);
-
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text("Error: $e")),
-                                );
-                              }
-                            },
-                      child: const Text("Withdraw"),
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-                ],
-              ),
+                ),
+              ],
             ),
           );
         },
@@ -583,21 +569,21 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                               padding: const EdgeInsets.symmetric(vertical: 20),
                               child: Column(
                                 children: [
-                                  const Icon(
+                                  Icon(
                                     Icons.payments,
                                     size: 30,
                                     color: Colors.white,
                                   ),
-                                  const SizedBox(height: 8),
-                                  const Text(
-                                    "Per Delivery",
+                                  SizedBox(height: 8),
+                                  Text(
+                                    "Avg Earning / Delivery",
                                     style: TextStyle(color: Colors.white70),
                                   ),
-                                  const SizedBox(height: 4),
+                                  SizedBox(height: 4),
                                   Text(
                                     totalDeliveries == 0
                                         ? "₦0"
-                                        : "₦${(totalEarned / totalDeliveries).toStringAsFixed(0)}",
+                                        : "₦${avgEarning.toStringAsFixed(0)}",
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 18,
@@ -613,33 +599,29 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                     ),
                     const SizedBox(height: 25),
                     ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
                       itemCount: transactions.length,
                       itemBuilder: (context, index) {
                         final tx = transactions[index];
-                        final color = getTransactionColor(tx['type'] ?? '');
-                        final icon = getTransactionIcon(tx['type'] ?? '');
 
-                        return Card(
-                          margin: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 6,
+                        final type = tx['type'] ?? '';
+                        final amount = tx['amount'] ?? 0;
+                        final date = tx['date'] ?? '';
+
+                        final color = getTransactionColor(type);
+                        final icon = getTransactionIcon(type);
+
+                        return ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: color.withOpacity(0.2),
+                            child: Icon(icon, color: color),
                           ),
-                          child: ListTile(
-                            leading: CircleAvatar(
-                              // ignore: deprecated_member_use
-                              backgroundColor: color.withOpacity(0.2),
-                              child: Icon(icon, color: color),
-                            ),
-                            title: Text(tx['type'] ?? ''),
-                            subtitle: Text(tx['date'] ?? ''),
-                            trailing: Text(
-                              "₦${tx['amount']}",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: color,
-                              ),
+                          title: Text(type),
+                          subtitle: Text(date),
+                          trailing: Text(
+                            "₦$amount",
+                            style: TextStyle(
+                              color: color,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         );

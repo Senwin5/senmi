@@ -515,7 +515,7 @@ class ApiService {
 
   // ==========================
   // RATE RIDER
-  
+
   static Future<bool> rateRider(
     String packageId,
     String rating,
@@ -536,22 +536,22 @@ class ApiService {
   // ==========================
   // 💰 WALLET
   // ==========================
-static Future<Map<String, dynamic>> getWallet() async {
-  final response = await http.get(
-    Uri.parse("$baseUrl/rider/wallet/"),
-    headers: await ApiService.getAuthHeaders(),
-  );
+  static Future<Map<String, dynamic>> getWallet() async {
+    final response = await http.get(
+      Uri.parse("$baseUrl/rider/wallet/"),
+      headers: await ApiService.getAuthHeaders(),
+    );
 
-  debugPrint("WALLET STATUS: ${response.statusCode}");
-  debugPrint("WALLET BODY: ${response.body}");
+    debugPrint("WALLET STATUS: ${response.statusCode}");
+    debugPrint("WALLET BODY: ${response.body}");
 
-  final data = jsonDecode(response.body);
+    final data = jsonDecode(response.body);
 
-  return {
-    "balance": (data['balance'] ?? 0).toDouble(),
-    "total_earned": (data['total_earned'] ?? 0).toDouble(),
-  };
-}
+    return {
+      "balance": (data['balance'] ?? 0).toDouble(),
+      "total_earnings": (data['total_earned'] ?? 0).toDouble(),
+    };
+  }
 
   // ==========================
   // 💸 WITHDRAW
@@ -587,7 +587,7 @@ static Future<Map<String, dynamic>> getWallet() async {
     }
   }
 
-  static Future<List> getBanks() async {
+  static Future<List<Map<String, dynamic>>> getBanks() async {
     final res = await http.get(
       Uri.parse("$baseUrl/banks/"),
       headers: await getAuthHeaders(),
@@ -595,7 +595,11 @@ static Future<Map<String, dynamic>> getWallet() async {
 
     final data = jsonDecode(res.body);
 
-    return data['data']; // ✅ IMPORTANT
+    if (data is Map && data['data'] is List) {
+      return List<Map<String, dynamic>>.from(data['data']);
+    }
+
+    return [];
   }
 
   static Future<String> resolveAccount({
