@@ -536,19 +536,22 @@ class ApiService {
   // ==========================
   // 💰 WALLET
   // ==========================
-  static Future<Map<String, dynamic>> getWallet() async {
-    final response = await http.get(
-      Uri.parse("$baseUrl/rider/wallet/"),
-      headers: await ApiService.getAuthHeaders(),
-    );
+static Future<Map<String, dynamic>> getWallet() async {
+  final response = await http.get(
+    Uri.parse("$baseUrl/rider/wallet/"),
+    headers: await ApiService.getAuthHeaders(),
+  );
 
-    final data = jsonDecode(response.body);
+  debugPrint("WALLET STATUS: ${response.statusCode}");
+  debugPrint("WALLET BODY: ${response.body}");
 
-    return {
-      "balance": (data['balance'] ?? 0).toDouble(),
-      "total_earned": (data['total_earned'] ?? 0).toDouble(),
-    };
-  }
+  final data = jsonDecode(response.body);
+
+  return {
+    "balance": (data['balance'] ?? 0).toDouble(),
+    "total_earned": (data['total_earned'] ?? 0).toDouble(),
+  };
+}
 
   // ==========================
   // 💸 WITHDRAW
