@@ -1,4 +1,4 @@
-// ignore_for_file: use_build_context_synchronously
+// ignore_for_file: use_build_context_synchronously, deprecated_member_use
 
 import 'dart:async';
 import 'dart:convert';
@@ -264,6 +264,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                   borderRadius: BorderRadius.circular(32),
                   boxShadow: [
                     BoxShadow(
+                      // ignore: duplicate_ignore
                       // ignore: deprecated_member_use
                       color: Colors.black.withOpacity(.18),
                       blurRadius: 35,
@@ -333,95 +334,202 @@ class _TrackingScreenState extends State<TrackingScreen>
 
                       const SizedBox(height: 25),
 
-                      Row(
-                        children: [
-                          Icon(Icons.local_shipping, color: Colors.deepPurple),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              status,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
+                      // Status Card
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.deepPurple.withOpacity(0.06),
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(
+                            color: Colors.deepPurple.withOpacity(0.15),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 52,
+                              height: 52,
+                              decoration: BoxDecoration(
+                                color: Colors.deepPurple,
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Icon(
+                                status == "picked_up"
+                                    ? Icons.two_wheeler
+                                    : Icons.local_shipping,
+                                color: Colors.white,
+                                size: 28,
                               ),
                             ),
-                          ),
-                        ],
-                      ),
 
-                      const SizedBox(height: 0),
+                            const SizedBox(width: 14),
 
-                      Text(
-                        deliveryCode != null
-                            ? "Delivery Code: $deliveryCode"
-                            : "Delivery code will appear when rider is near",
-                        style: TextStyle(
-                          color: deliveryCode != null
-                              ? Colors.green
-                              : Colors.orange,
-                          fontWeight: FontWeight.w600,
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "Current Status",
+                                    style: TextStyle(
+                                      color: Colors.grey.shade600,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    status.replaceAll("_", " ").toUpperCase(),
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 16),
 
-                      if (riderPhone != null &&
-                          (status == "accepted" || status == "picked_up"))
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      const SizedBox(height: 22),
+
+                      // Delivery Code Card
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: deliveryCode != null
+                              ? Colors.green.withOpacity(0.08)
+                              : Colors.orange.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        child: Row(
                           children: [
-                            Row(
-                              children: [
-                                CircleAvatar(
-                                  radius: 25,
-                                  backgroundImage: riderImage != null
-                                      ? NetworkImage(riderImage!)
-                                      : null,
-                                  child: riderImage == null
-                                      ? const Icon(Icons.person)
-                                      : null,
-                                ),
-
-                                const SizedBox(width: 12),
-
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        riderName ?? "Rider",
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                        ),
-                                      ),
-                                      Text(
-                                        vehicleNumber ?? "No vehicle number",
-                                        style: const TextStyle(
-                                          color: Colors.grey,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
+                            Icon(
+                              deliveryCode != null
+                                  ? Icons.verified
+                                  : Icons.lock_clock,
+                              color: deliveryCode != null
+                                  ? Colors.green
+                                  : Colors.orange,
                             ),
-
-                            const SizedBox(height: 10),
-
-                            SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton.icon(
-                                onPressed: () => callRider(riderPhone!),
-                                icon: const Icon(Icons.call),
-                                label: const Text("Call Rider"),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.deepPurple,
-                                  foregroundColor: Colors.white,
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                deliveryCode != null
+                                    ? "Delivery Code: $deliveryCode"
+                                    : "Delivery code will appear when rider is near",
+                                style: TextStyle(
+                                  color: deliveryCode != null
+                                      ? Colors.green.shade700
+                                      : Colors.orange.shade700,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 15,
                                 ),
                               ),
                             ),
                           ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      if (riderPhone != null &&
+                          (status == "accepted" || status == "picked_up"))
+                        Container(
+                          padding: const EdgeInsets.all(18),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(22),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 16,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                "Your Rider",
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.grey,
+                                ),
+                              ),
+
+                              const SizedBox(height: 16),
+
+                              Row(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 30,
+                                    backgroundColor: Colors.deepPurple.shade50,
+                                    backgroundImage: riderImage != null
+                                        ? NetworkImage(riderImage!)
+                                        : null,
+                                    child: riderImage == null
+                                        ? const Icon(
+                                            Icons.person,
+                                            size: 28,
+                                            color: Colors.deepPurple,
+                                          )
+                                        : null,
+                                  ),
+
+                                  const SizedBox(width: 16),
+
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          riderName ?? "Rider",
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 18,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          vehicleNumber ?? "No vehicle number",
+                                          style: TextStyle(
+                                            color: Colors.grey.shade600,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 18),
+
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton.icon(
+                                  onPressed: () => callRider(riderPhone!),
+                                  icon: const Icon(Icons.call),
+                                  label: const Text("Call Rider"),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.deepPurple,
+                                    foregroundColor: Colors.white,
+                                    elevation: 0,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 15,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                     ],
                   ),
