@@ -505,46 +505,6 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
                       );
                     }
 
-                    if (status == 'delivered') {
-                      return Column(
-                        children: [
-                          const Icon(
-                            Icons.check_circle,
-                            size: 80,
-                            color: Colors.green,
-                          ),
-                          const SizedBox(height: 10),
-                          const Text(
-                            "Delivery Completed",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: () {
-                                Navigator.popUntil(
-                                  context,
-                                  (route) => route.isFirst,
-                                );
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.deepPurple,
-                              ),
-                              child: const Text(
-                                "Back to Home",
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ),
-                          ),
-                        ],
-                      );
-                    }
-
                     return ElevatedButton(
                       onPressed: null,
                       child: Text("Unknown: $status"),
