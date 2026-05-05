@@ -599,6 +599,8 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                     ),
                     const SizedBox(height: 25),
                     ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
                       itemCount: transactions.length,
                       itemBuilder: (context, index) {
                         final tx = transactions[index];
@@ -612,7 +614,7 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
 
                         return ListTile(
                           leading: CircleAvatar(
-                            backgroundColor: color.withOpacity(0.2),
+                            backgroundColor: color.withValues(alpha: 0.2),
                             child: Icon(icon, color: color),
                           ),
                           title: Text(type),
