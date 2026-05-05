@@ -15,6 +15,7 @@ class ApiService {
   static String? refreshToken;
   static String? userRole;
   static String? username;
+  static String? accessToken;
   static bool isAdminUser = false;
 
   // ✅ Track login state
@@ -996,9 +997,7 @@ class ApiService {
     }
   }
 
-  static Future<dynamic> getPaymentLink(Map<String, Object> map) async {
-    return null;
-  }
+
 
   static Future<dynamic> getUserPackages() async {
     return [];
