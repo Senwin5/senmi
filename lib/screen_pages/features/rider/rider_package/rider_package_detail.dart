@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:senmi/screen_pages/features/rider/rider_track/rider_track_screen.dart';
-import 'package:senmi/screen_pages/features/rider/success/delivery_complete_screen.dart';
 import 'package:senmi/services/api_service.dart';
 import 'package:geolocator/geolocator.dart';
 import 'dart:async';
@@ -34,7 +33,6 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
   bool accepting = false;
 
   String? errorMessage;
-  bool _deliveredHandled = false;
 
   // 🔥 START TRACKING FUNCTION
   void startLiveTracking() {
@@ -503,77 +501,47 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
                           ),
 
                           const SizedBox(height: 10),
-
-                          // NEW COMPLETE DELIVERY BUTTON
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: () async {
-                                final success = await ApiService.updateStatus(
-                                  widget.packageId,
-                                  "delivered",
-                                );
-
-                                if (success) {
-                                  stopTracking();
-
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) =>
-                                          const DeliveryCompleteScreen(),
-                                    ),
-                                  );
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.deepPurple,
-                              ),
-                              child: const Text(
-                                "Complete Delivery",
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ),
-                          ),
                         ],
                       );
                     }
 
                     if (status == 'delivered') {
-                      if (!_deliveredHandled) {
-                        _deliveredHandled = true;
-
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          Future.delayed(const Duration(seconds: 5), () {
-                            if (!mounted) return;
-                            goHomeAfterDelivery();
-                          });
-                        });
-                      }
-
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: const [
-                            Icon(
-                              Icons.check_circle,
-                              size: 80,
-                              color: Colors.green,
+                      return Column(
+                        children: [
+                          const Icon(
+                            Icons.check_circle,
+                            size: 80,
+                            color: Colors.green,
+                          ),
+                          const SizedBox(height: 10),
+                          const Text(
+                            "Delivery Completed",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
                             ),
-                            SizedBox(height: 10),
-                            Text(
-                              "Delivery Completed",
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
+                          ),
+                          const SizedBox(height: 20),
+
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.popUntil(
+                                  context,
+                                  (route) => route.isFirst,
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.deepPurple,
+                              ),
+                              child: const Text(
+                                "Back to Home",
+                                style: TextStyle(color: Colors.white),
                               ),
                             ),
-                            SizedBox(height: 20),
-                            CircularProgressIndicator(),
-                            SizedBox(height: 10),
-                            Text("Returning to home..."),
-                          ],
-                        ),
+                          ),
+                        ],
                       );
                     }
 

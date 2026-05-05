@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:senmi/screen_pages/features/rider/success/delivery_complete_screen.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -156,33 +157,52 @@ class _RiderTrackScreenState extends State<RiderTrackScreen> {
   // 🔐 CONFIRM DELIVERY
   // =========================
   Future<void> _submitCode() async {
-    final code = _codeController.text.trim();
+  final code = _codeController.text.trim();
 
-    if (code.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Enter delivery code")));
-      return;
-    }
-
-    setState(() => _isLoading = true);
-
-    final result = await ApiService.confirmDeliveryCode(widget.packageId, code);
-
-    setState(() => _isLoading = false);
-
-    if (result != null && result["success"] == true) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Delivery completed ✅")));
-
-      Navigator.pop(context, true);
-    } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Invalid code ❌")));
-    }
+  if (code.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Enter delivery code")),
+    );
+    return;
   }
+
+  setState(() => _isLoading = true);
+
+  final result = await ApiService.confirmDeliveryCode(
+    widget.packageId,
+    code,
+  );
+
+  setState(() => _isLoading = false);
+
+  if (result != null && result["success"] == true) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Delivery completed ✅")),
+    );
+
+    // ✅ STOP TRACKING
+    _positionStream?.cancel();
+
+    // ✅ CLOSE WEBSOCKET
+    wsSubscription?.cancel();
+    channel?.sink.close();
+
+    if (!mounted) return;
+
+    // ✅ GO TO SUCCESS SCREEN (NO BACK)
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const DeliveryCompleteScreen(),
+      ),
+      (route) => false,
+    );
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Invalid code ❌")),
+    );
+  }
+}
 
   @override
   void dispose() {
