@@ -6,14 +6,20 @@ import 'package:senmi/screen_pages/features/rider/rider_wallet/wallet_screen.dar
 import 'package:senmi/screen_pages/features/rider/rider_settings/rider_settings_screen.dart';
 
 class RiderBottomNav extends StatefulWidget {
-  const RiderBottomNav({super.key});
+  final int initialIndex;
+
+  const RiderBottomNav({
+    super.key,
+    this.initialIndex = 0, // ✅ DEFAULT VALUE
+  });
 
   @override
   State<RiderBottomNav> createState() => _RiderBottomNavState();
 }
 
 class _RiderBottomNavState extends State<RiderBottomNav> {
-  int _currentIndex = 0;
+  late int _currentIndex;
+  //int _currentIndex = 0;
   final darkModeNotifier = ValueNotifier<bool>(false);
 
   late final List<Widget> _screens;
@@ -21,6 +27,7 @@ class _RiderBottomNavState extends State<RiderBottomNav> {
   @override
   void initState() {
     super.initState();
+    _currentIndex = widget.initialIndex;
     _screens = [
       const RiderHome(),
       const RiderDeliveriesScreen(),

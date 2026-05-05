@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:senmi/screen_pages/features/rider/rider_wallet/wallet_screen.dart';
+import 'package:senmi/screen_pages/features/rider/rider_home_bottom/rider_bottom_nav.dart';
+
 
 class DeliveryCompleteScreen extends StatefulWidget {
   const DeliveryCompleteScreen({super.key});
@@ -31,7 +32,9 @@ class _DeliveryCompleteScreenState extends State<DeliveryCompleteScreen> {
   void _goToWallet() {
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (_) => const RiderWalletScreen()),
+      MaterialPageRoute(
+        builder: (_) => const RiderBottomNav(initialIndex: 2), // 👈 wallet tab
+      ),
       (route) => false,
     );
   }
