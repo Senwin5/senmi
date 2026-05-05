@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:senmi/screen_pages/features/rider/rider_track/rider_track_screen.dart';
+import 'package:senmi/screen_pages/features/rider/success/delivery_complete_screen.dart';
 import 'package:senmi/services/api_service.dart';
 import 'package:geolocator/geolocator.dart';
 import 'dart:async';
@@ -33,6 +34,7 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
   bool accepting = false;
 
   String? errorMessage;
+  bool _deliveredHandled = false;
 
   // 🔥 START TRACKING FUNCTION
   void startLiveTracking() {
@@ -471,6 +473,7 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
                               child: const Text("Track Delivery"),
                             ),
                           ),
+
                           const SizedBox(height: 10),
 
                           SizedBox(
@@ -498,23 +501,79 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
                               child: const Text("Call Receiver"),
                             ),
                           ),
+
                           const SizedBox(height: 10),
+
+                          // NEW COMPLETE DELIVERY BUTTON
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () async {
+                                final success = await ApiService.updateStatus(
+                                  widget.packageId,
+                                  "delivered",
+                                );
+
+                                if (success) {
+                                  stopTracking();
+
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          const DeliveryCompleteScreen(),
+                                    ),
+                                  );
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.deepPurple,
+                              ),
+                              child: const Text(
+                                "Complete Delivery",
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
+                          ),
                         ],
                       );
                     }
 
                     if (status == 'delivered') {
-                      Future.delayed(const Duration(seconds: 5), () {
-                        goHomeAfterDelivery();
-                      });
+                      if (!_deliveredHandled) {
+                        _deliveredHandled = true;
 
-                      return ElevatedButton(
-                        onPressed: null,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          Future.delayed(const Duration(seconds: 5), () {
+                            if (!mounted) return;
+                            goHomeAfterDelivery();
+                          });
+                        });
+                      }
+
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: const [
+                            Icon(
+                              Icons.check_circle,
+                              size: 80,
+                              color: Colors.green,
+                            ),
+                            SizedBox(height: 10),
+                            Text(
+                              "Delivery Completed",
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            SizedBox(height: 20),
+                            CircularProgressIndicator(),
+                            SizedBox(height: 10),
+                            Text("Returning to home..."),
+                          ],
                         ),
-                        child: const Text("Delivered"),
                       );
                     }
 

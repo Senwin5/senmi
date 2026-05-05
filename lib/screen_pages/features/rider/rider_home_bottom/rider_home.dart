@@ -18,6 +18,7 @@ class _RiderHomeState extends State<RiderHome> {
   double totalEarnings = 0.0;
   int totalDeliveries = 0;
   String riderName = "Rider"; // default
+  bool isOnline = true; // Rider availability
 
   double riderRating = 0.0;
   int ratingCount = 0;
@@ -113,6 +114,12 @@ class _RiderHomeState extends State<RiderHome> {
     }
   }
 
+  void toggleOnlineStatus(bool value) {
+    setState(() {
+      isOnline = value;
+    });
+  }
+
   // 🔹 Navigate to Wallet and refresh after withdrawal
   Future<void> openWallet() async {
     await Navigator.push(
@@ -151,6 +158,24 @@ class _RiderHomeState extends State<RiderHome> {
         ),
         backgroundColor: Colors.deepPurple,
         elevation: 0,
+        actions: [
+          Row(
+            children: [
+              Text(
+                isOnline ? "Online" : "Offline",
+                style: const TextStyle(color: Colors.white),
+              ),
+              Switch(
+                value: isOnline,
+                onChanged: toggleOnlineStatus,
+                activeThumbColor: const Color.fromARGB(255, 54, 96, 56),
+                inactiveThumbColor: Colors.white,
+                activeTrackColor: Color.fromARGB(255, 73, 135, 76),
+                inactiveTrackColor: Colors.white24,
+              ),
+            ],
+          ),
+        ],
       ),
 
       body: loading

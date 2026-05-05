@@ -282,17 +282,6 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                         horizontal: 14,
                         vertical: 6,
                       ),
-                      decoration: BoxDecoration(
-                        color: Colors.white24,
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      child: const Text(
-                        "Premium Customer",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
                     ),
                   ],
                 ),
