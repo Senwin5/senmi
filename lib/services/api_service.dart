@@ -8,8 +8,7 @@ import 'package:flutter/foundation.dart'; // ✅ For ValueNotifier
 class ApiService {
   // 🔥 CHANGE THIS
   //static const String baseUrl = "http://192.168.8.252:8001/api";
-  static const String baseUrl =
-      "https://cottage-molar-unguarded.ngrok-free.dev/api";
+  static const String baseUrl = "https://api.senmi.com.ng/api";
 
   static String? token;
   static String? refreshToken;
@@ -996,8 +995,6 @@ class ApiService {
       return {"accepted": [], "in_transit": [], "delivered": []};
     }
   }
-
-
 
   static Future<dynamic> getUserPackages() async {
     return [];
