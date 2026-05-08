@@ -24,9 +24,7 @@ class _TrackPackageScreenState extends State<TrackPackageScreen> {
 
     // 🔌 CONNECT TO WEBSOCKET (✅ FIXED URL WITH YOUR IP + PORT)
     channel = WebSocketChannel.connect(
-      //Uri.parse('ws://192.168.8.252:8001/ws/tracking/${widget.packageId}/'),
-      Uri.parse('wss://cottage-molar-unguarded.ngrok-free.dev/ws/tracking/${widget.packageId}/'),
-      
+      Uri.parse('wss://api.senmi.com.ng/ws/tracking/${widget.packageId}/'),
     );
 
     // 📡 LISTEN FOR LIVE LOCATION + STATUS
@@ -35,8 +33,8 @@ class _TrackPackageScreenState extends State<TrackPackageScreen> {
         final parsed = jsonDecode(data);
 
         setState(() {
-          lat = parsed['lat'] ?? lat;       // ✅ SAFE UPDATE
-          lng = parsed['lng'] ?? lng;       // ✅ SAFE UPDATE
+          lat = parsed['lat'] ?? lat; // ✅ SAFE UPDATE
+          lng = parsed['lng'] ?? lng; // ✅ SAFE UPDATE
           status = parsed['status'] ?? status; // ✅ NEW
         });
       },

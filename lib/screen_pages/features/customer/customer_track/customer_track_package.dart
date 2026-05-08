@@ -149,8 +149,6 @@ class _TrackingScreenState extends State<TrackingScreen>
     try {
       channel = WebSocketChannel.connect(
         Uri.parse(
-          //'wss://cottage-molar-unguarded.ngrok-free.dev/ws/tracking/${widget.packageId}/',
-          //'ws://192.168.8.252:8000/ws/tracking/${widget.packageId}/',
           'wss://api.senmi.com.ng/ws/tracking/${widget.packageId}/'
         ),
       );

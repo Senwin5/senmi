@@ -108,9 +108,7 @@ class _RiderTrackScreenState extends State<RiderTrackScreen> {
   // =========================
   void _connectWebSocket() {
     channel = WebSocketChannel.connect(
-      Uri.parse(
-        'wss://cottage-molar-unguarded.ngrok-free.dev/ws/tracking/${widget.packageId}/',
-      ),
+      Uri.parse('wss://api.senmi.com.ng/ws/tracking/${widget.packageId}/'),
     );
 
     wsSubscription = channel!.stream.listen((data) {
@@ -157,52 +155,47 @@ class _RiderTrackScreenState extends State<RiderTrackScreen> {
   // 🔐 CONFIRM DELIVERY
   // =========================
   Future<void> _submitCode() async {
-  final code = _codeController.text.trim();
+    final code = _codeController.text.trim();
 
-  if (code.isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Enter delivery code")),
-    );
-    return;
+    if (code.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Enter delivery code")));
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    final result = await ApiService.confirmDeliveryCode(widget.packageId, code);
+
+    setState(() => _isLoading = false);
+
+    if (result != null && result["success"] == true) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Delivery completed ✅")));
+
+      // ✅ STOP TRACKING
+      _positionStream?.cancel();
+
+      // ✅ CLOSE WEBSOCKET
+      wsSubscription?.cancel();
+      channel?.sink.close();
+
+      if (!mounted) return;
+
+      // ✅ GO TO SUCCESS SCREEN (NO BACK)
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const DeliveryCompleteScreen()),
+        (route) => false,
+      );
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Invalid code ❌")));
+    }
   }
-
-  setState(() => _isLoading = true);
-
-  final result = await ApiService.confirmDeliveryCode(
-    widget.packageId,
-    code,
-  );
-
-  setState(() => _isLoading = false);
-
-  if (result != null && result["success"] == true) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Delivery completed ✅")),
-    );
-
-    // ✅ STOP TRACKING
-    _positionStream?.cancel();
-
-    // ✅ CLOSE WEBSOCKET
-    wsSubscription?.cancel();
-    channel?.sink.close();
-
-    if (!mounted) return;
-
-    // ✅ GO TO SUCCESS SCREEN (NO BACK)
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const DeliveryCompleteScreen(),
-      ),
-      (route) => false,
-    );
-  } else {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Invalid code ❌")),
-    );
-  }
-}
 
   @override
   void dispose() {
