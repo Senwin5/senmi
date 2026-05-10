@@ -108,7 +108,7 @@ class _RiderTrackScreenState extends State<RiderTrackScreen> {
   // =========================
   void _connectWebSocket() {
     channel = WebSocketChannel.connect(
-      Uri.parse('wss://api.senmi.com.ng/ws/tracking/${widget.packageId}/'),
+      Uri.parse('wss://www.senmi.com.ng/ws/tracking/${widget.packageId}/'),
     );
 
     wsSubscription = channel!.stream.listen((data) {

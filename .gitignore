@@ -46,3 +46,18 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+
+When building features:
+#git checkout dev
+#then
+#git add .
+#git commit -m "new feature"
+#it push origin dev
+#-----------------------------------------------
+
+#When ready for production:
+#git checkout main
+#git merge dev
+#:wq
+#git push origin main

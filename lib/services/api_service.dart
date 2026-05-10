@@ -8,7 +8,7 @@ import 'package:flutter/foundation.dart'; // ✅ For ValueNotifier
 class ApiService {
   // 🔥 CHANGE THIS
   //static const String baseUrl = "http://192.168.8.252:8001/api";
-  static const String baseUrl = "https://api.senmi.com.ng/api";
+  static const String baseUrl = "https://www.senmi.com.ng/api";
 
   static String? token;
   static String? refreshToken;

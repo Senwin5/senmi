@@ -149,7 +149,7 @@ class _TrackingScreenState extends State<TrackingScreen>
     try {
       channel = WebSocketChannel.connect(
         Uri.parse(
-          'wss://api.senmi.com.ng/ws/tracking/${widget.packageId}/'
+          'wss://www.senmi.com.ng/ws/tracking/${widget.packageId}/'
         ),
       );
 

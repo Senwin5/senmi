@@ -27,7 +27,7 @@ class _TrackPackageScreenState extends State<TrackPackageScreen> {
     // 📍 TRACKING SOCKET
     // =========================
     channel = WebSocketChannel.connect(
-      Uri.parse('wss://api.senmi.com.ng/ws/tracking/${widget.packageId}/'),
+      Uri.parse('wss://www.senmi.com.ng/ws/tracking/${widget.packageId}/'),
     );
 
     channel.stream.listen(
@@ -54,7 +54,7 @@ class _TrackPackageScreenState extends State<TrackPackageScreen> {
     // 🔔 NOTIFICATION SOCKET
     // =========================
     notificationChannel = WebSocketChannel.connect(
-      Uri.parse('wss://api.senmi.com.ng/ws/notifications/'),
+      Uri.parse('wss://www.senmi.com.ng/ws/notifications/'),
     );
 
     notificationChannel.stream.listen(
