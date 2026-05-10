@@ -34,6 +34,8 @@ class _TrackPackageScreenState extends State<TrackPackageScreen> {
       (data) {
         final parsed = jsonDecode(data);
 
+        if (!mounted) return;
+
         setState(() {
           lat = parsed['lat'] ?? lat;
           lng = parsed['lng'] ?? lng;
@@ -63,10 +65,10 @@ class _TrackPackageScreenState extends State<TrackPackageScreen> {
 
         print("NOTIFICATION: $parsed");
 
+        if (!mounted) return;
+
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(parsed["message"] ?? "New notification"),
-          ),
+          SnackBar(content: Text(parsed["message"] ?? "New notification")),
         );
       },
       onError: (error) {
@@ -82,8 +84,12 @@ class _TrackPackageScreenState extends State<TrackPackageScreen> {
 
   @override
   void dispose() {
-    channel.sink.close();
-    notificationChannel.sink.close();
+    try {
+      channel.sink.close();
+      notificationChannel.sink.close();
+    } catch (e) {
+      print("Socket close error: $e");
+    }
     super.dispose();
   }
 

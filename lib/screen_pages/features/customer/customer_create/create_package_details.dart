@@ -226,6 +226,9 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
               final uri = Uri.parse(url);
               if (await canLaunchUrl(uri)) {
                 await launchUrl(uri, mode: LaunchMode.externalApplication);
+
+                await Future.delayed(const Duration(seconds: 5));
+                await _fetchPackage();
               }
             },
             child: const Text("WhatsApp"),
@@ -234,6 +237,9 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
             onPressed: () async {
               final uri = Uri.parse(link);
               await launchUrl(uri, mode: LaunchMode.externalApplication);
+
+              await Future.delayed(const Duration(seconds: 5));
+              await _fetchPackage();
               await Future.delayed(const Duration(seconds: 3));
               await _fetchPackage();
               setState(() {});
@@ -282,6 +288,9 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
         } else {
           final uri = Uri.parse(link);
           await launchUrl(uri, mode: LaunchMode.externalApplication);
+
+          await Future.delayed(const Duration(seconds: 5));
+          await _fetchPackage();
         }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -399,7 +408,7 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
 
             const SizedBox(height: 16),
 
-            if (package!['is_paid'] != true)
+            if (!paymentDone)
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -408,7 +417,9 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
                 ),
               ),
 
-            if (package!['is_paid'] != true)
+            if (!paymentDone) const SizedBox(height: 12),
+
+            if (!paymentDone)
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
