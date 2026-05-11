@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
@@ -14,7 +15,7 @@ class TrackPackageScreen extends StatefulWidget {
 class _TrackPackageScreenState extends State<TrackPackageScreen> {
   late WebSocketChannel channel;
   late WebSocketChannel notificationChannel;
- 
+
   double lat = 0;
   double lng = 0;
   String status = "";
@@ -43,12 +44,14 @@ class _TrackPackageScreenState extends State<TrackPackageScreen> {
         });
       },
       onError: (error) {
-        // ignore: avoid_print
-        print("WebSocket error: $error");
+        if (kDebugMode) {
+          print("WebSocket error: $error");
+        }
       },
       onDone: () {
-        // ignore: avoid_print
-        print("Tracking socket closed");
+        if (kDebugMode) {
+          print("Tracking socket closed");
+        }
       },
     );
 
@@ -59,7 +62,6 @@ class _TrackPackageScreenState extends State<TrackPackageScreen> {
     notificationChannel = WebSocketChannel.connect(
       Uri.parse('wss://www.senmi.com.ng/ws/notifications/'),
     );
-    
 
     notificationChannel.stream.listen(
       (data) {
@@ -70,16 +72,24 @@ class _TrackPackageScreenState extends State<TrackPackageScreen> {
         if (!mounted) return;
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(parsed["message"] ?? "New notification")),
+          SnackBar(
+            content: Text(
+              parsed["message"] ??
+              parsed["data"]?["message"] ??
+              "New notification",
+            ),
+          ),
         );
       },
       onError: (error) {
-        // ignore: avoid_print
-        print("Notification WebSocket error: $error");
+        if (kDebugMode) {
+          print("Notification WebSocket error: $error");
+        }
       },
       onDone: () {
-        // ignore: avoid_print
-        print("Notification socket closed");
+        if (kDebugMode) {
+          print("Notification socket closed");
+        }
       },
     );
   }
@@ -90,7 +100,9 @@ class _TrackPackageScreenState extends State<TrackPackageScreen> {
       channel.sink.close();
       notificationChannel.sink.close();
     } catch (e) {
-      print("Socket close error: $e");
+      if (kDebugMode) {
+        print("Socket close error: $e");
+      }
     }
     super.dispose();
   }
