@@ -14,8 +14,7 @@ class TrackPackageScreen extends StatefulWidget {
 class _TrackPackageScreenState extends State<TrackPackageScreen> {
   late WebSocketChannel channel;
   late WebSocketChannel notificationChannel;
-  String? token = "YOUR_JWT_TOKEN_HERE";
-
+ 
   double lat = 0;
   double lng = 0;
   String status = "";
@@ -60,6 +59,7 @@ class _TrackPackageScreenState extends State<TrackPackageScreen> {
     notificationChannel = WebSocketChannel.connect(
       Uri.parse('wss://www.senmi.com.ng/ws/notifications/'),
     );
+    
 
     notificationChannel.stream.listen(
       (data) {
