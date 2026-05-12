@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 class TrackPackageScreen extends StatefulWidget {
@@ -13,6 +14,8 @@ class TrackPackageScreen extends StatefulWidget {
 }
 
 class _TrackPackageScreenState extends State<TrackPackageScreen> {
+  final storage = const FlutterSecureStorage();
+
   late WebSocketChannel channel;
   late WebSocketChannel notificationChannel;
 
@@ -24,6 +27,10 @@ class _TrackPackageScreenState extends State<TrackPackageScreen> {
   void initState() {
     super.initState();
 
+    connectSockets();
+  }
+
+  Future<void> connectSockets() async {
     // =========================
     // 📍 TRACKING SOCKET
     // =========================
@@ -45,7 +52,7 @@ class _TrackPackageScreenState extends State<TrackPackageScreen> {
       },
       onError: (error) {
         if (kDebugMode) {
-          print("WebSocket error: $error");
+          print("Tracking WebSocket error: $error");
         }
       },
       onDone: () {
@@ -59,26 +66,31 @@ class _TrackPackageScreenState extends State<TrackPackageScreen> {
     // 🔔 NOTIFICATION SOCKET
     // =========================
 
+    final token = await storage.read(key: "access");
+
+    print("TOKEN: $token");
+
+    if (token == null) {
+      print("NO TOKEN FOUND - USER NOT LOGGED IN");
+      return;
+    }
+
     notificationChannel = WebSocketChannel.connect(
-      Uri.parse('wss://www.senmi.com.ng/ws/notifications/'),
+      Uri.parse('wss://www.senmi.com.ng/ws/notifications/?token=$token'),
     );
 
     notificationChannel.stream.listen(
       (data) {
         final parsed = jsonDecode(data);
 
-        print("NOTIFICATION: $parsed");
+        if (kDebugMode) {
+          print("NOTIFICATION: $parsed");
+        }
 
         if (!mounted) return;
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              parsed["message"] ??
-              parsed["data"]?["message"] ??
-              "New notification",
-            ),
-          ),
+          SnackBar(content: Text(parsed["message"] ?? "New notification")),
         );
       },
       onError: (error) {
@@ -113,7 +125,9 @@ class _TrackPackageScreenState extends State<TrackPackageScreen> {
       appBar: AppBar(title: const Text("Live Tracking")),
       body: Center(
         child: Text(
-          "📍 Lat: $lat\n📍 Lng: $lng\n\n📦 Status: $status",
+          "📍 Lat: $lat\n"
+          "📍 Lng: $lng\n\n"
+          "📦 Status: $status",
           textAlign: TextAlign.center,
           style: const TextStyle(fontSize: 18),
         ),
