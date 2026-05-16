@@ -1,6 +1,7 @@
 import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
-import 'package:senmi/screen_pages/features/customer/customer_history/customer_history_screen.dart';
+//import 'package:senmi/screen_pages/features/customer/customer_history/customer_history_screen.dart';
+import 'package:senmi/screen_pages/features/customer/customer_home_bottom/customer_bottomnav.dart';
 import 'package:senmi/screen_pages/welcome/splash_screen.dart';
 import 'package:senmi/services/api_service.dart';
 
@@ -20,7 +21,9 @@ void main() async {
       await Future.delayed(const Duration(milliseconds: 500));
 
       navigatorKey.currentState?.pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const HistoryScreen()),
+        MaterialPageRoute(
+          builder: (_) => const CustomerBottomNav(initialIndex: 2),
+        ),
         (route) => false,
       );
     }

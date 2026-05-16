@@ -7,14 +7,24 @@ import 'package:senmi/screen_pages/features/customer/customer_track/customer_tra
 
 /// Customer Bottom Navigation
 class CustomerBottomNav extends StatefulWidget {
-  const CustomerBottomNav({super.key});
+
+  final int initialIndex;
+  
+
+  const CustomerBottomNav({
+    super.key,
+    this.initialIndex = 0,
+    
+  });
 
   @override
   State<CustomerBottomNav> createState() => _CustomerBottomNavState();
 }
 
 class _CustomerBottomNavState extends State<CustomerBottomNav> {
-  int _currentIndex = 0;
+  //int _currentIndex = 0;
+  late int _currentIndex;
+  
 
   // Dark mode notifier for customer profile screen
   final ValueNotifier<bool> darkModeNotifier = ValueNotifier<bool>(false);
@@ -27,6 +37,7 @@ class _CustomerBottomNavState extends State<CustomerBottomNav> {
   @override
   void initState() {
     super.initState();
+    _currentIndex = widget.initialIndex;
     _screens = [
       CustomerHome(),
       const CreatePackageScreen(),
@@ -50,12 +61,7 @@ class _CustomerBottomNavState extends State<CustomerBottomNav> {
     return ValueListenableBuilder<bool>(
       valueListenable: darkModeNotifier,
       builder: (context, isDark, _) {
-        return MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: ThemeData.light(),
-          darkTheme: ThemeData.dark(),
-          themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
-          home: Scaffold(
+        return Scaffold(
             body: _screens[_currentIndex],
             bottomNavigationBar: BottomNavigationBar(
               currentIndex: _currentIndex,
@@ -67,7 +73,6 @@ class _CustomerBottomNavState extends State<CustomerBottomNav> {
               unselectedItemColor: Colors.black54,
               onTap: (index) => setState(() => _currentIndex = index),
             ),
-          ),
         );
       },
     );
