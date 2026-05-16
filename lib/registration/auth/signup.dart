@@ -73,8 +73,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         );
       }
     }
-    // ✅ If user created but no token returned
-    else if (res.containsKey("username") || res.containsKey("email")) {
+    // If user created but no token returned
+    //else if (res.containsKey("username") || res.containsKey("email")) 
+    else if (res["success"] == true) {
       // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Account created. Please login.")),

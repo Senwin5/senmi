@@ -171,14 +171,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
     }
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor, // ✅ FIX
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor, //  FIX
 
       appBar: AppBar(
         title: const Text("History"),
         centerTitle: true,
         elevation: 0,
         toolbarHeight: 90,
-        backgroundColor: Theme.of(context).appBarTheme.backgroundColor, // ✅ FIX
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor, // FIX
         surfaceTintColor: Colors.transparent,
 
         actions: [

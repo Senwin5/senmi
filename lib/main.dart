@@ -1,12 +1,27 @@
-// main.dart
+import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
+import 'package:senmi/screen_pages/features/customer/customer_history/customer_history_screen.dart';
 import 'package:senmi/screen_pages/welcome/splash_screen.dart';
 import 'package:senmi/services/api_service.dart';
 
+final navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   await ApiService.loadToken();
+
+  final appLinks = AppLinks();
+
+  appLinks.uriLinkStream.listen((uri) {
+    if (uri.toString().contains("payment-success")) {
+      navigatorKey.currentState?.pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const HistoryScreen()),
+        (route) => false,
+      );
+    }
+  });
+
   runApp(const MyApp());
 }
 
@@ -16,6 +31,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
       title: 'Senmi',
       theme: ThemeData.dark().copyWith(
