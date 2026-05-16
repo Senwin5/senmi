@@ -74,7 +74,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       }
     }
     // If user created but no token returned
-    //else if (res.containsKey("username") || res.containsKey("email")) 
+    //else if (res.containsKey("username") || res.containsKey("email"))
     else if (res["success"] == true) {
       // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
@@ -132,7 +132,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const Text(
-                        "Senmi 🚚",
+                        "Senmi 🏍",
                         style: TextStyle(
                           fontSize: 34,
                           fontWeight: FontWeight.bold,

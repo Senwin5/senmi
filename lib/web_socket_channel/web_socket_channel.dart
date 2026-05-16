@@ -68,12 +68,9 @@ class _TrackPackageScreenState extends State<TrackPackageScreen> {
 
     final token = await storage.read(key: "access");
 
-    print("TOKEN: $token");
+    if (token == null) return;
 
-    if (token == null) {
-      print("NO TOKEN FOUND - USER NOT LOGGED IN");
-      return;
-    }
+    print("WS TOKEN: $token");
 
     notificationChannel = WebSocketChannel.connect(
       Uri.parse('wss://www.senmi.com.ng/ws/notifications/?token=$token'),
@@ -81,11 +78,11 @@ class _TrackPackageScreenState extends State<TrackPackageScreen> {
 
     notificationChannel.stream.listen(
       (data) {
+        print("RAW SOCKET DATA: $data"); // 👈 ADD THIS
+
         final parsed = jsonDecode(data);
 
-        if (kDebugMode) {
-          print("NOTIFICATION: $parsed");
-        }
+        print("PARSED: $parsed"); // 👈 ADD THIS
 
         if (!mounted) return;
 
@@ -93,6 +90,7 @@ class _TrackPackageScreenState extends State<TrackPackageScreen> {
           SnackBar(content: Text(parsed["message"] ?? "New notification")),
         );
       },
+
       onError: (error) {
         if (kDebugMode) {
           print("Notification WebSocket error: $error");
