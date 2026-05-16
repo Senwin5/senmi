@@ -98,9 +98,15 @@ class RiderDetailsProfile extends StatelessWidget {
               radius: 55,
               backgroundColor: Colors.deepPurple,
               backgroundImage: rider!['profile_picture'] != null
-                  ? NetworkImage(
-                      ApiService.baseUrl.replaceAll('/api', '') +
-                          rider!['profile_picture'],
+                  ? NetworkImage(rider!['profile_picture'])
+                  : null,
+              onBackgroundImageError: (_, __) {
+                debugPrint("Image failed to load");
+              },
+              child: rider!['profile_picture'] == null
+                  ? Text(
+                      rider!['username']?[0].toUpperCase() ?? "R",
+                      style: const TextStyle(fontSize: 40, color: Colors.white),
                     )
                   : null,
             ),

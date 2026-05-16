@@ -63,10 +63,7 @@ class _RiderProfileScreenState extends State<RiderProfileScreen> {
                       radius: 55,
                       backgroundColor: Colors.deepPurple,
                       backgroundImage: rider!['profile_picture'] != null
-                          ? NetworkImage(
-                              ApiService.baseUrl.replaceAll('/api', '') +
-                                  rider!['profile_picture'],
-                            )
+                          ? NetworkImage(rider!['profile_picture'])
                           : null,
                       child: rider!['profile_picture'] == null
                           ? Text(
