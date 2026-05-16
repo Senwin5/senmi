@@ -5,7 +5,7 @@ import 'package:senmi/screen_pages/welcome/splash_screen.dart';
 import 'package:senmi/services/api_service.dart';
 
 final navigatorKey = GlobalKey<NavigatorState>();
-
+bool openedFromPayment = false;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -13,8 +13,12 @@ void main() async {
 
   final appLinks = AppLinks();
 
-  appLinks.uriLinkStream.listen((uri) {
+  appLinks.uriLinkStream.listen((uri) async {
     if (uri.toString().contains("payment-success")) {
+      openedFromPayment = true;
+
+      await Future.delayed(const Duration(milliseconds: 500));
+
       navigatorKey.currentState?.pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const HistoryScreen()),
         (route) => false,

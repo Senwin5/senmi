@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:senmi/main.dart';
 import 'package:senmi/screen_pages/admin/admin_home_screen.dart';
 import 'package:senmi/screen_pages/features/customer/customer_home_bottom/customer_bottomnav.dart';
 import 'package:senmi/screen_pages/features/rider/rider_home_bottom/rider_bottom_nav.dart';
@@ -62,6 +63,7 @@ class _SplashScreenState extends State<SplashScreen>
 
   // ✅ FIXED NAVIGATION LOGIC
   Future<void> _navigate() async {
+    if (openedFromPayment) return;
     if (!mounted) return;
 
     final prefs = await SharedPreferences.getInstance();
