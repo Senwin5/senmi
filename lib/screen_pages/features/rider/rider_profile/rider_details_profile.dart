@@ -100,7 +100,7 @@ class RiderDetailsProfile extends StatelessWidget {
               backgroundImage: rider!['profile_picture'] != null
                   ? NetworkImage(rider!['profile_picture'])
                   : null,
-              onBackgroundImageError: (_, __) {
+              onBackgroundImageError: (_, _) {
                 debugPrint("Image failed to load");
               },
               child: rider!['profile_picture'] == null

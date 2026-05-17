@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 class TrackPackageScreen extends StatefulWidget {
@@ -14,10 +13,7 @@ class TrackPackageScreen extends StatefulWidget {
 }
 
 class _TrackPackageScreenState extends State<TrackPackageScreen> {
-  final storage = const FlutterSecureStorage();
-
   late WebSocketChannel channel;
-  late WebSocketChannel notificationChannel;
 
   double lat = 0;
   double lng = 0;
@@ -34,6 +30,7 @@ class _TrackPackageScreenState extends State<TrackPackageScreen> {
     // =========================
     // 📍 TRACKING SOCKET
     // =========================
+
     channel = WebSocketChannel.connect(
       Uri.parse('wss://www.senmi.com.ng/ws/tracking/${widget.packageId}/'),
     );
@@ -50,55 +47,16 @@ class _TrackPackageScreenState extends State<TrackPackageScreen> {
           status = parsed['status'] ?? status;
         });
       },
+
       onError: (error) {
         if (kDebugMode) {
           print("Tracking WebSocket error: $error");
         }
       },
+
       onDone: () {
         if (kDebugMode) {
           print("Tracking socket closed");
-        }
-      },
-    );
-
-    // =========================
-    // 🔔 NOTIFICATION SOCKET
-    // =========================
-
-    final token = await storage.read(key: "access");
-
-    if (token == null) return;
-
-    print("WS TOKEN: $token");
-
-    notificationChannel = WebSocketChannel.connect(
-      Uri.parse('wss://www.senmi.com.ng/ws/notifications/?token=$token'),
-    );
-
-    notificationChannel.stream.listen(
-      (data) {
-        print("RAW SOCKET DATA: $data"); // 👈 ADD THIS
-
-        final parsed = jsonDecode(data);
-
-        print("PARSED: $parsed"); // 👈 ADD THIS
-
-        if (!mounted) return;
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(parsed["message"] ?? "New notification")),
-        );
-      },
-
-      onError: (error) {
-        if (kDebugMode) {
-          print("Notification WebSocket error: $error");
-        }
-      },
-      onDone: () {
-        if (kDebugMode) {
-          print("Notification socket closed");
         }
       },
     );
@@ -108,12 +66,12 @@ class _TrackPackageScreenState extends State<TrackPackageScreen> {
   void dispose() {
     try {
       channel.sink.close();
-      notificationChannel.sink.close();
     } catch (e) {
       if (kDebugMode) {
         print("Socket close error: $e");
       }
     }
+
     super.dispose();
   }
 
@@ -121,12 +79,15 @@ class _TrackPackageScreenState extends State<TrackPackageScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Live Tracking")),
+
       body: Center(
         child: Text(
           "📍 Lat: $lat\n"
           "📍 Lng: $lng\n\n"
           "📦 Status: $status",
+
           textAlign: TextAlign.center,
+
           style: const TextStyle(fontSize: 18),
         ),
       ),

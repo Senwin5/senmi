@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 //import 'package:senmi/screen_pages/features/customer/customer_history/customer_history_screen.dart';
 import 'package:senmi/screen_pages/features/customer/customer_home_bottom/customer_bottomnav.dart';
 import 'package:senmi/screen_pages/welcome/splash_screen.dart';
+import 'package:senmi/services/notification_service.dart';
 import 'package:senmi/services/api_service.dart';
 
 final navigatorKey = GlobalKey<NavigatorState>();
@@ -11,6 +12,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await ApiService.loadToken();
+  await NotificationService.connect();
 
   final appLinks = AppLinks();
 
@@ -37,6 +39,15 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    NotificationService.onMessage = (message) {
+      final context = navigatorKey.currentContext;
+
+      if (context != null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
+      }
+    };
     return MaterialApp(
       navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
