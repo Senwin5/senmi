@@ -12,6 +12,17 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await ApiService.loadToken();
+
+  NotificationService.onMessage = (message) {
+    final context = navigatorKey.currentContext;
+
+    if (context != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
+    }
+  };
+
   await NotificationService.connect();
 
   final appLinks = AppLinks();
@@ -39,15 +50,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    NotificationService.onMessage = (message) {
-      final context = navigatorKey.currentContext;
-
-      if (context != null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(message)));
-      }
-    };
     return MaterialApp(
       navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
