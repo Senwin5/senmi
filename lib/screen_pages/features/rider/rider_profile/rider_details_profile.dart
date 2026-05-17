@@ -100,9 +100,7 @@ class RiderDetailsProfile extends StatelessWidget {
               backgroundImage: rider!['profile_picture'] != null
                   ? NetworkImage(rider!['profile_picture'])
                   : null,
-              onBackgroundImageError: (_, _) {
-                debugPrint("Image failed to load");
-              },
+
               child: rider!['profile_picture'] == null
                   ? Text(
                       rider!['username']?[0].toUpperCase() ?? "R",

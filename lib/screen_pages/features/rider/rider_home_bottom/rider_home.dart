@@ -371,7 +371,7 @@ class _RiderHomeState extends State<RiderHome> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    "Total Available Packages",
+                    "Available Packages",
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,

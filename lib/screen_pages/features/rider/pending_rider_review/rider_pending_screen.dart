@@ -24,7 +24,6 @@ class _RiderPendingScreenState extends State<RiderPendingScreen> {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-
       await ApiService.loadToken();
       if (ApiService.token == null) {
         setState(() {
@@ -192,6 +191,7 @@ class _RiderPendingScreenState extends State<RiderPendingScreen> {
                   ElevatedButton(
                     onPressed: checkStatus,
                     style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.deepPurple,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 32,
                         vertical: 14,
