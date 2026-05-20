@@ -1,8 +1,11 @@
 import 'package:app_links/app_links.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:senmi/firebase_options.dart';
 //import 'package:senmi/screen_pages/features/customer/customer_history/customer_history_screen.dart';
 import 'package:senmi/screen_pages/features/customer/customer_home_bottom/customer_bottomnav.dart';
 import 'package:senmi/screen_pages/welcome/splash_screen.dart';
+import 'package:senmi/service_firebase/firebase_notification_service.dart';
 import 'package:senmi/services/notification_service.dart';
 import 'package:senmi/services/api_service.dart';
 
@@ -12,6 +15,11 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await ApiService.loadToken();
+
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  await FirebaseNotificationService.initialize();
 
   NotificationService.onMessage = (message) {
     final context = navigatorKey.currentContext;

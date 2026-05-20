@@ -672,6 +672,9 @@ class ApiService {
       );
 
       final data = jsonDecode(response.body);
+      if (kDebugMode) {
+        print("RAW RIDER PROFILE RESPONSE: $data");
+      }
 
       if (response.statusCode == 401) {
         await logout();

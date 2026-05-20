@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
@@ -12,11 +13,15 @@ class NotificationService {
     final token = await storage.read(key: "access");
 
     if (token == null) {
-      print("NO TOKEN FOUND");
+      if (kDebugMode) {
+        print("NO TOKEN FOUND");
+      }
       return;
     }
 
-    print("CONNECTING TO WS...");
+    if (kDebugMode) {
+      print("CONNECTING TO WS...");
+    }
 
     channel = WebSocketChannel.connect(
       Uri.parse('wss://www.senmi.com.ng/ws/notifications/?token=$token'),
@@ -24,13 +29,17 @@ class NotificationService {
 
     channel!.stream.listen(
       (data) {
-        print("LIVE NOTIFICATION RECEIVED: $data");
+        if (kDebugMode) {
+          print("LIVE NOTIFICATION RECEIVED: $data");
+        }
 
         final parsed = jsonDecode(data);
 
         final message = parsed["message"];
 
-        print(message);
+        if (kDebugMode) {
+          print(message);
+        }
 
         if (onMessage != null) {
           onMessage!(message);
@@ -38,11 +47,15 @@ class NotificationService {
       },
 
       onError: (e) {
-        print("WS ERROR: $e");
+        if (kDebugMode) {
+          print("WS ERROR: $e");
+        }
       },
 
       onDone: () {
-        print("WS CLOSED");
+        if (kDebugMode) {
+          print("WS CLOSED");
+        }
       },
     );
   }

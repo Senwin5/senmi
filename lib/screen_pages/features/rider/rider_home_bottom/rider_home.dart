@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:senmi/screen_pages/features/rider/rider_package/rider_deliveries_screen.dart';
 import 'package:senmi/screen_pages/features/rider/rider_wallet/wallet_screen.dart';
@@ -43,6 +44,9 @@ class _RiderHomeState extends State<RiderHome> {
       final walletData = await ApiService.getWallet();
       final earningsData = await ApiService.getEarnings();
       final riderProfile = await ApiService.getRiderProfile();
+      if (kDebugMode) {
+        print("RIDER PROFILE: $riderProfile");
+      }
       final rating = riderProfile['rating'];
       final count = riderProfile['rating_count'];
 

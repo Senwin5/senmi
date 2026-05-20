@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:senmi/screen_pages/admin/admin_home_screen.dart';
 import 'package:senmi/screen_pages/features/customer/customer_home_bottom/customer_bottomnav.dart';
 import 'package:senmi/screen_pages/features/rider/rider_home_bottom/rider_bottom_nav.dart';
+import 'package:senmi/service_firebase/firebase_service.dart';
 import 'package:senmi/services/notification_service.dart';
 import 'package:senmi/widgets/custom_buttom.dart';
 import '../../services/api_service.dart';
@@ -39,6 +40,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (res.containsKey("access")) {
       await NotificationService.connect();
+      await FirebaseService.init();
       try {
         // ADMIN
         if (ApiService.isAdmin) {

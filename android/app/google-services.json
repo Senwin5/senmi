@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "48776237975",
+    "project_id": "senmi-94326",
+    "storage_bucket": "senmi-94326.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:48776237975:android:3f29c4268521165645aad2",
+        "android_client_info": {
+          "package_name": "com.example.senmi"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCvdhOD0no9ky85rSTU--eMq86cyp2DWPU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
