@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:senmi/main.dart';
 import 'package:senmi/screen_pages/admin/admin_home_screen.dart';
@@ -43,6 +45,7 @@ class _SplashScreenState extends State<SplashScreen>
     super.initState();
     _setupAnimation();
     _startSplashTimer();
+    initFcm();
   }
 
   void _setupAnimation() {
@@ -59,6 +62,19 @@ class _SplashScreenState extends State<SplashScreen>
 
   void _startSplashTimer() {
     Timer(const Duration(seconds: 3), _navigate);
+  }
+
+
+  Future<void> initFcm() async {
+    await FirebaseMessaging.instance.requestPermission();
+    String? token = await FirebaseMessaging.instance.getToken();
+    if (kDebugMode) {
+      print("FCM TOKEN: $token");
+    }
+
+    if (token != null) {
+      await ApiService.saveFcmToken(token);
+    }
   }
 
   // ✅ FIXED NAVIGATION LOGIC
