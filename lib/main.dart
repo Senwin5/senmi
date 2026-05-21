@@ -7,13 +7,10 @@ import 'package:senmi/firebase_options.dart';
 import 'package:senmi/screen_pages/features/customer/customer_home_bottom/customer_bottomnav.dart';
 import 'package:senmi/screen_pages/welcome/splash_screen.dart';
 import 'package:senmi/service_firebase/firebase_notification_service.dart';
-import 'package:senmi/services/notification_service.dart';
 import 'package:senmi/services/api_service.dart';
-
 
 final navigatorKey = GlobalKey<NavigatorState>();
 bool openedFromPayment = false;
-
 
 /// ===============================
 /// 🔥 BACKGROUND HANDLER (MUST BE TOP LEVEL)
@@ -31,35 +28,18 @@ void main() async {
 
   await ApiService.loadToken();
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   await FirebaseNotificationService.initialize();
 
-  NotificationService.onMessage = (message) {
-    final context = navigatorKey.currentContext;
-
-    if (context != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+  FlutterError.onError = (errorDetails) {
+    if (kDebugMode) {
+      print("FLUTTER ERROR: ${errorDetails.exception}");
     }
   };
 
-  await NotificationService.connect();
-
-  /// 🔥 Foreground messages
-  FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-    if (kDebugMode) {
-      print("FOREGROUND NOTIFICATION: ${message.notification?.title}");
-    }
-  });
-
   /// 🔥 Background handler (NOW SAFE)
-  FirebaseMessaging.onBackgroundMessage(
-    _firebaseMessagingBackgroundHandler,
-  );
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   /// 🔗 Deep links
   final appLinks = AppLinks();

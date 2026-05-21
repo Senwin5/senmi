@@ -236,11 +236,11 @@ class _RiderTrackScreenState extends State<RiderTrackScreen> {
             left: 0,
             right: 0,
             child: Container(
-              padding: EdgeInsets.only(
+              padding: const EdgeInsets.only(
                 left: 16,
                 right: 16,
                 top: 16,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+                bottom: 16,
               ),
               //height: 320,
               decoration: const BoxDecoration(
@@ -253,38 +253,62 @@ class _RiderTrackScreenState extends State<RiderTrackScreen> {
                   Text(
                     status,
                     style: const TextStyle(
-                      fontSize: 18,
+                      fontSize: 25,
                       fontWeight: FontWeight.bold,
+                      color: Colors.deepPurple,
                     ),
                   ),
 
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 9),
 
-                  Text("Package: ${widget.packageId}"),
+                  Text(
+                    "Package: ${widget.packageId}",
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Color.fromARGB(255, 73, 135, 76),
+                    ),
+                  ),
 
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 9),
 
                   const Text(
                     "Deliver to:",
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.deepPurple,
+                    ),
                   ),
 
                   Text(
                     deliveryAddress,
-                    style: const TextStyle(color: Colors.grey),
+                    style: const TextStyle(
+                      color: Color.fromARGB(255, 73, 135, 76),
+                    ),
                   ),
 
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 9),
 
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: _openMap,
-                      child: const Text("Navigate"),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color.fromARGB(255, 73, 135, 76),
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                      ),
+                      child: const Text(
+                        "Navigate",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
                   ),
 
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 9),
 
                   TextField(
                     controller: _codeController,
@@ -294,7 +318,7 @@ class _RiderTrackScreenState extends State<RiderTrackScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 9),
 
                   SizedBox(
                     width: double.infinity,

@@ -1,4 +1,3 @@
-
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -10,7 +9,7 @@ class FirebaseNotificationService {
       FlutterLocalNotificationsPlugin();
 
   static Future<void> initialize() async {
-    // ASK PERMISSION
+    // 🔥 ASK NOTIFICATION PERMISSION
     NotificationSettings settings = await _messaging.requestPermission(
       alert: true,
       badge: true,
@@ -21,14 +20,14 @@ class FirebaseNotificationService {
       print("NOTIFICATION PERMISSION: ${settings.authorizationStatus}");
     }
 
-    // GET FCM TOKEN
+    // 🔥 GET FCM TOKEN
     String? token = await _messaging.getToken();
 
     if (kDebugMode) {
       print("FCM TOKEN: $token");
     }
 
-    // LOCAL NOTIFICATION INIT
+    // 🔥 LOCAL NOTIFICATION INIT
     const AndroidInitializationSettings androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
 
@@ -38,19 +37,33 @@ class FirebaseNotificationService {
 
     await _localNotifications.initialize(settings: settingsInit);
 
-    // FOREGROUND MESSAGE
+    // 🔥 CREATE NOTIFICATION CHANNEL
+    const AndroidNotificationChannel channel = AndroidNotificationChannel(
+      'senmi_channel',
+      'Senmi Notifications',
+      description: 'This channel is used for important notifications.',
+      importance: Importance.max,
+    );
+
+    await _localNotifications
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()
+        ?.createNotificationChannel(channel);
+
+    // 🔥 FOREGROUND MESSAGE
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       if (kDebugMode) {
         print("FOREGROUND MESSAGE: ${message.notification?.title}");
       }
 
       showNotification(
-        message.notification?.title ?? "Notification",
-        message.notification?.body ?? "",
+        message.notification?.title ?? message.data['title'] ?? "Notification",
+        message.notification?.body ?? message.data['body'] ?? "",
       );
     });
 
-    // APP OPENED FROM NOTIFICATION
+    // 🔥 NOTIFICATION CLICK
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       if (kDebugMode) {
         print("NOTIFICATION CLICKED");
@@ -72,7 +85,7 @@ class FirebaseNotificationService {
     );
 
     await _localNotifications.show(
-      id: 0,
+      id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
       title: title,
       body: body,
       notificationDetails: details,

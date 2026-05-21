@@ -190,7 +190,8 @@ class ApiService {
     final res = await http.post(
       Uri.parse("$baseUrl/save-fcm-token/"),
       headers: await ApiService.getAuthHeaders(),
-      body: jsonEncode({"fcm_token": token}),
+      //body: jsonEncode({"fcm_token": token}),
+      body: jsonEncode({"token": token}),
     );
 
     debugPrint("FCM SAVE STATUS: ${res.statusCode}");
