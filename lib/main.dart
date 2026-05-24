@@ -18,9 +18,10 @@ bool openedFromPayment = false;
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
 
-  if (kDebugMode) {
-    print("BACKGROUND MESSAGE: ${message.notification?.title}");
-  }
+  FirebaseNotificationService.showNotification(
+    message.notification?.title ?? "Notification",
+    message.notification?.body ?? "",
+  );
 }
 
 void main() async {

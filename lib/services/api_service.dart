@@ -186,17 +186,13 @@ class ApiService {
     }
   }
 
-  static Future<void> saveFcmToken(String token) async {
+  static Future<void> saveFcmToken(String token, int userId) async {
     final res = await http.post(
       Uri.parse("$baseUrl/save-fcm-token/"),
-
-      headers: {
-        ...(await ApiService.getAuthHeaders()),
-        "Content-Type": "application/json",
-      },
-
+      headers: {"Content-Type": "application/json"},
       body: jsonEncode({
         "token": token,
+        "user_id": userId,
         "device_type": Platform.isIOS ? "ios" : "android",
       }),
     );
@@ -204,7 +200,6 @@ class ApiService {
     debugPrint("FCM SAVE STATUS: ${res.statusCode}");
     debugPrint("FCM SAVE BODY: ${res.body}");
   }
-  
 
   // ==========================
   // CREATE PACKAGE (Customer)
@@ -1017,6 +1012,26 @@ class ApiService {
     }
   }
 
+  // ==========================
+// 👤 GET USER ID
+// ==========================
+static Future<int?> getUserId() async {
+
+  // open phone local storage
+  SharedPreferences prefs =
+      await SharedPreferences.getInstance();
+
+  // get saved user id
+  int? userId = prefs.getInt('user_id');
+
+  // debug print
+  debugPrint("USER ID: $userId");
+
+  // return id
+  return userId;
+}
+  
+
   static Future<dynamic> getUserPackages() async {
     return [];
   }
@@ -1024,4 +1039,6 @@ class ApiService {
   static Future<dynamic> getCustomerProfile() async {
     return {};
   }
+
+  
 }
