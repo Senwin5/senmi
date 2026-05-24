@@ -189,19 +189,25 @@ class ApiService {
   static Future<void> saveFcmToken(String token) async {
     final res = await http.post(
       Uri.parse("$baseUrl/save-fcm-token/"),
-      headers: await ApiService.getAuthHeaders(),
-      //body: jsonEncode({"fcm_token": token}),
-      body: jsonEncode({"token": token}),
+
+      headers: {
+        ...(await ApiService.getAuthHeaders()),
+        "Content-Type": "application/json",
+      },
+
+      body: jsonEncode({
+        "token": token,
+        "device_type": Platform.isIOS ? "ios" : "android",
+      }),
     );
 
     debugPrint("FCM SAVE STATUS: ${res.statusCode}");
     debugPrint("FCM SAVE BODY: ${res.body}");
   }
+  
 
   // ==========================
-  // 📦 CREATE PACKAGE (Customer)
-  // ==========================
-  // Create a package
+  // CREATE PACKAGE (Customer)
 
   static Future<Map<String, dynamic>> createPackage(
     Map<String, dynamic> data,
