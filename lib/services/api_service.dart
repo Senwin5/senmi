@@ -187,11 +187,13 @@ class ApiService {
   }
 
   static Future<void> saveFcmToken(String token) async {
+    final accessToken = ApiService.token; // ✅ use existing variable
+
     final res = await http.post(
       Uri.parse("$baseUrl/save-fcm-token/"),
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "Bearer $token",
+        "Authorization": "Bearer $accessToken",
       },
       body: jsonEncode({
         "token": token,
@@ -199,8 +201,12 @@ class ApiService {
       }),
     );
 
-    debugPrint("FCM SAVE STATUS: ${res.statusCode}");
-    debugPrint("FCM SAVE BODY: ${res.body}");
+    if (kDebugMode) {
+      print("FCM SAVE STATUS: ${res.statusCode}");
+    }
+    if (kDebugMode) {
+      print("FCM SAVE BODY: ${res.body}");
+    }
   }
 
   // ==========================
