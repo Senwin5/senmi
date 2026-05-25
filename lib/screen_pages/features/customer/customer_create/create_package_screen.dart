@@ -50,6 +50,12 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
     _formKey.currentState?.reset();
   }
 
+  void _autoCalculatePrice() {
+    if (pickupLocation != null && deliveryLocation != null) {
+      _calculatePrice();
+    }
+  }
+
   Future<void> _refreshPage() async {
     _resetForm();
   }
@@ -119,6 +125,7 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
 
     if (isPickup) {
       pickupLocation = selected;
+      _autoCalculatePrice();
 
       final addr = await _getAddressFromLatLng(selected);
 
@@ -132,6 +139,7 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
       });
     } else {
       deliveryLocation = selected;
+      _autoCalculatePrice();
 
       final addr = await _getAddressFromLatLng(selected);
 

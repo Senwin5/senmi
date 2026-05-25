@@ -58,6 +58,7 @@ class _CustomerHomeState extends State<CustomerHome> {
     final result = await ApiService.searchPackage(trackNumber);
 
     if (result == null) {
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("❌ Tracking code not found")),
       );
@@ -65,6 +66,7 @@ class _CustomerHomeState extends State<CustomerHome> {
     }
 
     Navigator.push(
+      // ignore: use_build_context_synchronously
       context,
       MaterialPageRoute(
         builder: (_) => TrackingScreen(packageId: result['package_id']),
