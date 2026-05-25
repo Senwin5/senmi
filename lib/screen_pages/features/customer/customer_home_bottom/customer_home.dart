@@ -15,10 +15,14 @@ class CustomerHome extends StatefulWidget {
 
 class _CustomerHomeState extends State<CustomerHome> {
   List packages = [];
-  String username = "User"; // default
+  String username = "User";
 
-  // ✅ ADDED (controller)
   TextEditingController trackController = TextEditingController();
+
+  bool _expanded = false;
+
+  // ✅ MATCH PROFILE THEME
+  bool get isDark => Theme.of(context).brightness == Brightness.dark;
 
   @override
   void initState() {
@@ -27,7 +31,6 @@ class _CustomerHomeState extends State<CustomerHome> {
     loadPackages();
   }
 
-  // Load username from ApiService
   void loadUsername() async {
     await ApiService.loadToken();
     setState(() {
@@ -35,7 +38,6 @@ class _CustomerHomeState extends State<CustomerHome> {
     });
   }
 
-  // 📦 LOAD PACKAGES
   void loadPackages() async {
     final data = await ApiService.getCustomerPackages();
     setState(() {
@@ -43,7 +45,6 @@ class _CustomerHomeState extends State<CustomerHome> {
     });
   }
 
-  // ✅ ADDED (tracking function)
   void trackPackage() async {
     String trackNumber = trackController.text.trim();
 
@@ -53,10 +54,10 @@ class _CustomerHomeState extends State<CustomerHome> {
       ).showSnackBar(const SnackBar(content: Text("Enter tracking number")));
       return;
     }
+
     final result = await ApiService.searchPackage(trackNumber);
 
     if (result == null) {
-      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("❌ Tracking code not found")),
       );
@@ -64,7 +65,6 @@ class _CustomerHomeState extends State<CustomerHome> {
     }
 
     Navigator.push(
-      // ignore: use_build_context_synchronously
       context,
       MaterialPageRoute(
         builder: (_) => TrackingScreen(packageId: result['package_id']),
@@ -76,8 +76,11 @@ class _CustomerHomeState extends State<CustomerHome> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBody: true,
-      //backgroundColor: Colors.grey.shade100,
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+
+      // ✅ MATCH PROFILE BACKGROUND
+      backgroundColor: isDark
+          ? const Color(0xFF111111)
+          : const Color(0xFFF7F8FC),
 
       body: SafeArea(
         child: LayoutBuilder(
@@ -87,7 +90,7 @@ class _CustomerHomeState extends State<CustomerHome> {
                 constraints: BoxConstraints(minHeight: constraints.maxHeight),
                 child: Column(
                   children: [
-                    // 🔵 HEADER
+                    // HEADER
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(16),
@@ -104,24 +107,19 @@ class _CustomerHomeState extends State<CustomerHome> {
                         children: [
                           Text(
                             "Hi $username",
-                            style: TextStyle(
-                              //color: Colors.white,
-                              color: Theme.of(context).cardColor,
-                              fontSize: 18,
-                            ),
+                            style: TextStyle(color: Colors.white, fontSize: 18),
                           ),
                           const SizedBox(height: 5),
                           const Text(
                             "Track Packages",
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: 21,
+                              fontSize: 22,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           const SizedBox(height: 20),
 
-                          // ✅ FIXED TEXTFIELD (removed const + added controller properly)
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12),
                             decoration: BoxDecoration(
@@ -130,24 +128,12 @@ class _CustomerHomeState extends State<CustomerHome> {
                             ),
                             child: TextField(
                               controller: trackController,
-                              decoration: InputDecoration(
+                              decoration: const InputDecoration(
                                 hintText: "Enter track number",
                                 border: InputBorder.none,
-                                icon: const Icon(
-                                  Icons.search,
-                                  color: Colors.grey,
-                                ),
-                                suffixIcon: IconButton(
-                                  icon: const Icon(
-                                    Icons.search,
-                                    color: Colors.grey,
-                                  ),
-                                  onPressed: trackPackage,
-                                ),
+                                icon: Icon(Icons.search, color: Colors.grey),
                               ),
-                              onSubmitted: (value) {
-                                trackPackage();
-                              },
+                              onSubmitted: (_) => trackPackage(),
                             ),
                           ),
 
@@ -165,7 +151,6 @@ class _CustomerHomeState extends State<CustomerHome> {
 
                     const SizedBox(height: 20),
 
-                    // 📦 CONTENT
                     ListView(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
@@ -224,6 +209,10 @@ class _CustomerHomeState extends State<CustomerHome> {
                           },
                         ),
 
+                        const SizedBox(height: 10),
+
+                        _recentActivity(),
+
                         const SizedBox(height: 30),
                       ],
                     ),
@@ -237,7 +226,6 @@ class _CustomerHomeState extends State<CustomerHome> {
 
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.deepPurple,
-        elevation: 6,
         child: const Icon(Icons.add, color: Colors.white),
         onPressed: () {
           Navigator.push(
@@ -246,15 +234,10 @@ class _CustomerHomeState extends State<CustomerHome> {
           ).then((_) => loadPackages());
         },
       ),
-
-      bottomNavigationBar: Container(
-        height: MediaQuery.of(context).padding.bottom,
-        //color: Colors.grey.shade100,
-        color: Theme.of(context).scaffoldBackgroundColor,
-      ),
     );
   }
 
+  // ✅ CARD (FIXED SIZE + CLEAN UI)
   Widget _card({
     required IconData icon,
     required String title,
@@ -265,33 +248,15 @@ class _CustomerHomeState extends State<CustomerHome> {
       margin: const EdgeInsets.only(bottom: 16),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
         child: Ink(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
+            color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
             borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.black.withOpacity(0.4)
-                    : Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                spreadRadius: 2,
-                offset: const Offset(0, 4),
-              ),
-            ],
           ),
           child: Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF7F8FC),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, color: Colors.deepPurple),
-              ),
+              Icon(icon, color: Colors.deepPurple, size: 26),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
@@ -301,7 +266,7 @@ class _CustomerHomeState extends State<CustomerHome> {
                       title,
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                        fontSize: 18,
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -309,16 +274,110 @@ class _CustomerHomeState extends State<CustomerHome> {
                       subtitle,
                       style: TextStyle(
                         color: Colors.grey.shade600,
-                        fontSize: 13,
+                        fontSize: 13.5,
                       ),
                     ),
                   ],
                 ),
               ),
-              const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+              const Icon(Icons.arrow_forward_ios, size: 16),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  // QUICK INSIGHTS
+  Widget _recentActivity() {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          InkWell(
+            onTap: () {
+              setState(() {
+                _expanded = !_expanded;
+              });
+            },
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  "Quick Insights",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 19),
+                ),
+                Icon(
+                  _expanded
+                      ? Icons.keyboard_arrow_up
+                      : Icons.keyboard_arrow_down,
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          AnimatedCrossFade(
+            duration: const Duration(milliseconds: 250),
+            crossFadeState: _expanded
+                ? CrossFadeState.showFirst
+                : CrossFadeState.showSecond,
+            firstChild: Column(
+              children: const [
+                _ActivityItem(
+                  icon: Icons.info,
+                  color: Colors.blue,
+                  text: "Track your package anytime from the home screen",
+                ),
+                _ActivityItem(
+                  icon: Icons.security,
+                  color: Colors.green,
+                  text: "Payments are secured via Paystack",
+                ),
+                _ActivityItem(
+                  icon: Icons.local_shipping,
+                  color: Colors.orange,
+                  text: "Riders are assigned automatically after payment",
+                ),
+              ],
+            ),
+            secondChild: const SizedBox.shrink(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Activity Item
+class _ActivityItem extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String text;
+
+  const _ActivityItem({
+    required this.icon,
+    required this.color,
+    required this.text,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(width: 10),
+          Expanded(child: Text(text)),
+        ],
       ),
     );
   }

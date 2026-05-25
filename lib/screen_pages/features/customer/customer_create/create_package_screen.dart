@@ -271,13 +271,13 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
         decoration: InputDecoration(
           labelText: label,
           filled: true,
-          fillColor: Colors.white,
+          fillColor: Theme.of(context).cardColor,
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 18,
             vertical: 18,
           ),
-          labelStyle: const TextStyle(
-            color: Colors.black54,
+          labelStyle: TextStyle(
+            color: Theme.of(context).textTheme.bodyLarge?.color,
             fontWeight: FontWeight.w600,
           ),
           border: OutlineInputBorder(
@@ -301,18 +301,20 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F8FC),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.black87),
-        title: const Text(
+        title: Text(
           "Create Package",
           style: TextStyle(
             fontWeight: FontWeight.w700,
             fontSize: 24,
-            color: Colors.black87,
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.white
+                : Colors.black,
           ),
         ),
         actions: [
@@ -333,7 +335,7 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(22),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(28),
                     boxShadow: [
                       BoxShadow(
