@@ -196,34 +196,20 @@ class _RiderSettingsScreenState extends State<RiderSettingsScreen> {
                 settingTile(
                   icon: Icons.privacy_tip,
                   title: "App Privacy",
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const InfoScreen(
-                          title: "App Privacy",
-                          content:
-                              "Senmi values your privacy.\n\nWe only collect essential rider information for platform operations and account verification.\n\nYour information is protected and never shared without consent.",
-                        ),
-                      ),
-                    );
+                  onTap: () async {
+                    final url = Uri.parse("https://www.senmi.com.ng/privacy/");
+
+                    await launchUrl(url);
                   },
                 ),
 
                 settingTile(
                   icon: Icons.article,
                   title: "Terms & Conditions",
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const InfoScreen(
-                          title: "Terms & Conditions",
-                          content:
-                              "By using Senmi Rider App, you agree to:\n\n• Deliver responsibly\n• Maintain accurate account information\n• Follow platform policies\n• Avoid fraudulent activities\n\nViolation may result in account suspension.",
-                        ),
-                      ),
-                    );
+                  onTap: () async {
+                    final url = Uri.parse("https://www.senmi.com.ng/terms/");
+
+                    await launchUrl(url);
                   },
                 ),
 

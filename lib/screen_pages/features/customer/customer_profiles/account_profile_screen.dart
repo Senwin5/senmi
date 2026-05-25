@@ -97,34 +97,6 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
     }
   }
 
-  void showTerms() {
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Text(
-          "Terms & Conditions",
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        content: const SingleChildScrollView(
-          child: Text(
-            "1. Safe delivery\n\n"
-            "2. Correct customer information is required\n\n"
-            "3. We are not responsible for incorrect delivery addresses",
-            style: TextStyle(height: 1.6),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text("Close"),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final safeUsername = username;
@@ -325,7 +297,20 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
               settingTile(
                 icon: Icons.description_outlined,
                 title: "Terms & Conditions",
-                onTap: showTerms,
+                onTap: () async {
+                  final url = Uri.parse("https://www.senmi.com.ng/terms/");
+
+                  await launchUrl(url);
+                },
+              ),
+              settingTile(
+                icon: Icons.privacy_tip_outlined,
+                title: "Privacy Policy",
+                onTap: () async {
+                  final url = Uri.parse("https://www.senmi.com.ng/privacy/");
+
+                  await launchUrl(url);
+                },
               ),
 
               settingTile(
