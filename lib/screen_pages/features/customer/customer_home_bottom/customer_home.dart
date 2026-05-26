@@ -130,15 +130,24 @@ class _CustomerHomeState extends State<CustomerHome> {
                             ),
                             child: TextField(
                               controller: trackController,
-                              decoration: const InputDecoration(
+                              decoration: InputDecoration(
                                 hintText: "Enter track number",
                                 border: InputBorder.none,
-                                icon: Icon(Icons.search, color: Colors.grey),
+
+                                suffixIcon: IconButton(
+                                  icon: const Icon(
+                                    Icons.search,
+                                    color: Colors.grey,
+                                  ),
+                                  onPressed: () {
+                                    trackPackage();
+                                  },
+                                ),
                               ),
+
                               onSubmitted: (_) => trackPackage(),
                             ),
                           ),
-
                           const SizedBox(height: 20),
 
                           Center(
@@ -258,7 +267,11 @@ class _CustomerHomeState extends State<CustomerHome> {
           ),
           child: Row(
             children: [
-              Icon(icon, color: Colors.deepPurple, size: 26),
+              Icon(
+                icon,
+                color: const Color.fromARGB(255, 96, 95, 99),
+                size: 26,
+              ),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(

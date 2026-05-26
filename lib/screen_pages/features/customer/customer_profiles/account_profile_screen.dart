@@ -322,17 +322,6 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                 ),
               ),
 
-              settingTile(
-                icon: Icons.dark_mode_outlined,
-                title: "Dark Mode",
-                trailing: Switch.adaptive(
-                  value: isDark,
-                  onChanged: (v) {
-                    widget.darkModeNotifier.value = v;
-                  },
-                ),
-              ),
-
               const SizedBox(height: 30),
 
               Center(

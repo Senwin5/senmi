@@ -148,9 +148,7 @@ class _TrackingScreenState extends State<TrackingScreen>
   void _connectWebSocket() {
     try {
       channel = WebSocketChannel.connect(
-        Uri.parse(
-          'wss://www.senmi.com.ng/ws/tracking/${widget.packageId}/'
-        ),
+        Uri.parse('wss://www.senmi.com.ng/ws/tracking/${widget.packageId}/'),
       );
 
       wsSubscription = channel!.stream.listen((data) {
@@ -293,6 +291,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                         "Tracking Details",
                         style: const TextStyle(
                           fontSize: 22,
+                          color: Colors.deepPurple,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -301,7 +300,9 @@ class _TrackingScreenState extends State<TrackingScreen>
 
                       Text(
                         "Waybill no.",
-                        style: TextStyle(color: Colors.grey.shade600),
+                        style: TextStyle(
+                          color: Color.fromARGB(255, 73, 135, 76),
+                        ),
                       ),
 
                       Text(
@@ -309,6 +310,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 17,
+                          color: Colors.deepPurple,
                         ),
                       ),
 

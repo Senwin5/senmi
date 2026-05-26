@@ -17,7 +17,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   String selectedFilter = "All";
 
-  static const Color primaryPurple = Color(0xFF6C2BD9);
+  static const Color primaryPurple = Color(0xFF581C87);
+
+  bool get isDark => Theme.of(context).brightness == Brightness.dark;
 
   @override
   void initState() {
@@ -171,19 +173,22 @@ class _HistoryScreenState extends State<HistoryScreen> {
     }
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor, //  FIX
-
+      backgroundColor: isDark
+          ? const Color(0xFF111111)
+          : const Color(0xFFF7F8FC),
       appBar: AppBar(
-        title: const Text("History"),
+        title: const Text(
+          "History",
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
         centerTitle: true,
         elevation: 0,
         toolbarHeight: 90,
-        backgroundColor: Theme.of(context).appBarTheme.backgroundColor, // FIX
-        surfaceTintColor: Colors.transparent,
-
+        backgroundColor: const Color(0xFF581C87),
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh, color: Colors.white),
             onPressed: () async {
               setState(() => loading = true);
               fetchPackages();
@@ -290,7 +295,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                   child: const Text(
                                     "PAY NOW",
                                     style: TextStyle(
-                                      color: Color(0xFF6C2BD9),
+                                      color: Color(0xFF581C87),
                                       fontWeight: FontWeight.bold,
                                       fontSize: 12,
                                       height: 1,

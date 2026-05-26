@@ -22,6 +22,9 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
   bool isDeleting = false;
   bool hasRated = false;
 
+  static const Color primaryPurple = Color(0xFF581C87);
+  static const Color darkPurple = Color(0xFF3B0764);
+
   @override
   void initState() {
     super.initState();
@@ -63,10 +66,19 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
       builder: (_) => StatefulBuilder(
         builder: (context, setStateDialog) {
           return AlertDialog(
+            backgroundColor: Theme.of(context).brightness == Brightness.dark
+                ? const Color(0xFF1E1E1E)
+                : Colors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
-            title: const Text("Rate Rider"),
+            title: const Text(
+              "Rate Rider",
+              style: TextStyle(
+                color: primaryPurple,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -270,7 +282,13 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
 
       if (result["already_paid"] == true) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Already paid for this package")),
+          SnackBar(
+            backgroundColor: primaryPurple,
+            content: const Text(
+              "Already paid for this package",
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
         );
 
         await _fetchPackage();
@@ -294,7 +312,13 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
         }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result["error"] ?? "Payment failed")),
+          SnackBar(
+            backgroundColor: Colors.red,
+            content: Text(
+              result["error"] ?? "Payment failed",
+              style: const TextStyle(color: Colors.white),
+            ),
+          ),
         );
       }
     } finally {
@@ -304,6 +328,9 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
 
   Widget _infoCard(String title, Map<String, String> data) {
     return Card(
+      color: Theme.of(context).brightness == Brightness.dark
+          ? const Color(0xFF1E1E1E)
+          : Colors.white,
       margin: const EdgeInsets.symmetric(vertical: 8),
       elevation: 2,
       child: Padding(
@@ -313,7 +340,11 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
           children: [
             Text(
               title,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: primaryPurple,
+              ),
             ),
             const SizedBox(height: 8),
             ...data.entries.map(
@@ -359,13 +390,25 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
     final paymentDone = package?['is_paid'] == true;
 
     return Scaffold(
+      backgroundColor: Theme.of(context).brightness == Brightness.dark
+          ? const Color(0xFF111111)
+          : const Color(0xFFF7F8FC),
       appBar: AppBar(
-        title: const Text("Details"),
+        backgroundColor: primaryPurple,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+
+        title: const Text(
+          "Details",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+
+        iconTheme: const IconThemeData(color: Colors.white),
+
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new),
           onPressed: () => Navigator.pop(context),
         ),
-
         // ✅ UPDATED ACTIONS (refresh + delete)
         actions: [
           IconButton(icon: const Icon(Icons.refresh), onPressed: _fetchPackage),
@@ -412,8 +455,19 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryPurple,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
                   onPressed: () => _pay("sender"),
-                  child: const Text("Pay as Sender"),
+                  child: const Text(
+                    "Pay as Sender",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
 
@@ -423,8 +477,19 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: darkPurple,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
                   onPressed: () => _pay("receiver"),
-                  child: const Text("Generate Receiver Payment Link"),
+                  child: const Text(
+                    "Generate Receiver Payment Link",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
 
@@ -437,6 +502,11 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
                       onPressed: null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                       ),
                       child: const Text("Delivered"),
                     ),
@@ -450,8 +520,12 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
                       icon: const Icon(Icons.star),
                       label: const Text("Rate Rider"),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepPurple,
+                        backgroundColor: primaryPurple,
                         foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                       ),
                       onPressed: _showRateDialog,
                     ),
@@ -462,6 +536,14 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryPurple,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
                   onPressed: () => Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -469,7 +551,10 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
                           TrackingScreen(packageId: widget.packageId),
                     ),
                   ),
-                  child: const Text("Track Package"),
+                  child: const Text(
+                    "Track Package",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
           ],

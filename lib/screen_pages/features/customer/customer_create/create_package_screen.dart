@@ -298,7 +298,7 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(18),
-            borderSide: const BorderSide(color: Colors.deepPurple, width: 2),
+            borderSide: const BorderSide(color: Color(0xFF581C87), width: 2),
           ),
         ),
         onSaved: onSaved,
@@ -309,22 +309,23 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: Theme.of(context).brightness == Brightness.dark
+          ? const Color(0xFF111111)
+          : const Color(0xFFF7F8FC),
+
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.black87),
-        title: Text(
+        backgroundColor: const Color(0xFF581C87),
+        surfaceTintColor: Colors.transparent,
+
+        iconTheme: const IconThemeData(color: Colors.white),
+
+        title: const Text(
           "Create Package",
-          style: TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: 24,
-            color: Theme.of(context).brightness == Brightness.dark
-                ? Colors.white
-                : Colors.black,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
+
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
@@ -343,7 +344,9 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(22),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).cardColor,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? const Color(0xFF1E1E1E)
+                        : Colors.white,
                     borderRadius: BorderRadius.circular(28),
                     boxShadow: [
                       BoxShadow(
@@ -375,17 +378,18 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
                                 decoration: BoxDecoration(
                                   gradient: const LinearGradient(
                                     colors: [
-                                      Color(0xFF6A11CB),
-                                      Color(0xFF8E2DE2),
+                                      Color(0xFF581C87),
+                                      Color(0xFF3B0764),
                                     ],
                                   ),
                                   borderRadius: BorderRadius.circular(14),
                                   boxShadow: [
                                     BoxShadow(
                                       // ignore: deprecated_member_use
-                                      color: Colors.deepPurple.withOpacity(
-                                        0.25,
-                                      ),
+                                      color: const Color(
+                                        0xFF581C87,
+                                        // ignore: deprecated_member_use
+                                      ).withOpacity(0.25),
                                       blurRadius: 12,
                                       offset: const Offset(0, 4),
                                     ),
