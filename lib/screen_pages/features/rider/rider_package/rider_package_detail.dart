@@ -225,13 +225,36 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
                       "You Earn",
                       style: TextStyle(color: Colors.white70),
                     ),
+
                     const SizedBox(height: 8),
+
                     Text(
                       "₦${riderEarning.toStringAsFixed(2)}",
                       style: const TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        // ignore: deprecated_member_use
+                        color: Colors.orange.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      child: Text(
+                        package!['status'].toString().toUpperCase(),
+                        style: const TextStyle(
+                          color: Colors.orange,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],
@@ -282,9 +305,10 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
                                 if (widget.hasActiveDelivery) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
+                                      backgroundColor: Colors.red,
                                       content: Text(
                                         "⚠ Finish your current delivery first",
-                                        style: TextStyle(color: Colors.red),
+                                        style: TextStyle(color: Colors.white),
                                       ),
                                     ),
                                   );
@@ -343,9 +367,15 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
                                 }
                               },
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white,
+                                backgroundColor: Colors.green,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
                               ),
-                              child: const Text("Call Customer"),
+                              child: const Text(
+                                "Call Customer",
+                                style: TextStyle(color: Colors.white),
+                              ),
                             ),
                           ),
                           const SizedBox(height: 10),
@@ -495,8 +525,14 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.green,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
                               ),
-                              child: const Text("Call Receiver"),
+                              child: const Text(
+                                "Call Receiver",
+                                style: TextStyle(color: Colors.white),
+                              ),
                             ),
                           ),
 

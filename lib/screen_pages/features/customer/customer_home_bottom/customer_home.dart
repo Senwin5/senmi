@@ -83,6 +83,7 @@ class _CustomerHomeState extends State<CustomerHome> {
       backgroundColor: isDark
           ? const Color(0xFF111111)
           : const Color(0xFFF7F8FC),
+      floatingActionButton: null,
 
       body: SafeArea(
         child: LayoutBuilder(
@@ -233,17 +234,6 @@ class _CustomerHomeState extends State<CustomerHome> {
             );
           },
         ),
-      ),
-
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.deepPurple,
-        child: const Icon(Icons.add, color: Colors.white),
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const CreatePackageScreen()),
-          ).then((_) => loadPackages());
-        },
       ),
     );
   }

@@ -160,37 +160,10 @@ class _RiderSettingsScreenState extends State<RiderSettingsScreen> {
                 sectionTitle("SUPPORT & INFO"),
 
                 settingTile(
-                  icon: Icons.support_agent,
-                  title: "Support",
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const InfoScreen(
-                          title: "Support",
-                          content:
-                              "Need help?\n\nOur support team is available 24/7 to assist you with rider account issues, delivery concerns, wallet problems, payment inquiries and technical assistance.\n\nReach out through WhatsApp chat for quick support.",
-                        ),
-                      ),
-                    );
-                  },
-                ),
-
-                settingTile(
-                  icon: Icons.question_answer,
-                  title: "FAQ",
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const InfoScreen(
-                          title: "FAQ",
-                          content:
-                              "1. How do I accept deliveries?\nOpen available deliveries and tap accept.\n\n2. How do I withdraw earnings?\nVisit wallet and request withdrawal.\n\n3. Why is my account pending?\nYour profile is under admin review.",
-                        ),
-                      ),
-                    );
-                  },
+                  icon: Icons.chat,
+                  title: "Chat Admin",
+                  onTap: openWhatsApp,
+                  iconColor: Colors.green,
                 ),
 
                 settingTile(
@@ -214,10 +187,23 @@ class _RiderSettingsScreenState extends State<RiderSettingsScreen> {
                 ),
 
                 settingTile(
-                  icon: Icons.chat,
-                  title: "Chat Admin",
-                  onTap: openWhatsApp,
-                  iconColor: Colors.green,
+                  icon: Icons.support_agent,
+                  title: "SUPPORT",
+                  onTap: () async {
+                    final url = Uri.parse("https://www.senmi.com.ng/support/");
+
+                    await launchUrl(url);
+                  },
+                ),
+
+                settingTile(
+                  icon: Icons.question_answer,
+                  title: "FAQ",
+                  onTap: () async {
+                    final url = Uri.parse("https://www.senmi.com.ng/faq/");
+
+                    await launchUrl(url);
+                  },
                 ),
 
                 sectionTitle("PREFERENCES"),
