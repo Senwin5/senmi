@@ -269,7 +269,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                     // 👇 THIS is the important fix
                     Expanded(
                       child: SingleChildScrollView(
-                        padding: const EdgeInsets.all(20),
+                        padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [

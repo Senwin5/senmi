@@ -62,6 +62,40 @@ class AdminHomeScreen extends StatelessWidget {
                 statCard("Delivered", "280", Icons.check_circle, Colors.purple),
               ],
             ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                statCard("Packages", "340", Icons.inventory, Colors.green),
+                const SizedBox(width: 10),
+                statCard(
+                  "Admin Notification",
+                  "280",
+                  Icons.check_circle,
+                  Colors.purple,
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                statCard(
+                  "AdminNotification",
+                  "340",
+                  Icons.inventory,
+                  Colors.green,
+                ),
+                const SizedBox(width: 10),
+                statCard("Delivered", "280", Icons.check_circle, Colors.purple),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                statCard("Packages", "340", Icons.inventory, Colors.green),
+                const SizedBox(width: 10),
+                statCard("Delivered", "280", Icons.check_circle, Colors.purple),
+              ],
+            ),
             const SizedBox(height: 20),
 
             // Recent activity placeholder
@@ -171,7 +205,7 @@ class _AdminBottomNavState extends State<AdminBottomNav> {
 
   final List<Widget> pages = [
     const AdminHomeScreen(),
-   // const AdminDashboard(),
+    // const AdminDashboard(),
     const AdminPackagesScreen(),
     const AdminProfileScreen(),
   ];
