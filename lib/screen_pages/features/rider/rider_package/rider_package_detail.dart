@@ -347,42 +347,9 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
                     if (status == 'accepted') {
                       return Column(
                         children: [
-                          // 📞 CALL CUSTOMER
                           SizedBox(
                             width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: () {
-                                final phone =
-                                    package?['sender_phone']; // 👈 from backend
-                                if (phone != null) {
-                                  callNumber(phone);
-                                } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        "Customer phone not available",
-                                      ),
-                                    ),
-                                  );
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 14,
-                                ),
-                              ),
-                              child: const Text(
-                                "Call Customer",
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
+                            child: ElevatedButton.icon(
                               onPressed: () async {
                                 final success = await ApiService.updateStatus(
                                   widget.packageId,
@@ -402,80 +369,70 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
                                   loadPackage();
                                 }
                               },
+                              icon: const Icon(Icons.two_wheeler),
+                              label: const Text("Start Delivery"),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.deepPurple,
+                                foregroundColor: Colors
+                                    .white, // ⭐ THIS fixes icon + text color
                                 padding: const EdgeInsets.symmetric(
-                                  vertical: 14,
+                                  vertical: 16,
                                 ),
-                              ),
-                              child: const Text(
-                                "Start Delivery",
-                                style: TextStyle(color: Colors.white),
                               ),
                             ),
                           ),
-                          const SizedBox(height: 10),
 
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: () async {
-                                final confirm = await showDialog(
-                                  context: context,
-                                  builder: (dialogContext) => AlertDialog(
-                                    title: const Text("Cancel Delivery"),
+                          const SizedBox(height: 12),
 
-                                    content: const Text(
-                                      "Are you sure you want to cancel?",
-                                    ),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.of(
-                                          dialogContext,
-                                        ).pop(false),
-                                        child: const Text("No"),
-                                      ),
-                                      TextButton(
-                                        onPressed: () => Navigator.of(
-                                          dialogContext,
-                                        ).pop(true),
-                                        child: const Text("Yes"),
-                                      ),
-                                    ],
-                                  ),
-                                );
-
-                                if (confirm == true) {
-                                  final success = await ApiService.updateStatus(
-                                    widget.packageId,
-                                    "cancelled",
-                                  );
-
-                                  if (success) {
-                                    stopTracking();
-
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text("Package cancelled"),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton(
+                                  onPressed: () {
+                                    final phone = package?['sender_phone'];
+                                    if (phone != null) callNumber(phone);
+                                  },
+                                  child: const Text("Call Customer"),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: OutlinedButton(
+                                  onPressed: () async {
+                                    final confirm = await showDialog(
+                                      context: context,
+                                      builder: (_) => AlertDialog(
+                                        title: const Text("Cancel Delivery"),
+                                        content: const Text("Are you sure?"),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(context, false),
+                                            child: const Text("No"),
+                                          ),
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(context, true),
+                                            child: const Text("Yes"),
+                                          ),
+                                        ],
                                       ),
                                     );
 
-                                    //loadPackage(); // refresh screen
-                                    Navigator.pop(
-                                      context,
-                                      true,
-                                    ); // go back and trigger refresh
-                                  }
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.red,
+                                    if (confirm == true) {
+                                      await ApiService.updateStatus(
+                                        widget.packageId,
+                                        "cancelled",
+                                      );
+
+                                      stopTracking();
+                                      Navigator.pop(context, true);
+                                    }
+                                  },
+                                  child: const Text("Cancel"),
+                                ),
                               ),
-                              child: const Text(
-                                "Cancel Delivery",
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ),
+                            ],
                           ),
                         ],
                       );
@@ -543,7 +500,7 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
 
                     return ElevatedButton(
                       onPressed: null,
-                      child: Text("Unknown: $status"),
+                      child: Text("Package: $status"),
                     );
                   },
                 ),

@@ -250,89 +250,144 @@ class _RiderTrackScreenState extends State<RiderTrackScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    status,
-                    style: const TextStyle(
-                      fontSize: 25,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.deepPurple,
-                    ),
-                  ),
-
-                  const SizedBox(height: 9),
-
-                  Text(
-                    "Package: ${widget.packageId}",
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Color.fromARGB(255, 73, 135, 76),
-                    ),
-                  ),
-
-                  const SizedBox(height: 9),
-
-                  const Text(
-                    "Deliver to:",
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.deepPurple,
-                    ),
-                  ),
-
-                  Text(
-                    deliveryAddress,
-                    style: const TextStyle(
-                      color: Color.fromARGB(255, 73, 135, 76),
-                    ),
-                  ),
-
-                  const SizedBox(height: 9),
-
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _openMap,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color.fromARGB(255, 73, 135, 76),
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                      ),
-                      child: const Text(
-                        "Navigate",
-                        style: TextStyle(
-                          fontSize: 16,
+                  // 1. STATUS + ID
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        status,
+                        style: const TextStyle(
+                          fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color: Colors.deepPurple,
                         ),
                       ),
+                      Text(
+                        widget.packageId,
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  // 2. ADDRESS BOX
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Deliver to",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 5),
+                        Text(deliveryAddress),
+                      ],
                     ),
                   ),
 
-                  const SizedBox(height: 9),
+                  const SizedBox(height: 10),
 
+                  // 3. NAVIGATE BUTTON
+                  Row(
+                    children: [
+                      // NAVIGATE BUTTON
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: _openMap,
+                          icon: const Icon(
+                            Icons.navigation,
+                            color: Colors.white,
+                          ),
+                          label: const Text(
+                            "Navigate",
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.deepPurple,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(width: 12),
+
+                      // CALL BUTTON
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () async {
+                            final pkg = await ApiService.getPackage(
+                              widget.packageId,
+                            );
+                            final phone = pkg?['receiver_phone'];
+
+                            if (phone == null || phone.toString().isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("Receiver phone not available"),
+                                ),
+                              );
+                              return;
+                            }
+
+                            final Uri url = Uri.parse("tel:$phone");
+
+                            if (await canLaunchUrl(url)) {
+                              await launchUrl(url);
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("Cannot make call"),
+                                ),
+                              );
+                            }
+                          },
+                          icon: const Icon(Icons.call, color: Colors.white),
+                          label: const Text(
+                            "Call Receiver",
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  // 4. CODE INPUT
                   TextField(
                     controller: _codeController,
                     decoration: const InputDecoration(
-                      labelText: "Enter receiver code",
+                      labelText: "Receiver Code",
                       border: OutlineInputBorder(),
                     ),
                   ),
 
-                  const SizedBox(height: 9),
+                  const SizedBox(height: 10),
 
+                  // 5. CONFIRM BUTTON
                   SizedBox(
                     width: double.infinity,
-                    child: ElevatedButton(
+                    child: ElevatedButton.icon(
                       onPressed: _isLoading ? null : _submitCode,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color.fromARGB(255, 73, 135, 76),
+                      icon: const Icon(Icons.check_circle, color: Colors.white),
+                      label: const Text(
+                        "Confirm Receiver Code",
+                        style: TextStyle(color: Colors.white),
                       ),
-                      child: _isLoading
-                          ? const CircularProgressIndicator()
-                          : const Text(
-                              "Confirm Delivery",
-                              style: TextStyle(color: Colors.white),
-                            ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
                     ),
                   ),
                 ],

@@ -289,9 +289,29 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
 
               settingTile(
                 icon: Icons.chat_bubble_outline,
-                title: "Chat Support",
+                title: "Chat Admin",
                 subtitle: "Contact us instantly",
                 onTap: openWhatsApp,
+              ),
+
+              settingTile(
+                icon: Icons.privacy_tip_outlined,
+                title: "Privacy Policy",
+                onTap: () async {
+                  final url = Uri.parse("https://www.senmi.com.ng/privacy/");
+
+                  await launchUrl(url);
+                },
+              ),
+
+              settingTile(
+                icon: Icons.description_outlined,
+                title: "Support",
+                onTap: () async {
+                  final url = Uri.parse("https://www.senmi.com.ng/support/");
+
+                  await launchUrl(url);
+                },
               ),
 
               settingTile(
@@ -299,15 +319,6 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                 title: "Terms & Conditions",
                 onTap: () async {
                   final url = Uri.parse("https://www.senmi.com.ng/terms/");
-
-                  await launchUrl(url);
-                },
-              ),
-              settingTile(
-                icon: Icons.privacy_tip_outlined,
-                title: "Privacy Policy",
-                onTap: () async {
-                  final url = Uri.parse("https://www.senmi.com.ng/privacy/");
 
                   await launchUrl(url);
                 },

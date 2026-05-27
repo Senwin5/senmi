@@ -169,7 +169,7 @@ class _CustomerHomeState extends State<CustomerHome> {
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       children: [
                         _card(
-                          icon: Icons.local_shipping,
+                          icon: Icons.two_wheeler,
                           title: "Create a Package",
                           subtitle:
                               "We'll pick it up and deliver it across town quickly.",
@@ -257,11 +257,7 @@ class _CustomerHomeState extends State<CustomerHome> {
           ),
           child: Row(
             children: [
-              Icon(
-                icon,
-                color: const Color.fromARGB(255, 96, 95, 99),
-                size: 26,
-              ),
+              Icon(icon, color: Colors.deepPurple, size: 26),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(

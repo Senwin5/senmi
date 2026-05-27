@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:senmi/services/api_service.dart';
 import 'package:senmi/registration/auth/login.dart';
 import 'package:senmi/screen_pages/features/rider/rider_profile/rider_profile.dart';
-import 'info_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class RiderSettingsScreen extends StatefulWidget {
