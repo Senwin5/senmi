@@ -74,22 +74,32 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   // =========================
   // LIVE WEBSOCKET
   // =========================
+  // =========================
+  // LIVE WEBSOCKET
+  // =========================
   void connectWebSocket() {
     channel = IOWebSocketChannel.connect(
       'wss://www.senmi.com.ng/ws/admin-dashboard/',
     );
 
+    // 👇 LISTEN FOR LIVE EVENTS
     channel!.stream.listen(
       (message) {
-        debugPrint("Dashboard update received");
+        // 👇 print websocket message
+        debugPrint("Dashboard update received: $message");
 
-        loadDashboard(); // auto refresh
+        // 👇 refresh dashboard automatically
+        loadDashboard();
       },
-      onError: (e) {
-        debugPrint("WebSocket error: $e");
+
+      // 👇 websocket error
+      onError: (error) {
+        debugPrint("WebSocket error: $error");
       },
+
+      // 👇 websocket disconnected
       onDone: () {
-        debugPrint("WebSocket closed");
+        debugPrint("WebSocket connection closed");
       },
     );
   }
