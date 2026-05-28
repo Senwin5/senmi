@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-//import 'package:senmi/screen_pages/admin/admin_dashboard.dart';
-import 'package:senmi/screen_pages/admin/admin_home_screen.dart';
+import 'package:senmi/screen_pages/admin/screen/admin_home_bottom/admin_bottom_nav.dart';
 import 'package:senmi/screen_pages/features/customer/customer_home_bottom/customer_bottomnav.dart';
 import 'package:senmi/screen_pages/features/rider/rider_home_bottom/rider_bottom_nav.dart';
 import 'package:senmi/service_firebase/firebase_service.dart';

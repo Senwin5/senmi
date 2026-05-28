@@ -94,3 +94,20 @@ class _TrackPackageScreenState extends State<TrackPackageScreen> {
     );
   }
 }
+class AdminSocketService {
+  late WebSocketChannel channel;
+
+  void connect() {
+    channel = WebSocketChannel.connect(
+      Uri.parse(
+        'wss://www.senmi.com.ng/ws/admin/riders/',
+      ),
+    );
+  }
+
+  Stream<dynamic> get stream => channel.stream;
+
+  void dispose() {
+    channel.sink.close();
+  }
+}
