@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:senmi/screen_pages/admin/screen/admin_home_bottom/dashboard.dart';
+import 'package:senmi/screen_pages/admin/screen/admin_home_bottom/admin_dashboard.dart';
 import 'package:senmi/screen_pages/admin/screen/admin_package/admin_packages.dart';
 import 'package:senmi/screen_pages/admin/screen/admin_prrofile/admin_profile_screen.dart';
 import 'package:senmi/screen_pages/admin/screen/admin_prrofile/analytics_screen.dart';

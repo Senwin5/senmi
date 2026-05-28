@@ -343,37 +343,56 @@ class ApiService {
     }
   }
 
-  static Future<List<dynamic>>
-getAvailableRiders() async {
-  final response = await http.get(
-    Uri.parse(
-      "$baseUrl/admin/available-riders/",
-    ),
+  static Future<List<dynamic>> getAvailableRiders() async {
+    final response = await http.get(
+      Uri.parse("$baseUrl/admin/available-riders/"),
 
-    headers: await getAuthHeaders(),
-  );
+      headers: await getAuthHeaders(),
+    );
 
-  if (response.statusCode == 200) {
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+
+    return [];
+  }
+
+  static Future<Map<String, dynamic>> getAdminAnalytics() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/admin/analytics/'),
+      headers: await getAuthHeaders(),
+    );
+
+    debugPrint("ANALYTICS STATUS: ${response.statusCode}");
+    debugPrint("ANALYTICS BODY: ${response.body}");
+
     return jsonDecode(response.body);
   }
 
-  return [];
-}
 
-static Future<void> updatePackageStatus(
-  String packageId,
-  String status,
-) async {
-  final response = await http.post(
-    Uri.parse("$baseUrl/admin/packages/$packageId/update-status/"),
+  static Future<Map<String, dynamic>> getAdminDashboard() async {
+  final response = await http.get(
+    Uri.parse('$baseUrl/admin/dashboard/'),
     headers: await getAuthHeaders(),
-    body: jsonEncode({"status": status}),
   );
 
-  if (response.statusCode != 200) {
-    throw Exception("Failed to update status");
-  }
+  return jsonDecode(response.body);
 }
+
+  static Future<void> updatePackageStatus(
+    String packageId,
+    String status,
+  ) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/admin/packages/$packageId/update-status/"),
+      headers: await getAuthHeaders(),
+      body: jsonEncode({"status": status}),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception("Failed to update status");
+    }
+  }
 
   // Create Paystack payment link
   static Future<Map<String, dynamic>> createPaystackPaymentLink(

@@ -55,6 +55,27 @@ class _AdminPackageDetailsScreenState extends State<AdminPackageDetailsScreen> {
     }
   }
 
+  Widget sectionCard({required String title, required List<Widget> children}) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 20),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            ...children,
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
