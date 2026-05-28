@@ -306,6 +306,75 @@ class ApiService {
     }
   }
 
+  // ==========================
+  // ADMIN PACKAGES
+  // ==========================
+
+  static Future<List<dynamic>> getAdminPackages() async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/admin/packages/"),
+        headers: await getAuthHeaders(),
+      );
+
+      debugPrint("ADMIN PACKAGES STATUS: ${response.statusCode}");
+
+      debugPrint("ADMIN PACKAGES BODY: ${response.body}");
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        if (data is List) {
+          return data;
+        }
+
+        if (data is Map<String, dynamic>) {
+          if (data['results'] is List) {
+            return data['results'];
+          }
+        }
+      }
+
+      return [];
+    } catch (e) {
+      debugPrint("getAdminPackages error: $e");
+
+      return [];
+    }
+  }
+
+  static Future<List<dynamic>>
+getAvailableRiders() async {
+  final response = await http.get(
+    Uri.parse(
+      "$baseUrl/admin/available-riders/",
+    ),
+
+    headers: await getAuthHeaders(),
+  );
+
+  if (response.statusCode == 200) {
+    return jsonDecode(response.body);
+  }
+
+  return [];
+}
+
+static Future<void> updatePackageStatus(
+  String packageId,
+  String status,
+) async {
+  final response = await http.post(
+    Uri.parse("$baseUrl/admin/packages/$packageId/update-status/"),
+    headers: await getAuthHeaders(),
+    body: jsonEncode({"status": status}),
+  );
+
+  if (response.statusCode != 200) {
+    throw Exception("Failed to update status");
+  }
+}
+
   // Create Paystack payment link
   static Future<Map<String, dynamic>> createPaystackPaymentLink(
     Map<String, dynamic> data,
@@ -1018,10 +1087,6 @@ class ApiService {
       debugPrint("getMyPackages error: $e");
       return {"accepted": [], "in_transit": [], "delivered": []};
     }
-  }
-
-  static Future<dynamic> getUserPackages() async {
-    return [];
   }
 
   static Future<dynamic> getCustomerProfile() async {
