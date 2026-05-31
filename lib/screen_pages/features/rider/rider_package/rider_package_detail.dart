@@ -97,6 +97,8 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
         package = res;
         loading = false;
       });
+
+      debugPrint("PACKAGE DETAILS => $res");
     } catch (e) {
       setState(() {
         loading = false;
@@ -298,38 +300,68 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
                     final status = (package?['status'] ?? '').toLowerCase();
 
                     if (status == 'paid') {
-                      return ElevatedButton(
-                        onPressed: accepting
-                            ? null
-                            : () {
-                                if (widget.hasActiveDelivery) {
+                      return Column(
+                        children: [
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              onPressed: () {
+                                final phone = package?['receiver_phone'];
+                                if (phone != null &&
+                                    phone.toString().isNotEmpty) {
+                                  callNumber(phone);
+                                } else {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                      backgroundColor: Colors.red,
-                                      content: Text(
-                                        "⚠ Finish your current delivery first",
-                                        style: TextStyle(color: Colors.white),
-                                      ),
+                                      content: Text("Phone not available"),
                                     ),
                                   );
-                                  return;
                                 }
-                                accept();
                               },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.deepPurple,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                              icon: const Icon(Icons.call),
+                              label: const Text("Call Customer Before"),
+                            ),
                           ),
-                        ),
-                        child: Text(
-                          accepting ? "Accepting..." : "Accept Package",
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: Colors.white,
+
+                          const SizedBox(height: 12),
+
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: accepting
+                                  ? null
+                                  : () {
+                                      if (widget.hasActiveDelivery) {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          const SnackBar(
+                                            backgroundColor: Colors.red,
+                                            content: Text(
+                                              "⚠ Finish your current delivery first",
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                        return;
+                                      }
+                                      accept();
+                                    },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.deepPurple,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                              ),
+                              child: Text(
+                                accepting ? "Accepting..." : "Accept Package",
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                            ),
                           ),
-                        ),
+                        ],
                       );
                     }
 
@@ -406,13 +438,22 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
                                         content: const Text("Are you sure?"),
                                         actions: [
                                           TextButton(
-                                            onPressed: () =>
-                                                Navigator.pop(context, false),
+                                            onPressed: () {
+                                              Navigator.of(
+                                                context,
+                                                rootNavigator: true,
+                                              ).pop(false);
+                                            },
                                             child: const Text("No"),
                                           ),
+
                                           TextButton(
-                                            onPressed: () =>
-                                                Navigator.pop(context, true),
+                                            onPressed: () {
+                                              Navigator.of(
+                                                context,
+                                                rootNavigator: true,
+                                              ).pop(true);
+                                            },
                                             child: const Text("Yes"),
                                           ),
                                         ],
@@ -420,13 +461,35 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
                                     );
 
                                     if (confirm == true) {
-                                      await ApiService.updateStatus(
-                                        widget.packageId,
-                                        "cancelled",
-                                      );
+                                      final success =
+                                          await ApiService.updateStatus(
+                                            widget.packageId,
+                                            "cancelled",
+                                          );
 
-                                      stopTracking();
-                                      Navigator.pop(context, true);
+                                      if (!mounted) return;
+
+                                      if (success) {
+                                        stopTracking();
+
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          const SnackBar(
+                                            content: Text("Delivery cancelled"),
+                                          ),
+                                        );
+
+                                        Navigator.pop(context, true);
+                                      } else {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          const SnackBar(
+                                            content: Text("Cancel failed"),
+                                          ),
+                                        );
+                                      }
                                     }
                                   },
                                   child: const Text("Cancel"),

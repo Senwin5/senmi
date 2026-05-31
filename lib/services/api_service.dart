@@ -369,15 +369,14 @@ class ApiService {
     return jsonDecode(response.body);
   }
 
-
   static Future<Map<String, dynamic>> getAdminDashboard() async {
-  final response = await http.get(
-    Uri.parse('$baseUrl/admin/dashboard/'),
-    headers: await getAuthHeaders(),
-  );
+    final response = await http.get(
+      Uri.parse('$baseUrl/admin/dashboard/'),
+      headers: await getAuthHeaders(),
+    );
 
-  return jsonDecode(response.body);
-}
+    return jsonDecode(response.body);
+  }
 
   static Future<void> updatePackageStatus(
     String packageId,
@@ -595,14 +594,28 @@ class ApiService {
 
   // ==========================
   // 🔄 UPDATE DELIVERY STATUS
-  // ==========================
   static Future<bool> updateStatus(String packageId, String status) async {
     final response = await http.post(
       Uri.parse("$baseUrl/packages/$packageId/update-status/"),
-      headers: await ApiService.getAuthHeaders(),
+      headers: {
+        ...await ApiService.getAuthHeaders(),
+        "Content-Type": "application/json",
+      },
       body: jsonEncode({"status": status}),
     );
-    return response.statusCode == 200;
+
+    final body = jsonDecode(response.body);
+
+    if (kDebugMode) {
+      print("STATUS CODE: ${response.statusCode}");
+    }
+    if (kDebugMode) {
+      print("RESPONSE BODY: $body");
+    }
+
+    return response.statusCode >= 200 &&
+        response.statusCode < 300 &&
+        (body["success"] == true || body["message"] == "Cancelled");
   }
 
   // ==========================

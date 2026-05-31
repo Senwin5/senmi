@@ -192,6 +192,7 @@ class _RiderPendingScreenState extends State<RiderPendingScreen> {
                     onPressed: checkStatus,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.deepPurple,
+                      foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 32,
                         vertical: 14,
@@ -205,6 +206,7 @@ class _RiderPendingScreenState extends State<RiderPendingScreen> {
                       onPressed: navigateToCompleteProfile,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 32,
                           vertical: 14,
