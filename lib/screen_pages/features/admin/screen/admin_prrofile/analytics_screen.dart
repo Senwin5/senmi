@@ -239,7 +239,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
                           title: Text(rider['username'].toString()),
 
-                          subtitle: Text("${rider['deliveries']} deliveries"),
+                          //subtitle: Text(rider['total_deliveries']),
+                          subtitle: Text("${rider['deliveries']}"),
 
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,

@@ -258,7 +258,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SizedBox(height: 6),
+                        const SizedBox(height: 2),
                         Text(
                           "₦${package['price']}",
                           style: TextStyle(
@@ -276,16 +276,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               statusBadge(status),
-
-                              const SizedBox(height: 6),
-
+                              const SizedBox(height: 2),
                               InkWell(
                                 onTap: () => payNow(package),
                                 borderRadius: BorderRadius.circular(20),
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 3,
+                                    horizontal: 8,
+                                    vertical: 2,
                                   ),
                                   decoration: BoxDecoration(
                                     color: primaryPurple.withOpacity(0.12),
@@ -298,15 +296,41 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                       color: Color(0xFF581C87),
                                       fontWeight: FontWeight.bold,
                                       fontSize: 12,
-                                      height: 1,
                                     ),
                                   ),
                                 ),
                               ),
                             ],
                           )
+                        : status == "paid"
+                        ? Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              statusBadge(status),
+                              const SizedBox(height: 2),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.withOpacity(0.12),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(color: Colors.orange),
+                                ),
+                                child: const Text(
+                                  "WAITING FOR RIDER",
+                                  style: TextStyle(
+                                    color: Colors.orange,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 10,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          )
                         : statusBadge(status),
-
                     onTap: () => payNow(package),
                   ),
                 );

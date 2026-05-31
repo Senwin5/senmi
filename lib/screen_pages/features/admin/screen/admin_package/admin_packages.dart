@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:senmi/screen_pages/admin/screen/admin_package/admin_package_details_screen.dart';
+import 'package:senmi/screen_pages/features/admin/screen/admin_package/admin_package_details_screen.dart';
 import 'package:senmi/services/api_service.dart';
 import '../../services/admin_socket_service.dart';
 
