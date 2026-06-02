@@ -271,8 +271,9 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
       child: TextFormField(
         controller: controller,
         keyboardType: type,
-        style: const TextStyle(
-          color: Colors.black,
+        cursorColor: const Color(0xFF581C87),
+        style: TextStyle(
+          color: Theme.of(context).textTheme.bodyLarge?.color,
           fontSize: 16,
           fontWeight: FontWeight.w500,
         ),
@@ -292,6 +293,7 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
             borderRadius: BorderRadius.circular(18),
             borderSide: BorderSide.none,
           ),
+
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(18),
             borderSide: BorderSide(color: Colors.grey.shade200),

@@ -259,18 +259,32 @@ class _RiderDeliveriesScreenState extends State<RiderDeliveriesScreen>
           ),
         ],
 
-        bottom: TabBar(
-          controller: _tabController,
-          isScrollable: true,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
-          indicatorColor: Colors.white,
-          tabs: const [
-            Tab(text: "Available"),
-            Tab(text: "Accepted"),
-            Tab(text: "In Transit"),
-            Tab(text: "Delivered"),
-          ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(70),
+          child: Padding(
+            padding: const EdgeInsets.only(left: 12, right: 12, bottom: 10),
+            child: TabBar(
+              controller: _tabController,
+              isScrollable: true,
+
+              indicator: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+
+              labelColor: Colors.deepPurple,
+              unselectedLabelColor: Colors.white,
+
+              dividerColor: Colors.transparent,
+
+              tabs: const [
+                Tab(text: "Available"),
+                Tab(text: "Accepted"),
+                Tab(text: "In Transit"),
+                Tab(text: "Delivered"),
+              ],
+            ),
+          ),
         ),
       ),
       body: TabBarView(
