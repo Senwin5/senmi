@@ -249,7 +249,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   child: ListTile(
                     contentPadding: const EdgeInsets.all(14),
                     title: Text(
-                      package['description'] ?? "Package",
+                      package['package_id'] ?? "Package",
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: Theme.of(context).textTheme.bodyLarge?.color,

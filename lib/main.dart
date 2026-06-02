@@ -4,7 +4,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:senmi/firebase_options.dart';
-import 'package:senmi/screen_pages/features/customer/customer_home_bottom/customer_bottomnav.dart';
+import 'package:senmi/screen_pages/features/customer/success/deliverycodescreen.dart';
 import 'package:senmi/screen_pages/welcome/splash_screen.dart';
 import 'package:senmi/service_firebase/firebase_notification_service.dart';
 import 'package:senmi/services/api_service.dart';
@@ -53,13 +53,16 @@ void main() async {
 
   appLinks.uriLinkStream.listen((uri) async {
     if (uri.toString().contains("payment-success")) {
-      openedFromPayment = true;
+      final packageId = uri.queryParameters["package_id"] ?? "";
 
-      await Future.delayed(const Duration(milliseconds: 500));
+      final deliveryCode = uri.queryParameters["delivery_code"] ?? "";
 
       navigatorKey.currentState?.pushAndRemoveUntil(
         MaterialPageRoute(
-          builder: (_) => const CustomerBottomNav(initialIndex: 2),
+          builder: (_) => DeliveryCodeInstructionScreen(
+            packageId: packageId,
+            deliveryCode: deliveryCode,
+          ),
         ),
         (route) => false,
       );
@@ -78,10 +81,23 @@ class MyApp extends StatelessWidget {
       navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
       title: 'Senmi',
-      theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: Colors.black,
-        cardColor: Colors.grey[900],
+
+      theme: ThemeData(
+        brightness: Brightness.light,
+        scaffoldBackgroundColor: Colors.white,
+        cardColor: Colors.white,
+        useMaterial3: true,
       ),
+
+      darkTheme: ThemeData(
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: const Color(0xFF0F0F0F),
+        cardColor: const Color(0xFF1E1E1E),
+        useMaterial3: true,
+      ),
+
+      themeMode: ThemeMode.light, 
+
       home: const SplashScreen(),
     );
   }

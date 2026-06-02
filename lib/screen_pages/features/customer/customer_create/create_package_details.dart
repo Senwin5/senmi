@@ -441,6 +441,7 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
               "Phone": package!['receiver_phone'] ?? "N/A",
             }),
             _infoCard("Package Info", {
+              "Package Id": package!['package_id'] ?? "N/A",
               "Description": package!['description'] ?? "N/A",
               "Price": "₦${package!['price'] ?? 0}",
             }),
