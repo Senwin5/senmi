@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:senmi/screen_pages/features/customer/customer_track/customer_track_package.dart';
+import 'package:senmi/screen_pages/features/customer/customer_home_bottom/customer_bottomnav.dart';
 
 class DeliveryScreen extends StatelessWidget {
   final String packageId;
@@ -74,7 +74,7 @@ class DeliveryScreen extends StatelessWidget {
               const SizedBox(height: 20),
 
               Text(
-                "Payment Successful",
+                "Delivery Code",
                 textAlign: TextAlign.center,
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
@@ -85,7 +85,7 @@ class DeliveryScreen extends StatelessWidget {
               const SizedBox(height: 10),
 
               Text(
-                "Keep your delivery code safe and share it only with the rider.",
+                "Keep your delivery code safe and share it only with the receiver of the package.",
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: isDark ? Colors.white70 : Colors.black87,
@@ -155,7 +155,7 @@ class DeliveryScreen extends StatelessWidget {
                         context,
                         5,
                         Icons.check_circle_outline,
-                        "Rider verifies the code and delivery begins",
+                        "Rider verifies the code and delivery is completed",
                       ),
                     ],
                   ),
@@ -174,11 +174,15 @@ class DeliveryScreen extends StatelessWidget {
                     ),
                   ),
                   onPressed: () {
-                    Navigator.pushReplacement(
+                    Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => TrackingScreen(packageId: packageId),
+                        builder: (_) => CustomerBottomNav(
+                          initialIndex: 3,
+                          packageId: packageId,
+                        ),
                       ),
+                      (route) => false,
                     );
                   },
                   child: const Text(

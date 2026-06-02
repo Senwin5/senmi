@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:senmi/screen_pages/features/customer/customer_home_bottom/customer_bottomnav.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:senmi/services/api_service.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
@@ -240,6 +241,23 @@ class _TrackingScreenState extends State<TrackingScreen>
     }
 
     return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const CustomerBottomNav(
+                  initialIndex: 0, // Home
+                ),
+              ),
+              (route) => false,
+            );
+          },
+        ),
+      ),
+
       body: Stack(
         children: [
           GoogleMap(

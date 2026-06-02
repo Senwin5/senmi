@@ -8,35 +8,38 @@ import 'package:senmi/screen_pages/features/customer/customer_track/customer_tra
 /// Customer Bottom Navigation
 class CustomerBottomNav extends StatefulWidget {
   final int initialIndex;
+  final String? packageId; // ✅ make nullable
 
-  const CustomerBottomNav({super.key, this.initialIndex = 0});
+  const CustomerBottomNav({super.key, this.initialIndex = 0, this.packageId});
 
   @override
   State<CustomerBottomNav> createState() => _CustomerBottomNavState();
 }
 
 class _CustomerBottomNavState extends State<CustomerBottomNav> {
-  //int _currentIndex = 0;
   late int _currentIndex;
 
-  // Dark mode notifier for customer profile screen
   final ValueNotifier<bool> darkModeNotifier = ValueNotifier<bool>(false);
-
-  // Example packageId for the tracking tab
-  final String lastPackageId = "sample-package-id";
 
   late final List<Widget> _screens;
 
   @override
   void initState() {
     super.initState();
+
     _currentIndex = widget.initialIndex;
+
     _screens = [
-      CustomerHome(),
+      const CustomerHome(),
       const CreatePackageScreen(),
       const HistoryScreen(),
-      //TrackingScreen(packageId: lastPackageId),
-      TrackingScreen(packageId: lastPackageId),
+
+      //  REAL TRACKING SCREEN (FIXED)
+      if (widget.packageId != null)
+        TrackingScreen(packageId: widget.packageId!)
+      else
+        const Center(child: Text("No active tracking")),
+
       CustomerProfileScreen(darkModeNotifier: darkModeNotifier),
     ];
   }
@@ -66,10 +69,13 @@ class _CustomerBottomNavState extends State<CustomerBottomNav> {
               items: _navItems,
               type: BottomNavigationBarType.fixed,
               backgroundColor: Colors.white,
-              elevation: 8,
               selectedItemColor: Colors.deepPurple,
               unselectedItemColor: Colors.black54,
-              onTap: (index) => setState(() => _currentIndex = index),
+              onTap: (index) {
+                setState(() {
+                  _currentIndex = index;
+                });
+              },
             ),
           ),
         );
