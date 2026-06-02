@@ -59,10 +59,8 @@ void main() async {
 
       navigatorKey.currentState?.pushAndRemoveUntil(
         MaterialPageRoute(
-          builder: (_) => DeliveryCodeInstructionScreen(
-            packageId: packageId,
-            deliveryCode: deliveryCode,
-          ),
+          builder: (_) =>
+              DeliveryScreen(packageId: packageId, deliveryCode: deliveryCode),
         ),
         (route) => false,
       );
@@ -96,7 +94,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
 
-      themeMode: ThemeMode.light, 
+      themeMode: ThemeMode.light,
 
       home: const SplashScreen(),
     );

@@ -221,6 +221,24 @@ class _TrackingScreenState extends State<TrackingScreen>
 
   @override
   Widget build(BuildContext context) {
+    // 🔥 Display friendly tracking status
+    String displayStatus;
+
+    if (status == "pending" ||
+        status == "created" ||
+        status == "paid" ||
+        status == "awaiting_rider") {
+      displayStatus = "WAITING FOR RIDER TO ACCEPT PACKAGE";
+    } else if (status == "accepted") {
+      displayStatus = "RIDER ACCEPTED PACKAGE";
+    } else if (status == "picked_up") {
+      displayStatus = "PACKAGE PICKED UP";
+    } else if (status == "delivered") {
+      displayStatus = "PACKAGE DELIVERED";
+    } else {
+      displayStatus = status.replaceAll("_", " ").toUpperCase();
+    }
+
     return Scaffold(
       body: Stack(
         children: [
@@ -363,7 +381,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: Text(
-                                      status.replaceAll("_", " ").toUpperCase(),
+                                      displayStatus,
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 16,

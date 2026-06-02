@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:senmi/screen_pages/features/customer/customer_track/customer_track_package.dart';
 
-class DeliveryCodeInstructionScreen extends StatelessWidget {
+class DeliveryScreen extends StatelessWidget {
   final String packageId;
   final String deliveryCode;
 
-  const DeliveryCodeInstructionScreen({
+  const DeliveryScreen({
     super.key,
     required this.packageId,
     required this.deliveryCode,
