@@ -2,23 +2,19 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:senmi/services/api_service.dart';
-
-
-import '../../models/rider_model.dart';
+import 'rider_model.dart';
 import '../../services/admin_socket_service.dart';
-import '../../widgets/rider_card.dart';
+import 'rider_card.dart';
 import 'rider_details_screen.dart';
 
 class AdminRidersScreen extends StatefulWidget {
   const AdminRidersScreen({super.key});
 
   @override
-  State<AdminRidersScreen> createState() =>
-      _AdminRidersScreenState();
+  State<AdminRidersScreen> createState() => _AdminRidersScreenState();
 }
 
-class _AdminRidersScreenState
-    extends State<AdminRidersScreen> {
+class _AdminRidersScreenState extends State<AdminRidersScreen> {
   bool isLoading = true;
 
   List<RiderModel> riders = [];
@@ -83,13 +79,9 @@ class _AdminRidersScreenState
     });
 
     try {
-      final data = await ApiService.getRiders();
+      final List<dynamic> list = await ApiService.getRiders();
 
-      riders = data
-          .map<RiderModel>(
-            (e) => RiderModel.fromJson(e),
-          )
-          .toList();
+      riders = list.map<RiderModel>((e) => RiderModel.fromJson(e)).toList();
 
       applyFilters();
     } catch (e) {
@@ -108,26 +100,17 @@ class _AdminRidersScreenState
   // =========================
 
   void applyFilters() {
-    final query =
-        searchController.text.toLowerCase();
+    final query = searchController.text.toLowerCase();
 
     filteredRiders = riders.where((rider) {
       final matchesSearch =
-          rider.username
-                  .toLowerCase()
-                  .contains(query) ||
-              rider.email
-                  .toLowerCase()
-                  .contains(query) ||
-              (rider.phone ?? '')
-                  .toLowerCase()
-                  .contains(query);
+          rider.username.toLowerCase().contains(query) ||
+          rider.email.toLowerCase().contains(query) ||
+          (rider.phone ?? '').toLowerCase().contains(query);
 
-      final matchesFilter =
-          selectedFilter == "all"
-              ? true
-              : rider.status.toLowerCase() ==
-                  selectedFilter;
+      final matchesFilter = selectedFilter == "all"
+          ? true
+          : rider.status.toLowerCase() == selectedFilter;
 
       return matchesSearch && matchesFilter;
     }).toList();
@@ -141,22 +124,14 @@ class _AdminRidersScreenState
   // APPROVE RIDER
   // =========================
 
-  Future<void> approveRider(int riderId) async {
-    final success =
-        await ApiService.reviewRider(
-      riderId,
-      "approved",
-      "",
-    );
+  Future<void> approveRider(String riderId) async {
+    final success = await ApiService.reviewRider(riderId, "approved", "");
+
+    if (!mounted) return;
 
     if (success) {
-      if (!mounted) return;
-
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content:
-              Text("Rider approved successfully"),
-        ),
+        const SnackBar(content: Text("Rider approved successfully")),
       );
 
       loadRiders();
@@ -167,40 +142,30 @@ class _AdminRidersScreenState
   // REJECT RIDER
   // =========================
 
-  Future<void> rejectRider(int riderId) async {
-    final controller =
-        TextEditingController();
+  Future<void> rejectRider(String riderId) async {
+    final controller = TextEditingController();
 
     showDialog(
       context: context,
-
       builder: (_) {
         return AlertDialog(
           title: const Text("Reject Rider"),
-
           content: TextField(
             controller: controller,
             maxLines: 3,
-
             decoration: const InputDecoration(
               hintText: "Reason for rejection",
               border: OutlineInputBorder(),
             ),
           ),
-
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-
+              onPressed: () => Navigator.pop(context),
               child: const Text("Cancel"),
             ),
-
             ElevatedButton(
               onPressed: () async {
-                final success =
-                    await ApiService.reviewRider(
+                final success = await ApiService.reviewRider(
                   riderId,
                   "rejected",
                   controller.text.trim(),
@@ -211,24 +176,13 @@ class _AdminRidersScreenState
                 Navigator.pop(context);
 
                 if (success) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        "Rider rejected",
-                      ),
-                    ),
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Rider rejected")),
                   );
 
                   loadRiders();
                 }
               },
-
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-              ),
-
               child: const Text("Reject"),
             ),
           ],
@@ -242,8 +196,7 @@ class _AdminRidersScreenState
   // =========================
 
   Widget filterChip(String label) {
-    final isSelected =
-        selectedFilter == label.toLowerCase();
+    final isSelected = selectedFilter == label.toLowerCase();
 
     return Padding(
       padding: const EdgeInsets.only(right: 8),
@@ -254,8 +207,7 @@ class _AdminRidersScreenState
         selected: isSelected,
 
         onSelected: (_) {
-          selectedFilter =
-              label.toLowerCase();
+          selectedFilter = label.toLowerCase();
 
           applyFilters();
         },
@@ -270,17 +222,13 @@ class _AdminRidersScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Riders Approval"),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text("Riders Approval"), centerTitle: true),
 
       body: Column(
         children: [
           // =========================
           // SEARCH
           // =========================
-
           Padding(
             padding: const EdgeInsets.all(12),
 
@@ -292,15 +240,12 @@ class _AdminRidersScreenState
               },
 
               decoration: InputDecoration(
-                hintText:
-                    "Search username, email, phone",
+                hintText: "Search username, email, phone",
 
-                prefixIcon:
-                    const Icon(Icons.search),
+                prefixIcon: const Icon(Icons.search),
 
                 border: OutlineInputBorder(
-                  borderRadius:
-                      BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(14),
                 ),
               ),
             ),
@@ -309,17 +254,13 @@ class _AdminRidersScreenState
           // =========================
           // FILTERS
           // =========================
-
           SizedBox(
             height: 50,
 
             child: ListView(
               scrollDirection: Axis.horizontal,
 
-              padding:
-                  const EdgeInsets.symmetric(
-                horizontal: 12,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
 
               children: [
                 filterChip("All"),
@@ -335,68 +276,47 @@ class _AdminRidersScreenState
           // =========================
           // RIDERS LIST
           // =========================
-
           Expanded(
             child: isLoading
-                ? const Center(
-                    child:
-                        CircularProgressIndicator(),
-                  )
+                ? const Center(child: CircularProgressIndicator())
                 : filteredRiders.isEmpty
-                    ? const Center(
-                        child:
-                            Text("No riders found"),
-                      )
-                    : RefreshIndicator(
-                        onRefresh: loadRiders,
+                ? const Center(child: Text("No riders found"))
+                : RefreshIndicator(
+                    onRefresh: loadRiders,
 
-                        child: ListView.builder(
-                          padding:
-                              const EdgeInsets.all(
-                            12,
-                          ),
+                    child: ListView.builder(
+                      padding: const EdgeInsets.all(12),
 
-                          itemCount:
-                              filteredRiders.length,
+                      itemCount: filteredRiders.length,
 
-                          itemBuilder:
-                              (context, index) {
-                            final rider =
-                                filteredRiders[
-                                    index];
+                      itemBuilder: (context, index) {
+                        final rider = filteredRiders[index];
 
-                            return RiderCard(
-                              rider: rider,
+                        return RiderCard(
+                          rider: rider,
 
-                              onTap: () {
-                                Navigator.push(
-                                  context,
+                          onTap: () {
+                            Navigator.push(
+                              context,
 
-                                  MaterialPageRoute(
-                                    builder: (_) =>
-                                        RiderDetailsScreen(
-                                      rider:
-                                          rider,
-                                    ),
-                                  ),
-                                );
-                              },
-
-                              onApprove: () {
-                                approveRider(
-                                  rider.id,
-                                );
-                              },
-
-                              onReject: () {
-                                rejectRider(
-                                  rider.id,
-                                );
-                              },
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    RiderDetailsScreen(rider: rider),
+                              ),
                             );
                           },
-                        ),
-                      ),
+
+                          onApprove: () {
+                            approveRider(rider.riderId);
+                          },
+
+                          onReject: () {
+                            rejectRider(rider.riderId);
+                          },
+                        );
+                      },
+                    ),
+                  ),
           ),
         ],
       ),

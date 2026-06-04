@@ -1,6 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:senmi/screen_pages/features/admin/screen/admin_riders_customer_screen/customer_management_screen.dart';
 import 'package:senmi/services/api_service.dart';
 
 class AnalyticsScreen extends StatefulWidget {
@@ -168,11 +169,21 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                         Colors.orange,
                       ),
 
-                      statCard(
-                        "Customers",
-                        "${data['total_customers']}",
-                        Icons.people,
-                        Colors.purple,
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const CustomerManagementScreen(),
+                            ),
+                          );
+                        },
+                        child: statCard(
+                          "Customers",
+                          "${data['total_customers']}",
+                          Icons.people,
+                          Colors.purple,
+                        ),
                       ),
 
                       statCard(

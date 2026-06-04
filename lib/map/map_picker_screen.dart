@@ -175,7 +175,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
       backgroundColor: Theme.of(context).colorScheme.surface,
 
       appBar: AppBar(
-        title: const Text("Location"),
+        title: const Text("Waypoint"),
         backgroundColor: Theme.of(context).colorScheme.surface,
         foregroundColor: Theme.of(context).colorScheme.onSurface,
         actions: [

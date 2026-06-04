@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:senmi/screen_pages/features/admin/screen/admin_prrofile/notifications.dart';
+//import 'package:senmi/screen_pages/features/admin/screen/admin_riders_customer_screen/customer_management_screen.dart';
+import 'package:senmi/screen_pages/features/admin/screen/admin_riders_customer_screen/riders_screen.dart';
 import 'package:senmi/services/api_service.dart';
 import 'package:web_socket_channel/io.dart';
 
@@ -21,6 +24,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   int activeDeliveries = 0;
   int delivered = 0;
   int availablePackages = 0;
+  int notificationsCount = 0;
 
   List alerts = [];
 
@@ -46,6 +50,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Future<void> loadDashboard() async {
     try {
       final data = await ApiService.getAdminDashboard();
+      final notif = await ApiService.getAdminNotifications(1);
 
       if (!mounted) return;
 
@@ -58,10 +63,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
         alerts = data['alerts'] ?? [];
 
+        // ignore: dead_code, unnecessary_type_check
+        notificationsCount = (notif["results"] is List)
+            ? (notif["results"] as List).length
+            : 0;
+
         isLoading = false;
       });
     } catch (e) {
-      debugPrint(e.toString());
+      debugPrint("Dashboard error: $e");
 
       if (!mounted) return;
 
@@ -71,12 +81,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     }
   }
 
-  // =========================
   // LIVE WEBSOCKET
-  // =========================
-  // =========================
-  // LIVE WEBSOCKET
-  // =========================
+  // ===================
   void connectWebSocket() {
     channel = IOWebSocketChannel.connect(
       'wss://www.senmi.com.ng/ws/admin-dashboard/',
@@ -141,18 +147,41 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       childAspectRatio: 1.2,
 
                       children: [
-                        AdminStatCard(
-                          title: "Riders",
-                          value: riders.toString(),
-                          icon: Icons.delivery_dining,
-                          color: Colors.blue,
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const AdminRidersScreen(),
+                              ),
+                            );
+                          },
+                          child: AdminStatCard(
+                            title: "Total Riders",
+                            value: riders.toString(),
+                            icon: Icons.delivery_dining,
+                            color: Colors.blue,
+                          ),
                         ),
 
-                        AdminStatCard(
-                          title: "Pending Riders",
-                          value: pending.toString(),
-                          icon: Icons.hourglass_bottom,
-                          color: Colors.orange,
+                       
+
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const AdminRidersScreen(),
+                              ),
+                            );
+                          },
+
+                          child: AdminStatCard(
+                            title: "Pending Riders",
+                            value: pending.toString(),
+                            icon: Icons.hourglass_bottom,
+                            color: Colors.orange,
+                          ),
                         ),
 
                         AdminStatCard(
@@ -174,6 +203,34 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           value: availablePackages.toString(),
                           icon: Icons.inventory,
                           color: Colors.red,
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const AdminNotificationScreen(),
+                              ),
+                            );
+                          },
+                          child: AdminStatCard(
+                            title: "Notifications",
+                            value: notificationsCount.toString(),
+                            icon: Icons.notification_add,
+                            color: Colors.deepPurple,
+                          ),
+                        ),
+                        AdminStatCard(
+                          title: "Rider Wallets",
+                          value: delivered.toString(),
+                          icon: Icons.check_circle,
+                          color: Colors.purple,
+                        ),
+                        AdminStatCard(
+                          title: "Pending Withdrawals",
+                          value: delivered.toString(),
+                          icon: Icons.check_circle,
+                          color: Colors.purple,
                         ),
                       ],
                     ),

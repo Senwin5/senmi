@@ -186,6 +186,42 @@ class ApiService {
     }
   }
 
+  static Future<Map<String, dynamic>> getAdminNotifications(int page) async {
+    final response = await http.get(
+      Uri.parse("$baseUrl/admin-notifications/?page=$page&limit=20"),
+      headers: {"Authorization": "Bearer $token"},
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+
+      if (data is Map<String, dynamic>) {
+        return data;
+      }
+
+      // 🔥 if backend accidentally returns list, wrap it
+      return {"results": data, "has_next": false, "page": page};
+    }
+
+    debugPrint("Notification API error: ${response.body}");
+
+    return {"results": [], "has_next": false, "page": page};
+  }
+
+  static Future<void> sendNotification({
+    required String title,
+    required String body,
+  }) async {
+    await http.post(
+      Uri.parse("$baseUrl/send-notification/"),
+      headers: {
+        "Authorization": "Bearer $token",
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode({"title": title, "body": body, "target": "all"}),
+    );
+  }
+
   static Future<void> saveFcmToken(String token) async {
     final accessToken = ApiService.token; // ✅ use existing variable
 
@@ -206,6 +242,51 @@ class ApiService {
     }
     if (kDebugMode) {
       print("FCM SAVE BODY: ${res.body}");
+    }
+  }
+
+  static Future<List> getCustomers() async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/admin/customers/"),
+        headers: await getAuthHeaders(),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        if (data is List) return data;
+
+        if (data is Map<String, dynamic>) {
+          if (data['results'] is List) {
+            return data['results'];
+          }
+        }
+      }
+
+      return [];
+    } catch (e) {
+      debugPrint("getCustomers error: $e");
+      return [];
+    }
+  }
+
+  static Future<Map<String, dynamic>> getCustomerDetail(int customerId) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/admin/customers/$customerId/"),
+        headers: await getAuthHeaders(),
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      }
+
+      return {};
+    } catch (e) {
+      debugPrint("getCustomerDetail error: $e");
+
+      return {};
     }
   }
 
@@ -945,7 +1026,7 @@ class ApiService {
 
   /// Approve or reject a rider
   static Future<bool> reviewRider(
-    int riderId,
+    String riderId,
     String status,
     String reason,
   ) async {

@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
-import '../../models/rider_model.dart';
+import 'rider_model.dart';
 
 class RiderDetailsScreen extends StatelessWidget {
   final RiderModel rider;
 
-  const RiderDetailsScreen({
-    super.key,
-    required this.rider,
-  });
+  const RiderDetailsScreen({super.key, required this.rider});
 
   Widget infoCard({
     required IconData icon,
@@ -17,21 +14,12 @@ class RiderDetailsScreen extends StatelessWidget {
     return Card(
       elevation: 2,
 
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
 
       child: ListTile(
-        leading: CircleAvatar(
-          child: Icon(icon),
-        ),
+        leading: CircleAvatar(child: Icon(icon)),
 
-        title: Text(
-          title,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
 
         subtitle: Padding(
           padding: const EdgeInsets.only(top: 4),
@@ -45,11 +33,7 @@ class RiderDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget imageSection(
-    BuildContext context,
-    String title,
-    String? imageUrl,
-  ) {
+  Widget imageSection(BuildContext context, String title, String? imageUrl) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
 
@@ -57,10 +41,7 @@ class RiderDetailsScreen extends StatelessWidget {
         Text(
           title,
 
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
 
         const SizedBox(height: 12),
@@ -72,10 +53,8 @@ class RiderDetailsScreen extends StatelessWidget {
                 context,
 
                 MaterialPageRoute(
-                  builder: (_) => FullImageScreen(
-                    imageUrl: imageUrl,
-                    title: title,
-                  ),
+                  builder: (_) =>
+                      FullImageScreen(imageUrl: imageUrl, title: title),
                 ),
               );
             },
@@ -92,62 +71,42 @@ class RiderDetailsScreen extends StatelessWidget {
                   width: double.infinity,
                   fit: BoxFit.cover,
 
-                  loadingBuilder:
-                      (
-                        context,
-                        child,
-                        loadingProgress,
-                      ) {
-                        if (loadingProgress == null) {
-                          return child;
-                        }
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) {
+                      return child;
+                    }
 
-                        return Container(
-                          height: 220,
-                          alignment: Alignment.center,
+                    return Container(
+                      height: 220,
+                      alignment: Alignment.center,
 
-                          child:
-                              const CircularProgressIndicator(),
-                        );
-                      },
+                      child: const CircularProgressIndicator(),
+                    );
+                  },
 
-                  errorBuilder:
-                      (
-                        context,
-                        error,
-                        stackTrace,
-                      ) {
-                        return Container(
-                          height: 220,
-                          alignment: Alignment.center,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      height: 220,
+                      alignment: Alignment.center,
 
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade200,
-                            borderRadius:
-                                BorderRadius.circular(
-                              18,
-                            ),
-                          ),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade200,
+                        borderRadius: BorderRadius.circular(18),
+                      ),
 
-                          child: const Column(
-                            mainAxisAlignment:
-                                MainAxisAlignment.center,
+                      child: const Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
 
-                            children: [
-                              Icon(
-                                Icons.broken_image,
-                                size: 50,
-                              ),
+                        children: [
+                          Icon(Icons.broken_image, size: 50),
 
-                              SizedBox(height: 10),
+                          SizedBox(height: 10),
 
-                              Text(
-                                "Failed to load image",
-                              ),
-                            ],
-                          ),
-                        );
-                      },
+                          Text("Failed to load image"),
+                        ],
+                      ),
+                    );
+                  },
                 ),
               ),
             ),
@@ -164,14 +123,10 @@ class RiderDetailsScreen extends StatelessWidget {
             ),
 
             child: const Column(
-              mainAxisAlignment:
-                  MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
 
               children: [
-                Icon(
-                  Icons.image_not_supported,
-                  size: 50,
-                ),
+                Icon(Icons.image_not_supported, size: 50),
 
                 SizedBox(height: 10),
 
@@ -201,9 +156,7 @@ class RiderDetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(rider.username),
-      ),
+      appBar: AppBar(title: Text(rider.username)),
 
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -212,7 +165,6 @@ class RiderDetailsScreen extends StatelessWidget {
           // =========================
           // PROFILE HEADER
           // =========================
-
           Center(
             child: Column(
               children: [
@@ -221,22 +173,14 @@ class RiderDetailsScreen extends StatelessWidget {
 
                   backgroundImage:
                       rider.profileImage != null &&
-                              rider.profileImage!
-                                  .isNotEmpty
-                          ? NetworkImage(
-                              rider.profileImage!,
-                            )
-                          : null,
+                          rider.profileImage!.isNotEmpty
+                      ? NetworkImage(rider.profileImage!)
+                      : null,
 
                   child:
-                      rider.profileImage == null ||
-                              rider.profileImage!
-                                  .isEmpty
-                          ? const Icon(
-                              Icons.person,
-                              size: 50,
-                            )
-                          : null,
+                      rider.profileImage == null || rider.profileImage!.isEmpty
+                      ? const Icon(Icons.person, size: 50)
+                      : null,
                 ),
 
                 const SizedBox(height: 16),
@@ -247,6 +191,24 @@ class RiderDetailsScreen extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    "ID: ${rider.riderId}",
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.blue,
+                    ),
                   ),
                 ),
 
@@ -262,8 +224,7 @@ class RiderDetailsScreen extends StatelessWidget {
                     // ignore: deprecated_member_use
                     color: statusColor().withOpacity(0.15),
 
-                    borderRadius:
-                        BorderRadius.circular(30),
+                    borderRadius: BorderRadius.circular(30),
                   ),
 
                   child: Text(
@@ -284,18 +245,9 @@ class RiderDetailsScreen extends StatelessWidget {
           // =========================
           // INFO SECTION
           // =========================
+          infoCard(icon: Icons.email, title: "Email", value: rider.email),
 
-          infoCard(
-            icon: Icons.email,
-            title: "Email",
-            value: rider.email,
-          ),
-
-          infoCard(
-            icon: Icons.phone,
-            title: "Phone",
-            value: rider.phone ?? "",
-          ),
+          infoCard(icon: Icons.phone, title: "Phone", value: rider.phone ?? ""),
 
           infoCard(
             icon: Icons.location_city,
@@ -314,24 +266,11 @@ class RiderDetailsScreen extends StatelessWidget {
           // =========================
           // DOCUMENTS
           // =========================
+          imageSection(context, "Profile Image", rider.profileImage),
 
-          imageSection(
-            context,
-            "Profile Image",
-            rider.profileImage,
-          ),
+          imageSection(context, "Rider Image", rider.riderImage),
 
-          imageSection(
-            context,
-            "Rider Image",
-            rider.riderImage,
-          ),
-
-          imageSection(
-            context,
-            "Vehicle Image",
-            rider.vehicleImage,
-          ),
+          imageSection(context, "Vehicle Image", rider.vehicleImage),
 
           const SizedBox(height: 30),
         ],
@@ -376,21 +315,13 @@ class FullImageScreen extends StatelessWidget {
 
               fit: BoxFit.contain,
 
-              loadingBuilder:
-                  (
-                    context,
-                    child,
-                    loadingProgress,
-                  ) {
-                    if (loadingProgress == null) {
-                      return child;
-                    }
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) {
+                  return child;
+                }
 
-                    return const Center(
-                      child:
-                          CircularProgressIndicator(),
-                    );
-                  },
+                return const Center(child: CircularProgressIndicator());
+              },
             ),
           ),
         ),

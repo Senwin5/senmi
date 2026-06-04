@@ -279,6 +279,14 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
         ),
         decoration: InputDecoration(
           labelText: label,
+
+          // ✅ THIS is your placeholder (hint)
+          hintText: "Enter $label",
+          hintStyle: const TextStyle(
+            fontSize: 8, // 👈 make it smaller
+            color: Colors.grey,
+          ),
+
           filled: true,
           fillColor: Theme.of(context).cardColor,
           contentPadding: const EdgeInsets.symmetric(
@@ -293,7 +301,6 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
             borderRadius: BorderRadius.circular(18),
             borderSide: BorderSide.none,
           ),
-
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(18),
             borderSide: BorderSide(color: Colors.grey.shade200),

@@ -274,7 +274,7 @@ class _CustomerHomeState extends State<CustomerHome> {
                     Text(
                       subtitle,
                       style: TextStyle(
-                        color: Colors.grey.shade600,
+                        color: isDark ? Colors.grey.shade300 : Colors.black,
                         fontSize: 13.5,
                       ),
                     ),
