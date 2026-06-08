@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:senmi/services/api_service.dart';
@@ -156,40 +158,109 @@ class _AdminNotificationScreenState extends State<AdminNotificationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Notifications")),
+      backgroundColor: const Color(0xffF5F7FB),
 
-      floatingActionButton: FloatingActionButton(
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.white,
+        title: const Text(
+          "Notifications",
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        ),
+        iconTheme: const IconThemeData(color: Colors.black),
+      ),
+
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: _showSendNotificationDialog,
-        child: const Icon(Icons.send),
+        icon: const Icon(Icons.send),
+        label: const Text("Send"),
       ),
 
       body: loading
           ? const Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              controller: _scrollController,
-              itemCount: notifications.length + 1,
-              itemBuilder: (context, index) {
-                if (index == notifications.length) {
-                  return hasNext
-                      ? const Padding(
-                          padding: EdgeInsets.all(16),
-                          child: Center(child: CircularProgressIndicator()),
-                        )
-                      : const SizedBox();
-                }
+          : RefreshIndicator(
+              onRefresh: loadNotifications,
+              child: ListView.builder(
+                controller: _scrollController,
+                padding: const EdgeInsets.all(16),
+                itemCount: notifications.length + 1,
+                itemBuilder: (context, index) {
+                  if (index == notifications.length) {
+                    return hasNext
+                        ? const Padding(
+                            padding: EdgeInsets.all(16),
+                            child: Center(child: CircularProgressIndicator()),
+                          )
+                        : const SizedBox(height: 80);
+                  }
 
-                final n = notifications[index];
+                  final n = notifications[index];
 
-                return Card(
-                  child: ListTile(
-                    leading: const Icon(Icons.notifications),
-                    title: Text(n["message"] ?? ""),
-                    subtitle: Text(
-                      "${n["user"] ?? ""}\n${n["created_at"] ?? ""}",
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
-                  ),
-                );
-              },
+
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // ICON
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.notifications,
+                            color: Colors.blue,
+                          ),
+                        ),
+
+                        const SizedBox(width: 12),
+
+                        // CONTENT
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // MESSAGE
+                              Text(
+                                n["message"] ?? "No message",
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 15,
+                                ),
+                              ),
+
+                              const SizedBox(height: 6),
+
+                              // USER + TIME
+                              Text(
+                                "${n["user"] ?? "System"} • ${n["created_at"] ?? ""}",
+                                style: TextStyle(
+                                  color: Colors.grey.shade600,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
             ),
     );
   }
