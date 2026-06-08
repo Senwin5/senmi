@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:senmi/screen_pages/features/admin/screen/admin_package/admin_packages.dart';
 import 'package:senmi/screen_pages/features/admin/screen/admin_prrofile/notifications.dart';
 //import 'package:senmi/screen_pages/features/admin/screen/admin_riders_customer_screen/customer_management_screen.dart';
-import 'package:senmi/screen_pages/features/admin/screen/admin_riders_customer_screen/riders_screen.dart';
+import 'package:senmi/screen_pages/features/admin/admin_riders_screen/riders_screen.dart';
+import 'package:senmi/screen_pages/features/admin/screen/admin_transaction/admin_wallet_screen.dart';
+import 'package:senmi/screen_pages/features/admin/screen/admin_transaction/admin_withdrawal_screen.dart';
 import 'package:senmi/services/api_service.dart';
 import 'package:web_socket_channel/io.dart';
 
@@ -25,6 +28,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   int delivered = 0;
   int availablePackages = 0;
   int notificationsCount = 0;
+  int totalWallets = 0;
+  int pendingWithdrawals = 0;
 
   List alerts = [];
 
@@ -50,6 +55,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Future<void> loadDashboard() async {
     try {
       final data = await ApiService.getAdminDashboard();
+      debugPrint("DASHBOARD DATA: $data");
       final notif = await ApiService.getAdminNotifications(1);
 
       if (!mounted) return;
@@ -60,6 +66,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         activeDeliveries = data['active_deliveries'] ?? 0;
         delivered = data['completed_deliveries'] ?? 0;
         availablePackages = data['available_packages'] ?? 0;
+        totalWallets = data['wallet_count'] ?? 0;
+        pendingWithdrawals = data['pending_withdrawals'] ?? 0;
 
         alerts = data['alerts'] ?? [];
 
@@ -164,8 +172,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           ),
                         ),
 
-                       
-
                         GestureDetector(
                           onTap: () {
                             Navigator.push(
@@ -184,26 +190,60 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           ),
                         ),
 
-                        AdminStatCard(
-                          title: "Active Deliveries",
-                          value: activeDeliveries.toString(),
-                          icon: Icons.local_shipping,
-                          color: Colors.green,
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const AdminPackagesScreen(),
+                              ),
+                            );
+                          },
+
+                          child: AdminStatCard(
+                            title: "Active Deliveries",
+                            value: activeDeliveries.toString(),
+                            icon: Icons.local_shipping,
+                            color: Colors.green,
+                          ),
                         ),
 
-                        AdminStatCard(
-                          title: "Delivered",
-                          value: delivered.toString(),
-                          icon: Icons.check_circle,
-                          color: Colors.purple,
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const AdminPackagesScreen(),
+                              ),
+                            );
+                          },
+
+                          child: AdminStatCard(
+                            title: "Delivered",
+                            value: delivered.toString(),
+                            icon: Icons.check_circle,
+                            color: Colors.purple,
+                          ),
                         ),
 
-                        AdminStatCard(
-                          title: "Available",
-                          value: availablePackages.toString(),
-                          icon: Icons.inventory,
-                          color: Colors.red,
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const AdminPackagesScreen(),
+                              ),
+                            );
+                          },
+
+                          child: AdminStatCard(
+                            title: "Available",
+                            value: availablePackages.toString(),
+                            icon: Icons.inventory,
+                            color: Colors.red,
+                          ),
                         ),
+
                         GestureDetector(
                           onTap: () {
                             Navigator.push(
@@ -220,17 +260,38 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                             color: Colors.deepPurple,
                           ),
                         ),
-                        AdminStatCard(
-                          title: "Rider Wallets",
-                          value: delivered.toString(),
-                          icon: Icons.check_circle,
-                          color: Colors.purple,
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const AdminWalletScreen(),
+                              ),
+                            );
+                          },
+                          child: AdminStatCard(
+                            title: "Rider Wallets",
+                            value: totalWallets.toString(),
+                            icon: Icons.check_circle,
+                            color: Colors.purple,
+                          ),
                         ),
-                        AdminStatCard(
-                          title: "Pending Withdrawals",
-                          value: delivered.toString(),
-                          icon: Icons.check_circle,
-                          color: Colors.purple,
+
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const AdminWithdrawalScreen(),
+                              ),
+                            );
+                          },
+                          child: AdminStatCard(
+                            title: "Pending Withdrawals",
+                            value: pendingWithdrawals.toString(),
+                            icon: Icons.check_circle,
+                            color: Colors.purple,
+                          ),
                         ),
                       ],
                     ),

@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:senmi/services/api_service.dart';
 import 'rider_model.dart';
-import '../../services/admin_socket_service.dart';
+import '../services/admin_socket_service.dart';
 import 'rider_card.dart';
 import 'rider_details_screen.dart';
 

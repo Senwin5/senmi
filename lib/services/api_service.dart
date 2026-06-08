@@ -866,6 +866,39 @@ class ApiService {
     }
   }
 
+  static Future<List> getAdminWithdrawals() async {
+    final res = await http.get(
+      Uri.parse("$baseUrl/admin/withdrawals/"),
+      headers: await getAuthHeaders(),
+    );
+
+    return jsonDecode(res.body);
+  }
+
+  static Future approveWithdrawal(int id) async {
+    await http.post(
+      Uri.parse("$baseUrl/admin/withdrawals/$id/approve/"),
+      headers: await getAuthHeaders(),
+    );
+  }
+
+  static Future rejectWithdrawal(int id, String reason) async {
+    await http.post(
+      Uri.parse("$baseUrl/admin/withdrawals/$id/reject/"),
+      headers: await getAuthHeaders(),
+      body: jsonEncode({"reason": reason}),
+    );
+  }
+
+  static Future<List> getAdminRiderWallets() async {
+  final response = await http.get(
+    Uri.parse("$baseUrl/admin/rider-wallets/"),
+    headers: await ApiService.getAuthHeaders(),
+  );
+
+  return jsonDecode(response.body);
+}
+
   // getRiderProfile
   static Future<Map<String, dynamic>> getRiderProfile() async {
     try {

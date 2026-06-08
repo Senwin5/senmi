@@ -1,7 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:senmi/screen_pages/features/admin/screen/admin_riders_customer_screen/customer_management_screen.dart';
+import 'package:senmi/screen_pages/features/admin/screen/admin_customer_screen/customer_management_screen.dart';
 import 'package:senmi/services/api_service.dart';
 
 class AnalyticsScreen extends StatefulWidget {
@@ -48,20 +48,23 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: color, size: 34),
+          Icon(icon, color: color, size: 30),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
 
           Text(
             value,
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
 
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
 
-          Text(title, textAlign: TextAlign.center),
+          Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
         ],
       ),
     );

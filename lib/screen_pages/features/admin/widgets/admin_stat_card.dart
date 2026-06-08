@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 
 class AdminStatCard extends StatelessWidget {
-
   final String title;
   final String value;
   final IconData icon;
@@ -19,7 +18,6 @@ class AdminStatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     return Container(
       padding: const EdgeInsets.all(18),
 
@@ -40,31 +38,30 @@ class AdminStatCard extends StatelessWidget {
 
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-
           CircleAvatar(
             radius: 22,
             backgroundColor: color.withOpacity(0.12),
             child: Icon(icon, color: color),
           ),
 
-          const Spacer(),
+          const SizedBox(height: 12),
 
           Text(
             value,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
 
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
 
           Text(
             title,
-            style: TextStyle(
-              color: Colors.grey.shade600,
-            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
           ),
         ],
       ),
