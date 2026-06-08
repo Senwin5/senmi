@@ -27,8 +27,8 @@ class _AdminPackageDetailsScreenState extends State<AdminPackageDetailsScreen> {
 
   StreamSubscription? socketSubscription;
 
-  double lat = 0;
-  double lng = 0;
+  double? lat;
+  double? lng;
   GoogleMapController? mapController;
 
   Set<Marker> markers = {};
@@ -90,7 +90,7 @@ class _AdminPackageDetailsScreenState extends State<AdminPackageDetailsScreen> {
       Marker(
         markerId: const MarkerId("delivery"),
 
-        position: LatLng(lat, lng),
+        position: LatLng(lat!, lng!),
 
         infoWindow: const InfoWindow(title: "Live Rider Location"),
       ),
@@ -125,7 +125,7 @@ class _AdminPackageDetailsScreenState extends State<AdminPackageDetailsScreen> {
           updateMarkers();
 
           mapController?.animateCamera(
-            CameraUpdate.newLatLng(LatLng(lat, lng)),
+            CameraUpdate.newLatLng(LatLng(lat!, lng!)),
           );
         }
       },
@@ -196,8 +196,16 @@ class _AdminPackageDetailsScreenState extends State<AdminPackageDetailsScreen> {
 
       package = data;
 
-      lat = double.tryParse(data['delivery_lat'].toString()) ?? 0;
-      lng = double.tryParse(data['delivery_lng'].toString()) ?? 0;
+      setState(() {
+        lat = double.tryParse(data['delivery_lat'].toString());
+        lng = double.tryParse(data['delivery_lng'].toString());
+      });
+
+      if (mapController != null && lat != null && lng != null) {
+        mapController!.animateCamera(
+          CameraUpdate.newLatLng(LatLng(lat!, lng!)),
+        );
+      }
 
       updateMarkers();
     } catch (e) {
@@ -448,9 +456,8 @@ class _AdminPackageDetailsScreenState extends State<AdminPackageDetailsScreen> {
                       ),
                     ],
                   ),
-
                   // =====================
-                  // LIVE TRACKING
+                  // LIVE TRACKING (FIXED)
                   // =====================
                   sectionCard(
                     title: "Live Tracking",
@@ -459,16 +466,30 @@ class _AdminPackageDetailsScreenState extends State<AdminPackageDetailsScreen> {
                         height: 260,
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(16),
-                          child: GoogleMap(
-                            initialCameraPosition: CameraPosition(
-                              target: LatLng(lat, lng),
-                              zoom: 15,
-                            ),
-                            markers: markers,
-                            onMapCreated: (controller) {
-                              mapController = controller;
-                            },
-                          ),
+
+                          child: (lat == null || lng == null)
+                              ? const Center(child: CircularProgressIndicator())
+                              : GoogleMap(
+                                  initialCameraPosition: CameraPosition(
+                                    target: LatLng(lat!, lng!),
+                                    zoom: 15,
+                                  ),
+
+                                  markers: markers,
+
+                                  myLocationEnabled: false, // IMPORTANT FIX
+
+                                  onMapCreated: (controller) {
+                                    mapController = controller;
+
+                                    // 🔥 FORCE CAMERA TO CORRECT POSITION
+                                    controller.animateCamera(
+                                      CameraUpdate.newLatLng(
+                                        LatLng(lat!, lng!),
+                                      ),
+                                    );
+                                  },
+                                ),
                         ),
                       ),
 

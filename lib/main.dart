@@ -11,6 +11,7 @@ import 'package:senmi/services/api_service.dart';
 
 final navigatorKey = GlobalKey<NavigatorState>();
 bool openedFromPayment = false;
+ValueNotifier<bool> isDarkMode = ValueNotifier(false);
 
 /// ===============================
 ///  BACKGROUND HANDLER (MUST BE TOP LEVEL)
@@ -70,33 +71,43 @@ void main() async {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      navigatorKey: navigatorKey,
-      debugShowCheckedModeBanner: false,
-      title: 'Senmi',
+    return ValueListenableBuilder<bool>(
+      valueListenable: isDarkMode,
+      builder: (context, darkMode, child) {
+        return MaterialApp(
+          navigatorKey: navigatorKey,
+          debugShowCheckedModeBanner: false,
+          title: 'Senmi',
 
-      theme: ThemeData(
-        brightness: Brightness.light,
-        scaffoldBackgroundColor: Colors.white,
-        cardColor: Colors.white,
-        useMaterial3: true,
-      ),
+          theme: ThemeData(
+            brightness: Brightness.light,
+            scaffoldBackgroundColor: Colors.white,
+            cardColor: Colors.white,
+            useMaterial3: true,
+          ),
 
-      darkTheme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF0F0F0F),
-        cardColor: const Color(0xFF1E1E1E),
-        useMaterial3: true,
-      ),
+          darkTheme: ThemeData(
+            brightness: Brightness.dark,
+            scaffoldBackgroundColor: const Color(0xFF0F0F0F),
+            cardColor: const Color(0xFF1E1E1E),
+            useMaterial3: true,
+          ),
 
-      themeMode: ThemeMode.light,
+          themeMode: darkMode ? ThemeMode.dark : ThemeMode.light,
 
-      home: const SplashScreen(),
+          home: const SplashScreen(),
+        );
+      },
     );
   }
 }

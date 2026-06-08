@@ -1,21 +1,20 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:senmi/main.dart';
 import 'package:senmi/registration/auth/login.dart';
+import 'package:senmi/screen_pages/features/admin/screen/admin_prrofile/notifications.dart';
+import 'package:senmi/screen_pages/features/admin/screen/admin_prrofile/security_screen.dart';
 import 'package:senmi/services/api_service.dart';
-
-
 
 class AdminProfileScreen extends StatefulWidget {
   const AdminProfileScreen({super.key});
 
   @override
-  State<AdminProfileScreen> createState() =>
-      _AdminProfileScreenState();
+  State<AdminProfileScreen> createState() => _AdminProfileScreenState();
 }
 
-class _AdminProfileScreenState
-    extends State<AdminProfileScreen> {
+class _AdminProfileScreenState extends State<AdminProfileScreen> {
   bool isLoading = true;
 
   Map<String, dynamic>? profile;
@@ -32,8 +31,7 @@ class _AdminProfileScreenState
       isLoading = true;
     });
 
-    final data =
-        await ApiService.getUserProfile();
+    final data = await ApiService.getUserProfile();
 
     if (!mounted) return;
 
@@ -51,9 +49,7 @@ class _AdminProfileScreenState
     Navigator.pushAndRemoveUntil(
       context,
 
-      MaterialPageRoute(
-        builder: (_) => const LoginScreen(),
-      ),
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
 
       (route) => false,
     );
@@ -67,34 +63,20 @@ class _AdminProfileScreenState
     return Card(
       elevation: 2,
 
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
 
       child: ListTile(
-        leading: CircleAvatar(
-          child: Icon(icon),
-        ),
+        leading: CircleAvatar(child: Icon(icon)),
 
-        title: Text(
-          title,
-
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
 
         subtitle: Padding(
           padding: const EdgeInsets.only(top: 4),
 
           child: Text(
-            value.isEmpty
-                ? "Not available"
-                : value,
+            value.isEmpty ? "Not available" : value,
 
-            style: const TextStyle(
-              fontSize: 15,
-            ),
+            style: const TextStyle(fontSize: 15),
           ),
         ),
       ),
@@ -110,35 +92,22 @@ class _AdminProfileScreenState
     return Card(
       elevation: 1,
 
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
 
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor:
-              (color ?? Colors.blue)
-                  .withOpacity(0.12),
+          backgroundColor: (color ?? Colors.blue).withOpacity(0.12),
 
-          child: Icon(
-            icon,
-            color: color ?? Colors.blue,
-          ),
+          child: Icon(icon, color: color ?? Colors.blue),
         ),
 
         title: Text(
           title,
 
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            color: color,
-          ),
+          style: TextStyle(fontWeight: FontWeight.w600, color: color),
         ),
 
-        trailing: const Icon(
-          Icons.arrow_forward_ios,
-          size: 18,
-        ),
+        trailing: const Icon(Icons.arrow_forward_ios, size: 18),
 
         onTap: onTap,
       ),
@@ -153,9 +122,7 @@ class _AdminProfileScreenState
         return AlertDialog(
           title: const Text("Logout"),
 
-          content: const Text(
-            "Are you sure you want to logout?",
-          ),
+          content: const Text("Are you sure you want to logout?"),
 
           actions: [
             TextButton(
@@ -183,58 +150,40 @@ class _AdminProfileScreenState
 
   @override
   Widget build(BuildContext context) {
-    final username =
-        profile?['username'] ?? "Admin";
+    final username = profile?['username'] ?? "Admin";
 
-    final email =
-        profile?['email'] ?? "";
+    final email = profile?['email'] ?? "";
 
-    final role =
-        profile?['role'] ?? "Administrator";
+    final role = profile?['role'] ?? "Administrator";
 
-    final profileImage =
-        profile?['profile_picture'];
+    final profileImage = profile?['profile_picture'];
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Admin Profile"),
-      ),
+      appBar: AppBar(title: const Text("Admin Profile")),
 
       body: isLoading
-          ? const Center(
-              child:
-                  CircularProgressIndicator(),
-            )
+          ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: loadProfile,
 
               child: ListView(
-                padding:
-                    const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(16),
 
                 children: [
                   // =========================
                   // PROFILE HEADER
                   // =========================
-
                   Container(
-                    padding:
-                        const EdgeInsets.all(24),
+                    padding: const EdgeInsets.all(24),
 
                     decoration: BoxDecoration(
-                      borderRadius:
-                          BorderRadius.circular(
-                        24,
-                      ),
+                      borderRadius: BorderRadius.circular(24),
 
                       gradient: LinearGradient(
                         colors: [
-                          Theme.of(context)
-                              .primaryColor,
+                          Theme.of(context).primaryColor,
 
-                          Theme.of(context)
-                              .primaryColor
-                              .withOpacity(0.7),
+                          Theme.of(context).primaryColor.withOpacity(0.7),
                         ],
                       ),
                     ),
@@ -244,100 +193,68 @@ class _AdminProfileScreenState
                         CircleAvatar(
                           radius: 50,
 
-                          backgroundColor:
-                              Colors.white,
+                          backgroundColor: Colors.white,
 
                           backgroundImage:
-                              profileImage !=
-                                          null &&
-                                      profileImage
-                                          .toString()
-                                          .isNotEmpty
-                                  ? NetworkImage(
-                                      profileImage,
-                                    )
-                                  : null,
+                              profileImage != null &&
+                                  profileImage.toString().isNotEmpty
+                              ? NetworkImage(profileImage)
+                              : null,
 
                           child:
-                              profileImage ==
-                                          null ||
-                                      profileImage
-                                          .toString()
-                                          .isEmpty
-                                  ? Icon(
-                                      Icons.admin_panel_settings,
-                                      size: 50,
-                                      color:
-                                          Theme.of(
-                                                context,
-                                              )
-                                              .primaryColor,
-                                    )
-                                  : null,
+                              profileImage == null ||
+                                  profileImage.toString().isEmpty
+                              ? Icon(
+                                  Icons.admin_panel_settings,
+                                  size: 50,
+                                  color: Theme.of(context).primaryColor,
+                                )
+                              : null,
                         ),
 
-                        const SizedBox(
-                          height: 16,
-                        ),
+                        const SizedBox(height: 16),
 
                         Text(
                           username,
 
-                          style:
-                              const TextStyle(
+                          style: const TextStyle(
                             fontSize: 24,
-                            fontWeight:
-                                FontWeight.bold,
-                            color:
-                                Colors.white,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
                           ),
                         ),
 
-                        const SizedBox(
-                          height: 8,
-                        ),
+                        const SizedBox(height: 8),
 
                         Text(
                           email,
 
-                          style:
-                              const TextStyle(
-                            color:
-                                Colors.white70,
+                          style: const TextStyle(
+                            color: Colors.white70,
                             fontSize: 16,
                           ),
                         ),
 
-                        const SizedBox(
-                          height: 12,
-                        ),
+                        const SizedBox(height: 12),
 
                         Container(
-                          padding:
-                              const EdgeInsets.symmetric(
+                          padding: const EdgeInsets.symmetric(
                             horizontal: 18,
                             vertical: 8,
                           ),
 
                           decoration: BoxDecoration(
-                            color:
-                                Colors.white24,
+                            color: Colors.white24,
 
-                            borderRadius:
-                                BorderRadius.circular(
-                              30,
-                            ),
+                            borderRadius: BorderRadius.circular(30),
                           ),
 
                           child: Text(
                             role.toUpperCase(),
 
-                            style:
-                                const TextStyle(
-                              color:
-                                  Colors.white,
-                              fontWeight:
-                                  FontWeight.bold,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
@@ -350,15 +267,10 @@ class _AdminProfileScreenState
                   // =========================
                   // ACCOUNT INFO
                   // =========================
-
                   const Text(
                     "Account Information",
 
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight:
-                          FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
 
                   const SizedBox(height: 14),
@@ -369,15 +281,10 @@ class _AdminProfileScreenState
                     value: username,
                   ),
 
-                  infoCard(
-                    icon: Icons.email,
-                    title: "Email",
-                    value: email,
-                  ),
+                  infoCard(icon: Icons.email, title: "Email", value: email),
 
                   infoCard(
-                    icon:
-                        Icons.admin_panel_settings,
+                    icon: Icons.admin_panel_settings,
                     title: "Role",
                     value: role,
                   ),
@@ -387,15 +294,10 @@ class _AdminProfileScreenState
                   // =========================
                   // SETTINGS
                   // =========================
-
                   const Text(
                     "Settings",
 
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight:
-                          FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
 
                   const SizedBox(height: 14),
@@ -403,32 +305,19 @@ class _AdminProfileScreenState
                   settingsTile(
                     icon: Icons.dark_mode,
                     title: "Dark Mode",
-
                     onTap: () {
-                      ScaffoldMessenger.of(
-                        context,
-                      ).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            "Dark mode coming soon",
-                          ),
-                        ),
-                      );
+                      isDarkMode.value = !isDarkMode.value;
                     },
                   ),
 
                   settingsTile(
                     icon: Icons.notifications,
                     title: "Notifications",
-
                     onTap: () {
-                      ScaffoldMessenger.of(
+                      Navigator.push(
                         context,
-                      ).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            "Notifications settings coming soon",
-                          ),
+                        MaterialPageRoute(
+                          builder: (context) => const AdminNotificationScreen(),
                         ),
                       );
                     },
@@ -437,15 +326,11 @@ class _AdminProfileScreenState
                   settingsTile(
                     icon: Icons.security,
                     title: "Security",
-
                     onTap: () {
-                      ScaffoldMessenger.of(
+                      Navigator.push(
                         context,
-                      ).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            "Security settings coming soon",
-                          ),
+                        MaterialPageRoute(
+                          builder: (context) => const SecurityScreen(),
                         ),
                       );
                     },
@@ -456,7 +341,6 @@ class _AdminProfileScreenState
                   // =========================
                   // LOGOUT
                   // =========================
-
                   settingsTile(
                     icon: Icons.logout,
                     title: "Logout",
