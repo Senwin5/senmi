@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:senmi/screen_pages/features/admin/screen/admin_package/admin_packages.dart';
+import 'package:senmi/screen_pages/features/admin/screen/admin_prrofile/analytics_screen.dart';
 import 'package:senmi/screen_pages/features/admin/screen/admin_prrofile/notifications.dart';
 //import 'package:senmi/screen_pages/features/admin/screen/admin_riders_customer_screen/customer_management_screen.dart';
 import 'package:senmi/screen_pages/features/admin/admin_riders_screen/riders_screen.dart';
@@ -55,7 +56,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Future<void> loadDashboard() async {
     try {
       final data = await ApiService.getAdminDashboard();
-      debugPrint("DASHBOARD DATA: $data");
       final notif = await ApiService.getAdminNotifications(1);
 
       if (!mounted) return;
@@ -272,7 +272,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           child: AdminStatCard(
                             title: "Rider Wallets",
                             value: totalWallets.toString(),
-                            icon: Icons.check_circle,
+                            icon: Icons.railway_alert,
                             color: Colors.purple,
                           ),
                         ),
@@ -289,8 +289,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           child: AdminStatCard(
                             title: "Pending Withdrawals",
                             value: pendingWithdrawals.toString(),
-                            icon: Icons.check_circle,
-                            color: Colors.purple,
+                            icon: Icons.recommend,
+                            color: Colors.yellow,
                           ),
                         ),
                       ],
@@ -339,24 +339,66 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     Row(
                       children: [
                         Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: () {
-                              Navigator.pushNamed(context, '/admin-riders');
+                          child: InkWell(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const AdminRidersScreen(),
+                                ),
+                              );
                             },
-                            icon: const Icon(Icons.verified),
-                            label: const Text("Approve Riders"),
+                            child: Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.blue,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.verified, color: Colors.white),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    "Approve Riders",
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                         ),
 
                         const SizedBox(width: 12),
 
                         Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: () {
-                              Navigator.pushNamed(context, '/analytics');
+                          child: InkWell(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const AnalyticsScreen(),
+                                ),
+                              );
                             },
-                            icon: const Icon(Icons.analytics),
-                            label: const Text("Analytics"),
+                            child: Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.green,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.analytics, color: Colors.white),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    "Analytics",
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                         ),
                       ],
