@@ -88,19 +88,42 @@ class _MyAppState extends State<MyApp> {
           navigatorKey: navigatorKey,
           debugShowCheckedModeBanner: false,
           title: 'Senmi',
-
           theme: ThemeData(
             brightness: Brightness.light,
+            useMaterial3: true,
+
             scaffoldBackgroundColor: Colors.white,
             cardColor: Colors.white,
-            useMaterial3: true,
+
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color(0xFF581C87),
+              brightness: Brightness.light,
+            ),
+
+            inputDecorationTheme: InputDecorationTheme(
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
           ),
 
           darkTheme: ThemeData(
             brightness: Brightness.dark,
-            scaffoldBackgroundColor: const Color(0xFF0F0F0F),
-            cardColor: const Color(0xFF1E1E1E),
             useMaterial3: true,
+
+            scaffoldBackgroundColor: const Color(0xFF121212),
+            cardColor: const Color(0xFF1E1E1E),
+
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color(0xFF581C87),
+              brightness: Brightness.dark,
+            ),
+
+            inputDecorationTheme: InputDecorationTheme(
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
           ),
 
           themeMode: darkMode ? ThemeMode.dark : ThemeMode.light,

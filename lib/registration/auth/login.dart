@@ -245,13 +245,14 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
           Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Card(
+                color: Theme.of(context).cardColor,
                 elevation: 6,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
@@ -261,17 +262,24 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text(
+                      Text(
                         "Senmi",
                         style: TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                       ),
                       const SizedBox(height: 16),
-                      const Text(
+                      Text(
                         "Sign in to continue",
-                        style: TextStyle(fontSize: 16, color: Colors.grey),
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Theme.of(
+                            context,
+                            // ignore: deprecated_member_use
+                          ).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                        ),
                       ),
                       const SizedBox(height: 32),
                       TextField(
@@ -363,8 +371,9 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           if (loading)
             Container(
-              color: Colors.black45,
-              child: const Center(child: CircularProgressIndicator()),
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.black54
+                  : Colors.black26,
             ),
         ],
       ),

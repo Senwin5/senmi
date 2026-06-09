@@ -45,9 +45,8 @@ class _AdminNotificationScreenState extends State<AdminNotificationScreen> {
     });
   }
 
-  // =========================
   // FIRST LOAD
-  // =========================
+  // ====================
   Future<void> loadNotifications() async {
     setState(() {
       loading = true;
@@ -66,9 +65,8 @@ class _AdminNotificationScreenState extends State<AdminNotificationScreen> {
     });
   }
 
-  // =========================
   // LOAD MORE (PAGINATION)
-  // =========================
+  // ====================
   Future<void> loadMore() async {
     if (loadingMore || !hasNext) return;
 
@@ -154,12 +152,11 @@ class _AdminNotificationScreenState extends State<AdminNotificationScreen> {
   }
 
   // UI
-  // =========================
+  // ==============
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xffF5F7FB),
-
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.white,
@@ -169,7 +166,7 @@ class _AdminNotificationScreenState extends State<AdminNotificationScreen> {
         ),
         iconTheme: const IconThemeData(color: Colors.black),
       ),
-
+      
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _showSendNotificationDialog,
         icon: const Icon(Icons.send),

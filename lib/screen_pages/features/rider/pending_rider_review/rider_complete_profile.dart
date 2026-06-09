@@ -257,7 +257,9 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
                   children: [
                     TextFormField(
                       controller: fullNameController,
-                      style: const TextStyle(color: Colors.white),
+                      style: TextStyle(
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
+                      ),
                       decoration: InputDecoration(
                         labelText: "Full Nmae",
                         labelStyle: TextStyle(
@@ -270,7 +272,9 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
                         ),
 
                         enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.black),
+                          borderSide: BorderSide(
+                            color: Theme.of(context).dividerColor,
+                          ),
                         ),
 
                         focusedBorder: OutlineInputBorder(
@@ -299,11 +303,13 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
                           color: Theme.of(context).iconTheme.color,
                         ),
 
-                        enabledBorder: const OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.black),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: Theme.of(context).dividerColor,
+                          ),
                         ),
 
-                        focusedBorder: const OutlineInputBorder(
+                        focusedBorder: OutlineInputBorder(
                           borderSide: BorderSide(
                             color: Color(0xFF581C87),
                             width: 2,
@@ -330,11 +336,13 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
                           color: Theme.of(context).iconTheme.color,
                         ),
 
-                        enabledBorder: const OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.black),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: Theme.of(context).dividerColor,
+                          ),
                         ),
 
-                        focusedBorder: const OutlineInputBorder(
+                        focusedBorder: OutlineInputBorder(
                           borderSide: BorderSide(
                             color: Color(0xFF581C87),
                             width: 2,
@@ -360,11 +368,13 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
                           color: Theme.of(context).iconTheme.color,
                         ),
 
-                        enabledBorder: const OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.black),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: Theme.of(context).dividerColor,
+                          ),
                         ),
 
-                        focusedBorder: const OutlineInputBorder(
+                        focusedBorder: OutlineInputBorder(
                           borderSide: BorderSide(
                             color: Color(0xFF581C87),
                             width: 2,
@@ -391,11 +401,13 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
                           color: Theme.of(context).iconTheme.color,
                         ),
 
-                        enabledBorder: const OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.black),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: Theme.of(context).dividerColor,
+                          ),
                         ),
 
-                        focusedBorder: const OutlineInputBorder(
+                        focusedBorder: OutlineInputBorder(
                           borderSide: BorderSide(
                             color: Color(0xFF581C87),
                             width: 2,
