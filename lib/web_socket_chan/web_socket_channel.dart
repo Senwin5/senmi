@@ -27,19 +27,21 @@ class _TrackPackageScreenState extends State<TrackPackageScreen> {
   }
 
   Future<void> connectSockets() async {
-    // =========================
-    // 📍 TRACKING SOCKET
-    // =========================
-
-    channel = WebSocketChannel.connect(
-      Uri.parse('wss://www.senmi.com.ng/ws/tracking/${widget.packageId}/'),
+    final uri = Uri(
+      scheme: 'wss',
+      host: 'www.senmi.com.ng',
+      path: '/ws/tracking/${widget.packageId}/',
     );
+
+    debugPrint("Connecting to: $uri");
+
+    channel = WebSocketChannel.connect(uri);
 
     channel.stream.listen(
       (data) {
-        final parsed = jsonDecode(data);
+        debugPrint("DATA: $data");
 
-        if (!mounted) return;
+        final parsed = jsonDecode(data);
 
         setState(() {
           lat = parsed['lat'] ?? lat;
@@ -47,17 +49,11 @@ class _TrackPackageScreenState extends State<TrackPackageScreen> {
           status = parsed['status'] ?? status;
         });
       },
-
-      onError: (error) {
-        if (kDebugMode) {
-          print("Tracking WebSocket error: $error");
-        }
+      onError: (e) {
+        debugPrint("WS ERROR: $e");
       },
-
       onDone: () {
-        if (kDebugMode) {
-          print("Tracking socket closed");
-        }
+        debugPrint("WS CLOSED");
       },
     );
   }
@@ -94,14 +90,13 @@ class _TrackPackageScreenState extends State<TrackPackageScreen> {
     );
   }
 }
+
 class AdminSocketService {
   late WebSocketChannel channel;
 
   void connect() {
     channel = WebSocketChannel.connect(
-      Uri.parse(
-        'wss://www.senmi.com.ng/ws/admin/riders/',
-      ),
+      Uri.parse('wss://www.senmi.com.ng/ws/admin/riders/'),
     );
   }
 
