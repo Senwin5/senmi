@@ -2,9 +2,20 @@ import 'package:flutter/material.dart';
 import 'rider_model.dart';
 
 class RiderDetailsScreen extends StatelessWidget {
-  final RiderModel rider;
+  //final RiderModel rider;
 
-  const RiderDetailsScreen({super.key, required this.rider});
+  //const RiderDetailsScreen({super.key, required this.rider});
+
+  final RiderModel rider;
+  final VoidCallback onApprove;
+  final VoidCallback onReject;
+
+  const RiderDetailsScreen({
+    super.key,
+    required this.rider,
+    required this.onApprove,
+    required this.onReject,
+  });
 
   Widget infoCard({
     required IconData icon,
@@ -275,6 +286,48 @@ class RiderDetailsScreen extends StatelessWidget {
           const SizedBox(height: 30),
         ],
       ),
+      bottomNavigationBar: rider.status.toLowerCase() == "pending"
+          ? SafeArea(
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [BoxShadow(blurRadius: 10, color: Colors.black12)],
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: onApprove, // 👈 HERE
+                        icon: const Icon(Icons.check),
+                        label: const Text("Approve"),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(width: 12),
+
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: onReject, // 👈 HERE
+                        icon: const Icon(Icons.close),
+                        label: const Text("Reject"),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          : null,
     );
   }
 }

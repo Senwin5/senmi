@@ -3,7 +3,7 @@ import 'package:senmi/screen_pages/features/admin/screen/admin_package/admin_pac
 import 'package:senmi/screen_pages/features/admin/screen/admin_prrofile/analytics_screen.dart';
 import 'package:senmi/screen_pages/features/admin/screen/admin_prrofile/notifications.dart';
 //import 'package:senmi/screen_pages/features/admin/screen/admin_riders_customer_screen/customer_management_screen.dart';
-import 'package:senmi/screen_pages/features/admin/admin_riders_screen/riders_screen.dart';
+import 'package:senmi/screen_pages/features/admin/screen/admin_riders_screen/admin_riders_screen.dart';
 import 'package:senmi/screen_pages/features/admin/screen/admin_transaction/admin_wallet_screen.dart';
 import 'package:senmi/screen_pages/features/admin/screen/admin_transaction/admin_withdrawal_screen.dart';
 import 'package:senmi/services/api_service.dart';

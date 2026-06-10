@@ -38,7 +38,7 @@ class RiderModel {
       email: json['email']?.toString() ?? '',
       status: json['status']?.toString() ?? 'pending',
 
-      phone: json['phone_number']?.toString(),
+      phone: json['phone']?.toString(),
       city: json['city']?.toString(),
       address: json['address']?.toString(),
 

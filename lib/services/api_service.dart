@@ -891,13 +891,13 @@ class ApiService {
   }
 
   static Future<List> getAdminRiderWallets() async {
-  final response = await http.get(
-    Uri.parse("$baseUrl/admin/rider-wallets/"),
-    headers: await ApiService.getAuthHeaders(),
-  );
+    final response = await http.get(
+      Uri.parse("$baseUrl/admin/rider-wallets/"),
+      headers: await ApiService.getAuthHeaders(),
+    );
 
-  return jsonDecode(response.body);
-}
+    return jsonDecode(response.body);
+  }
 
   // getRiderProfile
   static Future<Map<String, dynamic>> getRiderProfile() async {

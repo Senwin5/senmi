@@ -3,9 +3,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:senmi/services/api_service.dart';
 import 'rider_model.dart';
-import '../services/admin_socket_service.dart';
+import '../../services/admin_socket_service.dart';
 import 'rider_card.dart';
-import 'rider_details_screen.dart';
+import 'admin_rider_details_screen.dart';
 
 class AdminRidersScreen extends StatefulWidget {
   const AdminRidersScreen({super.key});
@@ -125,7 +125,11 @@ class _AdminRidersScreenState extends State<AdminRidersScreen> {
   // =========================
 
   Future<void> approveRider(String riderId) async {
+    debugPrint("BUTTON CLICKED: $riderId");
+
     final success = await ApiService.reviewRider(riderId, "approved", "");
+
+    debugPrint("API RESULT: $success");
 
     if (!mounted) return;
 
@@ -135,6 +139,14 @@ class _AdminRidersScreenState extends State<AdminRidersScreen> {
       );
 
       loadRiders();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Approval failed: rider profile incomplete or rejected by server",
+          ),
+        ),
+      );
     }
   }
 
@@ -300,8 +312,11 @@ class _AdminRidersScreenState extends State<AdminRidersScreen> {
                               context,
 
                               MaterialPageRoute(
-                                builder: (_) =>
-                                    RiderDetailsScreen(rider: rider),
+                                builder: (_) => RiderDetailsScreen(
+                                  rider: rider,
+                                  onApprove: () => approveRider(rider.riderId),
+                                  onReject: () => rejectRider(rider.riderId),
+                                ),
                               ),
                             );
                           },
