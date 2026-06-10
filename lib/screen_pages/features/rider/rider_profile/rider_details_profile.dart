@@ -206,28 +206,38 @@ class RiderDetailsProfile extends StatelessWidget {
                     padding: const EdgeInsets.all(16),
                     color: Colors.orange,
                   ),
-
-                  const SizedBox(height: 12),
-
-                  OutlinedButton.icon(
-                    onPressed: () => deleteAccount(context),
-                    icon: const Icon(Icons.delete_outline, color: Colors.red),
-                    label: const Text(
-                      "Delete Account",
-                      style: TextStyle(
-                        color: Colors.red,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 55),
-                      side: const BorderSide(color: Colors.red),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                  ),
                 ],
+              ),
+            ),
+            const SizedBox(height: 40),
+
+            Text(
+              "Danger Zone",
+              style: TextStyle(
+                color: Colors.red,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            OutlinedButton.icon(
+              onPressed: () => deleteAccount(context),
+              icon: const Icon(Icons.delete_outline, color: Colors.red),
+              label: const Text(
+                "Delete Account",
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 55),
+                side: const BorderSide(color: Colors.red),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
             ),
           ],
