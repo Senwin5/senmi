@@ -26,7 +26,7 @@ class SecurityScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => const ChangePasswordScreen(),
+                    builder: (_) => const ForgotPasswordScreen(),
                   ),
                 );
               },
@@ -34,17 +34,6 @@ class SecurityScreen extends StatelessWidget {
           ]),
 
           const SizedBox(height: 20),
-
-          _sectionTitle("Danger Zone"),
-
-          _card([
-            _dangerTile(
-              icon: Icons.logout,
-              title: "Logout all devices",
-              subtitle: "This will sign you out everywhere",
-              onTap: () => _showLogoutAllDialog(context),
-            ),
-          ]),
         ],
       ),
     );
@@ -105,54 +94,6 @@ class SecurityScreen extends StatelessWidget {
       subtitle: Text(subtitle),
       trailing: const Icon(Icons.arrow_forward_ios, size: 16),
       onTap: onTap,
-    );
-  }
-
-  Widget _dangerTile({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-  }) {
-    return ListTile(
-      leading: const CircleAvatar(
-        backgroundColor: Colors.red,
-        child: Icon(Icons.warning, color: Colors.white),
-      ),
-      title: Text(
-        title,
-        style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-      ),
-      subtitle: Text(subtitle),
-      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-      onTap: onTap,
-    );
-  }
-
-  void _showLogoutAllDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text("Logout all devices?"),
-        content: const Text(
-          "You will be signed out from all devices. You will need to log in again.",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel"),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Logged out from all devices")),
-              );
-            },
-            child: const Text("Confirm"),
-          ),
-        ],
-      ),
     );
   }
 }

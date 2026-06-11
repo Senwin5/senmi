@@ -186,6 +186,44 @@ class ApiService {
     }
   }
 
+  // ==========================
+  // FORGOT PASSWORD
+  // ==========================
+  static Future<Map<String, dynamic>> forgotPassword(String email) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/forgot-password/"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"email": email}),
+      );
+
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {"success": false, "error": e.toString()};
+    }
+  }
+
+  // ==========================
+  // RESET PASSWORD
+  // ==========================
+  static Future<Map<String, dynamic>> resetPassword({
+    required String email,
+    required String otp,
+    required String password,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/reset-password/"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"email": email, "otp": otp, "password": password}),
+      );
+
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {"success": false, "error": e.toString()};
+    }
+  }
+
   static Future<Map<String, dynamic>> getAdminNotifications(int page) async {
     final response = await http.get(
       Uri.parse("$baseUrl/admin-notifications/?page=$page&limit=20"),

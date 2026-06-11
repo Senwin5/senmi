@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:senmi/registration/forgotten/forgot_password.dart';
 import 'package:senmi/screen_pages/features/admin/screen/admin_home_bottom/admin_bottom_nav.dart';
 import 'package:senmi/screen_pages/features/customer/customer_home_bottom/customer_bottomnav.dart';
 import 'package:senmi/screen_pages/features/rider/rider_home_bottom/rider_bottom_nav.dart';
@@ -321,10 +322,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         alignment: Alignment.centerRight,
                         child: TextButton(
                           onPressed: () {
-                            // static link (you can route later)
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("Forgot password clicked"),
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const ForgotPasswordScreen(),
                               ),
                             );
                           },

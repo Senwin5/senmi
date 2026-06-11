@@ -117,67 +117,6 @@ class _AdminPackagesScreenState extends State<AdminPackagesScreen> {
   }
 
   // =========================
-  // DELETE PACKAGE
-  // =========================
-
-  Future<void> deletePackage(String packageId) async {
-    showDialog(
-      context: context,
-
-      builder: (_) {
-        return AlertDialog(
-          title: const Text("Delete Package"),
-
-          content: Text("Delete package #$packageId ?"),
-
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        AdminPackageDetailsScreen(packageId: packageId),
-                  ),
-                );
-              },
-
-              child: const Text("Cancel"),
-            ),
-
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-
-              onPressed: () async {
-                Navigator.pop(context);
-
-                try {
-                  await ApiService.deletePackage(packageId);
-
-                  loadPackages();
-
-                  if (!mounted) return;
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Package deleted")),
-                  );
-                } catch (e) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text(e.toString())));
-                }
-              },
-
-              child: const Text("Delete"),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  // =========================
   // FILTER CHIP
   // =========================
 
@@ -350,8 +289,14 @@ class _AdminPackagesScreenState extends State<AdminPackagesScreen> {
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: () {
-                        // NEXT:
-                        // package details
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => AdminPackageDetailsScreen(
+                              packageId: packageId.toString(),
+                            ),
+                          ),
+                        );
                       },
 
                       icon: const Icon(Icons.visibility),
@@ -361,22 +306,6 @@ class _AdminPackagesScreenState extends State<AdminPackagesScreen> {
                   ),
 
                   const SizedBox(width: 12),
-
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                      ),
-
-                      onPressed: () {
-                        deletePackage(packageId);
-                      },
-
-                      icon: const Icon(Icons.delete),
-
-                      label: const Text("Delete"),
-                    ),
-                  ),
                 ],
               ),
             ],

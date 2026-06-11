@@ -1,158 +1,228 @@
-import 'package:flutter/material.dart';
+// ignore_for_file: use_build_context_synchronously
 
-class ChangePasswordScreen extends StatefulWidget {
-  const ChangePasswordScreen({super.key});
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+
+import 'reset_password_screen.dart';
+
+class ForgotPasswordScreen extends StatefulWidget {
+  const ForgotPasswordScreen({super.key});
 
   @override
-  State<ChangePasswordScreen> createState() => _ChangePasswordScreenState();
+  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
-class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
-  final oldPasswordController = TextEditingController();
-  final newPasswordController = TextEditingController();
-  final confirmPasswordController = TextEditingController();
+class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
+  final TextEditingController emailController = TextEditingController();
 
-  bool isLoading = false;
+  bool loading = false;
 
-  bool obscureOld = true;
-  bool obscureNew = true;
-  bool obscureConfirm = true;
+  // ✅ FRIENDLY ERROR MAPPER
+  String getFriendlyError(dynamic error) {
+    final msg = error.toString().toLowerCase();
 
-  final _formKey = GlobalKey<FormState>();
+    if (msg.contains("formatexception")) {
+      return "Server error. Please try again.";
+    }
+    if (msg.contains("socket")) {
+      return "No internet connection";
+    }
+    if (msg.contains("timeout")) {
+      return "Request timed out. Try again.";
+    }
 
-  Future<void> changePassword() async {
-    if (!_formKey.currentState!.validate()) return;
+    return "Something went wrong";
+  }
 
-    if (newPasswordController.text != confirmPasswordController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Passwords do not match")),
-      );
+  // ✅ NICE SNACKBAR UI
+  void showMessage(String msg, {bool isError = true}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: isError ? Colors.redAccent : Colors.green,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        content: Text(msg, style: const TextStyle(color: Colors.white)),
+      ),
+    );
+  }
+
+  Future<void> sendOtp() async {
+    final email = emailController.text.trim();
+
+    // ✅ basic validation
+    if (email.isEmpty) {
+      showMessage("Please enter your email");
       return;
     }
 
-    setState(() => isLoading = true);
+    setState(() => loading = true);
 
     try {
-      await Future.delayed(const Duration(seconds: 2));
-
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Password changed successfully")),
+      final response = await http.post(
+        Uri.parse("https://www.senmi.com.ng/api/forgot-password/"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"email": email}),
       );
 
-      Navigator.pop(context);
+      dynamic data;
+
+      // ✅ SAFE JSON PARSE (prevents FormatException)
+      try {
+        data = jsonDecode(response.body);
+      } catch (_) {
+        data = null;
+      }
+
+      if (response.statusCode == 200) {
+        if (!mounted) return;
+
+        showMessage("OTP sent successfully", isError: false);
+
+        Navigator.push(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (_, _, _) => ResetPasswordScreen(email: email),
+            transitionsBuilder: (_, animation, _, child) {
+              return FadeTransition(opacity: animation, child: child);
+            },
+          ),
+        );
+      } else {
+        String message = "Something went wrong";
+
+        if (data is Map && data["error"] != null) {
+          message = data["error"];
+        }
+
+        showMessage(message);
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Failed to change password")),
-      );
+      showMessage(getFriendlyError(e));
+    } finally {
+      if (mounted) setState(() => loading = false);
     }
-
-    setState(() => isLoading = false);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Change Password"),
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              const SizedBox(height: 10),
-
-              const Icon(Icons.lock, size: 60, color: Colors.blue),
-
-              const SizedBox(height: 20),
-
-              _buildField(
-                controller: oldPasswordController,
-                label: "Old Password",
-                obscure: obscureOld,
-                onToggle: () => setState(() => obscureOld = !obscureOld),
+      body: Stack(
+        children: [
+          // Background
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color(0xFF120024), // almost black purple
+                  Color(0xFF2A0A4A), // deep violet
+                  Color(0xFF4A148C), // royal purple
+                ],
               ),
+            ),
+          ),
 
-              const SizedBox(height: 15),
+          Center(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    const CircleAvatar(
+                      radius: 45,
+                      backgroundColor: Colors.white,
+                      child: Icon(
+                        Icons.lock_reset,
+                        size: 40,
+                        color: Colors.green,
+                      ),
+                    ),
 
-              _buildField(
-                controller: newPasswordController,
-                label: "New Password",
-                obscure: obscureNew,
-                onToggle: () => setState(() => obscureNew = !obscureNew),
-              ),
+                    const SizedBox(height: 20),
 
-              const SizedBox(height: 15),
+                    const Text(
+                      "Forgot Password?",
+                      style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
 
-              _buildField(
-                controller: confirmPasswordController,
-                label: "Confirm Password",
-                obscure: obscureConfirm,
-                onToggle: () =>
-                    setState(() => obscureConfirm = !obscureConfirm),
-              ),
+                    const SizedBox(height: 8),
 
-              const SizedBox(height: 30),
+                    const Text(
+                      "Enter your email to receive OTP",
+                      style: TextStyle(color: Colors.white70),
+                    ),
 
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: isLoading ? null : changePassword,
-                  child: isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text("Change Password"),
+                    const SizedBox(height: 30),
+
+                    // 📦 CARD
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: const [
+                          BoxShadow(blurRadius: 20, color: Colors.black26),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          TextField(
+                            controller: emailController,
+                            keyboardType: TextInputType.emailAddress,
+                            decoration: InputDecoration(
+                              prefixIcon: const Icon(Icons.email),
+                              labelText: "Email Address",
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          SizedBox(
+                            width: double.infinity,
+                            height: 50,
+                            child: ElevatedButton(
+                              onPressed: loading ? null : sendOtp,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: loading
+                                  ? const CircularProgressIndicator(
+                                      color: Colors.white,
+                                    )
+                                  : const Text("Send OTP"),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
-        ),
+
+          // ⏳ LOADING OVERLAY
+          if (loading)
+            Container(
+              color: Colors.black45,
+              child: const Center(
+                child: CircularProgressIndicator(color: Colors.white),
+              ),
+            ),
+        ],
       ),
     );
-  }
-
-  Widget _buildField({
-    required TextEditingController controller,
-    required String label,
-    required bool obscure,
-    required VoidCallback onToggle,
-  }) {
-    return TextFormField(
-      controller: controller,
-      obscureText: obscure,
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return "$label is required";
-        }
-        if (value.length < 6) {
-          return "Password must be at least 6 characters";
-        }
-        return null;
-      },
-      decoration: InputDecoration(
-        labelText: label,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        suffixIcon: IconButton(
-          icon: Icon(
-            obscure ? Icons.visibility_off : Icons.visibility,
-          ),
-          onPressed: onToggle,
-        ),
-      ),
-    );
-  }
-
-  @override
-  void dispose() {
-    oldPasswordController.dispose();
-    newPasswordController.dispose();
-    confirmPasswordController.dispose();
-    super.dispose();
   }
 }
