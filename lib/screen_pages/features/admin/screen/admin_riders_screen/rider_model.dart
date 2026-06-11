@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 class RiderModel {
   final int id;
   final String riderId;
@@ -28,6 +30,9 @@ class RiderModel {
   });
 
   factory RiderModel.fromJson(Map<String, dynamic> json) {
+    if (kDebugMode) {
+      print("ADDRESS FIELD => ${json['address']}");
+    }
     return RiderModel(
       id: int.tryParse(json['id'].toString()) ?? 0,
 
