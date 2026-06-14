@@ -240,7 +240,15 @@ class ProfileSettingsScreen extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 14),
+
+              tile(
+                icon: Icons.logout,
+                title: "Logout",
+                iconColor: Colors.orange,
+                onTap: () => logout(context),
+              ),
+              const SizedBox(height: 34),
 
               const Text(
                 "Danger Zone",
@@ -250,15 +258,7 @@ class ProfileSettingsScreen extends StatelessWidget {
                   color: Colors.red,
                 ),
               ),
-
               const SizedBox(height: 14),
-
-              tile(
-                icon: Icons.logout,
-                title: "Logout",
-                iconColor: Colors.orange,
-                onTap: () => logout(context),
-              ),
 
               tile(
                 icon: Icons.delete_outline,
