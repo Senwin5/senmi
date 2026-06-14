@@ -1,6 +1,7 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:senmi/service_firebase/native_notification.dart';
 
 import 'package:senmi/services/api_service.dart';
 
@@ -80,8 +81,8 @@ class FirebaseNotificationService {
     // =========================
     // 📩 FOREGROUND
     // =========================
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      showNotification(
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+      await NativeNotification.show(
         message.notification?.title ?? message.data['title'] ?? "Notification",
         message.notification?.body ?? message.data['body'] ?? "",
       );
