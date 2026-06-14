@@ -246,14 +246,28 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color(0xFF120024),
+                  Color(0xFF2A0A4A),
+                  Color(0xFF4A148C),
+                ],
+              ),
+            ),
+          ),
+
           Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Card(
-                color: Theme.of(context).cardColor,
+                // ignore: deprecated_member_use
+                color: Colors.white.withOpacity(0.95),
                 elevation: 6,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
@@ -338,7 +352,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         onPressed: login,
                         fullWidth: true,
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        color: Colors.blue,
+                        color: Colors.green,
                       ),
                       const SizedBox(height: 16),
                       Row(

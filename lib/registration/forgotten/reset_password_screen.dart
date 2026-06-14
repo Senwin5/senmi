@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:senmi/registration/auth/login.dart';
 import 'package:senmi/registration/forgotten/otp_input.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
@@ -17,6 +18,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
   final passwordController = TextEditingController();
   final confirmController = TextEditingController();
+  bool hidePassword = true;
+  bool hideConfirmPassword = true;
 
   bool loading = false;
   int timer = 60;
@@ -122,7 +125,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         _msg("Password reset successful");
 
         if (!mounted) return;
-        Navigator.popUntil(context, (r) => r.isFirst);
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          (route) => false,
+        );
       } else {
         _msg(body["error"] ?? "Reset failed", error: true);
       }
@@ -160,7 +167,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF0F2027), Color(0xFF203A43), Color(0xFF2C5364)],
+            colors: [
+              Color(0xFF120024), // almost black purple
+              Color(0xFF2A0A4A), // deep violet
+              Color(0xFF4A148C), // royal purple
+            ],
           ),
         ),
         child: Center(
@@ -208,10 +219,22 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
                       TextField(
                         controller: passwordController,
-                        obscureText: true,
-                        decoration: const InputDecoration(
+                        obscureText: hidePassword,
+                        decoration: InputDecoration(
                           labelText: "New Password",
-                          border: OutlineInputBorder(),
+                          border: const OutlineInputBorder(),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              hidePassword
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                hidePassword = !hidePassword;
+                              });
+                            },
+                          ),
                         ),
                       ),
 
@@ -219,10 +242,22 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
                       TextField(
                         controller: confirmController,
-                        obscureText: true,
-                        decoration: const InputDecoration(
+                        obscureText: hideConfirmPassword,
+                        decoration: InputDecoration(
                           labelText: "Confirm Password",
-                          border: OutlineInputBorder(),
+                          border: const OutlineInputBorder(),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              hideConfirmPassword
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                hideConfirmPassword = !hideConfirmPassword;
+                              });
+                            },
+                          ),
                         ),
                       ),
 
@@ -247,7 +282,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                         onPressed: timer == 0 ? resend : null,
                         child: Text(
                           timer == 0 ? "Resend OTP" : "Resend in $timer s",
-                          style: const TextStyle(color: Colors.blue),
+                          style: const TextStyle(color: Colors.green),
                         ),
                       ),
                     ],
