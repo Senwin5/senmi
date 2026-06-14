@@ -39,7 +39,7 @@ class _CustomerBottomNavState extends State<CustomerBottomNav> {
 
   final List<BottomNavigationBarItem> _navItems = const [
     BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-    BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: "Send Order"),
+    BottomNavigationBarItem(icon: Icon(Icons.two_wheeler), label: "Send Order"),
     BottomNavigationBarItem(icon: Icon(Icons.history), label: "History"),
     //BottomNavigationBarItem(icon: Icon(Icons.two_wheeler), label: "Track"),
     BottomNavigationBarItem(icon: Icon(Icons.person), label: "Account"),
