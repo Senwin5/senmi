@@ -249,8 +249,9 @@ class _CustomerHomeState extends State<CustomerHome> {
       margin: const EdgeInsets.only(bottom: 16),
       child: InkWell(
         onTap: onTap,
-        child: Ink(
-          padding: const EdgeInsets.all(18),
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
             borderRadius: BorderRadius.circular(20),
@@ -258,7 +259,8 @@ class _CustomerHomeState extends State<CustomerHome> {
           child: Row(
             children: [
               Icon(icon, color: Colors.deepPurple, size: 26),
-              const SizedBox(width: 16),
+              const SizedBox(width: 14),
+
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -266,22 +268,26 @@ class _CustomerHomeState extends State<CustomerHome> {
                     Text(
                       title,
                       style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 6),
+
+                    const SizedBox(height: 4),
+
                     Text(
                       subtitle,
                       style: TextStyle(
-                        color: isDark ? Colors.grey.shade300 : Colors.black,
-                        fontSize: 13.5,
+                        fontSize: 12.5,
+                        color: Colors.grey.shade500,
+                        height: 1.3,
                       ),
                     ),
                   ],
                 ),
               ),
-              const Icon(Icons.arrow_forward_ios, size: 16),
+
+              const Icon(Icons.arrow_forward_ios, size: 14),
             ],
           ),
         ),
