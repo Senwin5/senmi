@@ -266,8 +266,9 @@ class _LoginScreenState extends State<LoginScreen> {
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Card(
-                // ignore: deprecated_member_use
-                color: Colors.white.withOpacity(0.95),
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? const Color(0xFF1E1E1E)
+                    : Colors.white,
                 elevation: 6,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
@@ -282,7 +283,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         style: TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.primary,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : const Color(0xFF581C87),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -290,10 +293,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         "Sign in to continue",
                         style: TextStyle(
                           fontSize: 16,
-                          color: Theme.of(
-                            context,
-                            // ignore: deprecated_member_use
-                          ).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white70
+                              : Colors.black54,
                         ),
                       ),
                       const SizedBox(height: 32),

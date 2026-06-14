@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:senmi/screen_pages/features/customer/customer_home_bottom/customer_bottomnav.dart';
+import 'package:senmi/screen_pages/features/customer/customer_track/customer_track_package.dart';
 
 class DeliveryScreen extends StatelessWidget {
   final String packageId;
@@ -177,8 +177,8 @@ class DeliveryScreen extends StatelessWidget {
                     Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => CustomerBottomNav(
-                          initialIndex: 3,
+                        builder: (_) => TrackingScreen(
+                         // initialIndex: 3,
                           packageId: packageId,
                         ),
                       ),

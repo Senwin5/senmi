@@ -160,7 +160,7 @@ class _RiderSettingsScreenState extends State<RiderSettingsScreen> {
 
                 settingTile(
                   icon: Icons.chat,
-                  title: "Chat Admin",
+                  title: "Chat Support",
                   onTap: openWhatsApp,
                   iconColor: Colors.green,
                 ),

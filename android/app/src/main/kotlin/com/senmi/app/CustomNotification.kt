@@ -2,6 +2,7 @@ package com.senmi.app
 
 import android.app.NotificationManager
 import android.content.Context
+import android.graphics.Color
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 
@@ -13,11 +14,10 @@ object CustomNotification {
         body: String
     ) {
 
-        val remoteViews =
-            RemoteViews(
-                context.packageName,
-                R.layout.custom_notification
-            )
+        val remoteViews = RemoteViews(
+            context.packageName,
+            R.layout.custom_notification
+        )
 
         remoteViews.setTextViewText(
             R.id.title,
@@ -29,19 +29,39 @@ object CustomNotification {
             body
         )
 
+        remoteViews.setTextColor(
+            R.id.title,
+            Color.WHITE
+        )
+
+        remoteViews.setTextColor(
+            R.id.body,
+            Color.WHITE
+        )
+
         val notification =
             NotificationCompat.Builder(
                 context,
                 "senmi_channel"
             )
                 .setSmallIcon(R.drawable.notification_icon)
+
+                // Normal view
                 .setCustomContentView(remoteViews)
+
+                // Expanded view (using SAME XML)
+                .setCustomBigContentView(remoteViews)
+
                 .setStyle(
                     NotificationCompat.DecoratedCustomViewStyle()
                 )
+
                 .setPriority(
                     NotificationCompat.PRIORITY_HIGH
                 )
+
+                .setAutoCancel(true)
+
                 .build()
 
         val manager =

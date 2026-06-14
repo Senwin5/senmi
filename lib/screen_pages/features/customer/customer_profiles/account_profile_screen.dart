@@ -289,7 +289,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
 
               settingTile(
                 icon: Icons.chat_bubble_outline,
-                title: "Chat Admin",
+                title: "Chat Support",
                 subtitle: "Contact us instantly",
                 onTap: openWhatsApp,
               ),
