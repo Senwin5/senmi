@@ -101,6 +101,7 @@ class FirebaseNotificationService {
           channelDescription: 'Important notifications',
           importance: Importance.max,
           priority: Priority.high,
+          largeIcon: DrawableResourceAndroidBitmap('notification_icon'),
         );
 
     const NotificationDetails details = NotificationDetails(
