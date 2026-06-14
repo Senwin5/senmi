@@ -277,9 +277,7 @@ class _TrackingScreenState extends State<TrackingScreen>
             child: SafeArea(
               top: false,
               child: Container(
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.65,
-                ),
+                height: MediaQuery.of(context).size.height * 0.55,
                 decoration: BoxDecoration(
                   color: Theme.of(context).cardColor,
                   borderRadius: const BorderRadius.vertical(
