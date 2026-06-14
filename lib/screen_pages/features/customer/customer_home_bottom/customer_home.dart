@@ -268,7 +268,7 @@ class _CustomerHomeState extends State<CustomerHome> {
                     Text(
                       title,
                       style: const TextStyle(
-                        fontSize: 15,
+                        fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -278,8 +278,8 @@ class _CustomerHomeState extends State<CustomerHome> {
                     Text(
                       subtitle,
                       style: TextStyle(
-                        fontSize: 12.5,
-                        color: Colors.grey.shade500,
+                        fontSize: 13.9,
+                        color: const Color.fromARGB(255, 30, 29, 29),
                         height: 1.3,
                       ),
                     ),
