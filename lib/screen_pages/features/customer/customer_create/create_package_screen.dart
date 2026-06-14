@@ -398,7 +398,7 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
                                   ],
                                 ),
                                 child: const Text(
-                                  "Order",
+                                  "Send Order",
                                   style: TextStyle(color: Colors.white),
                                 ),
                               ),
