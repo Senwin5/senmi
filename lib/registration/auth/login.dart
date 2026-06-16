@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:senmi/registration/forgotten/forgot_password.dart';
-import 'package:senmi/screen_pages/features/admin/screen/admin_home_bottom/admin_bottom_nav.dart';
-import 'package:senmi/screen_pages/features/customer/customer_home_bottom/customer_bottomnav.dart';
-import 'package:senmi/screen_pages/features/rider/rider_home_bottom/rider_bottom_nav.dart';
+import 'package:senmi/screen_package_pages/admin_package/admin/screen/admin_home_bottom/admin_bottom_nav.dart';
+import 'package:senmi/screen_package_pages/features/customer/customer_home_bottom/customer_bottomnav.dart';
+import 'package:senmi/screen_package_pages/features/rider/rider_home_bottom/rider_bottom_nav.dart';
 import 'package:senmi/service_firebase/firebase_service.dart';
+import 'package:senmi/services/package_service.dart';
 import 'package:senmi/widgets/custom_buttom.dart';
 import '../../services/api_service.dart';
 import '../auth/signup.dart';
-import '../../screen_pages/features/rider/pending_rider_review/rider_complete_profile.dart';
-import '../../screen_pages/features/rider/pending_rider_review/rider_pending_screen.dart';
+import '../../screen_package_pages/features/rider/pending_rider_review/rider_complete_profile.dart';
+import '../../screen_package_pages/features/rider/pending_rider_review/rider_pending_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -54,7 +55,7 @@ class _LoginScreenState extends State<LoginScreen> {
         if (ApiService.userRole == "rider") {
           Map<String, dynamic> statusRes = {};
           try {
-            statusRes = await ApiService.getRiderStatus();
+            statusRes = await PackageService.getRiderStatus();
           } catch (e) {
             // fallback to pending screen if API fails
             Navigator.pushReplacement(
@@ -178,7 +179,7 @@ class _LoginScreenState extends State<LoginScreen> {
         if (ApiService.userRole == "rider") {
           Map<String, dynamic> statusRes = {};
           try {
-            statusRes = await ApiService.getRiderStatus();
+            statusRes = await PackageService.getRiderStatus();
           } catch (e) {
             Navigator.pushReplacement(
               // ignore: use_build_context_synchronously

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:senmi/screen_pages/features/customer/customer_home_bottom/customer_bottomnav.dart';
-import 'package:senmi/screen_pages/features/rider/pending_rider_review/rider_complete_profile.dart';
+import 'package:senmi/screen_package_pages/features/customer/customer_home_bottom/customer_bottomnav.dart';
+import 'package:senmi/screen_package_pages/features/rider/pending_rider_review/rider_complete_profile.dart';
 import 'package:senmi/widgets/custom_buttom.dart';
 import '../../services/api_service.dart';
 import '../auth/login.dart';
