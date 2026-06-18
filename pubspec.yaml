@@ -31,6 +31,8 @@ dependencies:
   flutter_local_notifications: ^21.0.0
   fl_chart: ^1.2.0
   flutter_contacts: ^2.1.0
+  google_places_flutter: ^2.1.1
+  #flutter_google_places_sdk: ^0.4.3
 
 dev_dependencies:
   flutter_test:
@@ -56,5 +58,5 @@ flutter_launcher_icons:
 
 
 
-flutter_google_places: latest
-google_maps_webservice: latest
+#flutter_google_places: latest
+#google_maps_webservice: latest

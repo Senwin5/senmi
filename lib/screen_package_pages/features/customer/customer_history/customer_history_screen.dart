@@ -2,8 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:senmi/screen_package_pages/features/customer/customer_create/create_package_details.dart';
+import 'package:senmi/screen_package_pages/features/customer/customer_create/create_package_screen.dart';
 import 'package:senmi/services/package_service.dart';
-
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -232,6 +232,19 @@ class _HistoryScreenState extends State<HistoryScreen> {
               itemBuilder: (context, index) {
                 final package = filteredPackages[index];
                 final status = (package['status'] ?? "pending").toString();
+                String label = "";
+                bool showCreatePackage = false;
+
+                if (status == "paid") {
+                  label = "WAITING FOR RIDER";
+                } else if (status == "accepted") {
+                  label = "RIDER ASSIGNED";
+                } else if (status == "picked_up" || status == "in_transit") {
+                  label = "IN TRANSIT";
+                } else if (status == "delivered" || status == "cancelled") {
+                  label = "CREATE PACKAGE";
+                  showCreatePackage = true;
+                }
 
                 return Container(
                   margin: const EdgeInsets.only(bottom: 12),
@@ -303,35 +316,61 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               ),
                             ],
                           )
-                        : status == "paid"
-                        ? Column(
+                        : Column(
                             mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               statusBadge(status),
-                              const SizedBox(height: 2),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.orange.withOpacity(0.12),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(color: Colors.orange),
-                                ),
-                                child: const Text(
-                                  "WAITING FOR RIDER",
-                                  style: TextStyle(
-                                    color: Colors.orange,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 10,
+
+                              if (label.isNotEmpty) ...[
+                                const SizedBox(height: 2),
+
+                                InkWell(
+                                  onTap: showCreatePackage
+                                      ? () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) =>
+                                                  const CreatePackageScreen(),
+                                            ),
+                                          );
+                                        }
+                                      : null,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: showCreatePackage
+                                          ? Colors.green.withOpacity(0.12)
+                                          : Colors.orange.withOpacity(0.12),
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(
+                                        color: showCreatePackage
+                                            ? Colors.green
+                                            : Colors.orange,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      label,
+                                      style: TextStyle(
+                                        color: showCreatePackage
+                                            ? Colors.green
+                                            : Colors.orange,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 10,
+                                        decoration: showCreatePackage
+                                            ? TextDecoration.underline
+                                            : TextDecoration.none,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
+                              ],
                             ],
-                          )
-                        : statusBadge(status),
+                          ),
                     onTap: () => payNow(package),
                   ),
                 );

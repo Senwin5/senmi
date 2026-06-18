@@ -77,7 +77,7 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
   LatLng? pickupLocation;
   LatLng? deliveryLocation;
 
-  final String apiKey = "AIzaSyAZQIQTDqT15t8CfFrzHh99uDJmsFs7VtA";
+  final String apiKey = "AIzaSyANfJatY_6y8gzmUrvV2_n2aR9ms7Xe_ZY";
 
   Future<String> _getAddressFromLatLng(LatLng pos) async {
     try {
