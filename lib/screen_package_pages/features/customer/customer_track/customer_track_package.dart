@@ -10,16 +10,16 @@ import 'package:senmi/services/package_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
-class TrackingScreen extends StatefulWidget {
+class CustomerTrackingScreen extends StatefulWidget {
   final String packageId;
 
-  const TrackingScreen({super.key, required this.packageId});
+  const CustomerTrackingScreen({super.key, required this.packageId});
 
   @override
-  State<TrackingScreen> createState() => _TrackingScreenState();
+  State<CustomerTrackingScreen> createState() => _CustomerTrackingScreenState();
 }
 
-class _TrackingScreenState extends State<TrackingScreen>
+class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
     with TickerProviderStateMixin {
   LatLng _currentPos = const LatLng(6.5244, 3.3792);
   LatLng? _targetPos;

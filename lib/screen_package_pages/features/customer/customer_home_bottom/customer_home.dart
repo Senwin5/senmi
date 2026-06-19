@@ -70,7 +70,7 @@ class _CustomerHomeState extends State<CustomerHome> {
       // ignore: use_build_context_synchronously
       context,
       MaterialPageRoute(
-        builder: (_) => TrackingScreen(packageId: result['package_id']),
+        builder: (_) => CustomerTrackingScreen(packageId: result['package_id']),
       ),
     );
   }
@@ -196,7 +196,7 @@ class _CustomerHomeState extends State<CustomerHome> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) => TrackingScreen(
+                                  builder: (_) => CustomerTrackingScreen(
                                     packageId:
                                         pkg['package_id'] ??
                                         pkg['id'].toString(),

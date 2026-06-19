@@ -177,7 +177,7 @@ class DeliveryScreen extends StatelessWidget {
                     Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => TrackingScreen(
+                        builder: (_) => CustomerTrackingScreen(
                          // initialIndex: 3,
                           packageId: packageId,
                         ),

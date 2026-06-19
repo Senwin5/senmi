@@ -549,7 +549,7 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
                     context,
                     MaterialPageRoute(
                       builder: (_) =>
-                          TrackingScreen(packageId: widget.packageId),
+                          CustomerTrackingScreen(packageId: widget.packageId),
                     ),
                   ),
                   child: const Text(
