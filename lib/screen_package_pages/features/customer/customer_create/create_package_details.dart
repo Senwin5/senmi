@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:senmi/screen_package_pages/features/customer/customer_track/customer_track_package.dart';
-import 'package:senmi/services/package_service.dart';
+import 'package:senmi/services/api_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class PackageDetailsScreen extends StatefulWidget {
@@ -37,7 +37,7 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
     setState(() => loading = true);
 
     try {
-      final res = await PackageService.getPackage(widget.packageId);
+      final res = await ApiService.getPackage(widget.packageId);
 
       if (!mounted) return;
 
@@ -121,7 +121,7 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
               ),
               ElevatedButton(
                 onPressed: () async {
-                  final success = await PackageService.rateRider(
+                  final success = await ApiService.rateRider(
                     widget.packageId,
                     selectedRating.toString(),
                     commentController.text,
@@ -158,7 +158,7 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
     setState(() => isDeleting = true);
 
     try {
-      final res = await PackageService.deletePackage(widget.packageId);
+      final res = await ApiService.deletePackage(widget.packageId);
 
       final isSuccess = res["success"] == true;
 
@@ -275,7 +275,7 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
     setState(() => isPaying = true);
 
     try {
-      final result = await PackageService.createPaystackPaymentLink({
+      final result = await ApiService.createPaystackPaymentLink({
         "package_id": widget.packageId,
         "payer": payer,
       });

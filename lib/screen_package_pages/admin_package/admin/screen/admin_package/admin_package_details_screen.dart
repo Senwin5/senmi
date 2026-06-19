@@ -3,8 +3,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:senmi/services/admin_service.dart';
-import 'package:senmi/services/package_service.dart';
+import 'package:senmi/services/api_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
 import '../../../services/admin_socket_service.dart';
@@ -152,7 +151,7 @@ class _AdminPackageDetailsScreenState extends State<AdminPackageDetailsScreen> {
 
   Future<void> updateStatus(String status) async {
     try {
-      await AdminService.updatePackageStatus(widget.packageId, status);
+      await ApiService.updatePackageStatus(widget.packageId, status);
 
       await loadPackage();
 
@@ -193,7 +192,7 @@ class _AdminPackageDetailsScreenState extends State<AdminPackageDetailsScreen> {
     });
 
     try {
-      final data = await PackageService.getPackage(widget.packageId);
+      final data = await ApiService.getPackage(widget.packageId);
 
       package = data;
 

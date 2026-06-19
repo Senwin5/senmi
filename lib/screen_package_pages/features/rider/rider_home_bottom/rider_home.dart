@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:senmi/screen_package_pages/features/rider/rider_package/rider_deliveries_screen.dart';
 import 'package:senmi/screen_package_pages/features/rider/rider_wallet/wallet_screen.dart';
-import 'package:senmi/services/package_service.dart';
 import '../../../../services/api_service.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -41,10 +40,10 @@ class _RiderHomeState extends State<RiderHome> {
   Future<void> loadData() async {
     setState(() => loading = true);
     try {
-      final packageData = await PackageService.getAvailablePackages();
-      final walletData = await PackageService.getWallet();
-      final earningsData = await PackageService.getEarnings();
-      final riderProfile = await PackageService.getRiderProfile();
+      final packageData = await ApiService.getAvailablePackages();
+      final walletData = await ApiService.getWallet();
+      final earningsData = await ApiService.getEarnings();
+      final riderProfile = await ApiService.getRiderProfile();
       if (kDebugMode) {
         print("RIDER PROFILE: $riderProfile");
       }
@@ -110,7 +109,7 @@ class _RiderHomeState extends State<RiderHome> {
   }
 
   void accept(String id) async {
-    bool success = await PackageService.acceptPackage(id);
+    bool success = await ApiService.acceptPackage(id);
     if (success && mounted) {
       ScaffoldMessenger.of(
         context,

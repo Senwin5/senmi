@@ -6,7 +6,6 @@ import 'package:senmi/registration/auth/login.dart';
 import 'package:senmi/screen_package_pages/admin_package/admin/screen/admin_prrofile/notifications.dart';
 import 'package:senmi/screen_package_pages/admin_package/admin/screen/admin_prrofile/security_screen.dart';
 import 'package:senmi/services/api_service.dart';
-import 'package:senmi/services/package_service.dart';
 
 class AdminProfileScreen extends StatefulWidget {
   const AdminProfileScreen({super.key});
@@ -32,7 +31,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
       isLoading = true;
     });
 
-    final data = await PackageService.getUserProfile();
+    final data = await ApiService.getUserProfile();
 
     if (!mounted) return;
 

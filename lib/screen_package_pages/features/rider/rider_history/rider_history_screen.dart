@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:senmi/services/package_service.dart';
+import 'package:senmi/services/api_service.dart';
 
 
 class RiderHistoryScreen extends StatefulWidget {
@@ -27,7 +27,7 @@ class _RiderHistoryScreenState extends State<RiderHistoryScreen> {
     });
 
     try {
-      final tx = await PackageService.getTransactions();
+      final tx = await ApiService.getTransactions();
 
       setState(() {
         transactions = tx;

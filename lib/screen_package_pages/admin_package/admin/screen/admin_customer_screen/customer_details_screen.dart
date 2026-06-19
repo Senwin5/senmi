@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:senmi/services/admin_service.dart';
-
+import 'package:senmi/services/api_service.dart';
 
 class CustomerDetailsScreen extends StatefulWidget {
   final int customerId;
@@ -25,7 +24,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
 
   Future<void> loadCustomer() async {
     try {
-      final data = await AdminService.getCustomerDetail(widget.customerId);
+      final data = await ApiService.getCustomerDetail(widget.customerId);
 
       customer = data;
     } catch (e) {

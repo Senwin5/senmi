@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:senmi/screen_package_pages/features/rider/rider_package/rider_package_detail.dart';
-import 'package:senmi/services/package_service.dart';
 import '../../../../services/api_service.dart';
 
 class RiderDeliveriesScreen extends StatefulWidget {
@@ -52,7 +51,7 @@ class _RiderDeliveriesScreenState extends State<RiderDeliveriesScreen>
 
     try {
       await ApiService.loadToken();
-      final pkgs = await PackageService.getAvailablePackages();
+      final pkgs = await ApiService.getAvailablePackages();
 
       setState(() {
         availablePackages = pkgs;
@@ -67,7 +66,7 @@ class _RiderDeliveriesScreenState extends State<RiderDeliveriesScreen>
     setState(() => loadingMyPackages = true);
 
     try {
-      final res = await PackageService.getMyPackages();
+      final res = await ApiService.getMyPackages();
 
       setState(() {
         acceptedPackages = List<Map<String, dynamic>>.from(

@@ -1,8 +1,7 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
-import 'package:senmi/services/admin_service.dart';
-
+import 'package:senmi/services/api_service.dart';
 
 class AdminWalletScreen extends StatefulWidget {
   const AdminWalletScreen({super.key});
@@ -26,7 +25,7 @@ class _AdminWalletScreenState extends State<AdminWalletScreen> {
 
   Future<void> fetchWallets() async {
     try {
-      final data = await AdminService.getAdminRiderWallets();
+      final data = await ApiService.getAdminRiderWallets();
 
       setState(() {
         wallets = data;

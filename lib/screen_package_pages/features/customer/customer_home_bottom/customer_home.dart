@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 import 'package:senmi/screen_package_pages/features/customer/customer_history/customer_history_screen.dart';
 import 'package:senmi/screen_package_pages/features/customer/customer_track/customer_track_package.dart';
-import 'package:senmi/services/package_service.dart';
 import '../../../../services/api_service.dart';
 import '../customer_create/create_package_screen.dart';
 
@@ -40,7 +39,7 @@ class _CustomerHomeState extends State<CustomerHome> {
   }
 
   void loadPackages() async {
-    final data = await PackageService.getCustomerPackages();
+    final data = await ApiService.getCustomerPackages();
     setState(() {
       packages = data;
     });
@@ -56,7 +55,7 @@ class _CustomerHomeState extends State<CustomerHome> {
       return;
     }
 
-    final result = await PackageService.searchPackage(trackNumber);
+    final result = await ApiService.searchPackage(trackNumber);
 
     if (result == null) {
       // ignore: use_build_context_synchronously

@@ -1,7 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
-import 'package:senmi/services/package_service.dart';
+import 'package:senmi/services/api_service.dart';
 
 
 class RiderWalletScreen extends StatefulWidget {
@@ -38,9 +38,9 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
     });
 
     try {
-      final wallet = await PackageService.getWallet();
-      final tx = await PackageService.getTransactions();
-      final earningsData = await PackageService.getEarnings();
+      final wallet = await ApiService.getWallet();
+      final tx = await ApiService.getTransactions();
+      final earningsData = await ApiService.getEarnings();
 
       if (!mounted) return;
 
@@ -77,7 +77,7 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
     bool isLoading = false;
 
     try {
-      banks = await PackageService.getBanks();
+      banks = await ApiService.getBanks();
       banks = banks.map((b) {
         b['code'] = b['code'].toString();
         return b;
@@ -173,7 +173,7 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                             setStateDialog(() => isLoading = true);
 
                             try {
-                              await PackageService.withdraw(
+                              await ApiService.withdraw(
                                 amount: amt,
                                 accountNumber: accountController.text,
                                 bankCode: selectedBankCode!,
@@ -212,7 +212,7 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
     final amountController = TextEditingController();
     final accountController = TextEditingController();
 
-    List banks = await PackageService.getBanks();
+    List banks = await ApiService.getBanks();
 
     String? selectedBankCode;
     String? accountName;
@@ -244,7 +244,7 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                         setStateDialog(() => verifying = true);
 
                         try {
-                          final name = await PackageService.resolveAccount(
+                          final name = await ApiService.resolveAccount(
                             accountNumber: value,
                             bankCode: selectedBankCode!.toString(), // ✅ FIX
                           );
@@ -322,7 +322,7 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                         setStateDialog(() => loading = true);
 
                         try {
-                          await PackageService.withdraw(
+                          await ApiService.withdraw(
                             amount: amt,
                             accountNumber: accountController.text,
                             bankCode: selectedBankCode!.toString(), // ✅ FIX

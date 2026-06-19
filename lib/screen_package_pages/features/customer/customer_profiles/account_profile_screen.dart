@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 import 'package:senmi/screen_package_pages/features/customer/customer_profiles/customer_profile_screen.dart';
 import 'package:senmi/services/api_service.dart';
-import 'package:senmi/services/package_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
@@ -64,7 +63,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
     }
 
     try {
-      final res = await PackageService.getUserProfile();
+      final res = await ApiService.getUserProfile();
 
       if (!mounted) return;
 

@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:senmi/screen_package_pages/admin_package/admin/screen/admin_package/admin_package_details_screen.dart';
-import 'package:senmi/services/admin_service.dart';
+import 'package:senmi/services/api_service.dart';
 import '../../../services/admin_socket_service.dart';
 
 class AdminPackagesScreen extends StatefulWidget {
@@ -70,7 +70,7 @@ class _AdminPackagesScreenState extends State<AdminPackagesScreen> {
       isLoading = true;
     });
 
-    final data = await AdminService.getAdminPackages();
+    final data = await ApiService.getAdminPackages();
 
     packages = data;
 

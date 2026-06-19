@@ -5,10 +5,8 @@ import 'package:senmi/screen_package_pages/admin_package/admin/screen/admin_prro
 import 'package:senmi/screen_package_pages/admin_package/admin/screen/admin_riders_screen/admin_riders_screen.dart';
 import 'package:senmi/screen_package_pages/admin_package/admin/screen/admin_transaction/admin_wallet_screen.dart';
 import 'package:senmi/screen_package_pages/admin_package/admin/screen/admin_transaction/admin_withdrawal_screen.dart';
-import 'package:senmi/services/admin_service.dart';
-
+import 'package:senmi/services/api_service.dart';
 import 'package:web_socket_channel/io.dart';
-
 import '../../widgets/admin_section_title.dart';
 import '../../widgets/admin_stat_card.dart';
 import '../../widgets/recent_activity_tile.dart';
@@ -55,8 +53,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   // =========================
   Future<void> loadDashboard() async {
     try {
-      final data = await AdminService.getAdminDashboard();
-      final notif = await AdminService.getAdminNotifications(1);
+      final data = await ApiService.getAdminDashboard();
+      final notif = await ApiService.getAdminNotifications(1);
 
       if (!mounted) return;
 

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:senmi/screen_package_pages/features/rider/rider_profile/rider_details_profile.dart';
-import 'package:senmi/services/package_service.dart';
+import 'package:senmi/services/api_service.dart';
 
 class RiderProfileScreen extends StatefulWidget {
   const RiderProfileScreen({super.key});
@@ -22,7 +22,7 @@ class _RiderProfileScreenState extends State<RiderProfileScreen> {
   Future<void> fetchRider() async {
     setState(() => loading = true);
     try {
-      final data = await PackageService.getRiderProfile();
+      final data = await ApiService.getRiderProfile();
       setState(() {
         rider = data;
         loading = false;

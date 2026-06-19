@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:senmi/screen_package_pages/features/rider/pending_rider_review/rider_pending_screen.dart';
-import 'package:senmi/services/package_service.dart';
+import 'package:senmi/services/api_service.dart';
 
 class RiderCompleteProfile extends StatefulWidget {
   const RiderCompleteProfile({super.key});
@@ -110,7 +110,7 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
 
     setState(() => loading = true);
 
-    final res = await PackageService.updateRiderProfile(
+    final res = await ApiService.updateRiderProfile(
       fullNameController.text,
       phoneController.text,
       vehicleController.text,

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:senmi/services/admin_service.dart';
+import 'package:senmi/services/api_service.dart';
 import 'customer_details_screen.dart';
 
 class CustomerManagementScreen extends StatefulWidget {
@@ -28,7 +28,7 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen> {
     setState(() => isLoading = true);
 
     try {
-      final data = await AdminService.getCustomers();
+      final data = await ApiService.getCustomers();
 
       customers = data;
       filteredCustomers = data;

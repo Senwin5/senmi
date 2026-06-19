@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:senmi/screen_package_pages/features/customer/customer_home_bottom/customer_bottomnav.dart';
-import 'package:senmi/services/package_service.dart';
+import 'package:senmi/services/api_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
@@ -30,6 +30,7 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
   double deliveryLng = 3.3792;
 
   String status = "Waiting for rider...";
+  int? etaMinutes;
 
   GoogleMapController? mapController;
   Set<Marker> markers = {};
@@ -77,7 +78,7 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
   }
 
   Future<void> _loadPackageInfo() async {
-    final pkg = await PackageService.getPackage(widget.packageId);
+    final pkg = await ApiService.getPackage(widget.packageId);
     if (pkg == null) return;
 
     setState(() {
@@ -92,6 +93,7 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
       deliveryLng = (pkg['delivery_lng'] ?? deliveryLng).toDouble();
 
       status = pkg['status'] ?? status;
+      etaMinutes = pkg['eta_minutes'];
       riderPhone = pkg['rider_phone'];
       riderName = pkg['rider_name'];
       riderImage = pkg['rider_profile_picture'];
@@ -407,6 +409,33 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
                                 ],
                               ),
                             ),
+
+                            const SizedBox(height: 14),
+
+                            if (etaMinutes != null)
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.green.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.access_time,
+                                      color: Colors.green,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      "ETA: $etaMinutes mins remaining",
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.green,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
 
                             const SizedBox(height: 14),
 

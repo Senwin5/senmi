@@ -1,8 +1,6 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:senmi/services/admin_service.dart';
-import 'package:senmi/services/package_service.dart';
+import 'package:senmi/services/api_service.dart';
 import 'rider_model.dart';
 import '../../../services/admin_socket_service.dart';
 import 'rider_card.dart';
@@ -80,7 +78,7 @@ class _AdminRidersScreenState extends State<AdminRidersScreen> {
     });
 
     try {
-      final List<dynamic> list = await AdminService.getRiders();
+      final List<dynamic> list = await ApiService.getRiders();
 
       riders = list.map<RiderModel>((e) => RiderModel.fromJson(e)).toList();
 
@@ -128,7 +126,7 @@ class _AdminRidersScreenState extends State<AdminRidersScreen> {
   Future<void> approveRider(String riderId) async {
     debugPrint("BUTTON CLICKED: $riderId");
 
-    final success = await PackageService.reviewRider(riderId, "approved", "");
+    final success = await ApiService.reviewRider(riderId, "approved", "");
 
     debugPrint("API RESULT: $success");
 
@@ -178,7 +176,7 @@ class _AdminRidersScreenState extends State<AdminRidersScreen> {
             ),
             ElevatedButton(
               onPressed: () async {
-                final success = await PackageService.reviewRider(
+                final success = await ApiService.reviewRider(
                   riderId,
                   "rejected",
                   controller.text.trim(),

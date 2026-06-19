@@ -5,7 +5,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:senmi/screen_package_pages/features/rider/success/delivery_complete_screen.dart';
-import 'package:senmi/services/package_service.dart';
+import 'package:senmi/services/api_service.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -76,7 +76,7 @@ class _RiderTrackScreenState extends State<RiderTrackScreen> {
           });
 
           // send to backend
-          await PackageService.updateLocation(widget.packageId, lat, lng);
+          await ApiService.updateLocation(widget.packageId, lat, lng);
         });
   }
 
@@ -84,7 +84,7 @@ class _RiderTrackScreenState extends State<RiderTrackScreen> {
   // 📦 LOAD PACKAGE
   // =========================
   Future<void> _loadPackage() async {
-    final pkg = await PackageService.getPackage(widget.packageId);
+    final pkg = await ApiService.getPackage(widget.packageId);
     if (pkg == null) return;
 
     setState(() {
@@ -167,7 +167,7 @@ class _RiderTrackScreenState extends State<RiderTrackScreen> {
 
     setState(() => _isLoading = true);
 
-    final result = await PackageService.confirmDeliveryCode(widget.packageId, code);
+    final result = await ApiService.confirmDeliveryCode(widget.packageId, code);
 
     setState(() => _isLoading = false);
 
@@ -322,7 +322,7 @@ class _RiderTrackScreenState extends State<RiderTrackScreen> {
                       Expanded(
                         child: ElevatedButton.icon(
                           onPressed: () async {
-                            final pkg = await PackageService.getPackage(
+                            final pkg = await ApiService.getPackage(
                               widget.packageId,
                             );
                             final phone = pkg?['receiver_phone'];

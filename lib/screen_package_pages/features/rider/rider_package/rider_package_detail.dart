@@ -2,9 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:senmi/screen_package_pages/features/rider/rider_track/rider_track_screen.dart';
-
 import 'package:geolocator/geolocator.dart';
-import 'package:senmi/services/package_service.dart';
+import 'package:senmi/services/api_service.dart';
 import 'dart:async';
 
 import 'package:url_launcher/url_launcher.dart';
@@ -44,7 +43,7 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
             distanceFilter: 10,
           ),
         ).listen((pos) {
-          PackageService.updateLocation(
+          ApiService.updateLocation(
             widget.packageId,
             pos.latitude,
             pos.longitude,
@@ -92,7 +91,7 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
     });
 
     try {
-      final res = await PackageService.getPackage(widget.packageId);
+      final res = await ApiService.getPackage(widget.packageId);
 
       setState(() {
         package = res;
@@ -123,7 +122,7 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
   Future<void> accept() async {
     setState(() => accepting = true);
 
-    final success = await PackageService.acceptPackage(widget.packageId);
+    final success = await ApiService.acceptPackage(widget.packageId);
 
     setState(() => accepting = false);
 
@@ -384,7 +383,7 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
                             width: double.infinity,
                             child: ElevatedButton.icon(
                               onPressed: () async {
-                                final success = await PackageService.updateStatus(
+                                final success = await ApiService.updateStatus(
                                   widget.packageId,
                                   "picked_up",
                                 );
@@ -463,7 +462,7 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
 
                                     if (confirm == true) {
                                       final success =
-                                          await PackageService.updateStatus(
+                                          await ApiService.updateStatus(
                                             widget.packageId,
                                             "cancelled",
                                           );

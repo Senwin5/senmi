@@ -3,7 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:senmi/screen_package_pages/features/customer/customer_create/create_package_details.dart';
 import 'package:senmi/screen_package_pages/features/customer/customer_create/create_package_screen.dart';
-import 'package:senmi/services/package_service.dart';
+import 'package:senmi/services/api_service.dart';
+
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -32,7 +33,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     setState(() => loading = true);
 
     try {
-      final res = await PackageService.getMyOrders();
+      final res = await ApiService.getMyOrders();
 
       setState(() {
         packages = res;

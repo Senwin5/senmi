@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:senmi/services/admin_service.dart';
+import 'package:senmi/services/api_service.dart';
 
 
 class AdminWithdrawalScreen extends StatefulWidget {
@@ -21,7 +21,7 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
 
   Future<void> fetchWithdrawals() async {
     try {
-      final data = await AdminService.getAdminWithdrawals();
+      final data = await ApiService.getAdminWithdrawals();
 
       setState(() {
         withdrawals = data;
@@ -33,12 +33,12 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
   }
 
   Future<void> approve(int id) async {
-    await AdminService.approveWithdrawal(id);
+    await ApiService.approveWithdrawal(id);
     fetchWithdrawals();
   }
 
   Future<void> reject(int id) async {
-    await AdminService.rejectWithdrawal(id, "Rejected by admin");
+    await ApiService.rejectWithdrawal(id, "Rejected by admin");
     fetchWithdrawals();
   }
 

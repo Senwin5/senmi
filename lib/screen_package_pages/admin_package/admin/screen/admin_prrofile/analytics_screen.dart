@@ -2,7 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:senmi/screen_package_pages/admin_package/admin/screen/admin_customer_screen/customer_management_screen.dart';
-import 'package:senmi/services/admin_service.dart';
+import 'package:senmi/services/api_service.dart';
 
 
 class AnalyticsScreen extends StatefulWidget {
@@ -25,7 +25,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
   Future<void> loadAnalytics() async {
     try {
-      final data = await AdminService.getAdminAnalytics();
+      final data = await ApiService.getAdminAnalytics();
 
       setState(() {
         analytics = data;

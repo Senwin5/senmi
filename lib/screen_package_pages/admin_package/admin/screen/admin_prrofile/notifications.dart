@@ -2,7 +2,8 @@
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:senmi/services/admin_service.dart';
+import 'package:senmi/services/api_service.dart';
+
 
 class AdminNotificationScreen extends StatefulWidget {
   const AdminNotificationScreen({super.key});
@@ -55,7 +56,7 @@ class _AdminNotificationScreenState extends State<AdminNotificationScreen> {
       hasNext = true;
     });
 
-    final data = await AdminService.getAdminNotifications(page);
+    final data = await ApiService.getAdminNotifications(page);
 
     setState(() {
       notifications = data["results"] ?? [];
@@ -77,7 +78,7 @@ class _AdminNotificationScreenState extends State<AdminNotificationScreen> {
         print("REQUEST PAGE $page");
       }
 
-      final data = await AdminService.getAdminNotifications(page);
+      final data = await ApiService.getAdminNotifications(page);
 
       final newItems = data["results"] ?? [];
 
@@ -130,7 +131,7 @@ class _AdminNotificationScreenState extends State<AdminNotificationScreen> {
           ),
           ElevatedButton(
             onPressed: () async {
-              await AdminService.sendNotification(
+              await ApiService.sendNotification(
                 title: titleController.text,
                 body: bodyController.text,
               );

@@ -6,7 +6,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:senmi/map/map_picker_screen.dart';
 import 'package:senmi/screen_package_pages/features/customer/customer_create/create_package_details.dart';
 import 'package:senmi/screen_package_pages/features/customer/customer_history/customer_history_screen.dart';
-import 'package:senmi/services/package_service.dart';
+import 'package:senmi/services/api_service.dart';
 
 class CreatePackageScreen extends StatefulWidget {
   final bool fromHome;
@@ -170,7 +170,7 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
       'delivery_lng': deliveryLocation!.longitude,
     };
 
-    final res = await PackageService.getPrice(payload);
+    final res = await ApiService.getPrice(payload);
 
     if (res != null) {
       setState(() {
@@ -218,7 +218,7 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
         'price': estimatedPrice?.toStringAsFixed(2),
       };
 
-      final res = await PackageService.createPackage(payload);
+      final res = await ApiService.createPackage(payload);
 
       if (!mounted) return;
 
@@ -241,7 +241,7 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
               borderRadius: BorderRadius.circular(14),
             ),
             content: Text(
-              "Please complete all required fields",
+              res['error']?.toString() ?? "Please complete all required fields",
               style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w600,

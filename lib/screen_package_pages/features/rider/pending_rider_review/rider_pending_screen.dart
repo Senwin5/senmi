@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:senmi/screen_package_pages/features/rider/rider_home_bottom/rider_bottom_nav.dart';
-import 'package:senmi/services/package_service.dart';
 import '../../../../services/api_service.dart';
 import '../../../../registration/auth/login.dart';
 import 'rider_complete_profile.dart';
@@ -56,7 +55,7 @@ class _RiderPendingScreenState extends State<RiderPendingScreen> {
     setState(() => loading = true);
 
     try {
-      final res = await PackageService.getRiderStatusSafe();
+      final res = await ApiService.getRiderStatusSafe();
 
       //handle no_token WITHOUT breaking your flow
 

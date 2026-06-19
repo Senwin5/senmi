@@ -186,42 +186,40 @@ class ApiService {
     }
   }
 
-  // ==========================
-  // FORGOT PASSWORD
-  // ==========================
-  static Future<Map<String, dynamic>> forgotPassword(String email) async {
-    try {
-      final response = await http.post(
-        Uri.parse("$baseUrl/forgot-password/"),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"email": email}),
-      );
+  static Future<Map<String, dynamic>> getAdminNotifications(int page) async {
+    final response = await http.get(
+      Uri.parse("$baseUrl/admin-notifications/?page=$page&limit=20"),
+      headers: {"Authorization": "Bearer $token"},
+    );
 
-      return jsonDecode(response.body);
-    } catch (e) {
-      return {"success": false, "error": e.toString()};
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+
+      if (data is Map<String, dynamic>) {
+        return data;
+      }
+
+      // 🔥 if backend accidentally returns list, wrap it
+      return {"results": data, "has_next": false, "page": page};
     }
+
+    debugPrint("Notification API error: ${response.body}");
+
+    return {"results": [], "has_next": false, "page": page};
   }
 
-  // ==========================
-  // RESET PASSWORD
-  // ==========================
-  static Future<Map<String, dynamic>> resetPassword({
-    required String email,
-    required String otp,
-    required String password,
+  static Future<void> sendNotification({
+    required String title,
+    required String body,
   }) async {
-    try {
-      final response = await http.post(
-        Uri.parse("$baseUrl/reset-password/"),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"email": email, "otp": otp, "password": password}),
-      );
-
-      return jsonDecode(response.body);
-    } catch (e) {
-      return {"success": false, "error": e.toString()};
-    }
+    await http.post(
+      Uri.parse("$baseUrl/send-notification/"),
+      headers: {
+        "Authorization": "Bearer $token",
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode({"title": title, "body": body, "target": "all"}),
+    );
   }
 
   static Future<void> saveFcmToken(String token) async {
@@ -247,6 +245,928 @@ class ApiService {
     }
   }
 
+  static Future<List> getCustomers() async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/admin/customers/"),
+        headers: await getAuthHeaders(),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        if (data is List) return data;
+
+        if (data is Map<String, dynamic>) {
+          if (data['results'] is List) {
+            return data['results'];
+          }
+        }
+      }
+
+      return [];
+    } catch (e) {
+      debugPrint("getCustomers error: $e");
+      return [];
+    }
+  }
+
+  static Future<Map<String, dynamic>> getCustomerDetail(int customerId) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/admin/customers/$customerId/"),
+        headers: await getAuthHeaders(),
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      }
+
+      return {};
+    } catch (e) {
+      debugPrint("getCustomerDetail error: $e");
+
+      return {};
+    }
+  }
+
+  // ==========================
+  // CREATE PACKAGE (Customer)
+
+  static Future<Map<String, dynamic>> createPackage(
+    Map<String, dynamic> data,
+  ) async {
+    try {
+      final url = Uri.parse("$baseUrl/create-package/");
+
+      final response = await http.post(
+        url,
+        headers: {
+          ...await ApiService.getAuthHeaders(),
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode(data),
+      );
+
+      debugPrint("STATUS: ${response.statusCode}");
+      debugPrint("BODY: ${response.body}");
+
+      final res = jsonDecode(response.body);
+
+      if (response.statusCode == 201) {
+        return {"success": true, "package_id": res['package_id']?.toString()};
+      }
+
+      return {"success": false, "error": res['error'] ?? res.toString()};
+    } catch (e) {
+      return {"success": false, "error": e.toString()};
+    }
+  }
+
+  static Future<Map<String, dynamic>?> getPrice(Map payload) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/calculate-price/"),
+        headers: await ApiService.getAuthHeaders(),
+        body: jsonEncode(payload),
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      }
+    } catch (e) {
+      debugPrint("Price error: $e");
+    }
+    return null;
+  }
+
+  // Fetch package by ID
+  static Future<dynamic> getPackage(String packageId) async {
+    await loadToken();
+
+    final url = Uri.parse("$baseUrl/packages/$packageId/");
+
+    final res = await http.get(url, headers: await ApiService.getAuthHeaders());
+
+    if (res.statusCode == 200) {
+      if (res.body.isEmpty) {
+        throw Exception("Empty response from server");
+      }
+      return jsonDecode(res.body);
+    } else {
+      throw Exception("Failed: ${res.statusCode} - ${res.body}");
+    }
+  }
+
+  static Future<List<dynamic>> getMyOrders() async {
+    await loadToken();
+
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/my-orders/"),
+        headers: await ApiService.getAuthHeaders(),
+      );
+
+      debugPrint("MY ORDERS STATUS → ${response.statusCode}");
+      debugPrint("MY ORDERS BODY → ${response.body}");
+
+      final data = jsonDecode(response.body);
+
+      if (data is List) return data;
+
+      if (data is Map<String, dynamic>) {
+        if (data['results'] is List) return data['results'];
+        if (data['data'] is List) return data['data'];
+        if (data['packages'] is List) return data['packages'];
+      }
+
+      return [];
+    } catch (e) {
+      debugPrint("getMyOrders error: $e");
+      return [];
+    }
+  }
+
+  // ==========================
+  // ADMIN PACKAGES
+  // ==========================
+
+  static Future<List<dynamic>> getAdminPackages() async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/admin/packages/"),
+        headers: await getAuthHeaders(),
+      );
+
+      debugPrint("ADMIN PACKAGES STATUS: ${response.statusCode}");
+
+      debugPrint("ADMIN PACKAGES BODY: ${response.body}");
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        if (data is List) {
+          return data;
+        }
+
+        if (data is Map<String, dynamic>) {
+          if (data['results'] is List) {
+            return data['results'];
+          }
+        }
+      }
+
+      return [];
+    } catch (e) {
+      debugPrint("getAdminPackages error: $e");
+
+      return [];
+    }
+  }
+
+  static Future<List<dynamic>> getAvailableRiders() async {
+    final response = await http.get(
+      Uri.parse("$baseUrl/admin/available-riders/"),
+
+      headers: await getAuthHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+
+    return [];
+  }
+
+  static Future<Map<String, dynamic>> getAdminAnalytics() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/admin/analytics/'),
+      headers: await getAuthHeaders(),
+    );
+
+    debugPrint("ANALYTICS STATUS: ${response.statusCode}");
+    debugPrint("ANALYTICS BODY: ${response.body}");
+
+    return jsonDecode(response.body);
+  }
+
+  static Future<Map<String, dynamic>> getAdminDashboard() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/admin/dashboard/'),
+      headers: await getAuthHeaders(),
+    );
+
+    return jsonDecode(response.body);
+  }
+
+  static Future<void> updatePackageStatus(
+    String packageId,
+    String status,
+  ) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/admin/packages/$packageId/update-status/"),
+      headers: await getAuthHeaders(),
+      body: jsonEncode({"status": status}),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception("Failed to update status");
+    }
+  }
+
+  // Create Paystack payment link
+  static Future<Map<String, dynamic>> createPaystackPaymentLink(
+    Map<String, dynamic> data,
+  ) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse("$baseUrl/packages/${data['package_id']}/pay/"),
+            headers: await ApiService.getAuthHeaders(),
+            body: jsonEncode(data),
+          )
+          .timeout(const Duration(seconds: 20));
+
+      debugPrint("PAYSTACK STATUS: ${response.statusCode}");
+      debugPrint("PAYSTACK BODY: ${response.body}");
+
+      dynamic decoded;
+      try {
+        decoded = jsonDecode(response.body);
+      } catch (e) {
+        return {
+          "success": false,
+          "error": "Invalid JSON from server: ${response.body}",
+        };
+      }
+
+      if (response.statusCode == 200) {
+        if (decoded["payment_url"] != null) {
+          return {"success": true, "payment_url": decoded["payment_url"]};
+        }
+
+        if (decoded["message"] == "Package already paid") {
+          return {
+            "success": true,
+            "already_paid": true,
+            "message": decoded["message"],
+          };
+        }
+      }
+
+      return {
+        "success": false,
+        "error": decoded is Map
+            ? decoded["error"] ?? "Payment failed"
+            : decoded.toString(),
+      };
+    } catch (e) {
+      return {"success": false, "error": e.toString()};
+    }
+  }
+
+  // ==========================
+  // 💳 INITIALIZE PAYMENT
+  // ==========================
+  static Future<String?> initializePayment(String packageId) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/packages/$packageId/pay/"),
+        headers: await ApiService.getAuthHeaders(),
+      );
+
+      debugPrint("INIT PAYMENT: ${response.statusCode}");
+      debugPrint("INIT BODY: ${response.body}");
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return data['payment_url'];
+      }
+
+      return null;
+    } catch (e) {
+      debugPrint("Payment init error: $e");
+      return null;
+    }
+  }
+
+  // ==========================
+  // 📦 CUSTOMER PACKAGES
+  // ==========================
+  static Future<List<dynamic>> getCustomerPackages() async {
+    await loadToken(); // 🔥 IMPORTANT FIX
+
+    final response = await http.get(
+      Uri.parse("$baseUrl/customer/packages/"),
+      headers: await ApiService.getAuthHeaders(),
+    );
+
+    debugPrint("STATUS → ${response.statusCode}");
+    debugPrint("BODY → ${response.body}");
+
+    final data = jsonDecode(response.body);
+
+    if (data is List) {
+      return data;
+    }
+
+    if (data is Map<String, dynamic>) {
+      if (data['packages'] is List) return data['packages']; // 🔥 IMPORTANT
+      if (data['data'] is List) return data['data'];
+      if (data['results'] is List) return data['results'];
+    }
+
+    return [];
+  }
+
+  // ==========================
+  // 📍 TRACK PACKAGE
+  // ==========================
+  static Future<Map<String, dynamic>?> trackPackage(String packageId) async {
+    final response = await http.get(
+      Uri.parse("$baseUrl/track/$packageId/"),
+      headers: await ApiService.getAuthHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    return null;
+  }
+
+  // AVAILABLE PACKAGES (RIDER) - FIXED
+  static Future<List<dynamic>> getAvailablePackages() async {
+    await loadToken(); // Ensure token is loaded
+    if (token == null) return [];
+
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/packages/"),
+        headers: await ApiService.getAuthHeaders(),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        // ✅ FIX: handle Django pagination (results)
+        if (data is Map<String, dynamic>) {
+          if (data['results'] is List) {
+            return data['results'];
+          }
+
+          if (data['data'] is List) {
+            return data['data'];
+          }
+
+          if (data['packages'] is List) {
+            return data['packages'];
+          }
+        }
+
+        // fallback for raw list response
+        if (data is List) {
+          return data;
+        }
+
+        return [];
+      } else {
+        debugPrint("getAvailablePackages failed: ${response.statusCode}");
+        return [];
+      }
+    } catch (e) {
+      debugPrint("Error fetching available packages: $e");
+      return [];
+    }
+  }
+
+  static Future<Map<String, dynamic>?> searchPackage(String query) async {
+    try {
+      final res = await http.get(
+        Uri.parse("$baseUrl/packages/search/?q=${Uri.encodeComponent(query)}"),
+        headers: await getAuthHeaders(),
+      );
+
+      debugPrint("SEARCH STATUS: ${res.statusCode}");
+      debugPrint("SEARCH BODY: ${res.body}");
+
+      if (res.statusCode == 200) {
+        return jsonDecode(res.body);
+      }
+
+      return null;
+    } catch (e) {
+      debugPrint("searchPackage error: $e");
+      return null;
+    }
+  }
+
+  // ==========================
+  // ACCEPT PACKAGE
+  // ==========================
+  static Future<bool> acceptPackage(String packageId) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/packages/$packageId/accept/"),
+      headers: await ApiService.getAuthHeaders(),
+    );
+
+    return response.statusCode == 200;
+  }
+
+  // ==========================
+  // 🔄 UPDATE DELIVERY STATUS
+  static Future<bool> updateStatus(String packageId, String status) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/packages/$packageId/update-status/"),
+      headers: {
+        ...await ApiService.getAuthHeaders(),
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode({"status": status}),
+    );
+
+    final body = jsonDecode(response.body);
+
+    if (kDebugMode) {
+      print("STATUS CODE: ${response.statusCode}");
+    }
+    if (kDebugMode) {
+      print("RESPONSE BODY: $body");
+    }
+
+    return response.statusCode >= 200 &&
+        response.statusCode < 300 &&
+        (body["success"] == true || body["message"] == "Cancelled");
+  }
+
+  // ==========================
+  // 📍 UPDATE LOCATION (RIDER)
+  // ==========================
+  static Future<bool> updateLocation(
+    String packageId,
+    double lat,
+    double lng,
+  ) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/packages/$packageId/update-location/"),
+      headers: await ApiService.getAuthHeaders(),
+      body: jsonEncode({"lat": lat, "lng": lng}),
+    );
+
+    return response.statusCode == 200;
+  }
+
+  // ==========================
+  // RATE RIDER
+
+  static Future<bool> rateRider(
+    String packageId,
+    String rating,
+    String comment,
+  ) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/packages/$packageId/rate/"),
+      headers: {
+        ...(await ApiService.getAuthHeaders()),
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode({"rating": rating, "comment": comment}),
+    );
+
+    return response.statusCode == 200;
+  }
+
+  // ==========================
+  // 💰 WALLET
+  // ==========================
+  static Future<Map<String, dynamic>> getWallet() async {
+    final response = await http.get(
+      Uri.parse("$baseUrl/rider/wallet/"),
+      headers: await ApiService.getAuthHeaders(),
+    );
+
+    debugPrint("WALLET STATUS: ${response.statusCode}");
+    debugPrint("WALLET BODY: ${response.body}");
+
+    final data = jsonDecode(response.body);
+
+    return {
+      "balance": (data['balance'] ?? 0).toDouble(),
+      "total_earnings": (data['total_earned'] ?? 0).toDouble(),
+    };
+  }
+
+  // ==========================
+  // 💸 WITHDRAW
+  // ==========================
+  static Future<bool> withdraw({
+    required double amount,
+    required String accountNumber,
+    required String bankCode,
+  }) async {
+    if (amount <= 0) {
+      throw Exception("Amount must be greater than zero");
+    }
+
+    final response = await http.post(
+      Uri.parse("$baseUrl/rider/wallet/withdraw/"),
+      headers: await ApiService.getAuthHeaders(),
+      body: jsonEncode({
+        "amount": amount,
+        "bank_account": accountNumber,
+        "bank_code": bankCode,
+      }),
+    );
+
+    final data = jsonDecode(response.body);
+
+    debugPrint("WITHDRAW STATUS: ${response.statusCode}");
+    debugPrint("WITHDRAW BODY: $data");
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return true;
+    } else {
+      throw Exception(data['error'] ?? "Withdrawal failed");
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> getBanks() async {
+    final res = await http.get(
+      Uri.parse("$baseUrl/banks/"),
+      headers: await getAuthHeaders(),
+    );
+
+    final data = jsonDecode(res.body);
+
+    if (data is Map && data['data'] is List) {
+      return List<Map<String, dynamic>>.from(data['data']);
+    }
+
+    return [];
+  }
+
+  static Future<String> resolveAccount({
+    required String accountNumber,
+    required String bankCode,
+  }) async {
+    final res = await http.post(
+      Uri.parse("$baseUrl/rider/resolve-account/"),
+      headers: await getAuthHeaders(),
+      body: jsonEncode({
+        "account_number": accountNumber,
+        "bank_code": bankCode,
+      }),
+    );
+
+    final data = jsonDecode(res.body);
+
+    if (res.statusCode == 200) {
+      return data['account_name'];
+    } else {
+      throw Exception(data['error'] ?? "Failed to verify account");
+    }
+  }
+
+  // ==========================
+  // 📊 GET TRANSACTIONS
+  // ==========================
+  static Future<List<dynamic>> getTransactions() async {
+    final response = await http.get(
+      Uri.parse("$baseUrl/rider/wallet/transactions/"),
+      headers: await ApiService.getAuthHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data is List ? data : [];
+    }
+
+    return [];
+  }
+
+  static Future<Map<String, dynamic>> getEarnings() async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/rider-earnings/"), // ✅ FIXED URL
+        headers: await ApiService.getAuthHeaders(),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        return {
+          "total_earnings": (data['total_earnings'] ?? 0).toDouble(),
+          "total_deliveries": data['total_deliveries'] ?? 0,
+        };
+      } else {
+        return {"total_earnings": 0, "total_deliveries": 0};
+      }
+    } catch (e) {
+      return {"total_earnings": 0, "total_deliveries": 0};
+    }
+  }
+
+  static Future<List> getAdminWithdrawals() async {
+    final res = await http.get(
+      Uri.parse("$baseUrl/admin/withdrawals/"),
+      headers: await getAuthHeaders(),
+    );
+
+    return jsonDecode(res.body);
+  }
+
+  static Future approveWithdrawal(int id) async {
+    await http.post(
+      Uri.parse("$baseUrl/admin/withdrawals/$id/approve/"),
+      headers: await getAuthHeaders(),
+    );
+  }
+
+  static Future rejectWithdrawal(int id, String reason) async {
+    await http.post(
+      Uri.parse("$baseUrl/admin/withdrawals/$id/reject/"),
+      headers: await getAuthHeaders(),
+      body: jsonEncode({"reason": reason}),
+    );
+  }
+
+  static Future<List> getAdminRiderWallets() async {
+  final response = await http.get(
+    Uri.parse("$baseUrl/admin/rider-wallets/"),
+    headers: await ApiService.getAuthHeaders(),
+  );
+
+  return jsonDecode(response.body);
+}
+
+  // getRiderProfile
+  static Future<Map<String, dynamic>> getRiderProfile() async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/rider-profile/"),
+        headers: await getAuthHeaders(),
+      );
+
+      final data = jsonDecode(response.body);
+      if (kDebugMode) {
+        print("RAW RIDER PROFILE RESPONSE: $data");
+      }
+
+      if (response.statusCode == 401) {
+        await logout();
+        return {};
+      }
+
+      if (data is Map<String, dynamic>) {
+        return data;
+      }
+
+      if (data is List && data.isNotEmpty) {
+        return Map<String, dynamic>.from(data[0]);
+      }
+
+      return {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  // ================================
+  // Rider Profile Update (Static)
+  // ================================
+
+  static Future<Map<String, dynamic>> updateRiderProfile(
+    String fullName,
+    String phone,
+    String vehicle,
+    String address,
+    String city,
+    File? profile,
+    File? rider1,
+    File? vehicleImg,
+  ) async {
+    try {
+      var request = http.MultipartRequest(
+        'PUT',
+        Uri.parse("$baseUrl/rider-profile/"),
+      );
+
+      // Add headers
+      final headers = await getAuthHeaders();
+      headers.remove("Content-Type");
+
+      request.headers.addAll(headers);
+
+      // Add fields
+      request.fields['full_name'] = fullName;
+      request.fields['phone_number'] = phone; // ✅ Correct
+      request.fields['vehicle_number'] = vehicle;
+      request.fields['address'] = address;
+      request.fields['city'] = city;
+
+      // Add files with correct field names
+      if (profile != null) {
+        request.files.add(
+          await http.MultipartFile.fromPath('profile_picture', profile.path),
+        );
+      }
+      if (rider1 != null) {
+        request.files.add(
+          await http.MultipartFile.fromPath('rider_image_1', rider1.path),
+        ); // ✅ corrected
+      }
+      if (vehicleImg != null) {
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'rider_image_with_vehicle',
+            vehicleImg.path,
+          ),
+        ); // ✅ corrected
+      }
+
+      final response = await request.send();
+      final resBody = await response.stream.bytesToString();
+      final data = jsonDecode(resBody);
+
+      if (response.statusCode == 401) {
+        await logout();
+        return {"error": "Session expired. Please login again."};
+      }
+
+      return data;
+    } catch (e) {
+      return {"error": e.toString()};
+    }
+  }
+
+  // Safe Rider Status Fetch
+  // ================================
+  static Future<Map<String, dynamic>> getRiderStatusSafe() async {
+    await loadToken();
+    if (token == null) {
+      return {"status": "no_token", "error": "No token available"};
+    }
+
+    try {
+      final res = await http.get(
+        Uri.parse("$baseUrl/rider/status/"),
+        headers: await ApiService.getAuthHeaders(),
+      );
+
+      if (res.statusCode == 401) {
+        return {"status": "unauthorized", "error": "Token expired or invalid"};
+      }
+
+      final data = jsonDecode(res.body);
+      return data is Map<String, dynamic>
+          ? data
+          : {"status": "unknown", "data": data};
+    } catch (e) {
+      return {"status": "error", "error": e.toString()};
+    }
+  }
+
+  // ==============================
+  // 🟢 ADMIN DASHBOARD METHODS
+  // ==============================
+
+  /// Get all riders
+  static Future<List<dynamic>> getRiders() async {
+    try {
+      final res = await http.get(
+        Uri.parse("$baseUrl/admin/riders/"),
+        headers: await ApiService.getAuthHeaders(),
+      );
+
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+
+        // ✅ HANDLE PAGINATION
+        if (data is Map<String, dynamic>) {
+          if (data['results'] is List) return data['results'];
+        }
+
+        if (data is List) return data;
+
+        return [];
+      } else {
+        return [];
+      }
+    } catch (e) {
+      return [];
+    }
+  }
+
+  /// Approve or reject a rider
+  static Future<bool> reviewRider(
+    String riderId,
+    String status,
+    String reason,
+  ) async {
+    try {
+      final url = Uri.parse("$baseUrl/review-rider/$riderId/");
+      final res = await http.post(
+        url,
+        headers: await ApiService.getAuthHeaders(),
+        body: jsonEncode({
+          "status": status.toLowerCase(),
+          "rejection_reason": reason.trim(),
+        }),
+      );
+
+      return res.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  static Future<Map<String, dynamic>> getRiderStatus() async {
+    final res = await http.get(
+      Uri.parse("$baseUrl/rider/status/"),
+      headers: await ApiService.getAuthHeaders(),
+    );
+
+    return jsonDecode(res.body);
+  }
+
+  // ============================================
+  // Get the currently logged-in user profile
+  // ============================================
+  static Future<Map<String, dynamic>?> getUserProfile() async {
+    // 1️⃣ If the user is not logged in, token will be null
+    if (token == null) return null;
+
+    try {
+      // 2️⃣ Make GET request to your API endpoint for profile
+      final response = await http.get(
+        Uri.parse(
+          "$baseUrl/profile/",
+        ), // <-- Change if your API uses a different path
+        headers:
+            await ApiService.getAuthHeaders(), // Sends Authorization token automatically if set
+      );
+
+      // 3️⃣ Handle successful response
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        // Make sure it's a Map
+        return data is Map<String, dynamic> ? data : null;
+      }
+      // 4️⃣ Handle unauthorized (token expired)
+      else if (response.statusCode == 401) {
+        await logout(); // Force logout
+        return null;
+      }
+      // 5️⃣ Handle any other status codes
+      else {
+        return null;
+      }
+    } catch (e) {
+      // 6️⃣ Catch network / parsing errors
+      debugPrint("Error fetching profile: $e");
+      return null;
+    }
+  }
+
+  static Future<bool> deleteUser() async {
+    await loadToken();
+
+    if (token == null) {
+      return false;
+    }
+
+    try {
+      final res = await http.delete(
+        Uri.parse("$baseUrl/profile/hard-delete/"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+
+      return res.statusCode == 200 || res.statusCode == 204;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  static Future<Map<String, dynamic>?> confirmDeliveryCode(
+    String packageId,
+    String code,
+  ) async {
+    final res = await http.post(
+      Uri.parse("$baseUrl/packages/$packageId/update-status/"), // ✅ FIXED
+      headers: await ApiService.getAuthHeaders(),
+      body: jsonEncode({
+        "status": "delivered", // ✅ REQUIRED
+        "delivery_code": code, // ✅ REQUIRED
+      }),
+    );
+
+    if (res.statusCode == 200) {
+      return jsonDecode(res.body);
+    }
+
+    return null;
+  }
+
   static Future<bool> refreshAccessToken() async {
     if (refreshToken == null) return false;
 
@@ -269,16 +1189,49 @@ class ApiService {
     return false;
   }
 
-  static Future<bool> deleteUser() async {
+  static Future<Map<String, dynamic>> deletePackage(String packageId) async {
+    final response = await http.delete(
+      Uri.parse("$baseUrl/packages/$packageId/delete/"),
+      headers: await getAuthHeaders(),
+    );
+
+    final body = jsonDecode(response.body);
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return body;
+    } else {
+      throw Exception(body['error'] ?? 'Delete failed');
+    }
+  }
+
+  static Future<Map<String, dynamic>> getMyPackages() async {
+    await loadToken();
+
     try {
-      final res = await http.delete(
-        Uri.parse("$baseUrl/profile/hard-delete/"),
-        headers: {"Authorization": "Bearer $token"},
+      final response = await http.get(
+        Uri.parse("$baseUrl/rider/my-packages/"),
+        headers: await ApiService.getAuthHeaders(),
       );
 
-      return res.statusCode == 200 || res.statusCode == 204;
+      debugPrint("MY PACKAGES STATUS → ${response.statusCode}");
+      debugPrint("MY PACKAGES BODY → ${response.body}");
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        if (data is Map<String, dynamic>) {
+          return {
+            "accepted": data["accepted"] ?? [],
+            "in_transit": data["in_transit"] ?? [],
+            "delivered": data["delivered"] ?? [],
+          };
+        }
+      }
+
+      return {"accepted": [], "in_transit": [], "delivered": []};
     } catch (e) {
-      return false;
+      debugPrint("getMyPackages error: $e");
+      return {"accepted": [], "in_transit": [], "delivered": []};
     }
   }
 
