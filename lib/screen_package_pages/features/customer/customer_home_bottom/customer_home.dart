@@ -189,20 +189,29 @@ class _CustomerHomeState extends State<CustomerHome> {
                           subtitle:
                               "Track your delivery in real-time from pickup to drop-off.",
                           onTap: () {
-                            if (packages.isNotEmpty) {
-                              final pkg = packages[0];
-
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => CustomerTrackingScreen(
-                                    packageId:
-                                        pkg['package_id'] ??
-                                        pkg['id'].toString(),
+                            if (packages.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    "No package available for tracking",
                                   ),
+                                  duration: Duration(seconds: 2),
                                 ),
                               );
+                              return;
                             }
+
+                            final pkg = packages[0];
+
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => CustomerTrackingScreen(
+                                  packageId:
+                                      pkg['package_id'] ?? pkg['id'].toString(),
+                                ),
+                              ),
+                            );
                           },
                         ),
 

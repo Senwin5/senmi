@@ -181,6 +181,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.deepPurple,
+                      foregroundColor: Colors.white, // Text color
                       padding: const EdgeInsets.all(16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -189,6 +190,11 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     onPressed: nextPage,
                     child: Text(
                       currentPage == pages.length - 1 ? "Get Started" : "Next",
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.5,
+                      ),
                     ),
                   ),
                 ),
