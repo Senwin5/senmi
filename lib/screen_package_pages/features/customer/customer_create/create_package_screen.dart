@@ -91,18 +91,22 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
       final p = placemarks.first;
 
       final street = [
-        p.thoroughfare,
         p.subThoroughfare,
+        p.thoroughfare,
       ].where((e) => e != null && e.isNotEmpty).join(" ");
 
-      final address = [
-        if (street.isNotEmpty) street,
-        p.locality,
-        p.administrativeArea,
-        p.country,
-      ].where((e) => e != null && e.isNotEmpty).join(", ");
+      final address =
+          [
+                if (street.isNotEmpty) street,
+                p.locality,
+                p.administrativeArea,
+                p.country,
+              ]
+              .where((e) => e != null && e.isNotEmpty)
+              .toSet() // removes duplicate Lagos
+              .join(", ");
 
-      return address.isEmpty ? "Unknown location" : address;
+      return address;
     } catch (e) {
       return "Unknown location";
     }
