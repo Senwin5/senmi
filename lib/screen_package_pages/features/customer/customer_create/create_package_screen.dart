@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:senmi/map/map_picker_screen.dart';
+import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:senmi/screen_package_pages/features/customer/customer_create/create_package_details.dart';
 import 'package:senmi/screen_package_pages/features/customer/customer_history/customer_history_screen.dart';
 import 'package:senmi/services/api_service.dart';
@@ -28,6 +29,9 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
   final pickupController = TextEditingController();
   final deliveryController = TextEditingController();
 
+  final receiverNameController = TextEditingController();
+  final receiverPhoneController = TextEditingController();
+
   void _resetForm() {
     setState(() {
       pickupController.clear();
@@ -35,7 +39,7 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
 
       receiverName = '';
       receiverPhone = '';
-      description = '';
+      //description = '';
       pickupAddress = '';
       deliveryAddress = '';
 
@@ -70,7 +74,7 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
   String senderPhone = '';
   String receiverName = '';
   String receiverPhone = '';
-  String description = '';
+  //String description = '';
   String pickupAddress = '';
   String deliveryAddress = '';
 
@@ -109,6 +113,26 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
       return address;
     } catch (e) {
       return "Unknown location";
+    }
+  }
+
+  Future<void> _pickContact() async {
+    final status = await FlutterContacts.permissions.request(
+      PermissionType.read,
+    );
+
+    if (status != PermissionStatus.granted) return;
+
+    final contact = await FlutterContacts.native.showPicker(
+      properties: {ContactProperty.phone},
+    );
+
+    if (contact == null) return;
+
+    receiverNameController.text = contact.displayName!;
+
+    if (contact.phones.isNotEmpty) {
+      receiverPhoneController.text = contact.phones.first.number;
     }
   }
 
@@ -210,7 +234,7 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
 
     try {
       final payload = {
-        'description': description.trim(),
+        //'description': description.trim(),
         'pickup_address': pickupController.text,
         'delivery_address': deliveryController.text,
         'receiver_name': receiverName.trim(),
@@ -532,52 +556,28 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
                           ),
                         ),
 
-                        _buildTextField(
-                          "Receiver Phone",
-                          type: TextInputType.phone,
-                          onSaved: (v) => receiverPhone = v ?? '',
+                        const SizedBox(height: 10),
+
+                        OutlinedButton.icon(
+                          onPressed: _pickContact,
+                          icon: const Icon(Icons.contacts),
+                          label: const Text("Choose from Contacts"),
                         ),
 
                         _buildTextField(
                           "Receiver Name (Optional)",
+                          controller: receiverNameController,
                           onSaved: (v) => receiverName = v ?? '',
                         ),
 
-                        const SizedBox(height: 15),
-
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).cardColor,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: Colors.grey.shade300),
-                          ),
-                          child: ExpansionTile(
-                            tilePadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 4,
-                            ),
-                            childrenPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                            title: const Text(
-                              "Additional Details",
-                              style: TextStyle(fontWeight: FontWeight.w600),
-                            ),
-                            subtitle: const Text(
-                              "Optional",
-                              style: TextStyle(fontSize: 12),
-                            ),
-                            children: [
-                              _buildTextField(
-                                "Package Description",
-                                onSaved: (v) => description = v ?? '',
-                              ),
-                            ],
-                          ),
+                        _buildTextField(
+                          "Receiver Phone",
+                          controller: receiverPhoneController,
+                          type: TextInputType.phone,
+                          onSaved: (v) => receiverPhone = v ?? '',
                         ),
 
-                        const SizedBox(height: 30),
+                        const SizedBox(height: 15),
 
                         SizedBox(
                           width: double.infinity,
