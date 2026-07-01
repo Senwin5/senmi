@@ -13,7 +13,7 @@ final navigatorKey = GlobalKey<NavigatorState>();
 bool openedFromPayment = false;
 ValueNotifier<bool> isDarkMode = ValueNotifier(false);
 
-/// ===============================
+
 ///  BACKGROUND HANDLER (MUST BE TOP LEVEL)
 /// ===============================
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {

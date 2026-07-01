@@ -401,7 +401,7 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
                                   ],
                                 ),
                                 child: const Text(
-                                  "Send Order",
+                                  "Send Package",
                                   style: TextStyle(color: Colors.white),
                                 ),
                               ),
@@ -434,45 +434,9 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
                           ],
                         ),
 
-                        const SizedBox(height: 10),
-
+                        const SizedBox(height: 15),
                         const Text(
-                          "Receiver Details",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-
-                        _buildTextField(
-                          "Receiver Name",
-                          onSaved: (v) => receiverName = v ?? '',
-                        ),
-                        _buildTextField(
-                          "Receiver Phone",
-                          type: TextInputType.phone,
-                          onSaved: (v) => receiverPhone = v ?? '',
-                        ),
-
-                        const SizedBox(height: 10),
-
-                        const Text(
-                          "Package Info",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-
-                        _buildTextField(
-                          "Description",
-                          onSaved: (v) => description = v ?? '',
-                        ),
-
-                        const SizedBox(height: 10),
-
-                        const Text(
-                          "Locations",
+                          "Pickup & Delivery",
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -483,7 +447,7 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
                           onTap: () => _pickLocation(isPickup: true),
                           child: AbsorbPointer(
                             child: _buildTextField(
-                              "Pickup Address",
+                              "Pickup location",
                               controller: pickupController,
                             ),
                           ),
@@ -493,13 +457,13 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
                           onTap: () => _pickLocation(isPickup: false),
                           child: AbsorbPointer(
                             child: _buildTextField(
-                              "Delivery Address",
+                              "Delivery location",
                               controller: deliveryController,
                             ),
                           ),
                         ),
 
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 18),
 
                         SizedBox(
                           width: double.infinity,
@@ -511,7 +475,7 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
                                 ? const CircularProgressIndicator(
                                     color: Colors.white,
                                   )
-                                : const Text("Calculate Price"),
+                                : const Text("Calculate delivery cost"),
                           ),
                         ),
 
@@ -528,14 +492,90 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
                             ),
                             child: Column(
                               children: [
-                                Text(
-                                  "Distance: ${distanceKm?.toStringAsFixed(2)} km",
+                                const Text(
+                                  "Estimated Delivery Cost",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
                                 ),
-                                Text("₦${estimatedPrice!.toStringAsFixed(0)}"),
+
+                                const SizedBox(height: 8),
+
+                                Text(
+                                  "₦${estimatedPrice!.toStringAsFixed(0)}",
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 32,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+
+                                const SizedBox(height: 4),
+
+                                Text(
+                                  "${distanceKm?.toStringAsFixed(2)} km",
+                                  style: const TextStyle(color: Colors.white70),
+                                ),
                               ],
                             ),
                           ),
                         ],
+                        const SizedBox(height: 18),
+
+                        const Text(
+                          "Receiver Details",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+
+                        _buildTextField(
+                          "Receiver Phone",
+                          type: TextInputType.phone,
+                          onSaved: (v) => receiverPhone = v ?? '',
+                        ),
+
+                        _buildTextField(
+                          "Receiver Name (Optional)",
+                          onSaved: (v) => receiverName = v ?? '',
+                        ),
+
+                        const SizedBox(height: 15),
+
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).cardColor,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Colors.grey.shade300),
+                          ),
+                          child: ExpansionTile(
+                            tilePadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 4,
+                            ),
+                            childrenPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            title: const Text(
+                              "Additional Details",
+                              style: TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                            subtitle: const Text(
+                              "Optional",
+                              style: TextStyle(fontSize: 12),
+                            ),
+                            children: [
+                              _buildTextField(
+                                "Package Description",
+                                onSaved: (v) => description = v ?? '',
+                              ),
+                            ],
+                          ),
+                        ),
 
                         const SizedBox(height: 30),
 
@@ -543,7 +583,7 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
                           width: double.infinity,
                           child: ElevatedButton(
                             onPressed: _createPackage,
-                            child: const Text("Create Package"),
+                            child: const Text("Send Package"),
                           ),
                         ),
                       ],

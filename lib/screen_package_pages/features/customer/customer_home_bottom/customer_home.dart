@@ -170,9 +170,8 @@ class _CustomerHomeState extends State<CustomerHome> {
                       children: [
                         _card(
                           icon: Icons.two_wheeler,
-                          title: "Create a Package",
-                          subtitle:
-                              "We'll pick it up and deliver it across town quickly.",
+                          title: "Create a package",
+                          subtitle: "We’ll handle pickup and delivery.",
                           onTap: () {
                             Navigator.push(
                               context,
@@ -187,7 +186,7 @@ class _CustomerHomeState extends State<CustomerHome> {
                           icon: Icons.location_on,
                           title: "Track a delivery",
                           subtitle:
-                              "Track your delivery in real-time from pickup to drop-off.",
+                              "Real-time tracking from pickup to delivery.",
                           onTap: () {
                             if (packages.isEmpty) {
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -218,8 +217,7 @@ class _CustomerHomeState extends State<CustomerHome> {
                         _card(
                           icon: Icons.history,
                           title: "Check delivery history",
-                          subtitle:
-                              "Check your delivery history anytime to stay organized.",
+                          subtitle: "View all your deliveries.",
                           onTap: () {
                             Navigator.push(
                               context,
