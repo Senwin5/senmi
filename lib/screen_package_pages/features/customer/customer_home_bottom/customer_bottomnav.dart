@@ -4,7 +4,6 @@ import '../customer_create/create_package_screen.dart';
 import '../customer_history/customer_history_screen.dart';
 import 'package:senmi/screen_package_pages/features/customer/customer_profiles/account_profile_screen.dart';
 
-
 /// Customer Bottom Navigation
 class CustomerBottomNav extends StatefulWidget {
   final int initialIndex;
@@ -39,7 +38,10 @@ class _CustomerBottomNavState extends State<CustomerBottomNav> {
 
   final List<BottomNavigationBarItem> _navItems = const [
     BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-    BottomNavigationBarItem(icon: Icon(Icons.two_wheeler), label: "Send Order"),
+    BottomNavigationBarItem(
+      icon: Icon(Icons.two_wheeler),
+      label: "Send Package",
+    ),
     BottomNavigationBarItem(icon: Icon(Icons.history), label: "History"),
     //BottomNavigationBarItem(icon: Icon(Icons.two_wheeler), label: "Track"),
     BottomNavigationBarItem(icon: Icon(Icons.person), label: "Account"),

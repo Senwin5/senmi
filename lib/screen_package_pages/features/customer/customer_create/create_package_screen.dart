@@ -583,7 +583,7 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
                           width: double.infinity,
                           child: ElevatedButton(
                             onPressed: _createPackage,
-                            child: const Text("Send Package"),
+                            child: const Text("Create Package"),
                           ),
                         ),
                       ],
