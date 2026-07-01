@@ -425,7 +425,7 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
                                   ],
                                 ),
                                 child: const Text(
-                                  "Send Package",
+                                  "Reset",
                                   style: TextStyle(color: Colors.white),
                                 ),
                               ),
