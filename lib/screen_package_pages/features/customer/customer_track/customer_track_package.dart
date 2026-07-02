@@ -219,7 +219,38 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
       ),
     };
 
-    mapController?.animateCamera(CameraUpdate.newLatLng(_currentPos));
+    polylines = {
+      Polyline(
+        polylineId: const PolylineId('route'),
+        points: [_currentPos, LatLng(deliveryLat, deliveryLng)],
+        width: 5,
+        color: Colors.deepPurple,
+      ),
+    };
+
+    mapController?.animateCamera(
+      CameraUpdate.newLatLngBounds(
+        LatLngBounds(
+          southwest: LatLng(
+            _currentPos.latitude < deliveryLat
+                ? _currentPos.latitude
+                : deliveryLat,
+            _currentPos.longitude < deliveryLng
+                ? _currentPos.longitude
+                : deliveryLng,
+          ),
+          northeast: LatLng(
+            _currentPos.latitude > deliveryLat
+                ? _currentPos.latitude
+                : deliveryLat,
+            _currentPos.longitude > deliveryLng
+                ? _currentPos.longitude
+                : deliveryLng,
+          ),
+        ),
+        80,
+      ),
+    );
   }
 
   @override
@@ -277,7 +308,10 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
               target: _currentPos,
               zoom: 15,
             ),
-            onMapCreated: (c) => mapController = c,
+            onMapCreated: (c) {
+              mapController = c;
+              _updateMarkers();
+            },
             markers: markers,
             polylines: polylines,
           ),
