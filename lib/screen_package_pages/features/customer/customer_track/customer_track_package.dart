@@ -2,6 +2,7 @@
 
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -79,12 +80,18 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
 
   Future<void> _loadPackageInfo() async {
     final pkg = await ApiService.getPackage(widget.packageId);
+    if (kDebugMode) {
+      print("PACKAGE DATA = $pkg");
+    }
     if (pkg == null) return;
 
     setState(() {
       _currentPos = LatLng(
-        (pkg['lat'] ?? _currentPos.latitude).toDouble(),
-        (pkg['lng'] ?? _currentPos.longitude).toDouble(),
+        (pkg['lat'] as num?)?.toDouble() ??
+            (pkg['pickup_lat'] as num).toDouble(),
+
+        (pkg['lng'] as num?)?.toDouble() ??
+            (pkg['pickup_lng'] as num).toDouble(),
       );
 
       pickupLat = (pkg['pickup_lat'] ?? pickupLat).toDouble();
@@ -93,7 +100,10 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
       deliveryLng = (pkg['delivery_lng'] ?? deliveryLng).toDouble();
 
       status = pkg['status'] ?? status;
-      etaMinutes = pkg['eta_minutes'];
+      etaMinutes = (pkg['eta_minutes'] as num?)?.toInt();
+      if (kDebugMode) {
+        print("ETA = $etaMinutes");
+      }
       riderPhone = pkg['rider_phone'];
       riderName = pkg['rider_name'];
       riderImage = pkg['rider_profile_picture'];
@@ -427,7 +437,7 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
-                                      "ETA: $etaMinutes mins remaining",
+                                      "ETA: $etaMinutes ${etaMinutes == 1 ? 'minute' : 'minutes'} remaining",
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
                                         color: Colors.green,

@@ -348,10 +348,14 @@ class ApiService {
 
     final res = await http.get(url, headers: await ApiService.getAuthHeaders());
 
+    if (kDebugMode) {
+      print("RAW RESPONSE:");
+    }
+    if (kDebugMode) {
+      print(res.body);
+    }
+
     if (res.statusCode == 200) {
-      if (res.body.isEmpty) {
-        throw Exception("Empty response from server");
-      }
       return jsonDecode(res.body);
     } else {
       throw Exception("Failed: ${res.statusCode} - ${res.body}");
@@ -891,13 +895,13 @@ class ApiService {
   }
 
   static Future<List> getAdminRiderWallets() async {
-  final response = await http.get(
-    Uri.parse("$baseUrl/admin/rider-wallets/"),
-    headers: await ApiService.getAuthHeaders(),
-  );
+    final response = await http.get(
+      Uri.parse("$baseUrl/admin/rider-wallets/"),
+      headers: await ApiService.getAuthHeaders(),
+    );
 
-  return jsonDecode(response.body);
-}
+    return jsonDecode(response.body);
+  }
 
   // getRiderProfile
   static Future<Map<String, dynamic>> getRiderProfile() async {

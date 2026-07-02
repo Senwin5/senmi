@@ -81,7 +81,7 @@ class _RiderTrackScreenState extends State<RiderTrackScreen> {
   }
 
   // =========================
-  // 📦 LOAD PACKAGE
+  // LOAD PACKAGE
   // =========================
   Future<void> _loadPackage() async {
     final pkg = await ApiService.getPackage(widget.packageId);

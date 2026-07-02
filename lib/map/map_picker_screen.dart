@@ -39,6 +39,10 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
   void initState() {
     super.initState();
     position = widget.initialLocation;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      getAddress();
+    });
   }
 
   @override
@@ -152,11 +156,29 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
               target: position,
               zoom: 14,
             ),
-            onMapCreated: (c) => mapController = c,
+
+            // ADDED ONLY
+            myLocationEnabled: true,
+            myLocationButtonEnabled: false,
+
+            // CHANGED ONLY THIS PART
+            onMapCreated: (c) async {
+              mapController = c;
+
+              await mapController!.animateCamera(
+                maps.CameraUpdate.newCameraPosition(
+                  maps.CameraPosition(target: position, zoom: 14),
+                ),
+              );
+
+              getAddress();
+            },
+
             onCameraMove: (pos) {
               position = pos.target;
               userMovedMap = true;
             },
+
             onCameraIdle: () {
               if (isFirstLoad) {
                 isFirstLoad = false;
