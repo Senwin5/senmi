@@ -121,6 +121,20 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
     _connectWebSocket();
   }
 
+  Widget _card({required Widget child, Color? color}) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: color ?? Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10),
+        ],
+      ),
+      child: child,
+    );
+  }
+
   Widget _step(String title, bool active) {
     return Column(
       children: [
@@ -316,25 +330,23 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
             polylines: polylines,
           ),
 
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: SafeArea(
-              top: false,
-              child: Container(
-                height: MediaQuery.of(context).size.height * 0.55,
+          DraggableScrollableSheet(
+            initialChildSize: 0.35,
+            minChildSize: 0.25,
+            maxChildSize: 0.85,
+            builder: (context, scrollController) {
+              return Container(
                 decoration: BoxDecoration(
                   color: Theme.of(context).cardColor,
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(32),
                   ),
                 ),
-
                 child: Column(
                   children: [
-                    // drag handle
                     const SizedBox(height: 10),
+
+                    // drag handle
                     Container(
                       width: 50,
                       height: 5,
@@ -346,58 +358,84 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
 
                     const SizedBox(height: 10),
 
-                    // 👇 THIS is the important fix
                     Expanded(
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              "Tracking Details",
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.deepPurple,
-                              ),
+                      child: ListView(
+                        controller: scrollController,
+                        padding: const EdgeInsets.fromLTRB(16, 10, 16, 30),
+                        children: [
+                          // HEADER
+                          const Text(
+                            "Tracking Details",
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w700,
                             ),
+                          ),
 
-                            const SizedBox(height: 16),
+                          const SizedBox(height: 12),
 
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(14),
-                              decoration: BoxDecoration(
-                                color: Colors.deepPurple.withOpacity(0.06),
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "Waybill Number",
-                                    style: TextStyle(
-                                      color: Colors.grey.shade600,
-                                      fontSize: 13,
-                                    ),
+                          // ===== WAYBILL CARD =====
+                          _card(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Waybill Number",
+                                  style: TextStyle(color: Colors.grey.shade600),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  widget.packageId,
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 1,
+                                    color: Colors.deepPurple,
                                   ),
+                                ),
+                              ],
+                            ),
+                          ),
 
-                                  const SizedBox(height: 6),
+                          const SizedBox(height: 12),
 
-                                  Text(
-                                    widget.packageId,
+                          // ===== STATUS CARD =====
+                          _card(
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    color: Colors.deepPurple,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Icon(
+                                    status == "picked_up"
+                                        ? Icons.two_wheeler
+                                        : Icons.local_shipping,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    displayStatus,
                                     style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.deepPurple,
-                                      letterSpacing: 1,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
+                          ),
 
-                            Row(
+                          const SizedBox(height: 12),
+
+                          // ===== STEPS =====
+                          _card(
+                            child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 _step(
@@ -407,195 +445,126 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
                                       status == "delivered",
                                 ),
                                 _step(
-                                  "Picked Up",
+                                  "Picked",
                                   status == "picked_up" ||
                                       status == "delivered",
                                 ),
-                                _step("Delivered", status == "delivered"),
+                                _step("Done", status == "delivered"),
                               ],
                             ),
+                          ),
 
-                            const SizedBox(height: 18),
+                          const SizedBox(height: 12),
 
-                            // status card
-                            Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: Colors.deepPurple.withOpacity(0.06),
-                                borderRadius: BorderRadius.circular(18),
-                              ),
+                          // ===== ETA =====
+                          if (etaMinutes != null)
+                            _card(
+                              color: Colors.green.withOpacity(0.08),
                               child: Row(
                                 children: [
-                                  Container(
-                                    width: 50,
-                                    height: 50,
-                                    decoration: BoxDecoration(
-                                      color: Colors.deepPurple,
-                                      borderRadius: BorderRadius.circular(14),
-                                    ),
-                                    child: Icon(
-                                      status == "picked_up"
-                                          ? Icons.two_wheeler
-                                          : Icons.local_shipping,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Text(
-                                      displayStatus,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            const SizedBox(height: 14),
-
-                            if (etaMinutes != null)
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: Colors.green.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.access_time,
-                                      color: Colors.green,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      "ETA: $etaMinutes ${etaMinutes == 1 ? 'minute' : 'minutes'} remaining",
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.green,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-
-                            const SizedBox(height: 14),
-
-                            // delivery code
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(14),
-                              decoration: BoxDecoration(
-                                color: deliveryCode != null
-                                    ? Colors.green.withOpacity(0.10)
-                                    : Colors.orange.withOpacity(0.10),
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    deliveryCode != null
-                                        ? Icons.lock_open
-                                        : Icons.lock,
-                                    color: deliveryCode != null
-                                        ? Colors.green
-                                        : Colors.orange,
+                                  const Icon(
+                                    Icons.access_time,
+                                    color: Colors.green,
                                   ),
                                   const SizedBox(width: 10),
-                                  Expanded(
-                                    child: Text(
-                                      deliveryCode != null
-                                          ? "Delivery Code: $deliveryCode"
-                                          : "Delivery code will appear when rider is near",
+                                  Text(
+                                    "$etaMinutes min remaining",
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.green,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
 
-                            const SizedBox(height: 16),
+                          const SizedBox(height: 12),
 
-                            if (riderPhone != null)
-                              Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(18),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.06),
-                                      blurRadius: 12,
-                                      offset: const Offset(0, 6),
-                                    ),
-                                  ],
+                          // ===== DELIVERY CODE =====
+                          _card(
+                            color: deliveryCode != null
+                                ? Colors.green.withOpacity(0.08)
+                                : Colors.orange.withOpacity(0.08),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  deliveryCode != null
+                                      ? Icons.lock_open
+                                      : Icons.lock,
+                                  color: deliveryCode != null
+                                      ? Colors.green
+                                      : Colors.orange,
                                 ),
-                                child: Column(
-                                  children: [
-                                    Row(
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    deliveryCode != null
+                                        ? "Code: $deliveryCode"
+                                        : "Code will appear when rider is near",
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 12),
+
+                          // ===== RIDER CARD =====
+                          if (riderPhone != null)
+                            _card(
+                              child: Row(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 24,
+                                    backgroundImage: riderImage != null
+                                        ? NetworkImage(riderImage!)
+                                        : null,
+                                    child: riderImage == null
+                                        ? const Icon(Icons.person)
+                                        : null,
+                                  ),
+
+                                  const SizedBox(width: 12),
+
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
-                                        CircleAvatar(
-                                          backgroundImage: riderImage != null
-                                              ? NetworkImage(riderImage!)
-                                              : null,
-                                          radius: 24,
-                                          child: riderImage == null
-                                              ? const Icon(Icons.person)
-                                              : null,
-                                        ),
-
-                                        const SizedBox(width: 12),
-
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                riderName ?? "Rider",
-                                                style: const TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-
-                                              Text(
-                                                vehicleNumber ?? "No vehicle",
-                                              ),
-                                            ],
+                                        Text(
+                                          riderName ?? "Rider",
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
                                           ),
                                         ),
+                                        Text(vehicleNumber ?? "No vehicle"),
                                       ],
                                     ),
+                                  ),
 
-                                    const SizedBox(height: 12),
-
-                                    SizedBox(
-                                      width: double.infinity,
-                                      child: ElevatedButton.icon(
-                                        onPressed: () => callRider(riderPhone!),
-                                        icon: const Icon(Icons.call),
-                                        label: const Text("Call Rider"),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.deepPurple,
-                                          foregroundColor: Colors.white,
-                                          padding: const EdgeInsets.symmetric(
-                                            vertical: 14,
-                                          ),
-                                        ),
+                                  ElevatedButton.icon(
+                                    onPressed: () => callRider(riderPhone!),
+                                    icon: const Icon(Icons.call, size: 18),
+                                    label: const Text("Call"),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.deepPurple,
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 10,
                                       ),
                                     ),
-                                  ],
-                                ),
-                              ), // optional cleanup
-                          ],
-                        ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-              ),
-            ),
+              );
+            },
           ),
         ],
       ),
