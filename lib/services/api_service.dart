@@ -556,7 +556,7 @@ class ApiService {
   }
 
   // ==========================
-  // 📦 CUSTOMER PACKAGES
+  // CUSTOMER PACKAGES
   // ==========================
   static Future<List<dynamic>> getCustomerPackages() async {
     await loadToken(); // 🔥 IMPORTANT FIX
