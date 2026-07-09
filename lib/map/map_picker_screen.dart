@@ -10,8 +10,13 @@ import 'package:google_maps_flutter/google_maps_flutter.dart' as maps;
 
 class MapPickerScreen extends StatefulWidget {
   final maps.LatLng initialLocation;
+  final bool useCurrentLocation;
 
-  const MapPickerScreen({super.key, required this.initialLocation});
+  const MapPickerScreen({
+    super.key,
+    required this.initialLocation,
+    this.useCurrentLocation = false,
+  });
 
   @override
   State<MapPickerScreen> createState() => _MapPickerScreenState();
@@ -42,7 +47,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
     position = widget.initialLocation;
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      if (position.latitude == 0 && position.longitude == 0) {
+      if (widget.useCurrentLocation) {
         await useMyLocation();
       } else {
         await getAddress();

@@ -144,7 +144,7 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
           initialLocation: isPickup
               ? (pickupLocation ?? const LatLng(0, 0))
               : (deliveryLocation ?? const LatLng(0, 0)),
-              
+          useCurrentLocation: isPickup,
         ),
       ),
     );
