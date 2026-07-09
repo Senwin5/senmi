@@ -142,8 +142,9 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
       MaterialPageRoute(
         builder: (_) => MapPickerScreen(
           initialLocation: isPickup
-              ? pickupLocation ?? const LatLng(6.5244, 3.3792)
-              : deliveryLocation ?? const LatLng(6.5244, 3.3792),
+              ? (pickupLocation ?? const LatLng(0, 0))
+              : (deliveryLocation ?? const LatLng(0, 0)),
+              
         ),
       ),
     );
@@ -307,24 +308,35 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
         decoration: InputDecoration(
           labelText: label,
           filled: true,
-          fillColor: Theme.of(context).cardColor,
+          fillColor: Theme.of(context).brightness == Brightness.dark
+              ? const Color(0xFF2A2A2A)
+              : Colors.white,
+
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 18,
             vertical: 18,
           ),
+
           labelStyle: TextStyle(
             color: Theme.of(context).textTheme.bodyLarge?.color,
             fontWeight: FontWeight.w600,
-            fontSize: 12, // 👈 make it smaller
+            fontSize: 12,
           ),
+
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(18),
             borderSide: BorderSide.none,
           ),
+
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(18),
-            borderSide: BorderSide(color: Colors.grey.shade200),
+            borderSide: BorderSide(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.grey.shade700
+                  : Colors.grey.shade300,
+            ),
           ),
+
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(18),
             borderSide: const BorderSide(color: Color(0xFF581C87), width: 2),

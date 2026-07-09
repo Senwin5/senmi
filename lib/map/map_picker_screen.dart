@@ -38,10 +38,15 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
   @override
   void initState() {
     super.initState();
+
     position = widget.initialLocation;
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      getAddress();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (position.latitude == 0 && position.longitude == 0) {
+        await useMyLocation();
+      } else {
+        await getAddress();
+      }
     });
   }
 
@@ -128,7 +133,10 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
         return;
       }
 
-      final pos = await Geolocator.getCurrentPosition();
+      final pos = await Geolocator.getCurrentPosition(
+        // ignore: deprecated_member_use
+        desiredAccuracy: LocationAccuracy.high,
+      );
 
       final newPos = maps.LatLng(pos.latitude, pos.longitude);
 
@@ -162,16 +170,8 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
             myLocationButtonEnabled: false,
 
             // CHANGED ONLY THIS PART
-            onMapCreated: (c) async {
+            onMapCreated: (c) {
               mapController = c;
-
-              await mapController!.animateCamera(
-                maps.CameraUpdate.newCameraPosition(
-                  maps.CameraPosition(target: position, zoom: 14),
-                ),
-              );
-
-              getAddress();
             },
 
             onCameraMove: (pos) {
