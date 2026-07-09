@@ -122,9 +122,7 @@ class ProfileSettingsScreen extends StatelessWidget {
               subtitle: subtitle != null && subtitle.isNotEmpty
                   ? Text(subtitle)
                   : null,
-              trailing:
-                  trailing ??
-                  const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+              trailing: trailing,
               onTap: onTap,
             ),
           );
