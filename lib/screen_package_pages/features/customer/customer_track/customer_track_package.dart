@@ -8,6 +8,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:senmi/screen_package_pages/features/customer/customer_home_bottom/customer_bottomnav.dart';
 import 'package:senmi/services/api_service.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
@@ -36,6 +37,7 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
   GoogleMapController? mapController;
   Set<Marker> markers = {};
   Set<Polyline> polylines = {};
+  List<LatLng> routePoints = [];
 
   WebSocketChannel? channel;
   StreamSubscription? wsSubscription;
@@ -57,6 +59,51 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("Cannot make call")));
+    }
+  }
+
+  Future<void> getRoute() async {
+    if (kDebugMode) {
+      print("Getting route...");
+    }
+
+    PolylinePoints polylinePoints = PolylinePoints(
+      apiKey: "AIzaSyANfJatY_6y8gzmUrvV2_n2aR9ms7Xe_ZY",
+    );
+
+    PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
+      request: PolylineRequest(
+        origin: PointLatLng(_currentPos.latitude, _currentPos.longitude),
+        destination: PointLatLng(deliveryLat, deliveryLng),
+        mode: TravelMode.driving,
+      ),
+    );
+
+    if (kDebugMode) {
+      print("Status: ${result.status}");
+    }
+    if (kDebugMode) {
+      print("Error: ${result.errorMessage}");
+    }
+    if (kDebugMode) {
+      print("Points: ${result.points.length}");
+    }
+
+    if (result.points.isNotEmpty) {
+      routePoints = result.points
+          .map((e) => LatLng(e.latitude, e.longitude))
+          .toList();
+
+      polylines = {
+        Polyline(
+          polylineId: const PolylineId("route"),
+          points: routePoints,
+          color: Colors.deepPurple,
+          width: 6,
+        ),
+      };
+
+      if (mounted) setState(() {});
     }
   }
 
@@ -117,6 +164,7 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
 
       _updateMarkers();
     });
+    await getRoute();
 
     _connectWebSocket();
   }
@@ -173,7 +221,8 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
         Uri.parse('wss://www.senmi.com.ng/ws/tracking/${widget.packageId}/'),
       );
 
-      wsSubscription = channel!.stream.listen((data) {
+      //wsSubscription = channel!.stream.listen((data) {
+      wsSubscription = channel!.stream.listen((data) async {
         final parsed = jsonDecode(data);
 
         _targetPos = LatLng(
@@ -182,6 +231,8 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
         );
 
         status = parsed['status'] ?? status;
+
+        getRoute();
 
         if (!_ticker.isActive) _ticker.start();
       });
@@ -230,15 +281,6 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
         markerId: const MarkerId('delivery'),
         position: LatLng(deliveryLat, deliveryLng),
         icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-      ),
-    };
-
-    polylines = {
-      Polyline(
-        polylineId: const PolylineId('route'),
-        points: [_currentPos, LatLng(deliveryLat, deliveryLng)],
-        width: 5,
-        color: Colors.deepPurple,
       ),
     };
 
@@ -325,6 +367,7 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
             onMapCreated: (c) {
               mapController = c;
               _updateMarkers();
+              getRoute();
             },
             markers: markers,
             polylines: polylines,
