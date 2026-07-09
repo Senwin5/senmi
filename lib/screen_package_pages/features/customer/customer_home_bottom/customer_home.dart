@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:senmi/screen_package_pages/features/customer/customer_history/customer_history_screen.dart';
+import 'package:senmi/screen_package_pages/features/customer/customer_home_bottom/how_it_works_screen.dart';
 import 'package:senmi/screen_package_pages/features/customer/customer_track/customer_track_package.dart';
 import '../../../../services/api_service.dart';
 import '../customer_create/create_package_screen.dart';
@@ -183,32 +184,14 @@ class _CustomerHomeState extends State<CustomerHome> {
                         ),
 
                         _card(
-                          icon: Icons.location_on,
-                          title: "Track a delivery",
-                          subtitle:
-                              "Real-time tracking from pickup to delivery.",
+                          icon: Icons.help_outline,
+                          title: "How It Works",
+                          subtitle: "How to send a package with Senmi.",
                           onTap: () {
-                            if (packages.isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    "No package available for tracking",
-                                  ),
-                                  duration: Duration(seconds: 2),
-                                ),
-                              );
-                              return;
-                            }
-
-                            final pkg = packages[0];
-
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => CustomerTrackingScreen(
-                                  packageId:
-                                      pkg['package_id'] ?? pkg['id'].toString(),
-                                ),
+                                builder: (_) => const HowItWorksScreen(),
                               ),
                             );
                           },

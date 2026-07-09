@@ -525,23 +525,104 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
 
                           const SizedBox(height: 12),
 
-                          // ===== WAYBILL CARD =====
+                          // ===== WAYBILL + DELIVERY CODE =====
                           _card(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            child: Row(
                               children: [
-                                Text(
-                                  "Waybill Number",
-                                  style: TextStyle(color: Colors.grey.shade600),
+                                // WAYBILL
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "Waybill",
+                                        style: TextStyle(
+                                          color: Colors.grey.shade600,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        widget.packageId,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          color: Colors.deepPurple,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  widget.packageId,
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 1,
-                                    color: Colors.deepPurple,
+
+                                Container(
+                                  width: 1,
+                                  height: 55,
+                                  color: Colors.grey.shade300,
+                                ),
+
+                                const SizedBox(width: 16),
+
+                                // DELIVERY CODE
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "Delivery Code",
+                                        style: TextStyle(
+                                          color: Colors.grey.shade600,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6),
+
+                                      deliveryCode != null
+                                          ? Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 12,
+                                                    vertical: 8,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color: Colors.green.withOpacity(
+                                                  0.12,
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                              ),
+                                              child: Text(
+                                                deliveryCode!,
+                                                style: const TextStyle(
+                                                  fontSize: 22,
+                                                  fontWeight: FontWeight.bold,
+                                                  letterSpacing: 5,
+                                                  color: Colors.green,
+                                                ),
+                                              ),
+                                            )
+                                          : Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 12,
+                                                    vertical: 8,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color: Colors.orange
+                                                    .withOpacity(0.12),
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                              ),
+                                              child: const Text(
+                                                "Waiting...",
+                                                style: TextStyle(
+                                                  color: Colors.orange,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                            ),
+                                    ],
                                   ),
                                 ),
                               ],
@@ -601,35 +682,6 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
                                       status == "delivered",
                                 ),
                                 _step("Done", status == "delivered"),
-                              ],
-                            ),
-                          ),
-
-                          const SizedBox(height: 12),
-
-                          // ===== DELIVERY CODE =====
-                          _card(
-                            color: deliveryCode != null
-                                ? Colors.green.withOpacity(0.08)
-                                : Colors.orange.withOpacity(0.08),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  deliveryCode != null
-                                      ? Icons.lock_open
-                                      : Icons.lock,
-                                  color: deliveryCode != null
-                                      ? Colors.green
-                                      : Colors.orange,
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Text(
-                                    deliveryCode != null
-                                        ? "Code: $deliveryCode"
-                                        : "Code will appear when rider is near",
-                                  ),
-                                ),
                               ],
                             ),
                           ),

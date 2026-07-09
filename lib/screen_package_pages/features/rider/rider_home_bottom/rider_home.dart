@@ -196,7 +196,7 @@ class _RiderHomeState extends State<RiderHome> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "Welcome, $riderName!",
+                      "Hi, $riderName!",
                       style: Theme.of(context).textTheme.headlineSmall
                           ?.copyWith(
                             fontWeight: FontWeight.bold,
