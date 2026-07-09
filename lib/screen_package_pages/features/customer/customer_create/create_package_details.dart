@@ -18,7 +18,9 @@ class PackageDetailsScreen extends StatefulWidget {
 class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
   Map<String, dynamic>? package;
   bool loading = true;
-  bool isPaying = false;
+  //bool isPaying = false;
+  bool isSenderPaying = false;
+  bool isReceiverPaying = false;
   bool isDeleting = false;
   bool hasRated = false;
 
@@ -270,9 +272,16 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
   }
 
   Future<void> _pay(String payer) async {
-    if (isPaying) return;
+    if (payer == "sender" && isSenderPaying) return;
+    if (payer == "receiver" && isReceiverPaying) return;
 
-    setState(() => isPaying = true);
+    setState(() {
+      if (payer == "sender") {
+        isSenderPaying = true;
+      } else {
+        isReceiverPaying = true;
+      }
+    });
 
     try {
       final result = await ApiService.createPaystackPaymentLink({
@@ -322,7 +331,15 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
         );
       }
     } finally {
-      setState(() => isPaying = false);
+      if (mounted) {
+        setState(() {
+          if (payer == "sender") {
+            isSenderPaying = false;
+          } else {
+            isReceiverPaying = false;
+          }
+        });
+      }
     }
   }
 
@@ -464,11 +481,21 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
                       borderRadius: BorderRadius.circular(14),
                     ),
                   ),
-                  onPressed: () => _pay("sender"),
-                  child: const Text(
-                    "Pay as Sender",
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
+
+                  onPressed: isSenderPaying ? null : () => _pay("sender"),
+                  child: isSenderPaying
+                      ? const SizedBox(
+                          height: 22,
+                          width: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text(
+                          "Pay as Sender",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
                 ),
               ),
 
@@ -486,11 +513,20 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
                       borderRadius: BorderRadius.circular(14),
                     ),
                   ),
-                  onPressed: () => _pay("receiver"),
-                  child: const Text(
-                    "Generate Receiver Payment Link",
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
+                  onPressed: isReceiverPaying ? null : () => _pay("receiver"),
+                  child: isReceiverPaying
+                      ? const SizedBox(
+                          height: 22,
+                          width: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text(
+                          "Generate Receiver Payment Link",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
                 ),
               ),
 
