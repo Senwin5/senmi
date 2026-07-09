@@ -232,6 +232,15 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
 
         status = parsed['status'] ?? status;
 
+        // Update ETA live from websocket
+        if (parsed['eta_minutes'] != null) {
+          etaMinutes = (parsed['eta_minutes'] as num).toInt();
+        }
+
+        if (mounted) {
+          setState(() {});
+        }
+
         getRoute();
 
         if (!_ticker.isActive) _ticker.start();
@@ -372,6 +381,70 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
             markers: markers,
             polylines: polylines,
           ),
+          // ===== FLOATING ETA =====
+          if (etaMinutes != null)
+            Positioned(
+              top: 20,
+              left: 20,
+              right: 20,
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(30),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.15),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: Colors.green.withOpacity(0.15),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.access_time,
+                          color: Colors.green,
+                        ),
+                      ),
+
+                      const SizedBox(width: 10),
+
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            "Estimated Arrival",
+                            style: TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
+
+                          Text(
+                            "$etaMinutes min away",
+                            style: const TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
 
           DraggableScrollableSheet(
             initialChildSize: 0.35,
@@ -406,13 +479,48 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
                         controller: scrollController,
                         padding: const EdgeInsets.fromLTRB(16, 10, 16, 30),
                         children: [
-                          // HEADER
-                          const Text(
-                            "Tracking Details",
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w700,
-                            ),
+                          // HEADER + ETA HORIZONTAL
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                "Tracking Details",
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+
+                              if (etaMinutes != null)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green.withOpacity(0.08),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.access_time,
+                                        color: Colors.green,
+                                        size: 18,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        "$etaMinutes min",
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.green,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                            ],
                           ),
 
                           const SizedBox(height: 12),
@@ -496,30 +604,6 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
                               ],
                             ),
                           ),
-
-                          const SizedBox(height: 12),
-
-                          // ===== ETA =====
-                          if (etaMinutes != null)
-                            _card(
-                              color: Colors.green.withOpacity(0.08),
-                              child: Row(
-                                children: [
-                                  const Icon(
-                                    Icons.access_time,
-                                    color: Colors.green,
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Text(
-                                    "$etaMinutes min remaining",
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.green,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
 
                           const SizedBox(height: 12),
 
