@@ -686,57 +686,166 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
                             ),
                           ),
 
-                          const SizedBox(height: 12),
-
-                          // ===== RIDER CARD =====
-                          if (riderPhone != null)
-                            _card(
-                              child: Row(
-                                children: [
-                                  CircleAvatar(
-                                    radius: 24,
-                                    backgroundImage: riderImage != null
-                                        ? NetworkImage(riderImage!)
-                                        : null,
-                                    child: riderImage == null
-                                        ? const Icon(Icons.person)
-                                        : null,
-                                  ),
-
-                                  const SizedBox(width: 12),
-
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          riderName ?? "Rider",
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        Text(vehicleNumber ?? "No vehicle"),
-                                      ],
+                          Container(
+                            padding: const EdgeInsets.all(18),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.deepPurple,
+                                  Colors.deepPurple.shade400,
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(22),
+                            ),
+                            child: Column(
+                              children: [
+                                Row(
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 32,
+                                      backgroundColor: Colors.white,
+                                      backgroundImage: riderImage != null
+                                          ? NetworkImage(riderImage!)
+                                          : null,
+                                      child: riderImage == null
+                                          ? const Icon(
+                                              Icons.person,
+                                              color: Colors.deepPurple,
+                                              size: 34,
+                                            )
+                                          : null,
                                     ),
-                                  ),
 
-                                  ElevatedButton.icon(
-                                    onPressed: () => callRider(riderPhone!),
-                                    icon: const Icon(Icons.call, size: 18),
-                                    label: const Text("Call"),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.deepPurple,
-                                      foregroundColor: Colors.white,
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 10,
+                                    const SizedBox(width: 16),
+
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            riderName ?? "Your Rider",
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+
+                                          const SizedBox(height: 4),
+
+                                          const Text(
+                                            "Delivery Partner",
+                                            style: TextStyle(
+                                              color: Colors.white70,
+                                            ),
+                                          ),
+
+                                          const SizedBox(height: 8),
+
+                                          Row(
+                                            children: [
+                                              const Icon(
+                                                Icons.star,
+                                                color: Colors.amber,
+                                                size: 18,
+                                              ),
+
+                                              const SizedBox(width: 4),
+
+                                              const Text(
+                                                "4.9",
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+
+                                              const SizedBox(width: 14),
+
+                                              Container(
+                                                width: 8,
+                                                height: 8,
+                                                decoration: const BoxDecoration(
+                                                  color: Colors.greenAccent,
+                                                  shape: BoxShape.circle,
+                                                ),
+                                              ),
+
+                                              const SizedBox(width: 6),
+
+                                              const Text(
+                                                "Available",
+                                                style: TextStyle(
+                                                  color: Colors.white70,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                  ),
-                                ],
-                              ),
+
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(.15),
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                      child: IconButton(
+                                        icon: const Icon(
+                                          Icons.call,
+                                          color: Colors.white,
+                                        ),
+                                        onPressed: () => callRider(riderPhone!),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+
+                                const SizedBox(height: 18),
+
+                                const Divider(color: Colors.white24),
+
+                                const SizedBox(height: 14),
+
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.two_wheeler,
+                                      color: Colors.white70,
+                                    ),
+
+                                    const SizedBox(width: 10),
+
+                                    Expanded(
+                                      child: Text(
+                                        vehicleNumber ?? "Vehicle not assigned",
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 15,
+                                        ),
+                                      ),
+                                    ),
+
+                                    const Icon(
+                                      Icons.verified,
+                                      color: Colors.greenAccent,
+                                      size: 20,
+                                    ),
+
+                                    const SizedBox(width: 6),
+
+                                    const Text(
+                                      "Verified",
+                                      style: TextStyle(color: Colors.white70),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
+                          ),
                         ],
                       ),
                     ),

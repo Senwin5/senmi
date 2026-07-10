@@ -10,7 +10,6 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-
 class RiderTrackScreen extends StatefulWidget {
   final String packageId;
 
@@ -116,8 +115,16 @@ class _RiderTrackScreenState extends State<RiderTrackScreen> {
       final parsed = jsonDecode(data);
 
       setState(() {
-        // ❌ DO NOT update position here
         status = parsed['status'] ?? status;
+
+        if (parsed['lat'] != null && parsed['lng'] != null) {
+          _currentPos = LatLng(
+            (parsed['lat'] as num).toDouble(),
+            (parsed['lng'] as num).toDouble(),
+          );
+
+          _updateMarkers();
+        }
       });
     });
   }

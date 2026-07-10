@@ -267,7 +267,6 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
 
               _card("Package Info", [
                 _row("Package ID", package!['package_id']),
-                _row("Description", package!['description']),
                 _row("Total Price", "₦${price.toStringAsFixed(2)}"),
               ]),
 
