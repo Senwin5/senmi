@@ -38,6 +38,7 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
   Set<Marker> markers = {};
   Set<Polyline> polylines = {};
   List<LatLng> routePoints = [];
+  BitmapDescriptor? bikeIcon;
 
   WebSocketChannel? channel;
   StreamSubscription? wsSubscription;
@@ -60,6 +61,25 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
         context,
       ).showSnackBar(const SnackBar(content: Text("Cannot make call")));
     }
+  }
+
+  Future<void> _loadBikeIcon() async {
+    try {
+      bikeIcon = await BitmapDescriptor.asset(
+        const ImageConfiguration(size: Size(48, 48)),
+        "assets/bike_marker/bike_marker.png",
+      );
+
+      if (kDebugMode) {
+        print("BIKE ICON LOADED");
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("ERROR LOADING ICON: $e");
+      }
+    }
+
+    if (mounted) setState(() {});
   }
 
   Future<void> getRoute() async {
@@ -122,6 +142,7 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
     );
 
     _ticker = createTicker(_onTick);
+    _loadBikeIcon();
     _loadPackageInfo();
   }
 
@@ -241,7 +262,7 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
           setState(() {});
         }
 
-        getRoute();
+        //getRoute();
 
         if (!_ticker.isActive) _ticker.start();
       });
@@ -251,7 +272,8 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
   void _onTick(Duration elapsed) {
     if (_targetPos == null) return;
 
-    _animationProgress += 0.05;
+    //_animationProgress += 0.05;
+    _animationProgress += 0.03;
 
     if (_animationProgress >= 1.0) {
       _animationProgress = 0.0;
@@ -279,13 +301,9 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
       Marker(
         markerId: const MarkerId('rider'),
         position: _currentPos,
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+        icon: bikeIcon ?? BitmapDescriptor.defaultMarker,
       ),
-      Marker(
-        markerId: const MarkerId('pickup'),
-        position: LatLng(pickupLat, pickupLng),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
-      ),
+
       Marker(
         markerId: const MarkerId('delivery'),
         position: LatLng(deliveryLat, deliveryLng),
@@ -294,26 +312,8 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
     };
 
     mapController?.animateCamera(
-      CameraUpdate.newLatLngBounds(
-        LatLngBounds(
-          southwest: LatLng(
-            _currentPos.latitude < deliveryLat
-                ? _currentPos.latitude
-                : deliveryLat,
-            _currentPos.longitude < deliveryLng
-                ? _currentPos.longitude
-                : deliveryLng,
-          ),
-          northeast: LatLng(
-            _currentPos.latitude > deliveryLat
-                ? _currentPos.latitude
-                : deliveryLat,
-            _currentPos.longitude > deliveryLng
-                ? _currentPos.longitude
-                : deliveryLng,
-          ),
-        ),
-        80,
+      CameraUpdate.newCameraPosition(
+        CameraPosition(target: _currentPos, zoom: 17),
       ),
     );
   }
@@ -681,7 +681,7 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
                                   status == "picked_up" ||
                                       status == "delivered",
                                 ),
-                                _step("Done", status == "delivered"),
+                                _step("Delivered", status == "delivered"),
                               ],
                             ),
                           ),

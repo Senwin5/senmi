@@ -713,9 +713,15 @@ class ApiService {
   ) async {
     final response = await http.post(
       Uri.parse("$baseUrl/packages/$packageId/update-location/"),
-      headers: await ApiService.getAuthHeaders(),
+      headers: {
+        ...(await ApiService.getAuthHeaders()),
+        "Content-Type": "application/json",
+      },
       body: jsonEncode({"lat": lat, "lng": lng}),
     );
+
+    debugPrint("Update Location: ${response.statusCode}");
+    debugPrint("Response: ${response.body}");
 
     return response.statusCode == 200;
   }

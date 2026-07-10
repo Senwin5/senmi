@@ -76,6 +76,7 @@ class _RiderTrackScreenState extends State<RiderTrackScreen> {
 
           // send to backend
           await ApiService.updateLocation(widget.packageId, lat, lng);
+          debugPrint("GPS: $lat, $lng");
         });
   }
 
