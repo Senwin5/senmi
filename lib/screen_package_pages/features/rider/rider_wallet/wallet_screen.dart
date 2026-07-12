@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 import 'package:senmi/services/api_service.dart';
 
-
 class RiderWalletScreen extends StatefulWidget {
   const RiderWalletScreen({super.key});
 
@@ -21,6 +20,7 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
   bool loading = true;
   bool showBalance = true;
   String? errorMessage;
+  bool isSubmitting = false;
 
   double get avgEarning =>
       totalDeliveries == 0 ? 0 : totalEarned / totalDeliveries;
@@ -74,6 +74,9 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
 
     List banks = [];
     String? selectedBankCode;
+    String? accountName;
+
+    bool verifying = false;
     bool isLoading = false;
 
     try {
@@ -92,261 +95,316 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (_) => StatefulBuilder(
-        builder: (context, setStateDialog) {
-          return Padding(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).viewInsets.bottom,
-              left: 16,
-              right: 16,
-              top: 20,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  "Withdraw",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-
-                const SizedBox(height: 15),
-
-                TextField(
-                  controller: amountController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: "Amount",
-                    prefixText: "₦ ",
-                  ),
-                ),
-
-                TextField(
-                  controller: accountController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: "Account Number",
-                  ),
-                ),
-
-                DropdownButtonFormField<String>(
-                  hint: const Text("Select Bank"),
-                  items: banks.map<DropdownMenuItem<String>>((bank) {
-                    return DropdownMenuItem(
-                      value: bank['code'],
-                      child: Text(bank['name']),
-                    );
-                  }).toList(),
-                  onChanged: (val) => selectedBankCode = val,
-                ),
-
-                const SizedBox(height: 20),
-
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: isLoading
-                        ? null
-                        : () async {
-                            final amt =
-                                double.tryParse(amountController.text) ?? 0;
-
-                            if (amt <= 0 ||
-                                accountController.text.isEmpty ||
-                                selectedBankCode == null) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text("Fill all fields"),
-                                ),
-                              );
-                              return;
-                            }
-
-                            if (amt > balance) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text("Insufficient balance"),
-                                ),
-                              );
-                              return;
-                            }
-
-                            setStateDialog(() => isLoading = true);
-
-                            try {
-                              await ApiService.withdraw(
-                                amount: amt,
-                                accountNumber: accountController.text,
-                                bankCode: selectedBankCode!,
-                              );
-
-                              if (!mounted) return;
-
-                              Navigator.pop(context);
-                              fetchWallet();
-
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text("Withdrawal successful"),
-                                ),
-                              );
-                            } catch (e) {
-                              setStateDialog(() => isLoading = false);
-
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text("Error: $e")),
-                              );
-                            }
-                          },
-                    child: const Text("Withdraw"),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
       ),
-    );
-  }
-
-  void openWithdrawDialog() async {
-    final amountController = TextEditingController();
-    final accountController = TextEditingController();
-
-    List banks = await ApiService.getBanks();
-
-    String? selectedBankCode;
-    String? accountName;
-    bool verifying = false;
-    bool loading = false;
-
-    showDialog(
-      context: context,
       builder: (_) => StatefulBuilder(
         builder: (context, setStateDialog) {
-          return AlertDialog(
-            title: const Text("Withdraw"),
-            content: SingleChildScrollView(
-              child: Column(
-                children: [
-                  TextField(
-                    controller: amountController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: "Amount"),
-                  ),
-                  TextField(
-                    controller: accountController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: "Account Number",
-                    ),
-                    onChanged: (value) async {
-                      if (value.length == 10 && selectedBankCode != null) {
-                        setStateDialog(() => verifying = true);
-
-                        try {
-                          final name = await ApiService.resolveAccount(
-                            accountNumber: value,
-                            bankCode: selectedBankCode!.toString(), // ✅ FIX
-                          );
-
-                          setStateDialog(() {
-                            accountName = name;
-                            verifying = false;
-                          });
-                        } catch (e) {
-                          setStateDialog(() {
-                            accountName = null;
-                            verifying = false;
-                          });
-                        }
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 10),
-                  DropdownButtonFormField<String>(
-                    isExpanded: true,
-                    hint: const Text("Select Bank"),
-                    initialValue: selectedBankCode,
-                    items: banks.map<DropdownMenuItem<String>>((bank) {
-                      return DropdownMenuItem(
-                        value: bank['code'].toString(), // ✅ FIX
-                        child: Text(
-                          bank['name'],
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      );
-                    }).toList(),
-                    onChanged: (val) {
-                      setStateDialog(() {
-                        selectedBankCode = val;
-                        accountName = null;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 10),
-                  if (verifying) const CircularProgressIndicator(),
-                  if (accountName != null)
-                    Text(
-                      accountName!,
-                      style: const TextStyle(
-                        color: Colors.green,
+          return DraggableScrollableSheet(
+            expand: false,
+            initialChildSize: 0.8,
+            minChildSize: 0.65,
+            maxChildSize: 0.95,
+            builder: (context, scrollController) {
+              return SingleChildScrollView(
+                controller: scrollController,
+                padding: EdgeInsets.only(
+                  left: 20,
+                  right: 20,
+                  top: 20,
+                  bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // EVERYTHING that was previously inside your Column
+                    // starts here
+                    const Text(
+                      "Withdraw",
+                      style: TextStyle(
+                        fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text("Cancel"),
-              ),
-              ElevatedButton(
-                onPressed: loading
-                    ? null
-                    : () async {
-                        final amt = double.tryParse(amountController.text) ?? 0;
 
-                        if (amt <= 0 ||
-                            accountController.text.isEmpty ||
-                            selectedBankCode == null ||
-                            accountName == null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text("Complete all fields"),
+                    const SizedBox(height: 15),
+
+                    ValueListenableBuilder<TextEditingValue>(
+                      valueListenable: amountController,
+                      builder: (_, value, _) {
+                        final amount = double.tryParse(value.text) ?? 0;
+                        final remaining = balance - amount;
+
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(
+                            remaining >= 0
+                                ? "Remaining Balance: ₦${remaining.toStringAsFixed(2)}"
+                                : "Insufficient balance",
+                            style: TextStyle(
+                              color: remaining >= 0 ? Colors.green : Colors.red,
+                              fontWeight: FontWeight.bold,
                             ),
-                          );
-                          return;
-                        }
+                          ),
+                        );
+                      },
+                    ),
 
-                        setStateDialog(() => loading = true);
+                    TextField(
+                      controller: amountController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: "Amount",
+                        prefixText: "₦ ",
+                      ),
+                    ),
 
-                        try {
-                          await ApiService.withdraw(
-                            amount: amt,
-                            accountNumber: accountController.text,
-                            bankCode: selectedBankCode!.toString(), // ✅ FIX
-                          );
+                    TextField(
+                      controller: accountController,
+                      keyboardType: TextInputType.number,
+                      maxLength: 10,
+                      decoration: const InputDecoration(
+                        labelText: "Account Number",
+                        counterText: "",
+                        prefixIcon: Icon(Icons.account_balance),
+                      ),
+                      onChanged: (value) async {
+                        if (value.length == 10 && selectedBankCode != null) {
+                          setStateDialog(() {
+                            verifying = true;
+                            accountName = null;
+                          });
 
-                          Navigator.pop(context);
-                          fetchWallet();
+                          try {
+                            final name = await ApiService.resolveAccount(
+                              accountNumber: value,
+                              bankCode: selectedBankCode!,
+                            );
 
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text("Withdrawal successful"),
-                            ),
-                          );
-                        } catch (e) {
-                          setStateDialog(() => loading = false);
-
-                          ScaffoldMessenger.of(
-                            context,
-                          ).showSnackBar(SnackBar(content: Text("Error: $e")));
+                            setStateDialog(() {
+                              accountName = name;
+                              verifying = false;
+                            });
+                          } catch (_) {
+                            setStateDialog(() {
+                              verifying = false;
+                              accountName = null;
+                            });
+                          }
                         }
                       },
-                child: const Text("Withdraw"),
-              ),
-            ],
+                    ),
+
+                    DropdownButtonFormField<String>(
+                      isExpanded: true,
+                      decoration: const InputDecoration(
+                        labelText: "Bank",
+                        prefixIcon: Icon(Icons.account_balance),
+                      ),
+                      items: banks.map<DropdownMenuItem<String>>((bank) {
+                        return DropdownMenuItem<String>(
+                          value: bank['code'],
+                          child: Text(
+                            bank['name'],
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (value) async {
+                        setStateDialog(() {
+                          selectedBankCode = value;
+                          accountName = null;
+                        });
+
+                        if (accountController.text.length == 10 &&
+                            value != null) {
+                          setStateDialog(() => verifying = true);
+
+                          try {
+                            final name = await ApiService.resolveAccount(
+                              accountNumber: accountController.text,
+                              bankCode: value,
+                            );
+
+                            setStateDialog(() {
+                              accountName = name;
+                              verifying = false;
+                            });
+                          } catch (_) {
+                            setStateDialog(() {
+                              verifying = false;
+                              accountName = null;
+                            });
+                          }
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 12),
+
+                    if (verifying) const LinearProgressIndicator(),
+
+                    if (accountName != null)
+                      Container(
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(top: 10),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.green),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.check_circle, color: Colors.green),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                accountName!,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    const SizedBox(height: 20),
+
+                    SizedBox(
+                      width: double.infinity,
+                      height: 55,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.deepPurple,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        onPressed: isLoading
+                            ? null
+                            : () async {
+                                final amt =
+                                    double.tryParse(amountController.text) ?? 0;
+
+                                if (amt <= 0 ||
+                                    accountController.text.isEmpty ||
+                                    selectedBankCode == null ||
+                                    accountName == null) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text("Fill all fields"),
+                                    ),
+                                  );
+                                  return;
+                                }
+
+                                if (amt > balance) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text("Insufficient balance"),
+                                    ),
+                                  );
+                                  return;
+                                }
+
+                                setStateDialog(() {
+                                  isLoading = true;
+                                });
+
+                                final confirmed = await showDialog<bool>(
+                                  context: context,
+                                  builder: (_) => AlertDialog(
+                                    title: const Text("Confirm Withdrawal"),
+                                    content: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          "Amount: ₦${amt.toStringAsFixed(2)}",
+                                        ),
+                                        Text(
+                                          "Account: ${accountController.text}",
+                                        ),
+                                        Text("Account Name: $accountName"),
+                                      ],
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.pop(context, false),
+                                        child: const Text("Cancel"),
+                                      ),
+                                      ElevatedButton(
+                                        onPressed: () =>
+                                            Navigator.pop(context, true),
+                                        child: const Text("Confirm"),
+                                      ),
+                                    ],
+                                  ),
+                                );
+
+                                if (confirmed != true) {
+                                  setStateDialog(() {
+                                    isLoading = false;
+                                  });
+                                  return;
+                                }
+                                try {
+                                  await ApiService.withdraw(
+                                    amount: amt,
+                                    accountNumber: accountController.text,
+                                    bankCode: selectedBankCode!,
+                                  );
+
+                                  if (!mounted) return;
+
+                                  Navigator.pop(context);
+
+                                  fetchWallet();
+
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text("Withdrawal successful"),
+                                    ),
+                                  );
+                                } catch (e) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text(e.toString())),
+                                  );
+                                } finally {
+                                  if (mounted) {
+                                    setStateDialog(() {
+                                      isLoading = false;
+                                    });
+                                  }
+                                }
+                              },
+                        child: isLoading
+                            ? const SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text(
+                                "Withdraw",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
           );
         },
       ),
@@ -613,18 +671,28 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                         final color = getTransactionColor(type);
                         final icon = getTransactionIcon(type);
 
-                        return ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: color.withValues(alpha: 0.2),
-                            child: Icon(icon, color: color),
+                        return Card(
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 6,
                           ),
-                          title: Text(type),
-                          subtitle: Text(date),
-                          trailing: Text(
-                            "₦$amount",
-                            style: TextStyle(
-                              color: color,
-                              fontWeight: FontWeight.bold,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              // ignore: deprecated_member_use
+                              backgroundColor: color.withOpacity(0.2),
+                              child: Icon(icon, color: color),
+                            ),
+                            title: Text(type),
+                            subtitle: Text(date),
+                            trailing: Text(
+                              "₦$amount",
+                              style: TextStyle(
+                                color: color,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         );
