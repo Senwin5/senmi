@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:senmi/registration/auth/login.dart';
+import 'package:senmi/screen_package_pages/features/customer/customer_profiles/customer_security_screen.dart';
 import 'package:senmi/services/api_service.dart';
 
 class ProfileSettingsScreen extends StatelessWidget {
@@ -218,7 +219,7 @@ class ProfileSettingsScreen extends StatelessWidget {
 
               tile(icon: Icons.phone_outlined, title: "Phone", subtitle: phone),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
 
               const Text(
                 "Preferences",
@@ -241,28 +242,19 @@ class ProfileSettingsScreen extends StatelessWidget {
               const SizedBox(height: 14),
 
               tile(
-                icon: Icons.logout,
-                title: "Logout",
-                iconColor: Colors.orange,
-                onTap: () => logout(context),
-              ),
-              const SizedBox(height: 34),
-
-              const Text(
-                "Danger Zone",
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.red,
-                ),
-              ),
-              const SizedBox(height: 14),
-
-              tile(
-                icon: Icons.delete_outline,
-                title: "Delete Account",
-                iconColor: Colors.red,
-                onTap: () => deleteAccount(context),
+                icon: Icons.security,
+                title: "Account & Security",
+                subtitle: "Password, logout and account settings",
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => CustomerSecurityScreen(
+                        darkModeNotifier: darkModeNotifier,
+                      ),
+                    ),
+                  );
+                },
               ),
             ],
           ),

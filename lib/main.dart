@@ -105,10 +105,8 @@ class _MyAppState extends State<MyApp> {
           darkTheme: ThemeData(
             brightness: Brightness.dark,
             useMaterial3: true,
-
             scaffoldBackgroundColor: const Color(0xFF121212),
             cardColor: const Color(0xFF1E1E1E),
-
             colorScheme: ColorScheme.fromSeed(
               seedColor: const Color(0xFF581C87),
               brightness: Brightness.dark,

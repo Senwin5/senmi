@@ -1,9 +1,9 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
+import 'package:senmi/screen_package_pages/features/rider/rider_profile/rider_security_screen.dart';
 import 'package:senmi/services/api_service.dart';
 import '../../../../registration/auth/login.dart';
-import 'package:senmi/widgets/custom_buttom.dart';
 
 class RiderDetailsProfile extends StatelessWidget {
   final Map<String, dynamic>? rider;
@@ -166,7 +166,7 @@ class RiderDetailsProfile extends StatelessWidget {
               icon: Icons.verified,
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
 
             Container(
               padding: const EdgeInsets.all(20),
@@ -182,64 +182,30 @@ class RiderDetailsProfile extends StatelessWidget {
                   ),
                 ],
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "Account & Security",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  Text(
-                    "Manage your rider account settings",
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  CustomButton(
-                    text: "Sign Out",
-                    onPressed: () => logout(context),
-                    fullWidth: true,
-                    padding: const EdgeInsets.all(16),
-                    color: Colors.orange,
-                  ),
-                ],
-              ),
             ),
-            const SizedBox(height: 40),
-
-            Text(
-              "Danger Zone",
-              style: TextStyle(
-                color: Colors.red,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
             const SizedBox(height: 20),
 
-            OutlinedButton.icon(
-              onPressed: () => deleteAccount(context),
-              icon: const Icon(Icons.delete_outline, color: Colors.red),
-              label: const Text(
-                "Delete Account",
-                style: TextStyle(
-                  color: Colors.red,
-                  fontWeight: FontWeight.w600,
-                ),
+            Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
               ),
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 55),
-                side: const BorderSide(color: Colors.red),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
+              child: ListTile(
+                leading: const Icon(Icons.security, color: Colors.deepPurple),
+                title: const Text("Account & Security"),
+                subtitle: const Text("Password, logout and account settings"),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 18),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const RiderSecurityScreen(),
+                    ),
+                  );
+                },
               ),
             ),
+
+            const SizedBox(height: 30),
           ],
         ),
       ),
