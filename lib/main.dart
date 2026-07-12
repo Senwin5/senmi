@@ -18,7 +18,6 @@ ValueNotifier<bool> isDarkMode = ValueNotifier(false);
 /// ===============================
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
-
   FirebaseNotificationService.showNotification(
     message.notification?.title ?? "Notification",
     message.notification?.body ?? "",
@@ -29,9 +28,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await ApiService.loadToken();
-
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
   await FirebaseNotificationService.initialize();
 
   FlutterError.onError = (errorDetails) {
@@ -46,10 +43,10 @@ void main() async {
     debugPrint(details.stack.toString());
   };
 
-  /// 🔥 Background handler (NOW SAFE)
+  /// Background handler (NOW SAFE)
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-  /// 🔗 Deep links
+  /// Deep links
   final appLinks = AppLinks();
 
   appLinks.uriLinkStream.listen((uri) async {
@@ -67,13 +64,11 @@ void main() async {
       );
     }
   });
-
   runApp(const MyApp());
 }
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
-
   @override
   State<MyApp> createState() => _MyAppState();
 }

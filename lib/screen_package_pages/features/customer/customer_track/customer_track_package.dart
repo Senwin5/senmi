@@ -681,6 +681,11 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
                                   status == "picked_up" ||
                                       status == "delivered",
                                 ),
+                                _step(
+                                  "In transit",
+                                  status == "picked_up" ||
+                                      status == "delivered",
+                                ),
                                 _step("Delivered", status == "delivered"),
                               ],
                             ),

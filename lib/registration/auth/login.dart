@@ -388,9 +388,10 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           if (loading)
             Container(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.black54
-                  : Colors.black26,
+              color: Colors.black45,
+              child: const Center(
+                child: CircularProgressIndicator(color: Colors.white),
+              ),
             ),
         ],
       ),
