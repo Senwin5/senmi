@@ -299,6 +299,11 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
   void _updateMarkers() {
     markers = {
       Marker(
+        markerId: const MarkerId('pick up'),
+        position: LatLng(pickupLat, pickupLng),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+      ),
+      Marker(
         markerId: const MarkerId('rider'),
         position: _currentPos,
         icon: bikeIcon ?? BitmapDescriptor.defaultMarker,
