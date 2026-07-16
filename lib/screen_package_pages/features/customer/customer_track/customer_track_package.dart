@@ -389,15 +389,16 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const CustomerBottomNav(
-                  initialIndex: 0, // Home
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            } else {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const CustomerBottomNav(initialIndex: 0),
                 ),
-              ),
-              (route) => false,
-            );
+              );
+            }
           },
         ),
       ),
