@@ -49,6 +49,7 @@ flutter:
   assets:
     - assets/images/
     - assets/bike_marker/bike_marker.png
+    - assets/bike_marker/pickup_marker.png
     - assets/onboarding/
     - assets/splash/
   

@@ -39,6 +39,7 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
   Set<Polyline> polylines = {};
   List<LatLng> routePoints = [];
   BitmapDescriptor? bikeIcon;
+  BitmapDescriptor? pickupIcon;
 
   WebSocketChannel? channel;
   StreamSubscription? wsSubscription;
@@ -65,11 +66,14 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
 
   Future<void> _loadBikeIcon() async {
     try {
+      pickupIcon = await BitmapDescriptor.asset(
+        const ImageConfiguration(size: Size(48, 48)),
+        "assets/bike_marker/pickup_marker.png",
+      );
       bikeIcon = await BitmapDescriptor.asset(
         const ImageConfiguration(size: Size(48, 48)),
         "assets/bike_marker/bike_marker.png",
       );
-
       if (kDebugMode) {
         print("BIKE ICON LOADED");
       }
@@ -297,24 +301,51 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
   }
 
   void _updateMarkers() {
-    markers = {
-      Marker(
-        markerId: const MarkerId('pick up'),
-        position: LatLng(pickupLat, pickupLng),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-      ),
-      Marker(
-        markerId: const MarkerId('rider'),
-        position: _currentPos,
-        icon: bikeIcon ?? BitmapDescriptor.defaultMarker,
-      ),
+    final Set<Marker> newMarkers = {};
 
-      Marker(
-        markerId: const MarkerId('delivery'),
-        position: LatLng(deliveryLat, deliveryLng),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-      ),
-    };
+    // Pickup marker
+    if (status == "created" ||
+        status == "paid" ||
+        status == "pending" ||
+        status == "awaiting_rider" ||
+        status == "accepted") {
+      newMarkers.add(
+        Marker(
+          markerId: const MarkerId("pickup"),
+          position: LatLng(pickupLat, pickupLng),
+          icon: pickupIcon ?? BitmapDescriptor.defaultMarker,
+          infoWindow: const InfoWindow(title: "Pickup"),
+        ),
+      );
+    }
+
+    // Rider marker
+    if (status == "accepted" || status == "picked_up") {
+      newMarkers.add(
+        Marker(
+          markerId: const MarkerId("rider"),
+          position: _currentPos,
+          icon: bikeIcon ?? BitmapDescriptor.defaultMarker,
+          infoWindow: const InfoWindow(title: "Rider"),
+        ),
+      );
+    }
+
+    // Delivery marker
+    if (status != "delivered") {
+      newMarkers.add(
+        Marker(
+          markerId: const MarkerId("delivery"),
+          position: LatLng(deliveryLat, deliveryLng),
+          icon: BitmapDescriptor.defaultMarkerWithHue(
+            BitmapDescriptor.hueGreen,
+          ),
+          infoWindow: const InfoWindow(title: "Delivery"),
+        ),
+      );
+    }
+
+    markers = newMarkers;
 
     mapController?.animateCamera(
       CameraUpdate.newCameraPosition(
