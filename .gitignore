@@ -1,6 +1,11 @@
 #$env:ANDROID_NDK_HOME="C:\Users\senwin\AppData\Local\Android\Sdk\ndk\27.0.12077973"
 #flutter run -v
 #flutter run -d 1d520654 -v   
+#keystore password: adminsenwinsenmi
+
+
+Add-Content .gitignore "`nandroid/key.properties"
+Add-Content .gitignore "*.jks"
 
 # Miscellaneous
 *.class
