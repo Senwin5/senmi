@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 // ignore: depend_on_referenced_packages
 import 'package:http/http.dart' as http;
@@ -8,7 +9,8 @@ import 'package:flutter/foundation.dart'; // ✅ For ValueNotifier
 class ApiService {
   // 🔥 CHANGE THIS
   //static const String baseUrl = "http://192.168.8.252:8001/api";
-  static const String baseUrl = "https://www.senmi.com.ng/api";
+  static const String baseUrl =
+      "https://senmiback-production.up.railway.app/api";
 
   static String? token;
   static String? refreshToken;
@@ -77,38 +79,60 @@ class ApiService {
   }
 
   // 🔑 LOGIN
+  // 🔑 LOGIN
   static Future<Map<String, dynamic>> login(
     String email,
     String password,
   ) async {
-    final res = await http.post(
-      Uri.parse("$baseUrl/login/"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({"email": email, "password": password}),
-    );
+    try {
+      final res = await http
+          .post(
+            Uri.parse("$baseUrl/login/"),
+            headers: {"Content-Type": "application/json"},
+            body: jsonEncode({"email": email, "password": password}),
+          )
+          .timeout(const Duration(seconds: 20));
 
-    final data = jsonDecode(res.body);
+      final data = jsonDecode(res.body);
 
-    if (res.statusCode == 200) {
-      token = data['access'];
-      refreshToken = data['refresh'];
-      userRole = data['role'];
-      username = data['username'];
+      if (res.statusCode == 200) {
+        token = data['access'];
+        refreshToken = data['refresh'];
+        userRole = data['role'];
+        username = data['username'];
 
-      // ✅ ADD THIS LINE
-      isAdminUser = data['is_admin'] ?? false;
+        isAdminUser = data['is_admin'] ?? false;
 
-      SharedPreferences prefs = await SharedPreferences.getInstance();
+        SharedPreferences prefs = await SharedPreferences.getInstance();
 
-      await prefs.setString('refresh', data['refresh']);
+        await prefs.setString('refresh', data['refresh']);
 
-      // ✅ ADD THIS LINE
-      await prefs.setBool('is_admin', isAdminUser);
+        await prefs.setBool('is_admin', isAdminUser);
 
-      await saveTokenAndRole(token!, userRole!, data['username'] ?? '');
+        await saveTokenAndRole(token!, userRole!, data['username'] ?? '');
+      }
+
+      return data;
     }
-
-    return data;
+    // 📶 NO INTERNET
+    on SocketException {
+      return {
+        "error":
+            "No internet connection. Please check your Wi-Fi or mobile data.",
+      };
+    }
+    // ⏱️ REQUEST TAKES TOO LONG
+    on TimeoutException {
+      return {"error": "Connection timed out. Please try again."};
+    }
+    // 🌐 SERVER CONNECTION PROBLEM
+    on http.ClientException {
+      return {"error": "Unable to connect to the server. Please try again."};
+    }
+    // ❌ OTHER ERRORS
+    catch (e) {
+      return {"error": "Something went wrong. Please try again."};
+    }
   }
 
   // ✅ LOGOUT

@@ -114,7 +114,8 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } else {
       setState(() => loading = false);
-      String message = res['detail'] ?? "Login failed";
+
+      String message = res['error'] ?? res['detail'] ?? "Login failed";
 
       if (message.contains("Complete your profile")) {
         Navigator.push(

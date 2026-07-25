@@ -25,28 +25,37 @@ class FirebaseNotificationService {
       print("NOTIFICATION PERMISSION: ${settings.authorizationStatus}");
     }
 
-    String? token = await _messaging.getToken();
+    // =========================
+    // 🔥 GET FCM TOKEN SAFELY
+    // =========================
+    try {
+      String? token = await _messaging.getToken();
 
-    if (kDebugMode) {
-      print("FCM TOKEN: $token");
-    }
+      if (kDebugMode) {
+        print("FCM TOKEN: $token");
+      }
 
-    if (token != null) {
-      try {
-        await ApiService.saveFcmToken(token);
+      if (token != null) {
+        try {
+          await ApiService.saveFcmToken(token);
 
-        if (kDebugMode) {
-          print("FCM TOKEN SENT TO SERVER");
+          if (kDebugMode) {
+            print("FCM TOKEN SENT TO SERVER");
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print("FCM TOKEN SAVE ERROR: $e");
+          }
         }
-      } catch (e) {
-        if (kDebugMode) {
-          print("FCM TOKEN SAVE ERROR: $e");
-        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("FCM TOKEN GET ERROR: $e");
       }
     }
 
     // =========================
-    // 🔔 INIT LOCAL NOTIFICATIONS (FIXED)
+    // 🔔 INIT LOCAL NOTIFICATIONS
     // =========================
     const AndroidInitializationSettings androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -59,7 +68,6 @@ class FirebaseNotificationService {
       iOS: iosSettings,
     );
 
-    // 🔥 IMPORTANT FIX HERE
     await _localNotifications.initialize(settings: initSettings);
 
     // =========================
