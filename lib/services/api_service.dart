@@ -12,6 +12,22 @@ class ApiService {
   static const String baseUrl =
       "https://senmiback-production.up.railway.app/api";
 
+  static String getNetworkErrorMessage(Object error) {
+    if (error is SocketException) {
+      return "No internet connection. Please check your Wi-Fi or mobile data.";
+    }
+
+    if (error is TimeoutException) {
+      return "Connection timed out. Please try again.";
+    }
+
+    if (error is http.ClientException) {
+      return "Unable to connect to the server. Please try again.";
+    }
+
+    return "Something went wrong. Please try again.";
+  }
+
   static String? token;
   static String? refreshToken;
   static String? userRole;
@@ -206,7 +222,7 @@ class ApiService {
         return body is Map<String, dynamic> ? body : {"error": body.toString()};
       }
     } catch (e) {
-      return {"error": e.toString()};
+      return {"error": ApiService.getNetworkErrorMessage(e)};
     }
   }
 
