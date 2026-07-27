@@ -155,7 +155,7 @@ class _CustomerHomeState extends State<CustomerHome> {
                           Center(
                             child: Image.asset(
                               "assets/images/delivery.png",
-                              height: 150,
+                              height: 160,
                             ),
                           ),
                         ],
