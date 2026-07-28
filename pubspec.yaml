@@ -58,7 +58,8 @@ flutter_launcher_icons:
   ios: true
   image_path: "assets/icon.png"
   remove_alpha_ios: true
-
+  adaptive_icon_background: "#581C87"
+  adaptive_icon_foreground: "assets/icon.png"
 
 
 #flutter_google_places: latest

@@ -153,9 +153,13 @@ class _CustomerHomeState extends State<CustomerHome> {
                           const SizedBox(height: 20),
 
                           Center(
-                            child: Image.asset(
-                              "assets/images/delivery.png",
-                              height: 160,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(20),
+                              child: Image.asset(
+                                "assets/images/delivery.png",
+                                height: 160,
+                                fit: BoxFit.cover,
+                              ),
                             ),
                           ),
                         ],
