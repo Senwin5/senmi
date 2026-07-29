@@ -38,6 +38,18 @@ class _RiderTrackScreenState extends State<RiderTrackScreen> {
   final TextEditingController _codeController = TextEditingController();
 
   bool _isLoading = false;
+  final String _darkMapStyle = '''
+[
+ {
+  "elementType": "geometry",
+  "stylers": [
+   {
+    "color": "#212121"
+   }
+  ]
+ }
+]
+''';
 
   @override
   void initState() {
@@ -220,6 +232,7 @@ class _RiderTrackScreenState extends State<RiderTrackScreen> {
   // =========================
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -236,7 +249,14 @@ class _RiderTrackScreenState extends State<RiderTrackScreen> {
               target: _currentPos,
               zoom: 15,
             ),
-            onMapCreated: (c) => mapController = c,
+            onMapCreated: (controller) {
+              mapController = controller;
+
+              if (isDark) {
+                // ignore: deprecated_member_use
+                controller.setMapStyle(_darkMapStyle);
+              }
+            },
             markers: markers,
           ),
 
@@ -252,9 +272,11 @@ class _RiderTrackScreenState extends State<RiderTrackScreen> {
                 bottom: 16,
               ),
               //height: 320,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1C2128) : Colors.white,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(20),
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -265,15 +287,20 @@ class _RiderTrackScreenState extends State<RiderTrackScreen> {
                     children: [
                       Text(
                         status,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Colors.deepPurple,
+                          color: isDark
+                              ? Colors.deepPurpleAccent
+                              : Colors.deepPurple,
                         ),
                       ),
                       Text(
                         widget.packageId,
-                        style: const TextStyle(fontSize: 12),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isDark ? Colors.white70 : Colors.black87,
+                        ),
                       ),
                     ],
                   ),
@@ -284,18 +311,28 @@ class _RiderTrackScreenState extends State<RiderTrackScreen> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
+                      color: isDark
+                          ? const Color(0xFF252A34)
+                          : Colors.grey.shade100,
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           "Deliver to",
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : Colors.black,
+                          ),
                         ),
                         const SizedBox(height: 5),
-                        Text(deliveryAddress),
+                        Text(
+                          deliveryAddress,
+                          style: TextStyle(
+                            color: isDark ? Colors.white70 : Colors.black87,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -375,9 +412,20 @@ class _RiderTrackScreenState extends State<RiderTrackScreen> {
                   // 4. CODE INPUT
                   TextField(
                     controller: _codeController,
-                    decoration: const InputDecoration(
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black,
+                    ),
+                    decoration: InputDecoration(
                       labelText: "Receiver Code",
-                      border: OutlineInputBorder(),
+                      labelStyle: TextStyle(
+                        color: isDark ? Colors.white70 : Colors.black54,
+                      ),
+                      border: const OutlineInputBorder(),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: isDark ? Colors.white38 : Colors.grey,
+                        ),
+                      ),
                     ),
                   ),
 

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:senmi/screen_package_pages/features/rider/rider_home_bottom/rider_bottom_nav.dart';
 
-
 class DeliveryCompleteScreen extends StatefulWidget {
   const DeliveryCompleteScreen({super.key});
 
@@ -47,26 +46,50 @@ class _DeliveryCompleteScreenState extends State<DeliveryCompleteScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.check_circle, color: Colors.green, size: 100),
+              Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  // ignore: deprecated_member_use
+                  color: Colors.green.withOpacity(0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.check_circle,
+                  color: Colors.green,
+                  size: 75,
+                ),
+              ),
 
               const SizedBox(height: 20),
 
-              const Text(
+              Text(
                 "Delivery Completed 🎉",
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black,
+                ),
               ),
 
               const SizedBox(height: 10),
 
-              const Text("Redirecting to wallet..."),
+              Text(
+                "Redirecting to wallet...",
+                style: TextStyle(
+                  color: isDark ? Colors.white70 : Colors.black54,
+                ),
+              ),
 
               const SizedBox(height: 30),
 
@@ -77,6 +100,11 @@ class _DeliveryCompleteScreenState extends State<DeliveryCompleteScreen> {
                   onPressed: _goToWallet,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.deepPurple,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
                   child: const Text(
