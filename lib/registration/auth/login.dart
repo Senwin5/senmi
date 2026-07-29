@@ -94,20 +94,22 @@ class _LoginScreenState extends State<LoginScreen> {
           }
 
           if (statusRes['status'] == "approved") {
-            Navigator.pushReplacement(
+            Navigator.pushAndRemoveUntil(
               // ignore: use_build_context_synchronously
               context,
               MaterialPageRoute(builder: (_) => const RiderBottomNav()),
+              (route) => false,
             );
             return;
           }
         }
 
         // CUSTOMER
-        Navigator.pushReplacement(
+        Navigator.pushAndRemoveUntil(
           // ignore: use_build_context_synchronously
           context,
           MaterialPageRoute(builder: (_) => const CustomerBottomNav()),
+          (route) => false,
         );
       } finally {
         setState(() => loading = false);
@@ -167,10 +169,11 @@ class _LoginScreenState extends State<LoginScreen> {
       try {
         // ADMIN
         if (ApiService.isAdmin) {
-          Navigator.pushReplacement(
+          Navigator.pushAndRemoveUntil(
             // ignore: use_build_context_synchronously
             context,
             MaterialPageRoute(builder: (_) => const AdminBottomNav()),
+            (route) => false,
           );
           return;
         }

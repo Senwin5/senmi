@@ -156,7 +156,7 @@ class RiderDetailsProfile extends StatelessWidget {
               icon: Icons.location_on,
             ),
             _buildProfileCard(
-              "City",
+              "State",
               rider!['city'] ?? "",
               icon: Icons.location_city,
             ),
