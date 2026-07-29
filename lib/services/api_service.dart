@@ -67,31 +67,41 @@ class ApiService {
 
   // 🔐 SAVE TOKEN & ROLE
   static Future<void> saveTokenAndRole(
-    String t,
+    String access,
+    String refresh,
     String role,
-    String user,
+    String username,
   ) async {
-    token = t;
+    token = access;
+    refreshToken = refresh;
     userRole = role;
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString('token', t);
-    await prefs.setString('userRole', role);
-    await prefs.setString('username', user);
+
+    final prefs = await SharedPreferences.getInstance();
+
+    await prefs.setString("token", access);
+    await prefs.setString("refresh", refresh);
+    await prefs.setString("userRole", role);
+    await prefs.setString("username", username);
 
     isLoggedIn.value = true;
   }
 
   // 🔐 LOAD TOKEN & ROLE
+
   static Future<void> loadToken() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
     token = prefs.getString('token');
-    refreshToken = prefs.getString('refresh'); // 🔥 ADD THIS LINE
+    refreshToken = prefs.getString('refresh');
     userRole = prefs.getString('userRole');
     username = prefs.getString('username');
-    isAdminUser = prefs.getBool('is_admin') ?? false;
 
-    isLoggedIn.value = token != null && userRole != null;
+    if (kDebugMode) {
+      print("LOAD TOKEN = $token");
+    }
+    if (kDebugMode) {
+      print("LOAD REFRESH = $refreshToken");
+    }
   }
 
   // 🔑 LOGIN
@@ -125,7 +135,15 @@ class ApiService {
 
         await prefs.setBool('is_admin', isAdminUser);
 
-        await saveTokenAndRole(token!, userRole!, data['username'] ?? '');
+        await saveTokenAndRole(
+          token!,
+          refreshToken!,
+          userRole!,
+          data['username'] ?? '',
+        );
+        if (kDebugMode) {
+          print("TOKEN AFTER LOGIN = ${ApiService.token}");
+        }
       }
 
       return data;
@@ -211,10 +229,9 @@ class ApiService {
         if (body.containsKey("access") && body['access'] != null) {
           await saveTokenAndRole(
             body['access'],
+            body['refresh'],
             body['role'] ?? role,
-            body['username'] ??
-                username ??
-                '', // ✅ make sure username is passed
+            body['username'] ?? username,
           );
         }
         return body;
@@ -466,6 +483,72 @@ class ApiService {
 
       return [];
     }
+  }
+
+  // Safe Rider Status Fetch
+  // ================================
+  static Future<Map<String, dynamic>> getRiderStatusSafe() async {
+    await loadToken();
+    if (token == null) {
+      return {"status": "no_token", "error": "No token available"};
+    }
+
+    try {
+      final res = await http.get(
+        Uri.parse("$baseUrl/rider/status/"),
+        headers: await ApiService.getAuthHeaders(),
+      );
+
+      if (res.statusCode == 401) {
+        return {"status": "unauthorized", "error": "Token expired or invalid"};
+      }
+
+      final data = jsonDecode(res.body);
+      return data is Map<String, dynamic>
+          ? data
+          : {"status": "unknown", "data": data};
+    } catch (e) {
+      return {"status": "error", "error": e.toString()};
+    }
+  }
+
+  static Future<bool> refreshAccessToken() async {
+    await loadToken();
+
+    if (refreshToken == null) {
+      return false;
+    }
+
+    final res = await http.post(
+      Uri.parse("$baseUrl/token/refresh/"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"refresh": refreshToken}),
+    );
+
+    if (res.statusCode == 200) {
+      final data = jsonDecode(res.body);
+
+      token = data['access'];
+
+      final prefs = await SharedPreferences.getInstance();
+
+      await prefs.setString("token", data['access']);
+
+      isLoggedIn.value = true;
+
+      return true;
+    }
+
+    return false;
+  }
+
+  static Future<Map<String, dynamic>> getRiderStatus() async {
+    final res = await http.get(
+      Uri.parse("$baseUrl/rider/status/"),
+      headers: await ApiService.getAuthHeaders(),
+    );
+
+    return jsonDecode(res.body);
   }
 
   static Future<List<dynamic>> getAvailableRiders() async {
@@ -996,13 +1079,36 @@ class ApiService {
     File? vehicleImg,
   ) async {
     try {
+      await loadToken();
+
+      if (kDebugMode) {
+        print("TOKEN BEFORE UPDATE: $token");
+      }
+      if (kDebugMode) {
+        print("REFRESH BEFORE UPDATE: $refreshToken");
+      }
+
       var request = http.MultipartRequest(
         'PUT',
         Uri.parse("$baseUrl/rider-profile/"),
       );
 
-      // Add headers
       final headers = await getAuthHeaders();
+
+      if (kDebugMode) {
+        print(headers);
+      }
+
+      if (kDebugMode) {
+        print("========== RIDER PROFILE TOKEN ==========");
+      }
+      if (kDebugMode) {
+        print(headers);
+      }
+      if (kDebugMode) {
+        print("==========================================");
+      }
+
       headers.remove("Content-Type");
 
       request.headers.addAll(headers);
@@ -1046,33 +1152,6 @@ class ApiService {
       return data;
     } catch (e) {
       return {"error": e.toString()};
-    }
-  }
-
-  // Safe Rider Status Fetch
-  // ================================
-  static Future<Map<String, dynamic>> getRiderStatusSafe() async {
-    await loadToken();
-    if (token == null) {
-      return {"status": "no_token", "error": "No token available"};
-    }
-
-    try {
-      final res = await http.get(
-        Uri.parse("$baseUrl/rider/status/"),
-        headers: await ApiService.getAuthHeaders(),
-      );
-
-      if (res.statusCode == 401) {
-        return {"status": "unauthorized", "error": "Token expired or invalid"};
-      }
-
-      final data = jsonDecode(res.body);
-      return data is Map<String, dynamic>
-          ? data
-          : {"status": "unknown", "data": data};
-    } catch (e) {
-      return {"status": "error", "error": e.toString()};
     }
   }
 
@@ -1128,15 +1207,6 @@ class ApiService {
     } catch (e) {
       return false;
     }
-  }
-
-  static Future<Map<String, dynamic>> getRiderStatus() async {
-    final res = await http.get(
-      Uri.parse("$baseUrl/rider/status/"),
-      headers: await ApiService.getAuthHeaders(),
-    );
-
-    return jsonDecode(res.body);
   }
 
   // ============================================
@@ -1215,28 +1285,6 @@ class ApiService {
     }
 
     return null;
-  }
-
-  static Future<bool> refreshAccessToken() async {
-    if (refreshToken == null) return false;
-
-    final res = await http.post(
-      Uri.parse("$baseUrl/token/refresh/"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({"refresh": refreshToken}),
-    );
-
-    if (res.statusCode == 200) {
-      final data = jsonDecode(res.body);
-      token = data['access'];
-
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setString('token', token!);
-
-      return true;
-    }
-
-    return false;
   }
 
   static Future<Map<String, dynamic>> deletePackage(String packageId) async {

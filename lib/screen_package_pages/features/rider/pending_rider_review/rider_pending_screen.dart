@@ -34,11 +34,6 @@ class _RiderPendingScreenState extends State<RiderPendingScreen> {
       }
 
       await checkStatus();
-
-      refreshTimer = Timer.periodic(
-        const Duration(seconds: 15), // ✅ kept your original timing
-        (_) => checkStatus(),
-      );
     });
   }
 

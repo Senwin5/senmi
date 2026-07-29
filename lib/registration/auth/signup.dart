@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:senmi/screen_package_pages/features/customer/customer_home_bottom/customer_bottomnav.dart';
 import 'package:senmi/screen_package_pages/features/rider/pending_rider_review/rider_complete_profile.dart';
@@ -57,7 +59,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     // ✅ If backend returned access token
     if (res.containsKey("access") && res['access'] != null) {
-      await ApiService.saveTokenAndRole(res['access'], role, username.text);
+      await ApiService.saveTokenAndRole(
+        res['access'],
+        res['refresh'],
+        role,
+        username.text,
+      );
 
       if (role == "rider") {
         Navigator.pushReplacement(
@@ -223,30 +230,140 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                       const SizedBox(height: 16),
                       // ✅ Role dropdown
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey.shade400),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: DropdownButton<String>(
-                          value: role,
-                          isExpanded: true,
-                          underline: const SizedBox(),
-                          items: const [
-                            DropdownMenuItem(
-                              value: "customer",
-                              child: Text("Customer"),
+                      // ✅ Role Selection
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            "Choose account type",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
                             ),
-                            DropdownMenuItem(
-                              value: "rider",
-                              child: Text("Rider"),
-                            ),
-                          ],
-                          onChanged: (val) {
-                            if (val != null) setState(() => role = val);
-                          },
-                        ),
+                          ),
+
+                          const SizedBox(height: 12),
+
+                          Row(
+                            children: [
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      role = "customer";
+                                    });
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: role == "customer"
+                                          ? Colors.deepPurple.withOpacity(0.15)
+                                          : Colors.transparent,
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(
+                                        color: role == "customer"
+                                            ? Colors.deepPurple
+                                            : Colors.grey.shade400,
+                                        width: 2,
+                                      ),
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        Icon(
+                                          Icons.shopping_bag,
+                                          size: 40,
+                                          color: role == "customer"
+                                              ? Colors.deepPurple
+                                              : Colors.grey,
+                                        ),
+
+                                        const SizedBox(height: 8),
+
+                                        const Text(
+                                          "Customer",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+
+                                        const SizedBox(height: 5),
+
+                                        const Text(
+                                          "Send packages\nand track deliveries",
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+
+                              const SizedBox(width: 12),
+
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      role = "rider";
+                                    });
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: role == "rider"
+                                          ? Colors.green.withOpacity(0.15)
+                                          : Colors.transparent,
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(
+                                        color: role == "rider"
+                                            ? Colors.green
+                                            : Colors.grey.shade400,
+                                        width: 2,
+                                      ),
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        Icon(
+                                          Icons.delivery_dining,
+                                          size: 40,
+                                          color: role == "rider"
+                                              ? Colors.green
+                                              : Colors.grey,
+                                        ),
+
+                                        const SizedBox(height: 8),
+
+                                        const Text(
+                                          "Rider",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+
+                                        const SizedBox(height: 5),
+
+                                        const Text(
+                                          "Deliver packages\nand earn money",
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 24),
                       CustomButton(
@@ -288,7 +405,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
           if (loading)
             Container(
-              // ignore: deprecated_member_use
               color: Colors.white.withOpacity(0.7),
               child: const Center(
                 child: CircularProgressIndicator(color: Colors.blue),
