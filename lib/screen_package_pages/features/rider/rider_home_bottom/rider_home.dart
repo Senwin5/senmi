@@ -434,7 +434,6 @@ class _RiderHomeState extends State<RiderHome> {
               Colors.deepPurple,
               isDark,
             ),
-
             _metricCard(
               "Avg Delivery Time",
               avgTime,
