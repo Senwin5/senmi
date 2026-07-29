@@ -201,7 +201,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           child: AdminStatCard(
                             title: "Active Deliveries",
                             value: activeDeliveries.toString(),
-                            icon: Icons.local_shipping,
+                            icon: Icons.two_wheeler,
                             color: Colors.green,
                           ),
                         ),
@@ -419,7 +419,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     const RecentActivityTile(
                       title: "Package delivered",
                       subtitle: "10 mins ago",
-                      icon: Icons.local_shipping,
+                      icon: Icons.two_wheeler,
                     ),
 
                     const RecentActivityTile(

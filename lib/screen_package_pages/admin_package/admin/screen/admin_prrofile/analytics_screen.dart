@@ -148,7 +148,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       statCard(
                         "Deliveries",
                         "${data['total_deliveries']}",
-                        Icons.local_shipping,
+                        Icons.two_wheeler,
                         Colors.blue,
                       ),
 

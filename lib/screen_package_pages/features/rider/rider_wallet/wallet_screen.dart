@@ -584,7 +584,7 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                               child: Column(
                                 children: [
                                   const Icon(
-                                    Icons.local_shipping,
+                                    Icons.two_wheeler,
                                     size: 30,
                                     color: Colors.white,
                                   ),

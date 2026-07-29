@@ -41,7 +41,7 @@ class HowItWorksScreen extends StatelessWidget {
             child: const Column(
               children: [
                 Icon(
-                  Icons.local_shipping_rounded,
+                  Icons.two_wheeler,
                   color: Colors.white,
                   size: 70,
                 ),
@@ -104,7 +104,7 @@ class HowItWorksScreen extends StatelessWidget {
 
           _StepCard(
             number: "5",
-            icon: Icons.local_shipping_outlined,
+            icon: Icons.two_wheeler,
             title: "Pickup & Delivery",
             description:
                 "The rider picks up your package and delivers it to the destination safely.",

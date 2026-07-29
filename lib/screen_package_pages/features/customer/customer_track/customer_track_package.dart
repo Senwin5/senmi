@@ -682,7 +682,7 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
                                   child: Icon(
                                     status == "picked_up"
                                         ? Icons.two_wheeler
-                                        : Icons.local_shipping,
+                                        : Icons.two_wheeler,
                                     color: Colors.white,
                                   ),
                                 ),

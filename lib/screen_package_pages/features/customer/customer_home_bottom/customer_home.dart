@@ -343,7 +343,7 @@ class _CustomerHomeState extends State<CustomerHome> {
                   text: "Payments are secured via Paystack",
                 ),
                 _ActivityItem(
-                  icon: Icons.local_shipping,
+                  icon: Icons.two_wheeler,
                   color: Colors.orange,
                   text: "Riders are assigned automatically after payment",
                 ),

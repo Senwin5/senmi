@@ -244,7 +244,7 @@ class _RiderHomeState extends State<RiderHome> {
             padding: const EdgeInsets.symmetric(vertical: 20),
             child: Column(
               children: [
-                const Icon(Icons.local_shipping, size: 30, color: Colors.white),
+                const Icon(Icons.two_wheeler, size: 30, color: Colors.white),
                 const SizedBox(height: 8),
                 const Text(
                   "Deliveries",
@@ -430,7 +430,7 @@ class _RiderHomeState extends State<RiderHome> {
             _metricCard(
               "Completed Today",
               completedToday.toString(),
-              Icons.local_shipping,
+              Icons.two_wheeler,
               Colors.deepPurple,
               isDark,
             ),

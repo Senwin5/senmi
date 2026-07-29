@@ -213,7 +213,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
 
                     return Card(
                       child: ListTile(
-                        leading: const Icon(Icons.local_shipping),
+                        leading: const Icon(Icons.two_wheeler),
 
                         title: Text(package['description']),
 
