@@ -72,7 +72,6 @@ class _DeliveryCompleteScreenState extends State<DeliveryCompleteScreen> {
               ),
 
               const SizedBox(height: 20),
-
               Text(
                 "Delivery Completed 🎉",
                 style: TextStyle(
