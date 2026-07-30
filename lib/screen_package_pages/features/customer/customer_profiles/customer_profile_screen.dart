@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:senmi/registration/auth/login.dart';
 import 'package:senmi/screen_package_pages/features/customer/customer_profiles/customer_security_screen.dart';
+import 'package:senmi/screen_package_pages/features/customer/customer_profiles/edit_customer_profile_screen.dart';
 import 'package:senmi/services/api_service.dart';
 
 class ProfileSettingsScreen extends StatefulWidget {
@@ -241,18 +242,60 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                   icon: Icons.person_outline,
                   title: "Username",
                   subtitle: username,
+                  onTap: () async {
+                    final updatedUser = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => EditCustomerProfileScreen(user: user),
+                      ),
+                    );
+
+                    if (updatedUser != null) {
+                      setState(() {
+                        user = Map<String, dynamic>.from(updatedUser);
+                      });
+                    }
+                  },
                 ),
 
                 tile(
                   icon: Icons.email_outlined,
                   title: "Email",
                   subtitle: email,
+                  onTap: () async {
+                    final updatedUser = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => EditCustomerProfileScreen(user: user),
+                      ),
+                    );
+
+                    if (updatedUser != null) {
+                      setState(() {
+                        user = Map<String, dynamic>.from(updatedUser);
+                      });
+                    }
+                  },
                 ),
 
                 tile(
                   icon: Icons.phone_outlined,
                   title: "Phone",
                   subtitle: phone,
+                  onTap: () async {
+                    final updatedUser = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => EditCustomerProfileScreen(user: user),
+                      ),
+                    );
+
+                    if (updatedUser != null) {
+                      setState(() {
+                        user = Map<String, dynamic>.from(updatedUser);
+                      });
+                    }
+                  },
                 ),
 
                 const SizedBox(height: 20),
