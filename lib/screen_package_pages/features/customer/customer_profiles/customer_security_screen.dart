@@ -3,12 +3,18 @@
 import 'package:flutter/material.dart';
 import 'package:senmi/registration/auth/login.dart';
 import 'package:senmi/registration/forgotten/forgot_password.dart';
+import 'package:senmi/screen_package_pages/features/customer/customer_profiles/edit_customer_profile_screen.dart';
 import 'package:senmi/services/api_service.dart';
 
 class CustomerSecurityScreen extends StatelessWidget {
+  final Map<String, dynamic> user;
   final ValueNotifier<bool> darkModeNotifier;
 
-  const CustomerSecurityScreen({super.key, required this.darkModeNotifier});
+  const CustomerSecurityScreen({
+    super.key,
+    required this.user,
+    required this.darkModeNotifier,
+  });
 
   Future<void> logout(BuildContext context) async {
     await ApiService.logout();
@@ -174,6 +180,27 @@ class CustomerSecurityScreen extends StatelessWidget {
               const Text(
                 "Security",
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+
+              buildTile(
+                context: context,
+                icon: Icons.edit_outlined,
+                title: "Edit Profile",
+                subtitle: "Update username, email and phone",
+                onTap: () async {
+                  final updatedUser = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => EditCustomerProfileScreen(user: user),
+                    ),
+                  );
+
+                  if (updatedUser != null) {
+                    user
+                      ..clear()
+                      ..addAll(updatedUser);
+                  }
+                },
               ),
 
               const SizedBox(height: 15),

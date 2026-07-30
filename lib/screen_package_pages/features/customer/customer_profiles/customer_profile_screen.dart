@@ -1,11 +1,11 @@
-// ignore_for_file: deprecated_member_use
+// ignore_for_file: deprecated_member_use, use_build_context_synchronously
 
 import 'package:flutter/material.dart';
 import 'package:senmi/registration/auth/login.dart';
 import 'package:senmi/screen_package_pages/features/customer/customer_profiles/customer_security_screen.dart';
 import 'package:senmi/services/api_service.dart';
 
-class ProfileSettingsScreen extends StatelessWidget {
+class ProfileSettingsScreen extends StatefulWidget {
   final Map<String, dynamic> user;
   final ValueNotifier<bool> darkModeNotifier;
 
@@ -15,14 +15,39 @@ class ProfileSettingsScreen extends StatelessWidget {
     required this.darkModeNotifier,
   });
 
+  @override
+  State<ProfileSettingsScreen> createState() => _ProfileSettingsScreenState();
+}
+
+class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
+  late Map<String, dynamic> user;
+
+  @override
+  void initState() {
+    super.initState();
+    user = Map<String, dynamic>.from(widget.user);
+  }
+
   String get username => user['username']?.toString() ?? "User";
   String get email => user['email']?.toString() ?? "";
   String get phone => user['phone_number']?.toString() ?? "";
 
+  Future<void> _refresh() async {
+    final updatedUser = await ApiService.getCustomerProfile();
+
+    if (!mounted) return;
+
+    if (updatedUser != null) {
+      setState(() {
+        user = Map<String, dynamic>.from(updatedUser);
+      });
+    }
+  }
+
   Future<void> logout(BuildContext context) async {
     await ApiService.logout();
 
-    if (!context.mounted) return;
+    if (!mounted) return;
 
     Navigator.pushAndRemoveUntil(
       context,
@@ -55,7 +80,7 @@ class ProfileSettingsScreen extends StatelessWidget {
 
     final success = await ApiService.deleteUser();
 
-    if (!context.mounted) return;
+    if (!mounted) return;
 
     if (!success) {
       ScaffoldMessenger.of(
@@ -66,7 +91,7 @@ class ProfileSettingsScreen extends StatelessWidget {
 
     await ApiService.logout();
 
-    if (!context.mounted) return;
+    if (!mounted) return;
 
     Navigator.pushAndRemoveUntil(
       context,
@@ -80,7 +105,7 @@ class ProfileSettingsScreen extends StatelessWidget {
     final safeUsername = username;
 
     return ValueListenableBuilder<bool>(
-      valueListenable: darkModeNotifier,
+      valueListenable: widget.darkModeNotifier,
       builder: (context, isDark, _) {
         Widget tile({
           required IconData icon,
@@ -144,119 +169,132 @@ class ProfileSettingsScreen extends StatelessWidget {
             ),
           ),
 
-          body: ListView(
-            padding: const EdgeInsets.all(20),
-            children: [
-              Container(
-                padding: const EdgeInsets.all(28),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(30),
-                  gradient: const LinearGradient(
-                    colors: [
-                      Color(0xFF5E35B1),
-                      Color(0xFF7E57C2),
-                      Color(0xFF9575CD),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.deepPurple.withOpacity(.25),
-                      blurRadius: 30,
-                      offset: const Offset(0, 14),
+          body: RefreshIndicator(
+            onRefresh: _refresh,
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(20),
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(28),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(30),
+                    gradient: const LinearGradient(
+                      colors: [
+                        Color(0xFF5E35B1),
+                        Color(0xFF7E57C2),
+                        Color(0xFF9575CD),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    CircleAvatar(
-                      radius: 44,
-                      backgroundColor: Colors.white,
-                      child: Text(
-                        safeUsername[0].toUpperCase(),
-                        style: const TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.deepPurple,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.deepPurple.withOpacity(.25),
+                        blurRadius: 30,
+                        offset: const Offset(0, 14),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      CircleAvatar(
+                        radius: 44,
+                        backgroundColor: Colors.white,
+                        child: Text(
+                          safeUsername[0].toUpperCase(),
+                          style: const TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.deepPurple,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      safeUsername,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.w700,
+                      const SizedBox(height: 16),
+                      Text(
+                        safeUsername,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 6),
-                    const Text(
-                      "Account Information",
-                      style: TextStyle(color: Colors.white70),
-                    ),
-                  ],
+                      const SizedBox(height: 6),
+                      const Text(
+                        "Account Information",
+                        style: TextStyle(color: Colors.white70),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
 
-              const SizedBox(height: 30),
+                const SizedBox(height: 30),
 
-              const Text(
-                "Personal Information",
-                style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
-              ),
+                const Text(
+                  "Personal Information",
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                ),
 
-              const SizedBox(height: 14),
+                const SizedBox(height: 14),
 
-              tile(
-                icon: Icons.person_outline,
-                title: "Username",
-                subtitle: username,
-              ),
+                tile(
+                  icon: Icons.person_outline,
+                  title: "Username",
+                  subtitle: username,
+                ),
 
-              tile(icon: Icons.email_outlined, title: "Email", subtitle: email),
+                tile(
+                  icon: Icons.email_outlined,
+                  title: "Email",
+                  subtitle: email,
+                ),
 
-              tile(icon: Icons.phone_outlined, title: "Phone", subtitle: phone),
+                tile(
+                  icon: Icons.phone_outlined,
+                  title: "Phone",
+                  subtitle: phone,
+                ),
 
-              const SizedBox(height: 20),
+                const SizedBox(height: 20),
 
-              const Text(
-                "Preferences",
-                style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
-              ),
+                const Text(
+                  "Preferences",
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                ),
 
-              const SizedBox(height: 14),
+                const SizedBox(height: 14),
 
-              tile(
-                icon: Icons.dark_mode_outlined,
-                title: "Dark Mode",
-                trailing: Switch.adaptive(
-                  value: isDark,
-                  onChanged: (v) {
-                    darkModeNotifier.value = v;
+                tile(
+                  icon: Icons.dark_mode_outlined,
+                  title: "Dark Mode",
+                  trailing: Switch.adaptive(
+                    value: isDark,
+                    onChanged: (v) {
+                      widget.darkModeNotifier.value = v;
+                    },
+                  ),
+                ),
+
+                const SizedBox(height: 14),
+
+                tile(
+                  icon: Icons.security,
+                  title: "Account & Security",
+                  subtitle: "Password, logout and account settings",
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => CustomerSecurityScreen(
+                          user: user,
+                          darkModeNotifier: widget.darkModeNotifier,
+                        ),
+                      ),
+                    );
                   },
                 ),
-              ),
-
-              const SizedBox(height: 14),
-
-              tile(
-                icon: Icons.security,
-                title: "Account & Security",
-                subtitle: "Password, logout and account settings",
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => CustomerSecurityScreen(
-                        darkModeNotifier: darkModeNotifier,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },

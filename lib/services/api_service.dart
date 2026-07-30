@@ -1333,7 +1333,50 @@ class ApiService {
     }
   }
 
-  static Future<dynamic> getCustomerProfile() async {
-    return {};
+  static Future<Map<String, dynamic>?> updateCustomerProfile({
+    required String username,
+    required String email,
+    required String phone,
+  }) async {
+    try {
+      final response = await http.put(
+        Uri.parse("$baseUrl/profile/"),
+        headers: await getAuthHeaders(),
+        body: jsonEncode({
+          "username": username,
+          "email": email,
+          "phone_number": phone,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      }
+
+      debugPrint(response.body);
+      return null;
+    } catch (e) {
+      debugPrint(e.toString());
+      return null;
+    }
+  }
+
+  static Future<Map<String, dynamic>?> getCustomerProfile() async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/profile/"),
+        headers: await getAuthHeaders(),
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      }
+
+      debugPrint(response.body);
+      return null;
+    } catch (e) {
+      debugPrint(e.toString());
+      return null;
+    }
   }
 }
