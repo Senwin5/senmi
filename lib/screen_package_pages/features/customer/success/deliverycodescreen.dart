@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
 import 'package:senmi/screen_package_pages/features/customer/customer_track/customer_track_package.dart';
 
 class DeliveryScreen extends StatelessWidget {
@@ -35,6 +37,7 @@ class DeliveryScreen extends StatelessWidget {
             backgroundColor: senmiGreen,
             child: Text("$number", style: const TextStyle(color: Colors.white)),
           ),
+
           const SizedBox(width: 15),
 
           Expanded(
@@ -53,13 +56,29 @@ class DeliveryScreen extends StatelessWidget {
     );
   }
 
+  /// Copies the delivery code to the phone clipboard.
+  Future<void> _copyDeliveryCode(BuildContext context) async {
+    await Clipboard.setData(ClipboardData(text: deliveryCode));
+
+    if (!context.mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text("Delivery code copied successfully"),
+        backgroundColor: senmiGreen,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      // 🔥 THIS FIXES YOUR BLACK BACKGROUND ISSUE
       backgroundColor: isDark ? const Color(0xFF0F0F0F) : Colors.white,
 
       body: SafeArea(
@@ -94,27 +113,57 @@ class DeliveryScreen extends StatelessWidget {
 
               const SizedBox(height: 25),
 
+              // DELIVERY CODE CARD
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 18),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 20,
+                  horizontal: 18,
+                ),
                 decoration: BoxDecoration(
                   color: senmiGreen,
                   borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: senmiGreen.withValues(alpha: 0.25),
+                      blurRadius: 15,
+                      offset: const Offset(0, 7),
+                    ),
+                  ],
                 ),
                 child: Column(
                   children: [
                     const Text(
                       "DELIVERY CODE",
-                      style: TextStyle(color: Colors.white70),
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1,
+                      ),
                     ),
+
                     const SizedBox(height: 8),
-                    Text(
-                      deliveryCode,
-                      style: const TextStyle(
-                        fontSize: 40,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        letterSpacing: 5,
+
+                    // Tapping the code also copies it.
+                    InkWell(
+                      onTap: () {
+                        _copyDeliveryCode(context);
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 15,
+                          vertical: 5,
+                        ),
+                        child: Text(
+                          deliveryCode,
+                          style: const TextStyle(
+                            fontSize: 40,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            letterSpacing: 5,
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -133,24 +182,28 @@ class DeliveryScreen extends StatelessWidget {
                         Icons.inventory_2_outlined,
                         "A rider accepts your package",
                       ),
+
                       buildStep(
                         context,
                         2,
                         Icons.two_wheeler,
                         "Rider arrives at the pickup location",
                       ),
+
                       buildStep(
                         context,
                         3,
                         Icons.send,
                         "Send delivery code to receiver",
                       ),
+
                       buildStep(
                         context,
                         4,
                         Icons.lock_outline,
                         "Receiver presents the delivery code to the rider",
                       ),
+
                       buildStep(
                         context,
                         5,
@@ -177,10 +230,8 @@ class DeliveryScreen extends StatelessWidget {
                     Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => CustomerTrackingScreen(
-                         // initialIndex: 3,
-                          packageId: packageId,
-                        ),
+                        builder: (_) =>
+                            CustomerTrackingScreen(packageId: packageId),
                       ),
                       (route) => false,
                     );

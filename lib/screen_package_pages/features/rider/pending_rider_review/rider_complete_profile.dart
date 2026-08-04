@@ -25,7 +25,7 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
   final TextEditingController cityController = TextEditingController();
 
   File? profilePicture;
-  File? riderImage1;
+  File? ninImage;
   File? riderImageWithVehicle;
 
   bool loading = false;
@@ -124,8 +124,8 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
                           if (type == 'profile') {
                             profilePicture = File(image.path);
                           }
-                          if (type == 'rider1') {
-                            riderImage1 = File(image.path);
+                          if (type == 'rider_nin_image') {
+                            ninImage = File(image.path);
                           }
                           if (type == 'withVehicle') {
                             riderImageWithVehicle = File(image.path);
@@ -162,8 +162,8 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
                         if (type == 'profile') {
                           profilePicture = File(image.path);
                         }
-                        if (type == 'rider1') {
-                          riderImage1 = File(image.path);
+                        if (type == 'rider_nin_image') {
+                          ninImage = File(image.path);
                         }
                         if (type == 'withVehicle') {
                           riderImageWithVehicle = File(image.path);
@@ -184,7 +184,7 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
     if (!_formKey.currentState!.validate()) return;
 
     if (profilePicture == null ||
-        riderImage1 == null ||
+        ninImage == null ||
         riderImageWithVehicle == null) {
       ScaffoldMessenger.of(
         context,
@@ -201,7 +201,7 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
       addressController.text,
       cityController.text,
       profilePicture!,
-      riderImage1!,
+      ninImage!,
       riderImageWithVehicle!,
     );
 
@@ -1020,10 +1020,10 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
                           ),
 
                           imagePickerTile(
-                            label: 'Rider photo',
-                            subtitle: 'Upload a clear full photo of yourself',
-                            file: riderImage1,
-                            type: 'rider1',
+                            label: 'NIN photo',
+                            subtitle: 'Upload a clear full photo of your NIN',
+                            file: ninImage,
+                            type: 'rider_nin_image',
                             icon: Icons.person_pin_outlined,
                           ),
 

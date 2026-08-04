@@ -133,7 +133,7 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
 
   String? riderPhone;
   String? riderName;
-  String? riderImage;
+  String? ninImage;
   String? vehicleNumber;
 
   @override
@@ -178,7 +178,7 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
       }
       riderPhone = pkg['rider_phone'];
       riderName = pkg['rider_name'];
-      riderImage = pkg['rider_profile_picture'];
+      ninImage = pkg['rider_profile_picture'];
       vehicleNumber = pkg['vehicle_number'];
 
       if (pkg['delivery_code'] != null) {
@@ -748,10 +748,10 @@ class _CustomerTrackingScreenState extends State<CustomerTrackingScreen>
                                     CircleAvatar(
                                       radius: 32,
                                       backgroundColor: Colors.white,
-                                      backgroundImage: riderImage != null
-                                          ? NetworkImage(riderImage!)
+                                      backgroundImage: ninImage != null
+                                          ? NetworkImage(ninImage!)
                                           : null,
-                                      child: riderImage == null
+                                      child: ninImage == null
                                           ? const Icon(
                                               Icons.person,
                                               color: Colors.deepPurple,

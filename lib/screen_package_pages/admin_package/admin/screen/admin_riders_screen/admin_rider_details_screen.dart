@@ -279,7 +279,7 @@ class RiderDetailsScreen extends StatelessWidget {
           // =========================
           imageSection(context, "Profile Image", rider.profileImage),
 
-          imageSection(context, "Rider Image", rider.riderImage),
+          imageSection(context, "Rider Image", rider.ninImage),
 
           imageSection(context, "Vehicle Image", rider.vehicleImage),
 

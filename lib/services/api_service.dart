@@ -1075,7 +1075,7 @@ class ApiService {
     String address,
     String city,
     File? profile,
-    File? rider1,
+    File? riderNinImage,
     File? vehicleImg,
   ) async {
     try {
@@ -1126,9 +1126,9 @@ class ApiService {
           await http.MultipartFile.fromPath('profile_picture', profile.path),
         );
       }
-      if (rider1 != null) {
+      if (riderNinImage != null) {
         request.files.add(
-          await http.MultipartFile.fromPath('rider_image_1', rider1.path),
+          await http.MultipartFile.fromPath('nin_image', riderNinImage.path),
         ); // ✅ corrected
       }
       if (vehicleImg != null) {

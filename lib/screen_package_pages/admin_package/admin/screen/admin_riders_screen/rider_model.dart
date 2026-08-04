@@ -12,7 +12,7 @@ class RiderModel {
   final String? address;
 
   final String? profileImage;
-  final String? riderImage;
+  final String? ninImage;
   final String? vehicleImage;
 
   RiderModel({
@@ -25,7 +25,7 @@ class RiderModel {
     this.city,
     this.address,
     this.profileImage,
-    this.riderImage,
+    this.ninImage,
     this.vehicleImage,
   });
 
@@ -48,7 +48,7 @@ class RiderModel {
       address: json['address']?.toString(),
 
       profileImage: json['profile_picture']?.toString(),
-      riderImage: json['rider_image_1']?.toString(),
+      ninImage: json['nin_image']?.toString(),
       vehicleImage: json['rider_image_with_vehicle']?.toString(),
     );
   }
@@ -64,7 +64,7 @@ class RiderModel {
       'city': city,
       'address': address,
       'profile_picture': profileImage,
-      'rider_image_1': riderImage,
+      'nin_image': ninImage,
       'rider_image_with_vehicle': vehicleImage,
     };
   }
