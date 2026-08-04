@@ -32,14 +32,36 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
   final receiverNameController = TextEditingController();
   final receiverPhoneController = TextEditingController();
 
+  // Added for automatic movement between fields.
+  final receiverNameFocus = FocusNode();
+  final receiverPhoneFocus = FocusNode();
+
+  String senderName = '';
+  String senderPhone = '';
+  String receiverName = '';
+  String receiverPhone = '';
+
+  // String description = '';
+  String pickupAddress = '';
+  String deliveryAddress = '';
+
+  LatLng? pickupLocation;
+  LatLng? deliveryLocation;
+
+  final String apiKey = "AIzaSyANfJatY_6y8gzmUrvV2_n2aR9ms7Xe_ZY";
+
   void _resetForm() {
     setState(() {
       pickupController.clear();
       deliveryController.clear();
 
+      receiverNameController.clear();
+      receiverPhoneController.clear();
+
       receiverName = '';
       receiverPhone = '';
-      //description = '';
+
+      // description = '';
       pickupAddress = '';
       deliveryAddress = '';
 
@@ -50,6 +72,7 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
       distanceKm = null;
     });
 
+    FocusScope.of(context).unfocus();
     _formKey.currentState?.reset();
   }
 
@@ -67,21 +90,15 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
   void dispose() {
     pickupController.dispose();
     deliveryController.dispose();
+
+    receiverNameController.dispose();
+    receiverPhoneController.dispose();
+
+    receiverNameFocus.dispose();
+    receiverPhoneFocus.dispose();
+
     super.dispose();
   }
-
-  String senderName = '';
-  String senderPhone = '';
-  String receiverName = '';
-  String receiverPhone = '';
-  //String description = '';
-  String pickupAddress = '';
-  String deliveryAddress = '';
-
-  LatLng? pickupLocation;
-  LatLng? deliveryLocation;
-
-  final String apiKey = "AIzaSyANfJatY_6y8gzmUrvV2_n2aR9ms7Xe_ZY";
 
   Future<String> _getAddressFromLatLng(LatLng pos) async {
     try {
@@ -99,16 +116,12 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
         p.thoroughfare,
       ].where((e) => e != null && e.isNotEmpty).join(" ");
 
-      final address =
-          [
-                if (street.isNotEmpty) street,
-                p.locality,
-                p.administrativeArea,
-                p.country,
-              ]
-              .where((e) => e != null && e.isNotEmpty)
-              .toSet() // removes duplicate Lagos
-              .join(", ");
+      final address = [
+        if (street.isNotEmpty) street,
+        p.locality,
+        p.administrativeArea,
+        p.country,
+      ].where((e) => e != null && e.isNotEmpty).toSet().join(", ");
 
       return address;
     } catch (e) {
@@ -129,10 +142,18 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
 
     if (contact == null) return;
 
-    receiverNameController.text = contact.displayName!;
+    receiverNameController.text = contact.displayName ?? '';
 
     if (contact.phones.isNotEmpty) {
       receiverPhoneController.text = contact.phones.first.number;
+    }
+
+    // Keep the variables synchronized with the selected contact.
+    receiverName = receiverNameController.text;
+    receiverPhone = receiverPhoneController.text;
+
+    if (mounted) {
+      setState(() {});
     }
   }
 
@@ -142,8 +163,10 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
       MaterialPageRoute(
         builder: (_) => MapPickerScreen(
           initialLocation: isPickup
-              ? (pickupLocation ?? const LatLng(0, 0))
-              : (deliveryLocation ?? const LatLng(0, 0)),
+              ? (pickupLocation ?? const LatLng(6.5244, 3.3792))
+              : (deliveryLocation ??
+                    pickupLocation ??
+                    const LatLng(6.5244, 3.3792)),
           useCurrentLocation: isPickup,
         ),
       ),
@@ -153,9 +176,10 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
 
     if (isPickup) {
       pickupLocation = selected;
-      _autoCalculatePrice();
 
       final addr = await _getAddressFromLatLng(selected);
+
+      if (!mounted) return;
 
       setState(() {
         pickupAddress = addr;
@@ -167,9 +191,10 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
       });
     } else {
       deliveryLocation = selected;
-      _autoCalculatePrice();
 
       final addr = await _getAddressFromLatLng(selected);
+
+      if (!mounted) return;
 
       setState(() {
         deliveryAddress = addr;
@@ -180,6 +205,9 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
         );
       });
     }
+
+    // Calculate only after the selected location and address are updated.
+    _autoCalculatePrice();
   }
 
   Future<void> _calculatePrice() async {
@@ -199,16 +227,22 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
       'delivery_lng': deliveryLocation!.longitude,
     };
 
-    final res = await ApiService.getPrice(payload);
+    try {
+      final res = await ApiService.getPrice(payload);
 
-    if (res != null) {
-      setState(() {
-        estimatedPrice = (res['price'] as num?)?.toDouble();
-        distanceKm = (res['distance_km'] as num?)?.toDouble();
-      });
+      if (!mounted) return;
+
+      if (res != null) {
+        setState(() {
+          estimatedPrice = (res['price'] as num?)?.toDouble();
+          distanceKm = (res['distance_km'] as num?)?.toDouble();
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() => calculatingPrice = false);
+      }
     }
-
-    setState(() => calculatingPrice = false);
   }
 
   Future<void> _createPackage() async {
@@ -220,6 +254,7 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
     }
 
     if (!_formKey.currentState!.validate()) return;
+
     _formKey.currentState!.save();
 
     if (pickupLocation == null || deliveryLocation == null) {
@@ -235,7 +270,7 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
 
     try {
       final payload = {
-        //'description': description.trim(),
+        // 'description': description.trim(),
         'pickup_address': pickupController.text,
         'delivery_address': deliveryController.text,
         'receiver_name': receiverName.trim(),
@@ -280,11 +315,15 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
         );
       }
     } catch (e) {
+      if (!mounted) return;
+
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text("Error: $e")));
     } finally {
-      if (mounted) setState(() => loading = false);
+      if (mounted) {
+        setState(() => loading = false);
+      }
     }
   }
 
@@ -293,21 +332,35 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
     TextInputType type = TextInputType.text,
     Function(String?)? onSaved,
     TextEditingController? controller,
+    FocusNode? focusNode,
+    TextInputAction? textInputAction,
+    VoidCallback? onEditingComplete,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: TextFormField(
         controller: controller,
+        focusNode: focusNode,
         keyboardType: type,
+        textInputAction: textInputAction,
+        onEditingComplete: onEditingComplete,
         cursorColor: const Color(0xFF581C87),
+
         style: TextStyle(
           color: Theme.of(context).textTheme.bodyLarge?.color,
           fontSize: 16,
           fontWeight: FontWeight.w500,
         ),
+
         decoration: InputDecoration(
           labelText: label,
+
+          // The label moves up automatically when focused
+          // or when the field contains text.
+          floatingLabelBehavior: FloatingLabelBehavior.auto,
+
           filled: true,
+
           fillColor: Theme.of(context).brightness == Brightness.dark
               ? const Color(0xFF2A2A2A)
               : Colors.white,
@@ -320,6 +373,12 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
           labelStyle: TextStyle(
             color: Theme.of(context).textTheme.bodyLarge?.color,
             fontWeight: FontWeight.w600,
+            fontSize: 12,
+          ),
+
+          floatingLabelStyle: const TextStyle(
+            color: Color(0xFF581C87),
+            fontWeight: FontWeight.w700,
             fontSize: 12,
           ),
 
@@ -342,6 +401,7 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
             borderSide: const BorderSide(color: Color(0xFF581C87), width: 2),
           ),
         ),
+
         onSaved: onSaved,
       ),
     );
@@ -382,13 +442,17 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.all(16),
+
                 child: Container(
                   padding: const EdgeInsets.all(22),
+
                   decoration: BoxDecoration(
                     color: Theme.of(context).brightness == Brightness.dark
                         ? const Color(0xFF1E1E1E)
                         : Colors.white,
+
                     borderRadius: BorderRadius.circular(28),
+
                     boxShadow: [
                       BoxShadow(
                         // ignore: deprecated_member_use
@@ -398,24 +462,27 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
                       ),
                     ],
                   ),
+
                   child: Form(
                     key: _formKey,
+
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+
                       children: [
-                        // 🔥 ONLY ADDITION (ORDER + HISTORY UI)
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
                           children: [
                             GestureDetector(
-                              onTap: () {
-                                _resetForm();
-                              },
+                              onTap: _resetForm,
+
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 12,
                                   vertical: 6,
                                 ),
+
                                 decoration: BoxDecoration(
                                   gradient: const LinearGradient(
                                     colors: [
@@ -423,21 +490,26 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
                                       Color(0xFF3B0764),
                                     ],
                                   ),
+
                                   borderRadius: BorderRadius.circular(14),
+
                                   boxShadow: [
                                     BoxShadow(
-                                      // ignore: deprecated_member_use
                                       color: const Color(
                                         0xFF581C87,
                                         // ignore: deprecated_member_use
                                       ).withOpacity(0.25),
+
                                       blurRadius: 12,
+
                                       offset: const Offset(0, 4),
                                     ),
                                   ],
                                 ),
+
                                 child: const Text(
                                   "Reset",
+
                                   style: TextStyle(color: Colors.white),
                                 ),
                               ),
@@ -447,22 +519,28 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
                               onTap: () {
                                 Navigator.push(
                                   context,
+
                                   MaterialPageRoute(
                                     builder: (_) => const HistoryScreen(),
                                   ),
                                 );
                               },
+
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 12,
                                   vertical: 6,
                                 ),
+
                                 decoration: BoxDecoration(
                                   color: Colors.grey,
+
                                   borderRadius: BorderRadius.circular(8),
                                 ),
+
                                 child: const Text(
                                   "History",
+
                                   style: TextStyle(color: Colors.white),
                                 ),
                               ),
@@ -471,8 +549,10 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
                         ),
 
                         const SizedBox(height: 15),
+
                         const Text(
                           "Pickup & Delivery",
+
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -480,20 +560,28 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
                         ),
 
                         GestureDetector(
-                          onTap: () => _pickLocation(isPickup: true),
+                          onTap: () {
+                            _pickLocation(isPickup: true);
+                          },
+
                           child: AbsorbPointer(
                             child: _buildTextField(
                               "Pickup location",
+
                               controller: pickupController,
                             ),
                           ),
                         ),
 
                         GestureDetector(
-                          onTap: () => _pickLocation(isPickup: false),
+                          onTap: () {
+                            _pickLocation(isPickup: false);
+                          },
+
                           child: AbsorbPointer(
                             child: _buildTextField(
                               "Delivery location",
+
                               controller: deliveryController,
                             ),
                           ),
@@ -503,13 +591,22 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
 
                         SizedBox(
                           width: double.infinity,
+
                           child: ElevatedButton(
                             onPressed: calculatingPrice
                                 ? null
                                 : _calculatePrice,
+
                             child: calculatingPrice
-                                ? const CircularProgressIndicator(
-                                    color: Colors.white,
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+
+                                      strokeWidth: 2,
+                                    ),
                                   )
                                 : const Text("Calculate delivery cost"),
                           ),
@@ -517,22 +614,30 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
 
                         if (estimatedPrice != null) ...[
                           const SizedBox(height: 20),
+
                           Container(
                             width: double.infinity,
+
                             padding: const EdgeInsets.all(18),
+
                             decoration: BoxDecoration(
                               gradient: const LinearGradient(
                                 colors: [Colors.green, Colors.greenAccent],
                               ),
+
                               borderRadius: BorderRadius.circular(16),
                             ),
+
                             child: Column(
                               children: [
                                 const Text(
                                   "Estimated Delivery Cost",
+
                                   style: TextStyle(
                                     color: Colors.white,
+
                                     fontWeight: FontWeight.bold,
+
                                     fontSize: 14,
                                   ),
                                 ),
@@ -541,9 +646,12 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
 
                                 Text(
                                   "₦${estimatedPrice!.toStringAsFixed(0)}",
+
                                   style: const TextStyle(
                                     color: Colors.white,
+
                                     fontSize: 32,
+
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -552,18 +660,22 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
 
                                 Text(
                                   "${distanceKm?.toStringAsFixed(2)} km",
+
                                   style: const TextStyle(color: Colors.white70),
                                 ),
                               ],
                             ),
                           ),
                         ],
+
                         const SizedBox(height: 18),
 
                         const Text(
                           "Receiver Details",
+
                           style: TextStyle(
                             fontSize: 18,
+
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -572,29 +684,60 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
 
                         OutlinedButton.icon(
                           onPressed: _pickContact,
+
                           icon: const Icon(Icons.contacts),
+
                           label: const Text("Choose from Contacts"),
                         ),
 
                         _buildTextField(
                           "Receiver Name (Optional)",
+
                           controller: receiverNameController,
-                          onSaved: (v) => receiverName = v ?? '',
+
+                          focusNode: receiverNameFocus,
+
+                          textInputAction: TextInputAction.next,
+
+                          onEditingComplete: () {
+                            FocusScope.of(
+                              context,
+                            ).requestFocus(receiverPhoneFocus);
+                          },
+
+                          onSaved: (v) {
+                            receiverName = v ?? '';
+                          },
                         ),
 
                         _buildTextField(
                           "Receiver Phone",
+
                           controller: receiverPhoneController,
+
+                          focusNode: receiverPhoneFocus,
+
                           type: TextInputType.phone,
-                          onSaved: (v) => receiverPhone = v ?? '',
+
+                          textInputAction: TextInputAction.done,
+
+                          onEditingComplete: () {
+                            FocusScope.of(context).unfocus();
+                          },
+
+                          onSaved: (v) {
+                            receiverPhone = v ?? '';
+                          },
                         ),
 
                         const SizedBox(height: 15),
 
                         SizedBox(
                           width: double.infinity,
+
                           child: ElevatedButton(
                             onPressed: _createPackage,
+
                             child: const Text("Create Package"),
                           ),
                         ),
