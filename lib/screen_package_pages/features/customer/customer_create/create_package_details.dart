@@ -428,173 +428,180 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
         ),
         // ✅ UPDATED ACTIONS (refresh + delete)
         actions: [
-          IconButton(icon: const Icon(Icons.refresh), onPressed: _fetchPackage),
-
-          // ❌ hide delete if paid
           if (!paymentDone)
             IconButton(
+              tooltip: "Delete package",
               icon: isDeleting
                   ? const SizedBox(
                       height: 20,
                       width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
                     )
-                  : const Icon(Icons.delete, color: Colors.red),
-              onPressed: _confirmDelete,
+                  : const Icon(Icons.delete_outline, color: Colors.white),
+              onPressed: isDeleting ? null : _confirmDelete,
             ),
         ],
       ),
 
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            _infoCard("Sender Info", {
-              "Name": package!['sender_name'] ?? "N/A",
-              "Phone": package!['sender_phone'] ?? "N/A",
-            }),
-            _infoCard("Receiver Info", {
-              "Name": package!['receiver_name'] ?? "N/A",
-              "Phone": package!['receiver_phone'] ?? "N/A",
-            }),
-            _infoCard("Package Info", {
-              "Package Id": package!['package_id'] ?? "N/A",
-              //"Description": package!['description'] ?? "N/A",
-              "Price": "₦${package!['price'] ?? 0}",
-            }),
-            _infoCard("Locations", {
-              "Pickup": package!['pickup_address'] ?? "N/A",
-              "Delivery": package!['delivery_address'] ?? "N/A",
-            }),
+      body: RefreshIndicator(
+        color: primaryPurple,
+        backgroundColor: Colors.white,
+        onRefresh: _fetchPackage,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              _infoCard("Sender Info", {
+                "Name": package!['sender_name'] ?? "N/A",
+                "Phone": package!['sender_phone'] ?? "N/A",
+              }),
+              _infoCard("Receiver Info", {
+                "Name": package!['receiver_name'] ?? "N/A",
+                "Phone": package!['receiver_phone'] ?? "N/A",
+              }),
+              _infoCard("Package Info", {
+                "Package Id": package!['package_id'] ?? "N/A",
+                //"Description": package!['description'] ?? "N/A",
+                "Price": "₦${package!['price'] ?? 0}",
+              }),
+              _infoCard("Locations", {
+                "Pickup": package!['pickup_address'] ?? "N/A",
+                "Delivery": package!['delivery_address'] ?? "N/A",
+              }),
 
-            const SizedBox(height: 16),
+              const SizedBox(height: 16),
 
-            if (!paymentDone)
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryPurple,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-
-                  onPressed: isSenderPaying ? null : () => _pay("sender"),
-                  child: isSenderPaying
-                      ? const SizedBox(
-                          height: 22,
-                          width: 22,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Text(
-                          "Pay as Sender",
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                ),
-              ),
-
-            if (!paymentDone) const SizedBox(height: 12),
-
-            if (!paymentDone)
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: darkPurple,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  onPressed: isReceiverPaying ? null : () => _pay("receiver"),
-                  child: isReceiverPaying
-                      ? const SizedBox(
-                          height: 22,
-                          width: 22,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Text(
-                          "Generate Receiver Payment Link",
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                ),
-              ),
-
-            if (status == 'delivered' && !hasRated)
-              Column(
-                children: [
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
+              if (!paymentDone)
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryPurple,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
                       ),
-                      child: const Text("Delivered"),
                     ),
-                  ),
 
-                  const SizedBox(height: 12),
-
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      icon: const Icon(Icons.star),
-                      label: const Text("Rate Rider"),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryPurple,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                      onPressed: _showRateDialog,
-                    ),
-                  ),
-                ],
-              )
-            else if (paymentDone)
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryPurple,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          CustomerTrackingScreen(packageId: widget.packageId),
-                    ),
-                  ),
-                  child: const Text(
-                    "Track Package",
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    onPressed: isSenderPaying ? null : () => _pay("sender"),
+                    child: isSenderPaying
+                        ? const SizedBox(
+                            height: 22,
+                            width: 22,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text(
+                            "Pay as Sender",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
                   ),
                 ),
-              ),
-          ],
+
+              if (!paymentDone) const SizedBox(height: 12),
+
+              if (!paymentDone)
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: darkPurple,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    onPressed: isReceiverPaying ? null : () => _pay("receiver"),
+                    child: isReceiverPaying
+                        ? const SizedBox(
+                            height: 22,
+                            width: 22,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text(
+                            "Generate Receiver Payment Link",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                  ),
+                ),
+
+              if (status == 'delivered' && !hasRated)
+                Column(
+                  children: [
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        child: const Text("Delivered"),
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.star),
+                        label: const Text("Rate Rider"),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryPurple,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        onPressed: _showRateDialog,
+                      ),
+                    ),
+                  ],
+                )
+              else if (paymentDone)
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryPurple,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            CustomerTrackingScreen(packageId: widget.packageId),
+                      ),
+                    ),
+                    child: const Text(
+                      "Track Package",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
