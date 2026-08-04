@@ -114,7 +114,7 @@ class _RiderDeliveriesScreenState extends State<RiderDeliveriesScreen>
         itemBuilder: (context, index) {
           final p = packages[index];
 
-          final price = _toDouble(p['price'] ?? p['net_earning']);
+          _toDouble(p['price'] ?? p['net_earning']);
           final riderEarning = _toDouble(
             p['rider_earning'] ?? p['net_earning'],
           );
@@ -216,21 +216,22 @@ class _RiderDeliveriesScreenState extends State<RiderDeliveriesScreen>
                   const SizedBox(height: 10),
 
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        "₦${price.toStringAsFixed(2)}",
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
                       Text(
                         "Earn: ₦${riderEarning.toStringAsFixed(2)}",
                         style: const TextStyle(
                           color: Color.fromARGB(255, 73, 135, 76),
+                          fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
+                      ),
+
+                      const Spacer(),
+
+                      const Icon(
+                        Icons.arrow_forward_ios,
+                        size: 16,
+                        color: Colors.grey,
                       ),
                     ],
                   ),

@@ -267,7 +267,6 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
 
               _card("Package Info", [
                 _row("Package ID", package!['package_id']),
-                _row("Total Price", "₦${price.toStringAsFixed(2)}"),
               ]),
 
               _card("Receiver Info", [
@@ -282,12 +281,12 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
 
               _card("Earnings Breakdown", [
                 _row(
-                  "Rider Earning",
+                  "Your Earnings",
                   "₦${riderEarning.toStringAsFixed(2)}",
                   isHighlight: true,
                 ),
-                _row("App Commission", "₦${commission.toStringAsFixed(2)}"),
-                _row("Customer Paid", "₦${price.toStringAsFixed(2)}"),
+                _row("Service Fee", "₦${commission.toStringAsFixed(2)}"),
+                _row("Delivery Fee", "₦${price.toStringAsFixed(2)}"),
               ]),
 
               const SizedBox(height: 20),
@@ -305,14 +304,16 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
                             width: double.infinity,
                             child: OutlinedButton.icon(
                               onPressed: () {
-                                final phone = package?['receiver_phone'];
+                                final phone = package?['sender_phone'];
                                 if (phone != null &&
                                     phone.toString().isNotEmpty) {
                                   callNumber(phone);
                                 } else {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                      content: Text("Phone not available"),
+                                      content: Text(
+                                        "Customer phone not available",
+                                      ),
                                     ),
                                   );
                                 }
