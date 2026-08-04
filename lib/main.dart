@@ -15,7 +15,7 @@ ValueNotifier<bool> isDarkMode = ValueNotifier(false);
 
 
 ///  BACKGROUND HANDLER (MUST BE TOP LEVEL)
-/// ===============================
+/// =======================================
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
   FirebaseNotificationService.showNotification(

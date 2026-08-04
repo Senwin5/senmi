@@ -5,6 +5,7 @@ import 'package:senmi/screen_package_pages/features/customer/customer_home_botto
 import 'package:senmi/screen_package_pages/features/rider/pending_rider_review/rider_complete_profile.dart';
 import 'package:senmi/widgets/custom_buttom.dart';
 import '../../services/api_service.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../auth/login.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -24,6 +25,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   String role = "customer"; // default
   bool loading = false;
+  bool acceptedTerms = false;
 
   @override
   void dispose() {
@@ -42,6 +44,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("Please fill all fields")));
+      return;
+    }
+    if (!acceptedTerms) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "You must accept the Terms and Conditions before signing up.",
+          ),
+        ),
+      );
       return;
     }
 
@@ -162,7 +174,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                       const SizedBox(height: 12),
                       const Text(
-                        "Create a new account",
+                        "Create an account",
                         style: TextStyle(fontSize: 16, color: Colors.grey),
                       ),
                       const SizedBox(height: 24),
@@ -365,10 +377,57 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 20),
+
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Checkbox(
+                            value: acceptedTerms,
+                            activeColor: Colors.blue,
+                            onChanged: loading
+                                ? null
+                                : (bool? value) {
+                                    setState(() {
+                                      acceptedTerms = value ?? false;
+                                    });
+                                  },
+                          ),
+
+                          Expanded(
+                            child: Wrap(
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: [
+                                const Text(
+                                  "I agree to the ",
+                                  style: TextStyle(fontSize: 13),
+                                ),
+
+                                GestureDetector(
+                                  onTap: () {
+                                    // Open your Terms and Conditions screen here
+                                  },
+                                  child: const Text(
+                                    "Terms and Conditions",
+                                    style: TextStyle(
+                                      color: Colors.blue,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                      decoration: TextDecoration.underline,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 16),
+
                       CustomButton(
-                        text: "Register",
-                        onPressed: register,
+                        text: "Sign Up",
+                        onPressed: loading ? () {} : register,
                         fullWidth: true,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         color: Colors.blue,

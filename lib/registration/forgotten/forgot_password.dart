@@ -207,6 +207,23 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         ],
                       ),
                     ),
+                    const SizedBox(height: 20),
+
+                    TextButton(
+                      onPressed: loading
+                          ? null
+                          : () {
+                              Navigator.pop(context);
+                            },
+                      child: const Text(
+                        "Remember your password? Login",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),

@@ -294,7 +294,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        "Sign in to continue",
+                        "Login to continue",
                         style: TextStyle(
                           fontSize: 16,
                           color: Theme.of(context).brightness == Brightness.dark
@@ -342,7 +342,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         alignment: Alignment.centerRight,
                         child: TextButton(
                           onPressed: () {
-                            Navigator.pushReplacement(
+                            Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (_) => const ForgotPasswordScreen(),
@@ -364,7 +364,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Text("Don't have an account? "),
+                          const Text("You don't have an account? "),
                           GestureDetector(
                             onTap: () {
                               Navigator.push(
