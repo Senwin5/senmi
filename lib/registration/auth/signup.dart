@@ -49,9 +49,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!acceptedTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
-            "You must accept the Terms and Conditions before signing up.",
-          ),
+          content: Text("Accept the Terms and Conditions to sign up."),
         ),
       );
       return;
@@ -384,7 +382,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         children: [
                           Checkbox(
                             value: acceptedTerms,
-                            activeColor: Colors.blue,
+                            activeColor: Colors.deepPurple,
                             onChanged: loading
                                 ? null
                                 : (bool? value) {
@@ -404,8 +402,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 ),
 
                                 GestureDetector(
-                                  onTap: () {
-                                    // Open your Terms and Conditions screen here
+                                  onTap: () async {
+                                    final url = Uri.parse(
+                                      "https://www.senmi.com.ng/terms/",
+                                    );
+
+                                    final launched = await launchUrl(
+                                      url,
+                                      mode: LaunchMode.externalApplication,
+                                    );
+
+                                    if (!launched && context.mounted) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            "Could not open Terms and Conditions",
+                                          ),
+                                        ),
+                                      );
+                                    }
                                   },
                                   child: const Text(
                                     "Terms and Conditions",
