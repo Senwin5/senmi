@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:senmi/registration/forgotten/forgot_password.dart';
 import 'package:senmi/screen_package_pages/admin_package/admin/screen/admin_home_bottom/admin_bottom_nav.dart';
@@ -43,7 +44,9 @@ class _LoginScreenState extends State<LoginScreen> {
       await FirebaseService.init();
 
       // Ask once if the user wants Face ID/Fingerprint login
+
       await askToEnableBiometric();
+      if (!mounted) return;
 
       try {
         // ADMIN
@@ -155,7 +158,29 @@ class _LoginScreenState extends State<LoginScreen> {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+
       setState(() => loading = true);
+
+      final prefs = await SharedPreferences.getInstance();
+
+      final biometricEnabled = prefs.getBool("biometric_enabled") ?? false;
+
+      if (kDebugMode) {
+        print("Biometric enabled = $biometricEnabled");
+      }
+
+      if (biometricEnabled) {
+        final ok = await BiometricService.authenticate();
+
+        if (!ok) {
+          if (mounted) {
+            setState(() => loading = false);
+          }
+          return;
+        }
+      }
+
       await ApiService.loadToken();
 
       if (ApiService.token == null) {
@@ -251,6 +276,9 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> askToEnableBiometric() async {
+    if (kDebugMode) {
+      print("askToEnableBiometric() called");
+    }
     final prefs = await SharedPreferences.getInstance();
 
     // Already enabled, don't ask again
@@ -259,23 +287,26 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     final available = await BiometricService.isAvailable();
+    if (kDebugMode) {
+      print("Biometric available: $available");
+    }
 
     if (!available || !mounted) return;
 
     final enable = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text("Enable Face ID?"),
         content: const Text(
           "Use Face ID or fingerprint to sign in faster next time on this device.",
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(dialogContext, false),
             child: const Text("Not Now"),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(dialogContext, true),
             child: const Text("Enable"),
           ),
         ],
@@ -287,6 +318,16 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (success) {
         await prefs.setBool("biometric_enabled", true);
+
+        if (kDebugMode) {
+          print("Biometric enabled successfully");
+        }
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Face ID/Fingerprint enabled.")),
+          );
+        }
       }
     }
   }
