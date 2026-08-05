@@ -28,25 +28,35 @@ class _RiderHomeState extends State<RiderHome> {
   void initState() {
     super.initState();
     ApiService.loadToken().then((_) {
+      if (!mounted) return;
+
       setState(() {
         if (ApiService.username != null && ApiService.username!.isNotEmpty) {
           riderName = ApiService.username!;
         }
       });
+
       loadData();
     });
   }
 
   Future<void> loadData() async {
+    if (!mounted) return;
+
     setState(() => loading = true);
+
     try {
       final packageData = await ApiService.getAvailablePackages();
       final walletData = await ApiService.getWallet();
       final earningsData = await ApiService.getEarnings();
       final riderProfile = await ApiService.getRiderProfile();
+
       if (kDebugMode) {
         print("RIDER PROFILE: $riderProfile");
       }
+
+      if (!mounted) return;
+
       final rating = riderProfile['rating'];
       final count = riderProfile['rating_count'];
 
@@ -71,40 +81,40 @@ class _RiderHomeState extends State<RiderHome> {
         loading = false;
       });
     } catch (e) {
+      if (!mounted) return;
+
       setState(() => loading = false);
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.all(16),
-            backgroundColor: Colors.deepPurple,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            content: Row(
-              children: const [
-                Icon(Icons.wifi_off_rounded, color: Colors.white),
-                SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    "Unable to load dashboard.\nCheck your connection and try again.",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w500,
-                    ),
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(16),
+          backgroundColor: Colors.deepPurple,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          content: const Row(
+            children: [
+              Icon(Icons.wifi_off_rounded, color: Colors.white),
+              SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  "Unable to load dashboard.\nCheck your connection and try again.",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
-              ],
-            ),
-            action: SnackBarAction(
-              label: "Retry",
-              textColor: Colors.white,
-              onPressed: loadData,
-            ),
+              ),
+            ],
           ),
-        );
-      }
+          action: SnackBarAction(
+            label: "Retry",
+            textColor: Colors.white,
+            onPressed: loadData,
+          ),
+        ),
+      );
     }
   }
 
@@ -330,7 +340,7 @@ class _RiderHomeState extends State<RiderHome> {
           size: 28,
         ),
         title: const Text(
-          "Wallet Balance",
+          "Earning Balance",
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         trailing: Text(

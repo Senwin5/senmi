@@ -39,13 +39,10 @@ class _RiderBottomNavState extends State<RiderBottomNav> {
 
   final List<BottomNavigationBarItem> _navItems = const [
     BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: "Home"),
-    BottomNavigationBarItem(
-      icon: Icon(Icons.two_wheeler),
-      label: "Deliveries",
-    ),
+    BottomNavigationBarItem(icon: Icon(Icons.two_wheeler), label: "Deliveries"),
     BottomNavigationBarItem(
       icon: Icon(Icons.account_balance_wallet_rounded),
-      label: "Wallet",
+      label: "Earning",
     ),
     BottomNavigationBarItem(
       icon: Icon(Icons.history_rounded),

@@ -5,6 +5,8 @@ import 'package:senmi/screen_package_pages/features/customer/customer_home_botto
 import 'package:senmi/screen_package_pages/features/rider/rider_home_bottom/rider_bottom_nav.dart';
 import 'package:senmi/service_firebase/firebase_service.dart';
 import 'package:senmi/widgets/custom_buttom.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:senmi/services/biometric_service.dart';
 import '../../services/api_service.dart';
 import '../auth/signup.dart';
 import '../../screen_package_pages/features/rider/pending_rider_review/rider_complete_profile.dart';
@@ -39,6 +41,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (res.containsKey("access")) {
       await FirebaseService.init();
+
+      // Ask once if the user wants Face ID/Fingerprint login
+      await askToEnableBiometric();
+
       try {
         // ADMIN
         if (ApiService.isAdmin) {
@@ -242,6 +248,47 @@ class _LoginScreenState extends State<LoginScreen> {
         if (mounted) setState(() => loading = false);
       }
     });
+  }
+
+  Future<void> askToEnableBiometric() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // Already enabled, don't ask again
+    if (prefs.getBool("biometric_enabled") == true) {
+      return;
+    }
+
+    final available = await BiometricService.isAvailable();
+
+    if (!available || !mounted) return;
+
+    final enable = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Enable Face ID?"),
+        content: const Text(
+          "Use Face ID or fingerprint to sign in faster next time on this device.",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Not Now"),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Enable"),
+          ),
+        ],
+      ),
+    );
+
+    if (enable == true) {
+      final success = await BiometricService.authenticate();
+
+      if (success) {
+        await prefs.setBool("biometric_enabled", true);
+      }
+    }
   }
 
   // =========================

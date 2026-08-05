@@ -478,7 +478,10 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text("Wallet", style: TextStyle(color: Colors.white)),
+        title: const Text(
+          "Wallet Earning",
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: Colors.deepPurple,
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
