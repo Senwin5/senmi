@@ -164,12 +164,25 @@ class _LoginScreenState extends State<LoginScreen> {
 
       final prefs = await SharedPreferences.getInstance();
 
+      // Load saved login first
+      await ApiService.loadToken();
+
+      // No saved login
+      if (ApiService.token == null) {
+        if (mounted) {
+          setState(() => loading = false);
+        }
+        return;
+      }
+
+      // Check whether biometric is enabled
       final biometricEnabled = prefs.getBool("biometric_enabled") ?? false;
 
       if (kDebugMode) {
         print("Biometric enabled = $biometricEnabled");
       }
 
+      // Ask for fingerprint only if enabled
       if (biometricEnabled) {
         final ok = await BiometricService.authenticate();
 
@@ -179,13 +192,6 @@ class _LoginScreenState extends State<LoginScreen> {
           }
           return;
         }
-      }
-
-      await ApiService.loadToken();
-
-      if (ApiService.token == null) {
-        setState(() => loading = false);
-        return;
       }
 
       // Try refreshing expired token

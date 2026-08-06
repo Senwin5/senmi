@@ -1,10 +1,10 @@
 package com.senmi.app
 
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
-class MainActivity : FlutterActivity() {
+class MainActivity : FlutterFragmentActivity() {
 
     private val CHANNEL = "custom_notification"
 
@@ -20,11 +20,8 @@ class MainActivity : FlutterActivity() {
 
             if (call.method == "showNotification") {
 
-                val title =
-                    call.argument<String>("title") ?: ""
-
-                val body =
-                    call.argument<String>("body") ?: ""
+                val title = call.argument<String>("title") ?: ""
+                val body = call.argument<String>("body") ?: ""
 
                 CustomNotification.show(
                     this,
