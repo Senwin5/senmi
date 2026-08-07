@@ -83,7 +83,7 @@ class _CustomerHomeState extends State<CustomerHome> {
       // ✅ MATCH PROFILE BACKGROUND
       backgroundColor: isDark
           ? const Color(0xFF111111)
-          : const Color(0xFFF7F8FC),
+          : const Color.fromRGBO(247, 248, 252, 1),
       floatingActionButton: null,
 
       body: SafeArea(
