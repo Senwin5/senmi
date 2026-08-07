@@ -488,7 +488,7 @@ class _RiderHomeState extends State<RiderHome> {
 
         const SizedBox(height: 10),
 
-        ...List.generate(packages.take(1).length, (index) {
+        ...List.generate(packages.take(2).length, (index) {
           final p = packages[index];
 
           return Card(

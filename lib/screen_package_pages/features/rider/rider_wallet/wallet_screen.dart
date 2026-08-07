@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
+import 'package:senmi/screen_package_pages/features/rider/rider_package/rider_package_detail.dart';
 import 'package:senmi/services/api_service.dart';
 
 class RiderWalletScreen extends StatefulWidget {
@@ -55,7 +56,7 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                     0)
                 .toInt();
 
-        transactions = List<Map<String, dynamic>>.from(tx);
+        transactions = List<Map<String, dynamic>>.from(tx.take(4));
         loading = false;
       });
     } catch (e) {
@@ -683,19 +684,83 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: ListTile(
+                            onTap: () async {
+                              final packageId = tx['package_id'];
+
+                              // Only delivery transactions have a package
+                              if (packageId == null ||
+                                  packageId.toString().isEmpty) {
+                                return;
+                              }
+
+                              final result = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => RiderPackageDetailScreen(
+                                    packageId: packageId.toString(),
+                                    hasActiveDelivery: false,
+                                  ),
+                                ),
+                              );
+
+                              if (result == true && mounted) {
+                                fetchWallet();
+                              }
+                            },
+
                             leading: CircleAvatar(
                               // ignore: deprecated_member_use
                               backgroundColor: color.withOpacity(0.2),
                               child: Icon(icon, color: color),
                             ),
-                            title: Text(type),
-                            subtitle: Text(date),
-                            trailing: Text(
-                              "₦$amount",
-                              style: TextStyle(
-                                color: color,
+
+                            title: Text(
+                              tx['title'] ??
+                                  (type == 'credit'
+                                      ? 'Delivery Earnings'
+                                      : 'Withdrawal'),
+                              style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                               ),
+                            ),
+
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (tx['package_id'] != null)
+                                  Text(
+                                    "Package: ${tx['package_id']}",
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 12,
+                                    ),
+                                  ),
+
+                                Text(date),
+                              ],
+                            ),
+
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  "${type == 'credit' ? '+' : '-'}₦${amount.toStringAsFixed(2)}",
+                                  style: TextStyle(
+                                    color: color,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+
+                                if (tx['package_id'] != null)
+                                  const SizedBox(width: 6),
+
+                                if (tx['package_id'] != null)
+                                  const Icon(
+                                    Icons.arrow_forward_ios,
+                                    size: 14,
+                                    color: Colors.grey,
+                                  ),
+                              ],
                             ),
                           ),
                         );

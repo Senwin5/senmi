@@ -61,7 +61,7 @@ class _RiderHistoryScreenState extends State<RiderHistoryScreen> {
       return Icons.arrow_upward;
     }
 
-    return Icons.local_shipping;
+    return Icons.two_wheeler;
   }
 
   String formatTransactionDate(dynamic value) {
@@ -188,7 +188,13 @@ class _RiderHistoryScreenState extends State<RiderHistoryScreen> {
                       itemBuilder: (context, index) {
                         final tx = transactions[index];
 
-                        final transactionType = tx['icon_type'] ?? 'delivery';
+                        final type = (tx['type'] ?? '')
+                            .toString()
+                            .toLowerCase();
+
+                        final transactionType = (tx['icon_type'] ?? type)
+                            .toString()
+                            .toLowerCase();
 
                         final color = getTransactionColor(transactionType);
 
@@ -196,7 +202,7 @@ class _RiderHistoryScreenState extends State<RiderHistoryScreen> {
 
                         final amount = (tx['amount'] ?? 0).toDouble();
 
-                        final isCredit = tx['type'] == 'credit';
+                        final isCredit = type == 'credit';
 
                         return Card(
                           shape: RoundedRectangleBorder(
