@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:senmi/screen_package_pages/features/rider/rider_package/rider_package_detail.dart';
 import 'package:senmi/services/api_service.dart';
 
 class RiderHistoryScreen extends StatefulWidget {
@@ -201,94 +202,132 @@ class _RiderHistoryScreenState extends State<RiderHistoryScreen> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
-
                           color: isDark ? Colors.grey[900] : Colors.white,
-
                           margin: const EdgeInsets.symmetric(vertical: 6),
 
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.all(12),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(12),
 
-                            // =========================
-                            // ICON
-                            // =========================
-                            leading: CircleAvatar(
-                              backgroundColor:
-                                  // ignore: deprecated_member_use
-                                  color.withOpacity(0.15),
+                            onTap: () async {
+                              // Only delivery transactions have a package
+                              final packageId = tx['package_id'];
 
-                              child: Icon(icon, color: color),
-                            ),
+                              if (packageId == null ||
+                                  packageId.toString().isEmpty) {
+                                return;
+                              }
 
-                            // =========================
-                            // TITLE
-                            // =========================
-                            title: Text(
-                              tx['title'] ?? 'Transaction',
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => RiderPackageDetailScreen(
+                                    packageId: packageId.toString(),
 
-                              style: TextStyle(
-                                color: isDark ? Colors.white : Colors.black87,
+                                    // History is showing an old/completed delivery,
+                                    // so this should normally be false.
+                                    hasActiveDelivery: false,
+                                  ),
+                                ),
+                              );
+                            },
 
-                                fontWeight: FontWeight.bold,
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
 
-                                fontSize: 16,
-                              ),
-                            ),
+                              child: Row(
+                                children: [
+                                  // =========================
+                                  // ICON
+                                  // =========================
+                                  CircleAvatar(
+                                    // ignore: deprecated_member_use
+                                    backgroundColor: color.withOpacity(0.15),
 
-                            // =========================
-                            // DETAILS
-                            // =========================
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const SizedBox(height: 5),
+                                    child: Icon(icon, color: color),
+                                  ),
 
-                                if (tx['package_id'] != null)
-                                  Text(
-                                    "Package: ${tx['package_id']}",
-                                    style: TextStyle(
-                                      color: isDark
-                                          ? Colors.white70
-                                          : Colors.black54,
-                                      fontWeight: FontWeight.w500,
+                                  const SizedBox(width: 12),
+
+                                  // =========================
+                                  // DETAILS
+                                  // =========================
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+
+                                      children: [
+                                        Text(
+                                          tx['title'] ?? 'Transaction',
+
+                                          style: TextStyle(
+                                            color: isDark
+                                                ? Colors.white
+                                                : Colors.black87,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+
+                                        const SizedBox(height: 5),
+
+                                        if (tx['package_id'] != null)
+                                          Text(
+                                            "Package: ${tx['package_id']}",
+
+                                            style: TextStyle(
+                                              color: isDark
+                                                  ? Colors.white70
+                                                  : Colors.black54,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+
+                                        const SizedBox(height: 4),
+
+                                        Text(
+                                          formatTransactionDate(tx['date']),
+
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: isDark
+                                                ? Colors.white38
+                                                : Colors.black45,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
 
-                                const SizedBox(height: 4),
+                                  // =========================
+                                  // AMOUNT + ARROW
+                                  // =========================
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
 
-                                Text(
-                                  formatTransactionDate(tx['date']),
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: isDark
-                                        ? Colors.white38
-                                        : Colors.black45,
+                                    children: [
+                                      Text(
+                                        "${isCredit ? '+' : '-'}₦${amount.toStringAsFixed(2)}",
+
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 15,
+                                          color: color,
+                                        ),
+                                      ),
+
+                                      const SizedBox(height: 6),
+
+                                      if (tx['package_id'] != null)
+                                        const Icon(
+                                          Icons.arrow_forward_ios,
+                                          size: 14,
+                                          color: Colors.grey,
+                                        ),
+                                    ],
                                   ),
-                                ),
-                              ],
-                            ),
-
-                            // =========================
-                            // AMOUNT
-                            // =========================
-                            trailing: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-
-                              crossAxisAlignment: CrossAxisAlignment.end,
-
-                              children: [
-                                Text(
-                                  "${isCredit ? '+' : '-'}₦${amount.toStringAsFixed(2)}",
-
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-
-                                    fontSize: 15,
-
-                                    color: color,
-                                  ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         );
