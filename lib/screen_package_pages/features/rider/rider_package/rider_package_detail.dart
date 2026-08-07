@@ -180,7 +180,7 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
     }
 
     final riderEarning = _toDouble(package!['rider_earning']);
-    final commission = _toDouble(package!['commission']);
+    final serviceFee = _toDouble(package!['service_fee']);
     final price = _toDouble(package!['price']);
 
     return Scaffold(
@@ -285,7 +285,7 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
                   "₦${riderEarning.toStringAsFixed(2)}",
                   isHighlight: true,
                 ),
-                _row("Service Fee", "₦${commission.toStringAsFixed(2)}"),
+                _row("Service Fee", "₦${serviceFee.toStringAsFixed(2)}"),
                 _row("Delivery Fee", "₦${price.toStringAsFixed(2)}"),
               ]),
 

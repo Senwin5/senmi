@@ -422,8 +422,8 @@ class _AdminPackageDetailsScreenState extends State<AdminPackageDetailsScreen> {
                       infoTile(Icons.payments, "Price", "₦${data['price']}"),
                       infoTile(
                         Icons.account_balance_wallet,
-                        "Commission",
-                        "₦${data['commission']}",
+                        "Service Fee",
+                        "₦${data['service_fee']}",
                       ),
                       infoTile(
                         Icons.attach_money,

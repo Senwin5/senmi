@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:senmi/screen_package_pages/features/customer/customer_create/edit_package_screen.dart';
 import 'package:senmi/screen_package_pages/features/customer/customer_track/customer_track_package.dart';
 import 'package:senmi/services/api_service.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -430,11 +431,29 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
         actions: [
           if (!paymentDone)
             IconButton(
-              tooltip: "Delete package",
+              tooltip: "Edit Package",
+              icon: const Icon(Icons.edit, color: Colors.white),
+              onPressed: () async {
+                final updated = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => EditPackageScreen(package: package!),
+                  ),
+                );
+
+                if (updated == true) {
+                  _fetchPackage();
+                }
+              },
+            ),
+
+          if (!paymentDone)
+            IconButton(
+              tooltip: "Delete Package",
               icon: isDeleting
                   ? const SizedBox(
-                      height: 20,
                       width: 20,
+                      height: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
                         color: Colors.white,

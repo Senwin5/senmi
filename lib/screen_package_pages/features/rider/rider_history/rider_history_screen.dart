@@ -181,9 +181,9 @@ class _RiderHistoryScreenState extends State<RiderHistoryScreen> {
                                     color: color,
                                   ),
                                 ),
-                                if (tx['commission'] != null)
+                                if (tx['service_fee'] != null)
                                   Text(
-                                    "Commission: ₦${(tx['commission']).toStringAsFixed(2)}",
+                                    "service_fee: ₦${(tx['service_fee']).toStringAsFixed(2)}",
                                     style: TextStyle(
                                       fontSize: 12,
                                       color: isDark

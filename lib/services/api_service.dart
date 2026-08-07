@@ -419,6 +419,19 @@ class ApiService {
     }
   }
 
+  static Future<Map<String, dynamic>> editPackage(
+    String packageId,
+    Map<String, dynamic> payload,
+  ) async {
+    final response = await http.put(
+      Uri.parse("$baseUrl/packages/$packageId/edit/"),
+      headers: await ApiService.getAuthHeaders(),
+      body: jsonEncode(payload),
+    );
+
+    return jsonDecode(response.body);
+  }
+
   static Future<List<dynamic>> getMyOrders() async {
     await loadToken();
 
