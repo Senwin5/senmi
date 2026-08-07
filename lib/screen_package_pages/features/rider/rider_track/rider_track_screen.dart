@@ -185,36 +185,56 @@ class _RiderTrackScreenState extends State<RiderTrackScreen> {
       return;
     }
 
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+    });
 
-    final result = await ApiService.confirmDeliveryCode(widget.packageId, code);
-
-    setState(() => _isLoading = false);
-
-    if (result != null && result["success"] == true) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Delivery completed ✅")));
-
-      // ✅ STOP TRACKING
-      _positionStream?.cancel();
-
-      // ✅ CLOSE WEBSOCKET
-      wsSubscription?.cancel();
-      channel?.sink.close();
+    try {
+      final result = await ApiService.confirmDeliveryCode(
+        widget.packageId,
+        code,
+      );
 
       if (!mounted) return;
 
-      // ✅ GO TO SUCCESS SCREEN (NO BACK)
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => const DeliveryCompleteScreen()),
-        (route) => false,
-      );
-    } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Invalid code ❌")));
+      if (result != null && result["success"] == true) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Delivery completed ✅")));
+
+        // Stop GPS tracking
+        await _positionStream?.cancel();
+
+        // Close WebSocket
+        await wsSubscription?.cancel();
+        await channel?.sink.close();
+
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const DeliveryCompleteScreen()),
+          (route) => false,
+        );
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Invalid code ❌")));
+      }
+    } catch (e) {
+      debugPrint("Confirm delivery error: $e");
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Something went wrong. Please try again."),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -434,17 +454,34 @@ class _RiderTrackScreenState extends State<RiderTrackScreen> {
                   // 5. CONFIRM BUTTON
                   SizedBox(
                     width: double.infinity,
-                    child: ElevatedButton.icon(
+                    child: ElevatedButton(
                       onPressed: _isLoading ? null : _submitCode,
-                      icon: const Icon(Icons.check_circle, color: Colors.white),
-                      label: const Text(
-                        "Confirm Receiver Code",
-                        style: TextStyle(color: Colors.white),
-                      ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              height: 22,
+                              width: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
+                              ),
+                            )
+                          : const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.check_circle, color: Colors.white),
+                                SizedBox(width: 8),
+                                Text(
+                                  "Confirm Receiver Code",
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ],
+                            ),
                     ),
                   ),
                 ],

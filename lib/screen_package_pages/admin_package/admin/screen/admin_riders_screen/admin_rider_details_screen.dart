@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'rider_model.dart';
+import 'package:senmi/services/api_service.dart';
 
-class RiderDetailsScreen extends StatelessWidget {
-  //final RiderModel rider;
-
-  //const RiderDetailsScreen({super.key, required this.rider});
-
+class RiderDetailsScreen extends StatefulWidget {
   final RiderModel rider;
   final VoidCallback onApprove;
   final VoidCallback onReject;
@@ -16,6 +13,33 @@ class RiderDetailsScreen extends StatelessWidget {
     required this.onApprove,
     required this.onReject,
   });
+
+  @override
+  State<RiderDetailsScreen> createState() => _RiderDetailsScreenState();
+}
+
+class _RiderDetailsScreenState extends State<RiderDetailsScreen> {
+  late RiderModel rider;
+
+  @override
+  void initState() {
+    super.initState();
+    rider = widget.rider;
+  }
+
+  Future<void> _refresh() async {
+    try {
+      final updatedRider = await ApiService.getRiderDetails(rider.riderId);
+
+      if (!mounted) return;
+
+      setState(() {
+        rider = updatedRider;
+      });
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+  }
 
   Widget infoCard({
     required IconData icon,
@@ -169,122 +193,130 @@ class RiderDetailsScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text(rider.username)),
 
-      body: ListView(
-        padding: const EdgeInsets.all(16),
+      body: RefreshIndicator(
+        onRefresh: _refresh,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          children: [
+            // =========================
+            // PROFILE HEADER
+            // =========================
+            Center(
+              child: Column(
+                children: [
+                  CircleAvatar(
+                    radius: 55,
 
-        children: [
-          // =========================
-          // PROFILE HEADER
-          // =========================
-          Center(
-            child: Column(
-              children: [
-                CircleAvatar(
-                  radius: 55,
+                    backgroundImage:
+                        rider.profileImage != null &&
+                            rider.profileImage!.isNotEmpty
+                        ? NetworkImage(rider.profileImage!)
+                        : null,
 
-                  backgroundImage:
-                      rider.profileImage != null &&
-                          rider.profileImage!.isNotEmpty
-                      ? NetworkImage(rider.profileImage!)
-                      : null,
-
-                  child:
-                      rider.profileImage == null || rider.profileImage!.isEmpty
-                      ? const Icon(Icons.person, size: 50)
-                      : null,
-                ),
-
-                const SizedBox(height: 16),
-
-                Text(
-                  rider.username,
-
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
+                    child:
+                        rider.profileImage == null ||
+                            rider.profileImage!.isEmpty
+                        ? const Icon(Icons.person, size: 50)
+                        : null,
                   ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    "ID: ${rider.riderId}",
+
+                  const SizedBox(height: 16),
+
+                  Text(
+                    rider.username,
+
                     style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.blue,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 10),
-
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-
-                  decoration: BoxDecoration(
-                    // ignore: deprecated_member_use
-                    color: statusColor().withOpacity(0.15),
-
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-
-                  child: Text(
-                    rider.status.toUpperCase(),
-
-                    style: TextStyle(
-                      color: statusColor(),
+                      fontSize: 24,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                ),
-              ],
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      "ID: ${rider.riderId}",
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.blue,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+
+                    decoration: BoxDecoration(
+                      // ignore: deprecated_member_use
+                      color: statusColor().withOpacity(0.15),
+
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+
+                    child: Text(
+                      rider.status.toUpperCase(),
+
+                      style: TextStyle(
+                        color: statusColor(),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
 
-          const SizedBox(height: 30),
+            const SizedBox(height: 30),
 
-          // =========================
-          // INFO SECTION
-          // =========================
-          infoCard(icon: Icons.email, title: "Email", value: rider.email),
+            // =========================
+            // INFO SECTION
+            // =========================
+            infoCard(icon: Icons.email, title: "Email", value: rider.email),
 
-          infoCard(icon: Icons.phone, title: "Phone", value: rider.phone ?? ""),
+            infoCard(
+              icon: Icons.phone,
+              title: "Phone",
+              value: rider.phone ?? "",
+            ),
 
-          infoCard(
-            icon: Icons.location_city,
-            title: "City",
-            value: rider.city ?? "",
-          ),
+            infoCard(
+              icon: Icons.location_city,
+              title: "City / State",
+              value: rider.city ?? "",
+            ),
 
-          infoCard(
-            icon: Icons.home,
-            title: "Address",
-            value: rider.address ?? "",
-          ),
+            infoCard(
+              icon: Icons.home,
+              title: "Address",
+              value: rider.address ?? "",
+            ),
 
-          const SizedBox(height: 30),
+            const SizedBox(height: 30),
 
-          // =========================
-          // DOCUMENTS
-          // =========================
-          imageSection(context, "Profile Image", rider.profileImage),
+            // =========================
+            // DOCUMENTS
+            // =========================
+            imageSection(context, "Profile Image", rider.profileImage),
 
-          imageSection(context, "Rider NIN Image", rider.ninImage),
+            imageSection(context, "Rider NIN Image", rider.ninImage),
 
-          imageSection(context, "Vehicle Image", rider.vehicleImage),
+            imageSection(context, "Vehicle Image", rider.vehicleImage),
 
-          const SizedBox(height: 30),
-        ],
+            const SizedBox(height: 30),
+          ],
+        ),
       ),
       bottomNavigationBar: rider.status.toLowerCase() == "pending"
           ? SafeArea(
@@ -298,7 +330,7 @@ class RiderDetailsScreen extends StatelessWidget {
                   children: [
                     Expanded(
                       child: ElevatedButton.icon(
-                        onPressed: onApprove, // 👈 HERE
+                        onPressed: widget.onApprove,
                         icon: const Icon(Icons.check),
                         label: const Text("Approve"),
                         style: ElevatedButton.styleFrom(
@@ -313,7 +345,7 @@ class RiderDetailsScreen extends StatelessWidget {
 
                     Expanded(
                       child: ElevatedButton.icon(
-                        onPressed: onReject, // 👈 HERE
+                        onPressed: widget.onReject,
                         icon: const Icon(Icons.close),
                         label: const Text("Reject"),
                         style: ElevatedButton.styleFrom(

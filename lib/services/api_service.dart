@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:async';
+import 'package:senmi/screen_package_pages/admin_package/admin/screen/admin_riders_screen/rider_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // ignore: depend_on_referenced_packages
 import 'package:http/http.dart' as http;
@@ -1207,19 +1208,49 @@ class ApiService {
   ) async {
     try {
       final url = Uri.parse("$baseUrl/review-rider/$riderId/");
+
+      final headers = await ApiService.getAuthHeaders();
+      headers["Content-Type"] = "application/json";
+
       final res = await http.post(
         url,
-        headers: await ApiService.getAuthHeaders(),
+        headers: headers,
         body: jsonEncode({
           "status": status.toLowerCase(),
           "rejection_reason": reason.trim(),
         }),
       );
 
+      if (kDebugMode) {
+        print(res.statusCode);
+      }
+      if (kDebugMode) {
+        print(res.body);
+      }
+
       return res.statusCode == 200;
     } catch (e) {
+      if (kDebugMode) {
+        print(e);
+      }
       return false;
     }
+  }
+
+  static Future<RiderModel> getRiderDetails(String riderId) async {
+    final url = Uri.parse("$baseUrl/rider-details/$riderId/");
+
+    final response = await http.get(url, headers: await getAuthHeaders());
+
+    debugPrint("GET URL: $url");
+    debugPrint("STATUS CODE: ${response.statusCode}");
+    debugPrint("BODY: ${response.body}");
+
+    if (response.statusCode == 200) {
+      return RiderModel.fromJson(jsonDecode(response.body));
+    }
+
+    throw Exception(response.body);
   }
 
   // ============================================

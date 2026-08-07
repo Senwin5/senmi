@@ -55,10 +55,32 @@ class RiderCard extends StatelessWidget {
                   CircleAvatar(
                     radius: 28,
                     backgroundColor: Colors.purple.shade100,
-                    child: Text(
-                      rider.username.isNotEmpty
-                          ? rider.username[0].toUpperCase()
-                          : "R",
+                    child: ClipOval(
+                      child:
+                          rider.profileImage != null &&
+                              rider.profileImage!.isNotEmpty
+                          ? Image.network(
+                              rider.profileImage!,
+                              width: 56,
+                              height: 56,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, _, _) {
+                                return Center(
+                                  child: Text(
+                                    rider.username.isNotEmpty
+                                        ? rider.username[0].toUpperCase()
+                                        : "R",
+                                  ),
+                                );
+                              },
+                            )
+                          : Center(
+                              child: Text(
+                                rider.username.isNotEmpty
+                                    ? rider.username[0].toUpperCase()
+                                    : "R",
+                              ),
+                            ),
                     ),
                   ),
 

@@ -303,6 +303,8 @@ class _AdminRidersScreenState extends State<AdminRidersScreen> {
                       itemBuilder: (context, index) {
                         final rider = filteredRiders[index];
 
+                        debugPrint("PROFILE IMAGE: ${rider.profileImage}");
+
                         return RiderCard(
                           rider: rider,
 
