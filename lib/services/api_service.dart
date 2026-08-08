@@ -952,7 +952,7 @@ class ApiService {
     return [];
   }
 
-  static Future<String> resolveAccount({
+  static Future resolveAccount({
     required String accountNumber,
     required String bankCode,
   }) async {
@@ -965,9 +965,19 @@ class ApiService {
       }),
     );
 
+    if (kDebugMode) {
+      print("RESOLVE STATUS: ${res.statusCode}");
+    }
+    if (kDebugMode) {
+      print("RESOLVE BODY: ${res.body}");
+    }
+
     final data = jsonDecode(res.body);
 
     if (res.statusCode == 200) {
+      if (kDebugMode) {
+        print("ACCOUNT NAME: ${data['account_name']}");
+      }
       return data['account_name'];
     } else {
       throw Exception(data['error'] ?? "Failed to verify account");

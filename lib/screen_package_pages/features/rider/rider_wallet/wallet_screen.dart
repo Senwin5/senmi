@@ -69,7 +69,12 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
     }
   }
 
-  void withdraw() async {
+  Future<void> withdraw() async {
+    if (isSubmitting) return;
+
+    setState(() {
+      isSubmitting = true;
+    });
     final amountController = TextEditingController();
     final accountController = TextEditingController();
 
@@ -82,15 +87,29 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
 
     try {
       banks = await ApiService.getBanks();
+
       banks = banks.map((b) {
         b['code'] = b['code'].toString();
         return b;
       }).toList();
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Failed to load banks")));
+      if (mounted) {
+        setState(() {
+          isSubmitting = false;
+        });
+
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Failed to load banks")));
+      }
+
       return;
+    }
+
+    if (mounted) {
+      setState(() {
+        isSubmitting = false;
+      });
     }
 
     showModalBottomSheet(
@@ -287,15 +306,21 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                             ? null
                             : () async {
                                 final amt =
-                                    double.tryParse(amountController.text) ?? 0;
+                                    double.tryParse(
+                                      amountController.text.trim(),
+                                    ) ??
+                                    0;
 
                                 if (amt <= 0 ||
-                                    accountController.text.isEmpty ||
+                                    accountController.text.trim().length !=
+                                        10 ||
                                     selectedBankCode == null ||
                                     accountName == null) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                      content: Text("Fill all fields"),
+                                      content: Text(
+                                        "Fill all fields correctly",
+                                      ),
                                     ),
                                   );
                                   return;
@@ -326,60 +351,80 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                                         Text(
                                           "Amount: ₦${amt.toStringAsFixed(2)}",
                                         ),
+                                        const SizedBox(height: 5),
                                         Text(
                                           "Account: ${accountController.text}",
                                         ),
-                                        Text("Account Name: $accountName"),
+                                        const SizedBox(height: 5),
+                                        Text(
+                                          "Account Name: $accountName",
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
                                       ],
                                     ),
                                     actions: [
                                       TextButton(
-                                        onPressed: () =>
-                                            Navigator.pop(context, false),
+                                        onPressed: () {
+                                          Navigator.pop(context, false);
+                                        },
                                         child: const Text("Cancel"),
                                       ),
                                       ElevatedButton(
-                                        onPressed: () =>
-                                            Navigator.pop(context, true),
+                                        onPressed: () {
+                                          Navigator.pop(context, true);
+                                        },
                                         child: const Text("Confirm"),
                                       ),
                                     ],
                                   ),
                                 );
 
+                                // User cancelled confirmation
                                 if (confirmed != true) {
                                   setStateDialog(() {
                                     isLoading = false;
                                   });
                                   return;
                                 }
+
                                 try {
                                   await ApiService.withdraw(
                                     amount: amt,
-                                    accountNumber: accountController.text,
+                                    accountNumber: accountController.text
+                                        .trim(),
                                     bankCode: selectedBankCode!,
                                   );
 
-                                  if (!mounted) return;
+                                  // IMPORTANT:
+                                  // Close the bottom sheet first.
+                                  if (context.mounted) {
+                                    Navigator.pop(context);
+                                  }
 
-                                  Navigator.pop(context);
-
-                                  fetchWallet();
-
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text("Withdrawal successful"),
-                                    ),
-                                  );
-                                } catch (e) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(e.toString())),
-                                  );
-                                } finally {
+                                  // Refresh wallet using the parent screen's State.
                                   if (mounted) {
+                                    await fetchWallet();
+
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          "Withdrawal submitted — awaiting approval",
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                } catch (e) {
+                                  // Only update the bottom sheet if it is still open.
+                                  if (context.mounted) {
                                     setStateDialog(() {
                                       isLoading = false;
                                     });
+
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text(e.toString())),
+                                    );
                                   }
                                 }
                               },
@@ -547,15 +592,39 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                             style: const TextStyle(color: Colors.white70),
                           ),
                           const SizedBox(height: 20),
-                          ElevatedButton.icon(
-                            onPressed: balance <= 0 ? null : withdraw,
-                            icon: const Icon(Icons.arrow_upward),
-                            label: const Text(
-                              "Withdraw",
-                              style: TextStyle(color: Colors.white),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
+                          SizedBox(
+                            height: 48,
+                            child: ElevatedButton.icon(
+                              onPressed: (balance <= 0 || isSubmitting)
+                                  ? null
+                                  : withdraw,
+
+                              icon: isSubmitting
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2.5,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Icon(
+                                      Icons.arrow_upward,
+                                      color: Colors.white,
+                                    ),
+
+                              label: Text(
+                                isSubmitting ? "Loading..." : "Withdraw",
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                disabledBackgroundColor: Colors.green.shade700,
+                              ),
                             ),
                           ),
                         ],
