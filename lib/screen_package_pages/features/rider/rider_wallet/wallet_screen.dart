@@ -75,7 +75,7 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
 
     List banks = [];
     String? selectedBankCode;
-    String? accountNam;
+    String? accountName;
 
     bool verifying = false;
     bool isLoading = false;
