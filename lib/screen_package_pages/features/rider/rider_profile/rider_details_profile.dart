@@ -1,5 +1,3 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'package:flutter/material.dart';
 import 'package:senmi/screen_package_pages/features/rider/rider_profile/rider_security_screen.dart';
 import 'package:senmi/services/api_service.dart';
@@ -10,21 +8,38 @@ class RiderDetailsProfile extends StatelessWidget {
 
   const RiderDetailsProfile({super.key, required this.rider});
 
-  Widget _buildProfileCard(String title, String value, {IconData? icon}) {
+  Widget _buildProfileCard(
+    String title,
+    String value, {
+    IconData? icon,
+    bool highlight = false,
+  }) {
     return Card(
-      elevation: 2,
+      elevation: highlight ? 3 : 2,
       margin: const EdgeInsets.symmetric(vertical: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
-        leading: icon != null ? Icon(icon, color: Colors.deepPurple) : null,
+        leading: icon != null
+            ? Icon(
+                icon,
+                color: highlight ? Colors.deepPurple : Colors.deepPurple,
+              )
+            : null,
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text(value),
+        subtitle: Text(
+          value,
+          style: TextStyle(
+            fontWeight: highlight ? FontWeight.bold : FontWeight.normal,
+            fontSize: highlight ? 16 : 14,
+          ),
+        ),
       ),
     );
   }
 
   void logout(BuildContext context) {
     ApiService.logout();
+
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -38,7 +53,8 @@ class RiderDetailsProfile extends StatelessWidget {
       builder: (dialogContext) => AlertDialog(
         title: const Text("Confirm Delete"),
         content: const Text(
-          "Are you sure you want to delete your account? This cannot be undone.",
+          "Are you sure you want to delete your account? "
+          "This cannot be undone.",
         ),
         actions: [
           TextButton(
@@ -61,17 +77,23 @@ class RiderDetailsProfile extends StatelessWidget {
       if (deleted) {
         await ApiService.logout();
 
+        if (!context.mounted) return;
+
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (_) => const LoginScreen()),
           (route) => false,
         );
       } else {
+        if (!context.mounted) return;
+
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text("Delete failed ❌")));
       }
     } catch (e) {
+      if (!context.mounted) return;
+
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text("Failed to delete account: $e")));
@@ -80,8 +102,21 @@ class RiderDetailsProfile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final riderData = rider ?? {};
+
+    final riderId = riderData['rider_id']?.toString() ?? "Not available";
+    final username = riderData['username']?.toString() ?? "Rider";
+    final email = riderData['email']?.toString() ?? "";
+    final fullName = riderData['full_name']?.toString() ?? "";
+    final phone = riderData['phone_number']?.toString() ?? "";
+    final vehicleNumber = riderData['vehicle_number']?.toString() ?? "";
+    final address = riderData['address']?.toString() ?? "";
+    final city = riderData['city']?.toString() ?? "";
+    final status = riderData['status']?.toString() ?? "";
+
+    final profilePicture = riderData['profile_picture'];
+
     return Scaffold(
-      //backgroundColor: const Color(0xFFF2F2F2),
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text("Rider Profile"),
@@ -97,21 +132,21 @@ class RiderDetailsProfile extends StatelessWidget {
             CircleAvatar(
               radius: 55,
               backgroundColor: Colors.deepPurple,
-              backgroundImage: rider!['profile_picture'] != null
-                  ? NetworkImage(rider!['profile_picture'])
+              backgroundImage: profilePicture != null
+                  ? NetworkImage(profilePicture.toString())
                   : null,
-
-              child: rider!['profile_picture'] == null
+              child: profilePicture == null
                   ? Text(
-                      rider!['username']?[0].toUpperCase() ?? "R",
+                      username.isNotEmpty ? username[0].toUpperCase() : "R",
                       style: const TextStyle(fontSize: 40, color: Colors.white),
                     )
                   : null,
             ),
+
             const SizedBox(height: 12),
 
             Text(
-              rider!['username'] ?? "Rider",
+              username,
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
@@ -122,67 +157,97 @@ class RiderDetailsProfile extends StatelessWidget {
             const SizedBox(height: 4),
 
             Text(
-              rider!['email'] ?? "",
+              email,
               style: TextStyle(
                 color: Theme.of(context).textTheme.bodyMedium?.color,
               ),
             ),
 
-            const SizedBox(height: 24),
-
-            _buildProfileCard(
-              "Full Name",
-              rider!['full_name'] ?? "",
-              icon: Icons.person,
-            ),
-            _buildProfileCard(
-              "Email",
-              rider!['email'] ?? "",
-              icon: Icons.email,
-            ),
-            _buildProfileCard(
-              "Phone",
-              rider!['phone_number'] ?? "",
-              icon: Icons.phone,
-            ),
-            _buildProfileCard(
-              "Vehicle Number",
-              rider!['vehicle_number'] ?? "",
-              icon: Icons.directions_car,
-            ),
-            _buildProfileCard(
-              "Address",
-              rider!['address'] ?? "",
-              icon: Icons.location_on,
-            ),
-            _buildProfileCard(
-              "State",
-              rider!['city'] ?? "",
-              icon: Icons.location_city,
-            ),
-            _buildProfileCard(
-              "Status",
-              rider!['status'] ?? "",
-              icon: Icons.verified,
-            ),
-
             const SizedBox(height: 20),
 
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Theme.of(context).cardColor,
-                borderRadius: BorderRadius.circular(18),
-                boxShadow: [
-                  BoxShadow(
+            // =====================================================
+            // RIDER ID - IMPORTANT SUPPORT IDENTIFIER
+            // =====================================================
+            Card(
+              elevation: 4,
+              margin: const EdgeInsets.only(bottom: 20),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
                     // ignore: deprecated_member_use
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+                    color: Colors.deepPurple.withOpacity(0.25),
                   ),
-                ],
+                ),
+                child: Column(
+                  children: [
+                    const Icon(
+                      Icons.badge_outlined,
+                      size: 30,
+                      color: Colors.deepPurple,
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    const Text(
+                      "Rider ID",
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+
+                    const SizedBox(height: 5),
+
+                    Text(
+                      riderId,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.deepPurple,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+
+                    const SizedBox(height: 6),
+
+                    Text(
+                      "Use this ID when contacting Senmi Support or Admin.",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context).textTheme.bodySmall?.color,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
+
+            _buildProfileCard("Full Name", fullName, icon: Icons.person),
+
+            _buildProfileCard("Email", email, icon: Icons.email),
+
+            _buildProfileCard("Phone", phone, icon: Icons.phone),
+
+            _buildProfileCard(
+              "Vehicle Number",
+              vehicleNumber,
+              icon: Icons.directions_car,
+            ),
+
+            _buildProfileCard("Address", address, icon: Icons.location_on),
+
+            _buildProfileCard("State", city, icon: Icons.location_city),
+
+            _buildProfileCard("Status", status, icon: Icons.verified),
+
             const SizedBox(height: 20),
 
             Card(
