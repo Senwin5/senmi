@@ -175,8 +175,9 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                       controller: amountController,
                       keyboardType: TextInputType.number,
                       decoration: const InputDecoration(
-                        labelText: "Amount",
+                        labelText: "Enter Amount",
                         prefixText: "₦ ",
+                        prefixIcon: Icon(Icons.account_balance_wallet),
                       ),
                     ),
 
@@ -187,7 +188,7 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                       decoration: const InputDecoration(
                         labelText: "Account Number",
                         counterText: "",
-                        prefixIcon: Icon(Icons.account_balance),
+                        prefixIcon: Icon(Icons.payments_outlined),
                       ),
                       onChanged: (value) async {
                         if (value.length == 10 && selectedBankCode != null) {
@@ -219,8 +220,8 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                     DropdownButtonFormField<String>(
                       isExpanded: true,
                       decoration: const InputDecoration(
-                        labelText: "Bank",
-                        prefixIcon: Icon(Icons.account_balance),
+                        labelText: "Select Bank",
+                        prefixIcon: Icon(Icons.account_balance_outlined),
                       ),
                       items: banks.map<DropdownMenuItem<String>>((bank) {
                         return DropdownMenuItem<String>(
