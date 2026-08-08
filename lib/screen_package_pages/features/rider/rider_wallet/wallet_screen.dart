@@ -119,7 +119,7 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
       ),
-      builder: (_) => StatefulBuilder(
+      builder: (sheetContext) => StatefulBuilder(
         builder: (context, setStateDialog) {
           return DraggableScrollableSheet(
             expand: false,
@@ -342,44 +342,57 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
 
                                 final confirmed = await showDialog<bool>(
                                   context: context,
-                                  builder: (_) => AlertDialog(
-                                    title: const Text("Confirm Withdrawal"),
-                                    content: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          "Amount: ₦${amt.toStringAsFixed(2)}",
-                                        ),
-                                        const SizedBox(height: 5),
-                                        Text(
-                                          "Account: ${accountController.text}",
-                                        ),
-                                        const SizedBox(height: 5),
-                                        Text(
-                                          "Account Name: $accountName",
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
+                                  builder: (dialogContext) {
+                                    return AlertDialog(
+                                      title: const Text("Confirm Withdrawal"),
+
+                                      content: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            "Amount: ₦${amt.toStringAsFixed(2)}",
                                           ),
+                                          const SizedBox(height: 5),
+
+                                          Text(
+                                            "Account: ${accountController.text.trim()}",
+                                          ),
+                                          const SizedBox(height: 5),
+
+                                          Text(
+                                            "Account Name: ${accountName ?? ''}",
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.of(
+                                              dialogContext,
+                                              rootNavigator: true,
+                                            ).pop(false);
+                                          },
+                                          child: const Text("Cancel"),
+                                        ),
+
+                                        ElevatedButton(
+                                          onPressed: () {
+                                            Navigator.of(
+                                              dialogContext,
+                                              rootNavigator: true,
+                                            ).pop(true);
+                                          },
+                                          child: const Text("Confirm"),
                                         ),
                                       ],
-                                    ),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.pop(context, false);
-                                        },
-                                        child: const Text("Cancel"),
-                                      ),
-                                      ElevatedButton(
-                                        onPressed: () {
-                                          Navigator.pop(context, true);
-                                        },
-                                        child: const Text("Confirm"),
-                                      ),
-                                    ],
-                                  ),
+                                    );
+                                  },
                                 );
 
                                 // User cancelled confirmation
@@ -391,6 +404,16 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                                 }
 
                                 try {
+                                  debugPrint(
+                                    "========== WITHDRAW START ==========",
+                                  );
+                                  debugPrint("Amount: $amt");
+                                  debugPrint(
+                                    "Account: ${accountController.text.trim()}",
+                                  );
+                                  debugPrint("Bank Code: $selectedBankCode");
+                                  debugPrint("Account Name: $accountName");
+                                  debugPrint("Calling ApiService.withdraw...");
                                   await ApiService.withdraw(
                                     amount: amt,
                                     accountNumber: accountController.text
@@ -398,10 +421,14 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                                     bankCode: selectedBankCode!,
                                   );
 
+                                  debugPrint(
+                                    "========== WITHDRAW API SUCCESS ==========",
+                                  );
+
                                   // IMPORTANT:
                                   // Close the bottom sheet first.
-                                  if (context.mounted) {
-                                    Navigator.pop(context);
+                                  if (sheetContext.mounted) {
+                                    Navigator.of(sheetContext).pop();
                                   }
 
                                   // Refresh wallet using the parent screen's State.
