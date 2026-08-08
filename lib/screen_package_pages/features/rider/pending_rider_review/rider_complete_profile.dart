@@ -945,7 +945,7 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
                             controller: vehicleController,
                             label: 'Vehicle number',
                             hint: 'Enter your vehicle registration number',
-                            icon: Icons.directions_car_outlined,
+                            icon: Icons.two_wheeler,
                             validator: (val) =>
                                 val == null || val.trim().isEmpty
                                 ? 'Vehicle number is required'

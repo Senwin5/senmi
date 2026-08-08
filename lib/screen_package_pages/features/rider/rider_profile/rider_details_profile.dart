@@ -239,7 +239,7 @@ class RiderDetailsProfile extends StatelessWidget {
             _buildProfileCard(
               "Vehicle Number",
               vehicleNumber,
-              icon: Icons.directions_car,
+              icon: Icons.two_wheeler,
             ),
 
             _buildProfileCard("Address", address, icon: Icons.location_on),
