@@ -211,7 +211,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: GooglePlaceAutoCompleteTextField(
@@ -284,7 +284,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Column(
@@ -292,7 +292,15 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                 children: [
                   loadingAddress
                       ? const LinearProgressIndicator()
-                      : Text(address, textAlign: TextAlign.center),
+                      : Text(
+                          address,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Theme.of(context).textTheme.bodyLarge?.color,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
 
                   const SizedBox(height: 10),
 
