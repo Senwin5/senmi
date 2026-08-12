@@ -1,18 +1,20 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:senmi/screen_package_pages/admin_package/admin/screen/admin_transaction/admin_withdrawal_details_screen.dart';
 import 'package:senmi/services/api_service.dart';
 
 class AdminWithdrawalScreen extends StatefulWidget {
   const AdminWithdrawalScreen({super.key});
 
   @override
-  State<AdminWithdrawalScreen> createState() => _AdminWithdrawalScreenState();
+  State<AdminWithdrawalScreen> createState() =>
+      _AdminWithdrawalScreenState();
 }
 
 class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
   bool loading = true;
-  List withdrawals = [];
+  List<dynamic> withdrawals = [];
 
   @override
   void initState() {
@@ -21,7 +23,7 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
   }
 
   // =========================================================
-  // FETCH WITHDRAWALS
+  // FETCH
   // =========================================================
 
   Future<void> fetchWithdrawals() async {
@@ -43,9 +45,12 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
         loading = false;
       });
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Failed to load withdrawals: $e")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Failed to load withdrawals: $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -65,7 +70,9 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Withdrawal approved and sent for processing."),
+          content: Text(
+            "Withdrawal approved and sent to Paystack.",
+          ),
           backgroundColor: Colors.green,
         ),
       );
@@ -93,13 +100,19 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
   // REJECT
   // =========================================================
 
-  Future<void> reject(int id) async {
+  Future<void> reject(
+    int id,
+    String reason,
+  ) async {
     try {
       setState(() {
         loading = true;
       });
 
-      await ApiService.rejectWithdrawal(id, "Rejected by admin");
+      await ApiService.rejectWithdrawal(
+        id,
+        reason,
+      );
 
       if (!mounted) return;
 
@@ -132,19 +145,37 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
   }
 
   // =========================================================
-  // CONFIRM APPROVE
+  // APPROVE CONFIRMATION
   // =========================================================
 
-  Future<void> confirmApprove(int id, double amount) async {
+  Future<void> confirmApprove(
+    Map<String, dynamic> withdrawal,
+  ) async {
+    final int id = withdrawal["id"];
+
+    final double amount =
+        double.tryParse(
+              withdrawal["amount"].toString(),
+            ) ??
+            0;
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text("Approve Withdrawal?"),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+          title: const Text(
+            "Approve Withdrawal?",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           content: Text(
-            "Are you sure you want to approve "
-            "₦${amount.toStringAsFixed(2)}?\n\n"
-            "The withdrawal will be sent to Paystack for processing.",
+            "Approve ₦${amount.toStringAsFixed(2)} withdrawal?\n\n"
+            "Senmi will send the withdrawal to Paystack. "
+            "Paystack will determine the final transfer result.",
           ),
           actions: [
             TextButton(
@@ -157,6 +188,10 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
               onPressed: () {
                 Navigator.pop(context, true);
               },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+              ),
               child: const Text("Approve"),
             ),
           ],
@@ -170,98 +205,188 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
   }
 
   // =========================================================
-  // CONFIRM REJECT
+  // REJECT CONFIRMATION
   // =========================================================
 
-  Future<void> confirmReject(int id, double amount) async {
-    final confirmed = await showDialog<bool>(
+  Future<void> confirmReject(
+    Map<String, dynamic> withdrawal,
+  ) async {
+    final int id = withdrawal["id"];
+
+    final double amount =
+        double.tryParse(
+              withdrawal["amount"].toString(),
+            ) ??
+            0;
+
+    final controller = TextEditingController();
+
+    final reason = await showDialog<String>(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text("Reject Withdrawal?"),
-          content: Text(
-            "Reject ₦${amount.toStringAsFixed(2)} withdrawal?\n\n"
-            "The money will be returned to the rider wallet.",
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+          title: const Text(
+            "Reject Withdrawal",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "₦${amount.toStringAsFixed(2)} will be returned to the rider wallet.",
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: controller,
+                maxLines: 3,
+                decoration: InputDecoration(
+                  hintText: "Reason for rejection",
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ],
           ),
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(context, false);
+                Navigator.pop(context);
               },
               child: const Text("Cancel"),
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
               onPressed: () {
-                Navigator.pop(context, true);
+                Navigator.pop(
+                  context,
+                  controller.text.trim().isEmpty
+                      ? "Rejected by admin"
+                      : controller.text.trim(),
+                );
               },
-              child: const Text(
-                "Reject",
-                style: TextStyle(color: Colors.white),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
               ),
+              child: const Text("Reject"),
             ),
           ],
         );
       },
     );
 
-    if (confirmed == true) {
-      await reject(id);
+    controller.dispose();
+
+    if (reason != null) {
+      await reject(id, reason);
     }
   }
 
   // =========================================================
-  // STATUS BADGE
+  // STATUS
   // =========================================================
 
-  Widget statusBadge(String status) {
-    Color color;
-
-    switch (status) {
+  Color statusColor(String status) {
+    switch (status.toLowerCase()) {
       case "pending":
-        color = Colors.orange;
-        break;
+        return Colors.orange;
 
       case "approved":
-        color = Colors.blue;
-        break;
+        return Colors.blue;
 
       case "processing":
-        color = Colors.indigo;
-        break;
+        return Colors.indigo;
 
       case "success":
-        color = Colors.green;
-        break;
+        return Colors.green;
 
       case "failed":
-        color = Colors.red;
-        break;
+        return Colors.red;
 
       case "rejected":
-        color = Colors.red;
-        break;
+        return Colors.red;
 
       case "reversed":
-        color = Colors.deepOrange;
-        break;
+        return Colors.deepOrange;
 
       default:
-        color = Colors.grey;
+        return Colors.grey;
     }
+  }
+
+  String statusDescription(String status) {
+    switch (status.toLowerCase()) {
+      case "pending":
+        return "Waiting for admin approval";
+
+      case "approved":
+        return "Approved for processing";
+
+      case "processing":
+        return "Paystack is processing the transfer";
+
+      case "success":
+        return "Money successfully transferred";
+
+      case "failed":
+        return "Transfer failed and wallet should be refunded";
+
+      case "rejected":
+        return "Rejected by Senmi admin";
+
+      case "reversed":
+        return "Transfer was reversed and wallet should be refunded";
+
+      default:
+        return "Unknown withdrawal status";
+    }
+  }
+
+  Widget statusBadge(String status) {
+    final color = statusColor(status);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 10,
+        vertical: 6,
+      ),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20),
+        color: color.withOpacity(.10),
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(
+          color: color.withOpacity(.25),
+        ),
       ),
       child: Text(
         status.toUpperCase(),
         style: TextStyle(
           color: color,
-          fontWeight: FontWeight.bold,
           fontSize: 11,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  // =========================================================
+  // OPEN DETAILS
+  // =========================================================
+
+  void openDetails(Map<String, dynamic> withdrawal) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AdminWithdrawalDetailsScreen(
+          withdrawal: withdrawal,
+          onRefresh: fetchWithdrawals,
+          onApprove: approve,
+          onReject: reject,
         ),
       ),
     );
@@ -281,13 +406,29 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
         backgroundColor: Colors.white,
         title: const Text(
           "Withdrawals",
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+          ),
         ),
-        iconTheme: const IconThemeData(color: Colors.black),
+        iconTheme: const IconThemeData(
+          color: Colors.black,
+        ),
+        actions: [
+          IconButton(
+            onPressed: fetchWithdrawals,
+            icon: const Icon(
+              Icons.refresh,
+              color: Colors.black,
+            ),
+          ),
+        ],
       ),
 
       body: loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(
+              child: CircularProgressIndicator(),
+            )
           : RefreshIndicator(
               onRefresh: fetchWithdrawals,
               child: withdrawals.isEmpty
@@ -297,7 +438,9 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
                         Center(
                           child: Text(
                             "No withdrawals found",
-                            style: TextStyle(fontSize: 16, color: Colors.grey),
+                            style: TextStyle(
+                              color: Colors.grey,
+                            ),
                           ),
                         ),
                       ],
@@ -306,271 +449,239 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
                       padding: const EdgeInsets.all(16),
                       itemCount: withdrawals.length,
                       itemBuilder: (context, index) {
-                        final w = withdrawals[index];
+                        final Map<String, dynamic> w =
+                            Map<String, dynamic>.from(
+                          withdrawals[index],
+                        );
 
-                        final int id = w['id'];
+                        final amount =
+                            double.tryParse(
+                                  w["amount"].toString(),
+                                ) ??
+                                0;
 
-                        final double amount =
-                            double.tryParse(w['amount'].toString()) ?? 0;
+                        final rider =
+                            w["rider"]?.toString() ??
+                                "Unknown rider";
 
-                        final String rider =
-                            w['rider']?.toString() ?? "Unknown rider";
+                        final status =
+                            w["status"]?.toString() ??
+                                "unknown";
 
-                        final String status =
-                            w['status']?.toString() ?? "unknown";
+                        final accountName =
+                            w["account_name"]?.toString() ??
+                                "";
 
-                        final String date = w['created_at']?.toString() ?? "";
-
-                        final String accountName =
-                            w['account_name']?.toString() ?? "";
-
-                        final String bankAccount =
-                            w['bank_account']?.toString() ?? "";
+                        final bankAccount =
+                            w["bank_account"]?.toString() ??
+                                "";
 
                         return Card(
-                          margin: const EdgeInsets.only(bottom: 14),
+                          margin: const EdgeInsets.only(
+                            bottom: 12,
+                          ),
                           elevation: 1,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius:
+                                BorderRadius.circular(18),
                           ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // ==========================
-                                // RIDER
-                                // ==========================
-                                Row(
-                                  children: [
-                                    const CircleAvatar(
-                                      backgroundColor: Colors.blue,
-                                      child: Icon(
-                                        Icons.person,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-
-                                    const SizedBox(width: 12),
-
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            rider,
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            "Withdrawal #$id",
-                                            style: const TextStyle(
-                                              color: Colors.grey,
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-
-                                    statusBadge(status),
-                                  ],
-                                ),
-
-                                const SizedBox(height: 18),
-
-                                // ==========================
-                                // AMOUNT
-                                // ==========================
-                                Text(
-                                  "₦${amount.toStringAsFixed(2)}",
-                                  style: const TextStyle(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-
-                                const SizedBox(height: 12),
-
-                                // ==========================
-                                // BANK
-                                // ==========================
-                                if (accountName.isNotEmpty)
-                                  Text(
-                                    "Account: $accountName",
-                                    style: const TextStyle(fontSize: 14),
-                                  ),
-
-                                if (bankAccount.isNotEmpty)
-                                  Text(
-                                    "Bank Account: $bankAccount",
-                                    style: const TextStyle(fontSize: 14),
-                                  ),
-
-                                const SizedBox(height: 8),
-
-                                Text(
-                                  "Date: $date",
-                                  style: const TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 12,
-                                  ),
-                                ),
-
-                                const SizedBox(height: 16),
-
-                                // ==========================
-                                // ACTIONS
-                                // ==========================
-                                if (status == "pending")
+                          child: InkWell(
+                            borderRadius:
+                                BorderRadius.circular(18),
+                            onTap: () => openDetails(w),
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.start,
+                                children: [
                                   Row(
                                     children: [
-                                      Expanded(
-                                        child: ElevatedButton.icon(
-                                          onPressed: () =>
-                                              confirmApprove(id, amount),
-                                          icon: const Icon(
-                                            Icons.check,
-                                            color: Colors.white,
-                                          ),
-                                          label: const Text(
-                                            "Approve",
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: Colors.green,
-                                            padding: const EdgeInsets.symmetric(
-                                              vertical: 13,
-                                            ),
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                            ),
+                                      CircleAvatar(
+                                        backgroundColor:
+                                            statusColor(
+                                          status,
+                                        ).withOpacity(.10),
+                                        child: Icon(
+                                          Icons
+                                              .account_balance_wallet,
+                                          color:
+                                              statusColor(
+                                            status,
                                           ),
                                         ),
                                       ),
-
-                                      const SizedBox(width: 10),
-
+                                      const SizedBox(
+                                        width: 12,
+                                      ),
                                       Expanded(
-                                        child: OutlinedButton.icon(
-                                          onPressed: () =>
-                                              confirmReject(id, amount),
-                                          icon: const Icon(
-                                            Icons.close,
-                                            color: Colors.red,
-                                          ),
-                                          label: const Text(
-                                            "Reject",
-                                            style: TextStyle(color: Colors.red),
-                                          ),
-                                          style: OutlinedButton.styleFrom(
-                                            padding: const EdgeInsets.symmetric(
-                                              vertical: 13,
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment
+                                                  .start,
+                                          children: [
+                                            Text(
+                                              rider,
+                                              maxLines: 1,
+                                              overflow:
+                                                  TextOverflow
+                                                      .ellipsis,
+                                              style:
+                                                  const TextStyle(
+                                                fontWeight:
+                                                    FontWeight
+                                                        .bold,
+                                                fontSize: 15,
+                                              ),
                                             ),
-                                            side: const BorderSide(
-                                              color: Colors.red,
+                                            const SizedBox(
+                                              height: 3,
                                             ),
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
+                                            Text(
+                                              "Withdrawal #${w["id"]}",
+                                              style:
+                                                  const TextStyle(
+                                                color:
+                                                    Colors.grey,
+                                                fontSize: 12,
+                                              ),
                                             ),
-                                          ),
+                                          ],
                                         ),
+                                      ),
+                                      statusBadge(status),
+                                    ],
+                                  ),
+
+                                  const SizedBox(height: 16),
+
+                                  Text(
+                                    "₦${amount.toStringAsFixed(2)}",
+                                    style: const TextStyle(
+                                      fontSize: 24,
+                                      fontWeight:
+                                          FontWeight.bold,
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 8),
+
+                                  Text(
+                                    statusDescription(status),
+                                    style: TextStyle(
+                                      color:
+                                          statusColor(status),
+                                      fontSize: 13,
+                                      fontWeight:
+                                          FontWeight.w500,
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 12),
+
+                                  if (accountName.isNotEmpty)
+                                    Text(
+                                      accountName,
+                                      style:
+                                          const TextStyle(
+                                        fontWeight:
+                                            FontWeight.w600,
+                                      ),
+                                    ),
+
+                                  if (bankAccount.isNotEmpty)
+                                    Text(
+                                      "•••• ${bankAccount.length > 4 ? bankAccount.substring(bankAccount.length - 4) : bankAccount}",
+                                      style:
+                                          const TextStyle(
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+
+                                  const SizedBox(height: 12),
+
+                                  const Row(
+                                    children: [
+                                      Text(
+                                        "View full withdrawal details",
+                                        style: TextStyle(
+                                          color:
+                                              Colors.blue,
+                                          fontWeight:
+                                              FontWeight.w600,
+                                        ),
+                                      ),
+                                      Spacer(),
+                                      Icon(
+                                        Icons
+                                            .arrow_forward_ios,
+                                        size: 14,
+                                        color:
+                                            Colors.blue,
                                       ),
                                     ],
                                   ),
 
-                                // ==========================
-                                // PROCESSING
-                                // ==========================
-                                if (status == "processing")
-                                  Container(
-                                    width: double.infinity,
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: Colors.blue.withOpacity(0.08),
-                                      borderRadius: BorderRadius.circular(10),
+                                  if (status == "pending") ...[
+                                    const SizedBox(
+                                      height: 14,
                                     ),
-                                    child: const Row(
+                                    Row(
                                       children: [
-                                        SizedBox(
-                                          width: 18,
-                                          height: 18,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                          ),
-                                        ),
-                                        SizedBox(width: 10),
                                         Expanded(
-                                          child: Text(
-                                            "Payment is being processed by Paystack...",
+                                          child:
+                                              ElevatedButton(
+                                            onPressed: () =>
+                                                confirmApprove(
+                                              w,
+                                            ),
+                                            style:
+                                                ElevatedButton
+                                                    .styleFrom(
+                                              backgroundColor:
+                                                  Colors.green,
+                                              foregroundColor:
+                                                  Colors.white,
+                                            ),
+                                            child:
+                                                const Text(
+                                              "Approve",
+                                            ),
                                           ),
                                         ),
-                                      ],
-                                    ),
-                                  ),
-
-                                // ==========================
-                                // SUCCESS
-                                // ==========================
-                                if (status == "success")
-                                  Container(
-                                    width: double.infinity,
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: Colors.green.withOpacity(0.08),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: const Row(
-                                      children: [
-                                        Icon(
-                                          Icons.check_circle,
-                                          color: Colors.green,
+                                        const SizedBox(
+                                          width: 10,
                                         ),
-                                        SizedBox(width: 8),
-                                        Text(
-                                          "Withdrawal completed successfully.",
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-
-                                // ==========================
-                                // FAILED
-                                // ==========================
-                                if (status == "failed")
-                                  Container(
-                                    width: double.infinity,
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: Colors.red.withOpacity(0.08),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        const Icon(
-                                          Icons.error,
-                                          color: Colors.red,
-                                        ),
-                                        const SizedBox(width: 8),
                                         Expanded(
-                                          child: Text(
-                                            "Failed: ${w['reason'] ?? 'Unknown error'}",
+                                          child:
+                                              OutlinedButton(
+                                            onPressed: () =>
+                                                confirmReject(
+                                              w,
+                                            ),
+                                            style:
+                                                OutlinedButton
+                                                    .styleFrom(
+                                              foregroundColor:
+                                                  Colors.red,
+                                              side:
+                                                  const BorderSide(
+                                                color:
+                                                    Colors.red,
+                                              ),
+                                            ),
+                                            child:
+                                                const Text(
+                                              "Reject",
+                                            ),
                                           ),
                                         ),
                                       ],
                                     ),
-                                  ),
-                              ],
+                                  ],
+                                ],
+                              ),
                             ),
                           ),
                         );

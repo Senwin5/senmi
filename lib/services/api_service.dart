@@ -1094,6 +1094,43 @@ class ApiService {
     return Map<String, dynamic>.from(decoded);
   }
 
+  // ==========================
+  // RETRY WITHDRAWAL
+  // ==========================
+  static Future<Map<String, dynamic>> retryWithdrawal(int id) async {
+    final res = await http.post(
+      Uri.parse("$baseUrl/admin/withdrawals/$id/retry/"),
+      headers: await getAuthHeaders(),
+    );
+
+    debugPrint(
+      "RETRY withdrawal $id: "
+      "${res.statusCode} ${res.body}",
+    );
+
+    Map<String, dynamic> decoded;
+
+    try {
+      final data = jsonDecode(res.body);
+
+      if (data is Map<String, dynamic>) {
+        decoded = data;
+      } else {
+        throw Exception("Invalid server response");
+      }
+    } catch (e) {
+      throw Exception("Invalid response from server: ${res.body}");
+    }
+
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw Exception(
+        decoded['error'] ?? decoded['message'] ?? "Failed to retry withdrawal",
+      );
+    }
+
+    return decoded;
+  }
+
   static Future<List> getAdminRiderWallets() async {
     final response = await http.get(
       Uri.parse("$baseUrl/admin/rider-wallets/"),
