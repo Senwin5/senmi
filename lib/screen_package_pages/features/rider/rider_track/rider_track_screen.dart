@@ -427,7 +427,7 @@ class _RiderTrackScreenState extends State<RiderTrackScreen> {
                     ],
                   ),
 
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 18),
 
                   // 4. CODE INPUT
                   TextField(
@@ -436,7 +436,7 @@ class _RiderTrackScreenState extends State<RiderTrackScreen> {
                       color: isDark ? Colors.white : Colors.black,
                     ),
                     decoration: InputDecoration(
-                      labelText: "Receiver Code",
+                      labelText: "Enter Receiver Code",
                       labelStyle: TextStyle(
                         color: isDark ? Colors.white70 : Colors.black54,
                       ),
