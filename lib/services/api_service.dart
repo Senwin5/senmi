@@ -1029,22 +1029,69 @@ class ApiService {
       headers: await getAuthHeaders(),
     );
 
-    return jsonDecode(res.body);
+    debugPrint("GET withdrawals: ${res.statusCode} ${res.body}");
+
+    if (res.statusCode != 200) {
+      throw Exception("Failed to load withdrawals: ${res.body}");
+    }
+
+    final decoded = jsonDecode(res.body);
+
+    if (decoded is! List) {
+      throw Exception("Invalid withdrawal response");
+    }
+
+    return decoded;
   }
 
-  static Future approveWithdrawal(int id) async {
-    await http.post(
+  static Future<Map<String, dynamic>> approveWithdrawal(int id) async {
+    final res = await http.post(
       Uri.parse("$baseUrl/admin/withdrawals/$id/approve/"),
       headers: await getAuthHeaders(),
     );
+
+    debugPrint(
+      "APPROVE withdrawal $id: "
+      "${res.statusCode} ${res.body}",
+    );
+
+    final decoded = jsonDecode(res.body);
+
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw Exception(
+        decoded['error'] ??
+            decoded['message'] ??
+            "Failed to approve withdrawal",
+      );
+    }
+
+    return Map<String, dynamic>.from(decoded);
   }
 
-  static Future rejectWithdrawal(int id, String reason) async {
-    await http.post(
+  static Future<Map<String, dynamic>> rejectWithdrawal(
+    int id,
+    String reason,
+  ) async {
+    final res = await http.post(
       Uri.parse("$baseUrl/admin/withdrawals/$id/reject/"),
       headers: await getAuthHeaders(),
       body: jsonEncode({"reason": reason}),
     );
+
+    debugPrint(
+      "REJECT withdrawal $id: "
+      "${res.statusCode} ${res.body}",
+    );
+
+    final decoded = jsonDecode(res.body);
+
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw Exception(
+        decoded['error'] ?? decoded['message'] ?? "Failed to reject withdrawal",
+      );
+    }
+
+    return Map<String, dynamic>.from(decoded);
   }
 
   static Future<List> getAdminRiderWallets() async {
@@ -1053,7 +1100,17 @@ class ApiService {
       headers: await ApiService.getAuthHeaders(),
     );
 
-    return jsonDecode(response.body);
+    if (response.statusCode != 200) {
+      throw Exception("Failed to load rider wallets: ${response.body}");
+    }
+
+    final decoded = jsonDecode(response.body);
+
+    if (decoded is! List) {
+      throw Exception("Invalid wallet response");
+    }
+
+    return decoded;
   }
 
   // getRiderProfile
