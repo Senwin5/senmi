@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:senmi/screen_package_pages/admin_package/admin/screen/admin_home_bottom/admin_dashboard.dart';
 import 'package:senmi/screen_package_pages/admin_package/admin/screen/admin_package/admin_packages.dart';
 import 'package:senmi/screen_package_pages/admin_package/admin/screen/admin_prrofile/admin_profile_screen.dart';
-import 'package:senmi/screen_package_pages/admin_package/admin/screen/admin_prrofile/analytics_screen.dart';
+import 'package:senmi/screen_package_pages/admin_package/admin/screen/admin_analytics/analytics_screen.dart';
 import 'package:senmi/screen_package_pages/admin_package/admin/screen/admin_riders_screen/admin_riders_screen.dart';
 
 class AdminBottomNav extends StatefulWidget {

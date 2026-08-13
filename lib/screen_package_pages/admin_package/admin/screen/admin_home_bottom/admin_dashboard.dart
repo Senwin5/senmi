@@ -9,7 +9,7 @@ import 'package:senmi/services/api_service.dart';
 import 'package:web_socket_channel/io.dart';
 
 import 'package:senmi/screen_package_pages/admin_package/admin/screen/admin_package/admin_packages.dart';
-import 'package:senmi/screen_package_pages/admin_package/admin/screen/admin_prrofile/analytics_screen.dart';
+import 'package:senmi/screen_package_pages/admin_package/admin/screen/admin_analytics/analytics_screen.dart';
 import 'package:senmi/screen_package_pages/admin_package/admin/screen/admin_notifications/notifications.dart';
 import 'package:senmi/screen_package_pages/admin_package/admin/screen/admin_riders_screen/admin_riders_screen.dart';
 import 'package:senmi/screen_package_pages/admin_package/admin/screen/admin_transaction/admin_wallet_screen.dart';
