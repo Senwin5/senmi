@@ -1,6 +1,8 @@
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:senmi/services/api_service.dart';
+
 import '../../../services/admin_socket_service.dart';
 import 'rider_model.dart';
 import 'rider_card.dart';
@@ -15,15 +17,20 @@ class AdminRidersScreen extends StatefulWidget {
 
 class _AdminRidersScreenState extends State<AdminRidersScreen> {
   bool isLoading = true;
+
   List<RiderModel> riders = [];
   List<RiderModel> filteredRiders = [];
+
   String selectedFilter = "all";
+
   final searchController = TextEditingController();
+
   late AdminSocketService socketService;
 
   @override
   void initState() {
     super.initState();
+
     loadRiders();
 
     socketService = AdminSocketService();
@@ -37,7 +44,10 @@ class _AdminRidersScreenState extends State<AdminRidersScreen> {
         } catch (_) {
           debugPrint("LIVE UPDATE: $event");
         }
-        if (mounted) loadRiders(showLoader: false);
+
+        if (mounted) {
+          loadRiders(showLoader: false);
+        }
       },
       onError: (error) => debugPrint("Socket error: $error"),
       onDone: () => debugPrint("Socket closed"),
@@ -52,27 +62,43 @@ class _AdminRidersScreenState extends State<AdminRidersScreen> {
   }
 
   Future<void> loadRiders({bool showLoader = true}) async {
-    if (showLoader && mounted) setState(() => isLoading = true);
+    if (showLoader && mounted) {
+      setState(() => isLoading = true);
+    }
 
     try {
       final List<dynamic> list = await ApiService.getRiders();
-      final mapped = list.map<RiderModel>((e) => RiderModel.fromJson(e)).toList();
+
+      final mapped = list
+          .map<RiderModel>((e) => RiderModel.fromJson(e))
+          .toList();
 
       if (!mounted) return;
 
       riders = mapped;
+
       _applyFiltersWithoutSetState();
 
       setState(() => isLoading = false);
     } catch (e) {
       debugPrint("Load riders error: $e");
+
       if (!mounted) return;
+
       setState(() => isLoading = false);
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Failed to load riders: $e"),
+          content: Text(
+            "Failed to load riders: $e",
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
           backgroundColor: Colors.red.shade700,
           behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
         ),
       );
     }
@@ -87,7 +113,8 @@ class _AdminRidersScreenState extends State<AdminRidersScreen> {
           rider.email.toLowerCase().contains(query) ||
           (rider.phone ?? '').toLowerCase().contains(query);
 
-      final matchesFilter = selectedFilter == "all" ||
+      final matchesFilter =
+          selectedFilter == "all" ||
           rider.status.toLowerCase() == selectedFilter;
 
       return matchesSearch && matchesFilter;
@@ -96,24 +123,35 @@ class _AdminRidersScreenState extends State<AdminRidersScreen> {
 
   void applyFilters() {
     _applyFiltersWithoutSetState();
-    if (mounted) setState(() {});
+
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   Future<void> approveRider(String riderId) async {
     final success = await ApiService.reviewRider(riderId, "approved", "");
+
     if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(success
-            ? "Rider approved successfully"
-            : "Approval failed: rider profile may be incomplete"),
-        backgroundColor: success ? Colors.green : Colors.red,
+        content: Text(
+          success
+              ? "Rider approved successfully"
+              : "Approval failed: rider profile may be incomplete",
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+        backgroundColor: success ? Colors.green.shade600 : Colors.red.shade600,
         behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
     );
 
-    if (success) await loadRiders(showLoader: false);
+    if (success) {
+      await loadRiders(showLoader: false);
+    }
   }
 
   Future<void> rejectRider(String riderId) async {
@@ -121,73 +159,163 @@ class _AdminRidersScreenState extends State<AdminRidersScreen> {
 
     final reason = await showDialog<String>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text("Reject Rider"),
-        content: TextField(
-          controller: controller,
-          maxLines: 4,
-          decoration: InputDecoration(
-            hintText: "Reason for rejection",
-            filled: true,
-            fillColor: const Color(0xffF5F7FB),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide.none,
+      builder: (dialogContext) {
+        final theme = Theme.of(dialogContext);
+        final colors = theme.colorScheme;
+
+        return AlertDialog(
+          backgroundColor: colors.surface,
+          surfaceTintColor: Colors.transparent,
+          elevation: 10,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          title: Text(
+            "Reject Rider",
+            style: TextStyle(
+              color: colors.onSurface,
+              fontSize: 21,
+              fontWeight: FontWeight.w800,
             ),
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text("Cancel"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Please provide a reason for rejecting this rider.",
+                style: TextStyle(color: colors.onSurfaceVariant, fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: controller,
+                maxLines: 4,
+                style: TextStyle(color: colors.onSurface),
+                decoration: InputDecoration(
+                  hintText: "Reason for rejection",
+                  hintStyle: TextStyle(color: colors.onSurfaceVariant),
+                  filled: true,
+                  fillColor: colors.surfaceContainerHighest,
+                  prefixIcon: Padding(
+                    padding: const EdgeInsets.only(
+                      left: 14,
+                      right: 8,
+                      bottom: 52,
+                    ),
+                    child: Icon(Icons.edit_note_rounded, color: colors.primary),
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(color: colors.primary, width: 1.5),
+                  ),
+                  contentPadding: const EdgeInsets.all(16),
+                ),
+              ),
+            ],
           ),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () => Navigator.pop(
-              dialogContext,
-              controller.text.trim().isEmpty
-                  ? "Rejected by admin"
-                  : controller.text.trim(),
+          actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(
+                "Cancel",
+                style: TextStyle(
+                  color: colors.onSurfaceVariant,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ),
-            child: const Text("Reject"),
-          ),
-        ],
-      ),
+            FilledButton.icon(
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.red.shade600,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              onPressed: () {
+                Navigator.pop(
+                  dialogContext,
+                  controller.text.trim().isEmpty
+                      ? "Rejected by admin"
+                      : controller.text.trim(),
+                );
+              },
+              icon: const Icon(Icons.close_rounded, size: 18),
+              label: const Text(
+                "Reject",
+                style: TextStyle(fontWeight: FontWeight.w800),
+              ),
+            ),
+          ],
+        );
+      },
     );
 
     controller.dispose();
 
     if (reason == null) return;
 
-    final success = await ApiService.reviewRider(
-      riderId,
-      "rejected",
-      reason,
-    );
+    final success = await ApiService.reviewRider(riderId, "rejected", reason);
 
     if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(success ? "Rider rejected" : "Rejection failed"),
-        backgroundColor: success ? Colors.orange : Colors.red,
+        content: Text(
+          success ? "Rider rejected" : "Rejection failed",
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+        backgroundColor: success ? Colors.orange.shade700 : Colors.red.shade600,
         behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
     );
 
-    if (success) await loadRiders(showLoader: false);
+    if (success) {
+      await loadRiders(showLoader: false);
+    }
   }
 
   Widget filterChip(String label) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
     final value = label.toLowerCase();
     final selected = selectedFilter == value;
 
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: ChoiceChip(
-        label: Text(label),
+        label: Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: selected ? colors.onPrimary : colors.onSurfaceVariant,
+          ),
+        ),
         selected: selected,
+        selectedColor: colors.primary,
+        backgroundColor: colors.surfaceContainerHighest,
+        side: BorderSide(
+          color: selected ? colors.primary : colors.outlineVariant,
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
         onSelected: (_) {
           selectedFilter = value;
           applyFilters();
@@ -196,102 +324,229 @@ class _AdminRidersScreenState extends State<AdminRidersScreen> {
     );
   }
 
-  int countStatus(String status) =>
-      riders.where((r) => r.status.toLowerCase() == status).length;
+  int countStatus(String status) {
+    return riders.where((r) => r.status.toLowerCase() == status).length;
+  }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xffF5F7FB),
-      appBar: AppBar(
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        backgroundColor: Colors.white,
-        title: const Text(
-          "Rider Management",
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.w800),
+  Widget _buildHeader(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        border: Border(
+          // ignore: deprecated_member_use
+          bottom: BorderSide(color: colors.outlineVariant.withOpacity(0.35)),
         ),
-        iconTheme: const IconThemeData(color: Colors.black),
       ),
-      body: Column(
+      child: Column(
         children: [
-          Container(
-            color: Colors.white,
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
-            child: Column(
+          TextField(
+            controller: searchController,
+            onChanged: (_) => applyFilters(),
+            style: TextStyle(
+              color: colors.onSurface,
+              fontWeight: FontWeight.w500,
+            ),
+            decoration: InputDecoration(
+              hintText: "Search name, email or phone",
+              hintStyle: TextStyle(color: colors.onSurfaceVariant),
+              prefixIcon: Icon(
+                Icons.search_rounded,
+                color: colors.onSurfaceVariant,
+              ),
+              suffixIcon: searchController.text.isNotEmpty
+                  ? IconButton(
+                      onPressed: () {
+                        searchController.clear();
+                        applyFilters();
+                      },
+                      icon: Icon(
+                        Icons.close_rounded,
+                        color: colors.onSurfaceVariant,
+                      ),
+                    )
+                  : null,
+              filled: true,
+              fillColor: colors.surfaceContainerHighest,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 18,
+                vertical: 16,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(17),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(17),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(17),
+                borderSide: BorderSide(color: colors.primary, width: 1.5),
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            height: 38,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
               children: [
-                TextField(
-                  controller: searchController,
-                  onChanged: (_) => applyFilters(),
-                  decoration: InputDecoration(
-                    hintText: "Search name, email or phone",
-                    prefixIcon: const Icon(Icons.search_rounded),
-                    filled: true,
-                    fillColor: const Color(0xffF5F7FB),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  height: 36,
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    children: [
-                      filterChip("All"),
-                      filterChip("Pending"),
-                      filterChip("Approved"),
-                      filterChip("Rejected"),
-                    ],
-                  ),
-                ),
+                filterChip("All"),
+                filterChip("Pending"),
+                filterChip("Approved"),
+                filterChip("Rejected"),
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      children: [
+        const SizedBox(height: 90),
+        Center(
+          child: Container(
+            width: 100,
+            height: 100,
+            decoration: BoxDecoration(
+              // ignore: deprecated_member_use
+              color: colors.primary.withOpacity(0.10),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.people_outline_rounded,
+              size: 48,
+              color: colors.primary,
+            ),
+          ),
+        ),
+        const SizedBox(height: 22),
+        Center(
+          child: Text(
+            "No riders found",
+            style: TextStyle(
+              color: colors.onSurface,
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+        const SizedBox(height: 7),
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40),
+            child: Text(
+              "Try changing your search or filter to find riders.",
+              textAlign: TextAlign.center,
+              style: TextStyle(color: colors.onSurfaceVariant, fontSize: 14),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
+
+      appBar: AppBar(
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        backgroundColor: colors.surface,
+        surfaceTintColor: Colors.transparent,
+
+        titleSpacing: 16,
+
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Rider Management",
+              style: TextStyle(
+                color: colors.onSurface,
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.3,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              "${riders.length} rider${riders.length == 1 ? '' : 's'}",
+              style: TextStyle(
+                color: colors.onSurfaceVariant,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+
+        iconTheme: IconThemeData(color: colors.onSurface),
+      ),
+
+      body: Column(
+        children: [
+          _buildHeader(context),
+
           Expanded(
             child: isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? Center(
+                    child: CircularProgressIndicator(color: colors.primary),
+                  )
                 : RefreshIndicator(
+                    color: colors.primary,
+                    backgroundColor: colors.surface,
                     onRefresh: () => loadRiders(showLoader: false),
                     child: filteredRiders.isEmpty
-                        ? ListView(
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            children: [
-                              const SizedBox(height: 100),
-                              const Icon(Icons.people_outline,
-                                  size: 54, color: Colors.grey),
-                              const SizedBox(height: 12),
-                              const Center(child: Text("No riders found")),
-                            ],
-                          )
+                        ? _buildEmptyState(context)
                         : ListView.builder(
-                            physics: const AlwaysScrollableScrollPhysics(),
+                            physics: const AlwaysScrollableScrollPhysics(
+                              parent: BouncingScrollPhysics(),
+                            ),
                             padding: const EdgeInsets.fromLTRB(12, 14, 12, 28),
                             itemCount: filteredRiders.length,
                             itemBuilder: (_, index) {
                               final rider = filteredRiders[index];
-                              return RiderCard(
-                                rider: rider,
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => RiderDetailsScreen(
-                                        rider: rider,
-                                        onApprove: () =>
-                                            approveRider(rider.riderId),
-                                        onReject: () =>
-                                            rejectRider(rider.riderId),
+
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 10),
+                                child: RiderCard(
+                                  rider: rider,
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => RiderDetailsScreen(
+                                          rider: rider,
+                                          onApprove: () =>
+                                              approveRider(rider.riderId),
+                                          onReject: () =>
+                                              rejectRider(rider.riderId),
+                                        ),
                                       ),
-                                    ),
-                                  );
-                                },
-                                onApprove: () =>
-                                    approveRider(rider.riderId),
-                                onReject: () =>
-                                    rejectRider(rider.riderId),
+                                    );
+                                  },
+                                  onApprove: () => approveRider(rider.riderId),
+                                  onReject: () => rejectRider(rider.riderId),
+                                ),
                               );
                             },
                           ),
