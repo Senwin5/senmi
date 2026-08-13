@@ -39,6 +39,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   static const Color surface = Color(0xff11161D);
   static const Color surface3 = Color(0xff1A2029);
   static const Color border = Color(0xff252D38);
+
   static const Color primary = Color(0xff7C5CFF);
   static const Color blue = Color(0xff4C8DFF);
   static const Color green = Color(0xff2DD881);
@@ -46,6 +47,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   static const Color red = Color(0xffff5c68);
   static const Color cyan = Color(0xff27C7D9);
   static const Color yellow = Color(0xffffd54f);
+
   static const Color textPrimary = Color(0xffF5F7FA);
   static const Color textSecondary = Color(0xff8D98A8);
   static const Color textMuted = Color(0xff626C7A);
@@ -719,7 +721,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       crossAxisSpacing: 11,
       mainAxisSpacing: 11,
 
-      childAspectRatio: 1.38,
+      // FIX:
+      // Slightly taller cards to prevent the
+      // 0.511px RenderFlex overflow.
+      childAspectRatio: 1.42,
 
       children: [
         _financialCard(
@@ -776,6 +781,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
+
           colors: [surface, Color.lerp(surface, color, .035)!],
         ),
       ),
@@ -812,28 +818,42 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
           Text(
             title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+
             style: const TextStyle(color: textSecondary, fontSize: 11),
-          ),
-
-          const SizedBox(height: 4),
-
-          FittedBox(
-            alignment: Alignment.centerLeft,
-
-            child: Text(
-              value,
-              style: const TextStyle(
-                color: textPrimary,
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
           ),
 
           const SizedBox(height: 3),
 
+          // FIX:
+          // Flexible prevents the FittedBox/Text from
+          // demanding more vertical space than the card has.
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+
+              child: Text(
+                value,
+                maxLines: 1,
+
+                style: const TextStyle(
+                  color: textPrimary,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 2),
+
           Text(
             caption,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+
             style: TextStyle(
               color: color.withOpacity(.75),
               fontSize: 9,
@@ -890,6 +910,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
                 child: Text(
                   value,
+
                   style: TextStyle(
                     color: range == value ? Colors.white : textSecondary,
 
@@ -972,6 +993,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
                 child: Text(
                   '${totalInRange.round()} packages',
+
                   style: const TextStyle(
                     color: textSecondary,
                     fontSize: 10,
@@ -1051,6 +1073,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
             return Padding(
               padding: const EdgeInsets.only(bottom: 15),
+
               child: _statusRow(status, value, ratio),
             );
           }),
@@ -1066,7 +1089,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
         decoration: BoxDecoration(
           color: color.withOpacity(.06),
+
           borderRadius: BorderRadius.circular(13),
+
           border: Border.all(color: color.withOpacity(.10)),
         ),
 
@@ -1076,6 +1101,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           children: [
             Text(
               '$value',
+
               style: TextStyle(
                 color: color,
                 fontSize: 18,
@@ -1087,6 +1113,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
             Text(
               title,
+
               style: const TextStyle(color: textSecondary, fontSize: 9),
             ),
           ],
@@ -1127,6 +1154,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
             Text(
               '$value',
+
               style: TextStyle(color: color, fontWeight: FontWeight.w800),
             ),
 
@@ -1134,6 +1162,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
             Text(
               '${(ratio * 100).toStringAsFixed(1)}%',
+
               style: const TextStyle(color: textSecondary, fontSize: 10),
             ),
           ],
@@ -1232,6 +1261,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
             decoration: BoxDecoration(
               color: color.withOpacity(.10),
+
               borderRadius: BorderRadius.circular(11),
             ),
 
@@ -1243,6 +1273,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           Expanded(
             child: Text(
               title,
+
               style: const TextStyle(color: textSecondary, fontSize: 13),
             ),
           ),
@@ -1330,6 +1361,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
       decoration: BoxDecoration(
         color: surface,
+
         borderRadius: BorderRadius.circular(18),
 
         border: Border.all(color: border),
@@ -1348,6 +1380,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
                 decoration: BoxDecoration(
                   color: color.withOpacity(.08),
+
                   borderRadius: BorderRadius.circular(9),
                 ),
 
@@ -1375,16 +1408,19 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
           const SizedBox(height: 5),
 
-          FittedBox(
-            alignment: Alignment.centerLeft,
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
 
-            child: Text(
-              value,
+              child: Text(
+                value,
 
-              style: TextStyle(
-                color: color,
-                fontSize: 19,
-                fontWeight: FontWeight.w800,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 19,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
           ),
@@ -1518,6 +1554,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
       decoration: BoxDecoration(
         color: surface,
+
         borderRadius: BorderRadius.circular(21),
 
         border: Border.all(color: border),
