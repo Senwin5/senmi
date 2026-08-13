@@ -35,9 +35,30 @@ class _AdminWithdrawalDetailsScreenState
   @override
   void initState() {
     super.initState();
-
     w = Map<String, dynamic>.from(widget.withdrawal);
   }
+
+  // =========================================================
+  // THEME
+  // =========================================================
+
+  bool get isDark => Theme.of(context).brightness == Brightness.dark;
+
+  Color get backgroundColor =>
+      isDark ? const Color(0xff101114) : const Color(0xffF5F7FB);
+
+  Color get cardColor => isDark ? const Color(0xff1A1C20) : Colors.white;
+
+  Color get primaryTextColor => isDark ? Colors.white : Colors.black;
+
+  Color get secondaryTextColor => isDark ? Colors.grey.shade400 : Colors.grey;
+
+  Color get dividerColor =>
+      isDark ? Colors.grey.shade800 : Colors.grey.shade200;
+
+  Color get appBarColor => isDark ? const Color(0xff15171A) : Colors.white;
+
+  Color get bottomBarColor => isDark ? const Color(0xff15171A) : Colors.white;
 
   // =========================================================
   // HELPERS
@@ -168,11 +189,20 @@ class _AdminWithdrawalDetailsScreenState
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) {
+        final dark = Theme.of(context).brightness == Brightness.dark;
+
         return AlertDialog(
-          title: const Text("Approve Withdrawal?"),
+          backgroundColor: dark ? const Color(0xff1A1C20) : Colors.white,
+          title: Text(
+            "Approve Withdrawal?",
+            style: TextStyle(color: dark ? Colors.white : Colors.black),
+          ),
           content: Text(
             "Approve ₦${amount.toStringAsFixed(2)} withdrawal?\n\n"
             "This will send the withdrawal to Paystack.",
+            style: TextStyle(
+              color: dark ? Colors.grey.shade300 : Colors.black87,
+            ),
           ),
           actions: [
             TextButton(
@@ -238,13 +268,23 @@ class _AdminWithdrawalDetailsScreenState
     final reason = await showDialog<String>(
       context: context,
       builder: (context) {
+        final dark = Theme.of(context).brightness == Brightness.dark;
+
         return AlertDialog(
-          title: const Text("Reject Withdrawal"),
+          backgroundColor: dark ? const Color(0xff1A1C20) : Colors.white,
+          title: Text(
+            "Reject Withdrawal",
+            style: TextStyle(color: dark ? Colors.white : Colors.black),
+          ),
           content: TextField(
             controller: controller,
             maxLines: 3,
+            style: TextStyle(color: dark ? Colors.white : Colors.black),
             decoration: InputDecoration(
               hintText: "Reason",
+              hintStyle: TextStyle(
+                color: dark ? Colors.grey.shade500 : Colors.grey.shade600,
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -321,11 +361,20 @@ class _AdminWithdrawalDetailsScreenState
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) {
+        final dark = Theme.of(context).brightness == Brightness.dark;
+
         return AlertDialog(
-          title: const Text("Retry Withdrawal?"),
+          backgroundColor: dark ? const Color(0xff1A1C20) : Colors.white,
+          title: Text(
+            "Retry Withdrawal?",
+            style: TextStyle(color: dark ? Colors.white : Colors.black),
+          ),
           content: Text(
             "Retry ₦${amount.toStringAsFixed(2)} withdrawal?\n\n"
             "The backend will send the withdrawal to Paystack again.",
+            style: TextStyle(
+              color: dark ? Colors.grey.shade300 : Colors.black87,
+            ),
           ),
           actions: [
             TextButton(
@@ -403,19 +452,23 @@ class _AdminWithdrawalDetailsScreenState
             width: 125,
             child: Text(
               label,
-              style: const TextStyle(color: Colors.grey, fontSize: 13),
+              style: TextStyle(color: secondaryTextColor, fontSize: 13),
             ),
           ),
           Expanded(
             child: Text(
               hasValue ? value : "-",
-              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+              style: TextStyle(
+                color: primaryTextColor,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
             ),
           ),
           if (copyable && hasValue)
             IconButton(
               onPressed: () => copyValue(value, label),
-              icon: const Icon(Icons.copy, size: 17),
+              icon: Icon(Icons.copy, size: 17, color: secondaryTextColor),
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(),
             ),
@@ -433,11 +486,11 @@ class _AdminWithdrawalDetailsScreenState
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardColor,
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(.04),
+            color: Colors.black.withOpacity(isDark ? .20 : .04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -452,14 +505,15 @@ class _AdminWithdrawalDetailsScreenState
               const SizedBox(width: 10),
               Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
+                  color: primaryTextColor,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ],
           ),
-          const Divider(height: 24),
+          Divider(height: 24, color: dividerColor),
           ...children,
         ],
       ),
@@ -491,8 +545,7 @@ class _AdminWithdrawalDetailsScreenState
               ),
               child: Icon(icon, color: color, size: 18),
             ),
-            if (!last)
-              Container(width: 2, height: 38, color: Colors.grey.shade200),
+            if (!last) Container(width: 2, height: 38, color: dividerColor),
           ],
         ),
         const SizedBox(width: 12),
@@ -504,12 +557,15 @@ class _AdminWithdrawalDetailsScreenState
               children: [
                 Text(
                   title,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: primaryTextColor,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 3),
                 Text(
                   description,
-                  style: const TextStyle(color: Colors.grey, fontSize: 12),
+                  style: TextStyle(color: secondaryTextColor, fontSize: 12),
                 ),
                 const SizedBox(height: 12),
               ],
@@ -549,23 +605,27 @@ class _AdminWithdrawalDetailsScreenState
     final color = statusColor();
 
     return Scaffold(
-      backgroundColor: const Color(0xffF5F7FB),
+      backgroundColor: backgroundColor,
 
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: appBarColor,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
-        title: const Text(
+        iconTheme: IconThemeData(color: primaryTextColor),
+        title: Text(
           "Withdrawal Details",
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: primaryTextColor,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
 
       bottomNavigationBar: actionLoading
-          ? const SafeArea(
-              child: Padding(
-                padding: EdgeInsets.all(16),
-                child: Center(child: CircularProgressIndicator()),
+          ? SafeArea(
+              child: Container(
+                color: bottomBarColor,
+                padding: const EdgeInsets.all(16),
+                child: const Center(child: CircularProgressIndicator()),
               ),
             )
           : _buildBottomActions(),
@@ -581,7 +641,7 @@ class _AdminWithdrawalDetailsScreenState
               width: double.infinity,
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: cardColor,
                 borderRadius: BorderRadius.circular(22),
               ),
               child: Column(
@@ -612,7 +672,8 @@ class _AdminWithdrawalDetailsScreenState
 
                   Text(
                     "₦${amount.toStringAsFixed(2)}",
-                    style: const TextStyle(
+                    style: TextStyle(
+                      color: primaryTextColor,
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
                     ),
@@ -644,7 +705,7 @@ class _AdminWithdrawalDetailsScreenState
                   Text(
                     statusMessage(),
                     textAlign: TextAlign.center,
-                    style: const TextStyle(color: Colors.grey, fontSize: 13),
+                    style: TextStyle(color: secondaryTextColor, fontSize: 13),
                   ),
                 ],
               ),
@@ -662,10 +723,13 @@ class _AdminWithdrawalDetailsScreenState
             ]),
 
             // =================================================
-            // RIDER WALLET
+            // WALLET
             // =================================================
-            section("Rider Wallet", Icons.account_balance_wallet, [
-              infoRow("Wallet Balance", "₦${walletBalance.toStringAsFixed(2)}"),
+            section("Wallet Information", Icons.account_balance_wallet, [
+              infoRow(
+                "Current Balance",
+                "₦${walletBalance.toStringAsFixed(2)}",
+              ),
               infoRow(
                 "Total Earned",
                 "₦${walletTotalEarned.toStringAsFixed(2)}",
@@ -711,7 +775,11 @@ class _AdminWithdrawalDetailsScreenState
                 [
                   Text(
                     reason,
-                    style: const TextStyle(fontSize: 14, height: 1.5),
+                    style: TextStyle(
+                      color: primaryTextColor,
+                      fontSize: 14,
+                      height: 1.5,
+                    ),
                   ),
                 ],
               ),
@@ -725,6 +793,7 @@ class _AdminWithdrawalDetailsScreenState
                 "Rider requested ₦${amount.toStringAsFixed(2)}.",
                 Icons.add_circle,
                 Colors.blue,
+                last: status == "pending",
               ),
 
               if (status != "pending")
@@ -735,6 +804,12 @@ class _AdminWithdrawalDetailsScreenState
                       : "Withdrawal was approved for Paystack processing.",
                   status == "rejected" ? Icons.close : Icons.check,
                   status == "rejected" ? Colors.red : Colors.green,
+                  last: ![
+                    "processing",
+                    "success",
+                    "failed",
+                    "reversed",
+                  ].contains(status),
                 ),
 
               if ([
@@ -748,6 +823,13 @@ class _AdminWithdrawalDetailsScreenState
                   "Transfer was sent to Paystack.",
                   Icons.send,
                   Colors.indigo,
+                  last: status == "processing"
+                      ? false
+                      : status == "success" ||
+                            status == "failed" ||
+                            status == "reversed"
+                      ? false
+                      : true,
                 ),
 
               if (status == "success")
@@ -811,7 +893,7 @@ class _AdminWithdrawalDetailsScreenState
     if (status == "pending") {
       return SafeArea(
         child: Container(
-          color: Colors.white,
+          color: bottomBarColor,
           padding: const EdgeInsets.all(14),
           child: Row(
             children: [
@@ -849,7 +931,7 @@ class _AdminWithdrawalDetailsScreenState
     if (status == "failed") {
       return SafeArea(
         child: Container(
-          color: Colors.white,
+          color: bottomBarColor,
           padding: const EdgeInsets.all(14),
           child: SizedBox(
             width: double.infinity,
@@ -871,17 +953,17 @@ class _AdminWithdrawalDetailsScreenState
     if (status == "processing") {
       return SafeArea(
         child: Container(
-          color: Colors.white,
+          color: bottomBarColor,
           padding: const EdgeInsets.all(14),
-          child: const Row(
+          child: Row(
             children: [
-              Icon(Icons.sync, color: Colors.indigo),
-              SizedBox(width: 10),
+              const Icon(Icons.sync, color: Colors.indigo),
+              const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   "Paystack is processing this withdrawal. No manual action is required.",
                   style: TextStyle(
-                    color: Colors.indigo,
+                    color: isDark ? Colors.indigo.shade200 : Colors.indigo,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -895,7 +977,7 @@ class _AdminWithdrawalDetailsScreenState
     if (status == "success") {
       return SafeArea(
         child: Container(
-          color: Colors.white,
+          color: bottomBarColor,
           padding: const EdgeInsets.all(14),
           child: const Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -918,7 +1000,7 @@ class _AdminWithdrawalDetailsScreenState
     if (status == "reversed") {
       return SafeArea(
         child: Container(
-          color: Colors.white,
+          color: bottomBarColor,
           padding: const EdgeInsets.all(14),
           child: const Row(
             mainAxisAlignment: MainAxisAlignment.center,
