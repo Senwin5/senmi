@@ -28,46 +28,88 @@ class _AdminBottomNavState extends State<AdminBottomNav> {
     return Scaffold(
       body: IndexedStack(index: currentIndex, children: screens),
 
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: currentIndex,
+      bottomNavigationBar: NavigationBarTheme(
+        data: NavigationBarThemeData(
+          // Bottom navigation background
+          backgroundColor: Colors.white,
 
-        onDestinationSelected: (index) {
-          setState(() {
-            currentIndex = index;
-          });
-        },
+          // Selected icon background
+          indicatorColor: const Color(0xffE9D5FF),
 
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.dashboard_outlined),
-            selectedIcon: Icon(Icons.dashboard),
-            label: "Dashboard",
-          ),
+          // Selected icon
+          iconTheme: WidgetStateProperty.resolveWith<IconThemeData>((states) {
+            if (states.contains(WidgetState.selected)) {
+              return const IconThemeData(color: Color(0xff7C3AED), size: 24);
+            }
 
-          NavigationDestination(
-            icon: Icon(Icons.delivery_dining_outlined),
-            selectedIcon: Icon(Icons.delivery_dining),
-            label: "Riders",
-          ),
+            return IconThemeData(color: Colors.grey.shade600, size: 24);
+          }),
 
-          NavigationDestination(
-            icon: Icon(Icons.inventory_2_outlined),
-            selectedIcon: Icon(Icons.inventory_2),
-            label: "Packages",
-          ),
+          // Labels
+          labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>((states) {
+            if (states.contains(WidgetState.selected)) {
+              return const TextStyle(
+                color: Color(0xff7C3AED),
+                fontWeight: FontWeight.w700,
+                fontSize: 12,
+              );
+            }
 
-          NavigationDestination(
-            icon: Icon(Icons.bar_chart_outlined),
-            selectedIcon: Icon(Icons.bar_chart),
-            label: "Analytics",
-          ),
+            return TextStyle(
+              color: Colors.grey.shade600,
+              fontWeight: FontWeight.w500,
+              fontSize: 12,
+            );
+          }),
 
-          NavigationDestination(
-            icon: Icon(Icons.settings_outlined),
-            selectedIcon: Icon(Icons.settings),
-            label: "Profile",
-          ),
-        ],
+          // Navigation bar height
+          height: 75,
+
+          // Remove extra Material tint
+          surfaceTintColor: Colors.transparent,
+        ),
+
+        child: NavigationBar(
+          selectedIndex: currentIndex,
+
+          onDestinationSelected: (index) {
+            setState(() {
+              currentIndex = index;
+            });
+          },
+
+          destinations: const [
+            NavigationDestination(
+              icon: Icon(Icons.dashboard_outlined),
+              selectedIcon: Icon(Icons.dashboard),
+              label: 'Dashboard',
+            ),
+
+            NavigationDestination(
+              icon: Icon(Icons.delivery_dining_outlined),
+              selectedIcon: Icon(Icons.delivery_dining),
+              label: 'Riders',
+            ),
+
+            NavigationDestination(
+              icon: Icon(Icons.inventory_2_outlined),
+              selectedIcon: Icon(Icons.inventory_2),
+              label: 'Packages',
+            ),
+
+            NavigationDestination(
+              icon: Icon(Icons.bar_chart_outlined),
+              selectedIcon: Icon(Icons.bar_chart),
+              label: 'Analytics',
+            ),
+
+            NavigationDestination(
+              icon: Icon(Icons.settings_outlined),
+              selectedIcon: Icon(Icons.settings),
+              label: 'Profile',
+            ),
+          ],
+        ),
       ),
     );
   }
