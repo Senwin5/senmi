@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:senmi/services/api_service.dart';
-import 'rider_model.dart';
 import '../../../services/admin_socket_service.dart';
+import 'rider_model.dart';
 import 'rider_card.dart';
 import 'admin_rider_details_screen.dart';
 
@@ -15,91 +15,71 @@ class AdminRidersScreen extends StatefulWidget {
 
 class _AdminRidersScreenState extends State<AdminRidersScreen> {
   bool isLoading = true;
-
   List<RiderModel> riders = [];
   List<RiderModel> filteredRiders = [];
-
   String selectedFilter = "all";
-
   final searchController = TextEditingController();
-
   late AdminSocketService socketService;
 
   @override
   void initState() {
     super.initState();
-
     loadRiders();
 
-    // =========================
-    // ✅ SOCKET CONNECTION
-    // =========================
-
     socketService = AdminSocketService();
-
     socketService.connect();
 
     socketService.stream.listen(
       (event) {
-        final data = jsonDecode(event);
-
-        debugPrint("LIVE UPDATE: $data");
-
-        // refresh riders automatically
-        loadRiders();
+        try {
+          final data = jsonDecode(event);
+          debugPrint("LIVE UPDATE: $data");
+        } catch (_) {
+          debugPrint("LIVE UPDATE: $event");
+        }
+        if (mounted) loadRiders(showLoader: false);
       },
-
-      onError: (error) {
-        debugPrint("Socket error: $error");
-      },
-
-      onDone: () {
-        debugPrint("Socket closed");
-      },
+      onError: (error) => debugPrint("Socket error: $error"),
+      onDone: () => debugPrint("Socket closed"),
     );
   }
 
   @override
   void dispose() {
     searchController.dispose();
-
     socketService.dispose();
-
     super.dispose();
   }
 
-  // =========================
-  // LOAD RIDERS
-  // =========================
-
-  Future<void> loadRiders() async {
-    setState(() {
-      isLoading = true;
-    });
+  Future<void> loadRiders({bool showLoader = true}) async {
+    if (showLoader && mounted) setState(() => isLoading = true);
 
     try {
       final List<dynamic> list = await ApiService.getRiders();
+      final mapped = list.map<RiderModel>((e) => RiderModel.fromJson(e)).toList();
 
-      riders = list.map<RiderModel>((e) => RiderModel.fromJson(e)).toList();
+      if (!mounted) return;
 
-      applyFilters();
+      riders = mapped;
+      _applyFiltersWithoutSetState();
+
+      setState(() => isLoading = false);
     } catch (e) {
       debugPrint("Load riders error: $e");
+      if (!mounted) return;
+      setState(() => isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Failed to load riders: $e"),
+          backgroundColor: Colors.red.shade700,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     }
-
-    if (!mounted) return;
-
-    setState(() {
-      isLoading = false;
-    });
   }
 
-  // =========================
-  // SEARCH + FILTERS
-  // =========================
-
-  void applyFilters() {
-    final query = searchController.text.toLowerCase();
+  void _applyFiltersWithoutSetState() {
+    final query = searchController.text.trim().toLowerCase();
 
     filteredRiders = riders.where((rider) {
       final matchesSearch =
@@ -107,231 +87,214 @@ class _AdminRidersScreenState extends State<AdminRidersScreen> {
           rider.email.toLowerCase().contains(query) ||
           (rider.phone ?? '').toLowerCase().contains(query);
 
-      final matchesFilter = selectedFilter == "all"
-          ? true
-          : rider.status.toLowerCase() == selectedFilter;
+      final matchesFilter = selectedFilter == "all" ||
+          rider.status.toLowerCase() == selectedFilter;
 
       return matchesSearch && matchesFilter;
     }).toList();
-
-    if (mounted) {
-      setState(() {});
-    }
   }
 
-  // =========================
-  // APPROVE RIDER
-  // =========================
+  void applyFilters() {
+    _applyFiltersWithoutSetState();
+    if (mounted) setState(() {});
+  }
 
   Future<void> approveRider(String riderId) async {
-    debugPrint("BUTTON CLICKED: $riderId");
-
     final success = await ApiService.reviewRider(riderId, "approved", "");
-
-    debugPrint("API RESULT: $success");
-
     if (!mounted) return;
 
-    if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Rider approved successfully")),
-      );
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(success
+            ? "Rider approved successfully"
+            : "Approval failed: rider profile may be incomplete"),
+        backgroundColor: success ? Colors.green : Colors.red,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
 
-      loadRiders();
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            "Approval failed: rider profile incomplete or rejected by server",
-          ),
-        ),
-      );
-    }
+    if (success) await loadRiders(showLoader: false);
   }
-
-  // =========================
-  // REJECT RIDER
-  // =========================
 
   Future<void> rejectRider(String riderId) async {
     final controller = TextEditingController();
 
-    showDialog(
+    final reason = await showDialog<String>(
       context: context,
-      builder: (_) {
-        return AlertDialog(
-          title: const Text("Reject Rider"),
-          content: TextField(
-            controller: controller,
-            maxLines: 3,
-            decoration: const InputDecoration(
-              hintText: "Reason for rejection",
-              border: OutlineInputBorder(),
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text("Reject Rider"),
+        content: TextField(
+          controller: controller,
+          maxLines: 4,
+          decoration: InputDecoration(
+            hintText: "Reason for rejection",
+            filled: true,
+            fillColor: const Color(0xffF5F7FB),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide.none,
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel"),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text("Cancel"),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(
+              dialogContext,
+              controller.text.trim().isEmpty
+                  ? "Rejected by admin"
+                  : controller.text.trim(),
             ),
-            ElevatedButton(
-              onPressed: () async {
-                final success = await ApiService.reviewRider(
-                  riderId,
-                  "rejected",
-                  controller.text.trim(),
-                );
-
-                if (!mounted) return;
-
-                Navigator.pop(context);
-
-                if (success) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Rider rejected")),
-                  );
-
-                  loadRiders();
-                }
-              },
-              child: const Text("Reject"),
-            ),
-          ],
-        );
-      },
+            child: const Text("Reject"),
+          ),
+        ],
+      ),
     );
+
+    controller.dispose();
+
+    if (reason == null) return;
+
+    final success = await ApiService.reviewRider(
+      riderId,
+      "rejected",
+      reason,
+    );
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(success ? "Rider rejected" : "Rejection failed"),
+        backgroundColor: success ? Colors.orange : Colors.red,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+
+    if (success) await loadRiders(showLoader: false);
   }
 
-  // =========================
-  // FILTER CHIP
-  // =========================
-
   Widget filterChip(String label) {
-    final isSelected = selectedFilter == label.toLowerCase();
+    final value = label.toLowerCase();
+    final selected = selectedFilter == value;
 
     return Padding(
       padding: const EdgeInsets.only(right: 8),
-
       child: ChoiceChip(
         label: Text(label),
-
-        selected: isSelected,
-
+        selected: selected,
         onSelected: (_) {
-          selectedFilter = label.toLowerCase();
-
+          selectedFilter = value;
           applyFilters();
         },
       ),
     );
   }
 
-  // =========================
-  // UI
-  // =========================
+  int countStatus(String status) =>
+      riders.where((r) => r.status.toLowerCase() == status).length;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Riders Approval"), centerTitle: true),
-
+      backgroundColor: const Color(0xffF5F7FB),
+      appBar: AppBar(
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        backgroundColor: Colors.white,
+        title: const Text(
+          "Rider Management",
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.w800),
+        ),
+        iconTheme: const IconThemeData(color: Colors.black),
+      ),
       body: Column(
         children: [
-          // =========================
-          // SEARCH
-          // =========================
-          Padding(
-            padding: const EdgeInsets.all(12),
-
-            child: TextField(
-              controller: searchController,
-
-              onChanged: (_) {
-                applyFilters();
-              },
-
-              decoration: InputDecoration(
-                hintText: "Search username, email, phone",
-
-                prefixIcon: const Icon(Icons.search),
-
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
-            ),
-          ),
-
-          // =========================
-          // FILTERS
-          // =========================
-          SizedBox(
-            height: 50,
-
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
+            child: Column(
               children: [
-                filterChip("All"),
-                filterChip("Pending"),
-                filterChip("Approved"),
-                filterChip("Rejected"),
+                TextField(
+                  controller: searchController,
+                  onChanged: (_) => applyFilters(),
+                  decoration: InputDecoration(
+                    hintText: "Search name, email or phone",
+                    prefixIcon: const Icon(Icons.search_rounded),
+                    filled: true,
+                    fillColor: const Color(0xffF5F7FB),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 36,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    children: [
+                      filterChip("All"),
+                      filterChip("Pending"),
+                      filterChip("Approved"),
+                      filterChip("Rejected"),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
-
-          const SizedBox(height: 10),
-
-          // =========================
-          // RIDERS LIST
-          // =========================
           Expanded(
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : filteredRiders.isEmpty
-                ? const Center(child: Text("No riders found"))
                 : RefreshIndicator(
-                    onRefresh: loadRiders,
-
-                    child: ListView.builder(
-                      padding: const EdgeInsets.all(12),
-
-                      itemCount: filteredRiders.length,
-
-                      itemBuilder: (context, index) {
-                        final rider = filteredRiders[index];
-
-                        debugPrint("PROFILE IMAGE: ${rider.profileImage}");
-
-                        return RiderCard(
-                          rider: rider,
-
-                          onTap: () {
-                            Navigator.push(
-                              context,
-
-                              MaterialPageRoute(
-                                builder: (_) => RiderDetailsScreen(
-                                  rider: rider,
-                                  onApprove: () => approveRider(rider.riderId),
-                                  onReject: () => rejectRider(rider.riderId),
-                                ),
-                              ),
-                            );
-                          },
-
-                          onApprove: () {
-                            approveRider(rider.riderId);
-                          },
-
-                          onReject: () {
-                            rejectRider(rider.riderId);
-                          },
-                        );
-                      },
-                    ),
+                    onRefresh: () => loadRiders(showLoader: false),
+                    child: filteredRiders.isEmpty
+                        ? ListView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            children: [
+                              const SizedBox(height: 100),
+                              const Icon(Icons.people_outline,
+                                  size: 54, color: Colors.grey),
+                              const SizedBox(height: 12),
+                              const Center(child: Text("No riders found")),
+                            ],
+                          )
+                        : ListView.builder(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: const EdgeInsets.fromLTRB(12, 14, 12, 28),
+                            itemCount: filteredRiders.length,
+                            itemBuilder: (_, index) {
+                              final rider = filteredRiders[index];
+                              return RiderCard(
+                                rider: rider,
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => RiderDetailsScreen(
+                                        rider: rider,
+                                        onApprove: () =>
+                                            approveRider(rider.riderId),
+                                        onReject: () =>
+                                            rejectRider(rider.riderId),
+                                      ),
+                                    ),
+                                  );
+                                },
+                                onApprove: () =>
+                                    approveRider(rider.riderId),
+                                onReject: () =>
+                                    rejectRider(rider.riderId),
+                              );
+                            },
+                          ),
                   ),
           ),
         ],

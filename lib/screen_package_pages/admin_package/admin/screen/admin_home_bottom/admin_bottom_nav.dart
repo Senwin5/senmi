@@ -5,17 +5,14 @@ import 'package:senmi/screen_package_pages/admin_package/admin/screen/admin_prro
 import 'package:senmi/screen_package_pages/admin_package/admin/screen/admin_prrofile/analytics_screen.dart';
 import 'package:senmi/screen_package_pages/admin_package/admin/screen/admin_riders_screen/admin_riders_screen.dart';
 
-
 class AdminBottomNav extends StatefulWidget {
   const AdminBottomNav({super.key});
 
   @override
-  State<AdminBottomNav> createState() =>
-      _AdminBottomNavState();
+  State<AdminBottomNav> createState() => _AdminBottomNavState();
 }
 
-class _AdminBottomNavState
-    extends State<AdminBottomNav> {
+class _AdminBottomNavState extends State<AdminBottomNav> {
   int currentIndex = 0;
 
   final List<Widget> screens = [
@@ -29,10 +26,7 @@ class _AdminBottomNavState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: currentIndex,
-        children: screens,
-      ),
+      body: IndexedStack(index: currentIndex, children: screens),
 
       bottomNavigationBar: NavigationBar(
         selectedIndex: currentIndex,
