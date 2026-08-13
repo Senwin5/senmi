@@ -25,47 +25,81 @@ class _AdminBottomNavState extends State<AdminBottomNav> {
 
   @override
   Widget build(BuildContext context) {
+    // Check whether the app is currently using dark mode.
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      body: IndexedStack(index: currentIndex, children: screens),
+      body: IndexedStack(
+        index: currentIndex,
+        children: screens,
+      ),
 
       bottomNavigationBar: NavigationBarTheme(
         data: NavigationBarThemeData(
-          // Bottom navigation background
-          backgroundColor: Colors.white,
+          // ============================================================
+          // BOTTOM NAVIGATION BACKGROUND
+          // ============================================================
+          backgroundColor: isDark
+              ? const Color(0xff15121A)
+              : Colors.white,
 
-          // Selected icon background
-          indicatorColor: const Color(0xffE9D5FF),
+          // ============================================================
+          // SELECTED ITEM BACKGROUND
+          // ============================================================
+          indicatorColor: isDark
+              ? const Color(0xff3B1F5C)
+              : const Color(0xffE9D5FF),
 
-          // Selected icon
-          iconTheme: WidgetStateProperty.resolveWith<IconThemeData>((states) {
+          // ============================================================
+          // ICON COLORS
+          // ============================================================
+          iconTheme:
+              WidgetStateProperty.resolveWith<IconThemeData>((states) {
             if (states.contains(WidgetState.selected)) {
-              return const IconThemeData(color: Color(0xff7C3AED), size: 24);
+              return const IconThemeData(
+                color: Color(0xffA855F7),
+                size: 24,
+              );
             }
 
-            return IconThemeData(color: Colors.grey.shade600, size: 24);
+            return IconThemeData(
+              color: isDark
+                  ? Colors.grey.shade400
+                  : Colors.grey.shade600,
+              size: 24,
+            );
           }),
 
-          // Labels
-          labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>((states) {
+          // ============================================================
+          // LABEL COLORS
+          // ============================================================
+          labelTextStyle:
+              WidgetStateProperty.resolveWith<TextStyle>((states) {
             if (states.contains(WidgetState.selected)) {
               return const TextStyle(
-                color: Color(0xff7C3AED),
+                color: Color(0xffA855F7),
                 fontWeight: FontWeight.w700,
                 fontSize: 12,
               );
             }
 
             return TextStyle(
-              color: Colors.grey.shade600,
+              color: isDark
+                  ? Colors.grey.shade400
+                  : Colors.grey.shade600,
               fontWeight: FontWeight.w500,
               fontSize: 12,
             );
           }),
 
-          // Navigation bar height
+          // ============================================================
+          // NAVIGATION BAR HEIGHT
+          // ============================================================
           height: 75,
 
-          // Remove extra Material tint
+          // ============================================================
+          // REMOVE MATERIAL TINT
+          // ============================================================
           surfaceTintColor: Colors.transparent,
         ),
 

@@ -130,7 +130,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       });
     } catch (e) {
       debugPrint('Admin dashboard load error: $e');
+
       if (!mounted) return;
+
       setState(() {
         loading = false;
         refreshing = false;
@@ -148,9 +150,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       socketSubscription = channel!.stream.listen(
         (message) {
           debugPrint('Dashboard live event: $message');
+
           try {
             jsonDecode(message.toString());
           } catch (_) {}
+
           loadDashboard(showLoader: false);
         },
         onError: (_) => _scheduleReconnect(),
@@ -174,113 +178,181 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     final whole = value.round().toString();
     final chars = whole.split('');
     final out = StringBuffer();
+
     for (int i = 0; i < chars.length; i++) {
       final reverseIndex = chars.length - i;
+
       out.write(chars[i]);
-      if (reverseIndex > 1 && reverseIndex % 3 == 1) out.write(',');
+
+      if (reverseIndex > 1 && reverseIndex % 3 == 1) {
+        out.write(',');
+      }
     }
+
     return '₦${out.toString()}';
   }
+
+  // ============================================================
+  // THEME COLORS
+  // ============================================================
+
+  Color get _backgroundColor => Theme.of(context).scaffoldBackgroundColor;
+
+  Color get _cardColor => Theme.of(context).cardColor;
+
+  Color get _textColor => Theme.of(context).colorScheme.onSurface;
+
+  Color get _mutedTextColor =>
+      Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(.65) ??
+      Colors.grey;
+
+  Color get _borderColor => Theme.of(context).dividerColor.withOpacity(.12);
+
+  bool get _isDark => Theme.of(context).brightness == Brightness.dark;
+
+  // ============================================================
+  // BUILD
+  // ============================================================
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xffF5F7FB),
+      backgroundColor: _backgroundColor,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Colors.white,
-        title: const Column(
+        backgroundColor: _cardColor,
+        surfaceTintColor: Colors.transparent,
+        title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'Senmi Admin',
               style: TextStyle(
-                color: Color(0xff151515),
+                color: _textColor,
                 fontWeight: FontWeight.w800,
                 fontSize: 18,
               ),
             ),
             Text(
               'Operations overview',
-              style: TextStyle(color: Colors.grey, fontSize: 11),
+              style: TextStyle(color: _mutedTextColor, fontSize: 11),
             ),
           ],
         ),
         actions: [
           if (refreshing)
-            const Padding(
-              padding: EdgeInsets.only(right: 12),
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
               child: Center(
                 child: SizedBox(
                   width: 18,
                   height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                 ),
               ),
             ),
+
           IconButton(
             tooltip: 'Analytics',
             onPressed: () => _go(const AnalyticsScreen()),
-            icon: const Icon(Icons.insights_rounded, color: Colors.black87),
+            icon: Icon(Icons.insights_rounded, color: _textColor),
           ),
+
           IconButton(
             tooltip: 'Refresh',
             onPressed: () => loadDashboard(showLoader: false),
-            icon: const Icon(Icons.refresh_rounded, color: Colors.black87),
+            icon: Icon(Icons.refresh_rounded, color: _textColor),
           ),
         ],
       ),
       body: loading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(
+              child: CircularProgressIndicator(
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            )
           : RefreshIndicator(
               onRefresh: () => loadDashboard(showLoader: false),
+              color: Theme.of(context).colorScheme.primary,
               child: ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(16, 18, 16, 32),
                 children: [
                   _hero(),
+
                   const SizedBox(height: 18),
+
                   if (error != null) _errorCard(),
+
                   _sectionTitle('Business overview', 'Live platform totals'),
+
                   const SizedBox(height: 10),
+
                   _statsGrid(),
+
                   const SizedBox(height: 22),
+
                   _sectionTitle(
                     'Money overview',
                     'Current internal wallet position',
                   ),
+
                   const SizedBox(height: 10),
+
                   _moneyOverview(),
+
                   const SizedBox(height: 22),
+
                   _sectionTitle(
                     'Delivery operations',
                     'What is happening right now',
                   ),
+
                   const SizedBox(height: 10),
+
                   _operations(),
+
                   const SizedBox(height: 22),
+
                   _sectionTitle(
                     'Attention needed',
                     'Items that may require admin action',
                   ),
+
                   const SizedBox(height: 10),
+
                   _attention(),
+
                   const SizedBox(height: 22),
+
                   _sectionTitle('Quick actions', 'Jump directly to a task'),
+
                   const SizedBox(height: 10),
+
                   _quickActions(),
+
                   const SizedBox(height: 22),
+
                   _sectionTitle(
                     'Recent deliveries',
                     'Latest packages received by the API',
                   ),
+
                   const SizedBox(height: 10),
+
                   _recentPackages(),
                 ],
               ),
             ),
     );
   }
+
+  // ============================================================
+  // HERO
+  // ============================================================
 
   Widget _hero() {
     return Container(
@@ -294,7 +366,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xff581C87).withOpacity(.18),
+            color: const Color(0xff581C87).withOpacity(_isDark ? .35 : .18),
             blurRadius: 22,
             offset: const Offset(0, 10),
           ),
@@ -310,7 +382,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   'Good to see you 👋',
                   style: TextStyle(color: Colors.white70, fontSize: 13),
                 ),
+
                 const SizedBox(height: 6),
+
                 const Text(
                   'Senmi is running',
                   style: TextStyle(
@@ -319,14 +393,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     fontWeight: FontWeight.w800,
                   ),
                 ),
+
                 const SizedBox(height: 8),
+
                 Text(
-                  '$activeDeliveries active deliveries • $pendingRiders riders awaiting review',
+                  '$activeDeliveries active deliveries • '
+                  '$pendingRiders riders awaiting review',
                   style: const TextStyle(color: Colors.white70),
                 ),
               ],
             ),
           ),
+
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
@@ -340,29 +418,41 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
+  // ============================================================
+  // ERROR
+  // ============================================================
+
   Widget _errorCard() {
+    final errorColor = Theme.of(context).colorScheme.error;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 18),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.red.withOpacity(.07),
+        color: errorColor.withOpacity(.08),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.red.withOpacity(.15)),
+        border: Border.all(color: errorColor.withOpacity(.18)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.error_outline, color: Colors.red),
+          Icon(Icons.error_outline, color: errorColor),
+
           const SizedBox(width: 10),
+
           Expanded(
             child: Text(
               'Some live data could not be loaded. Pull down to retry.',
-              style: TextStyle(color: Colors.red.shade800),
+              style: TextStyle(color: errorColor),
             ),
           ),
         ],
       ),
     );
   }
+
+  // ============================================================
+  // SECTION TITLE
+  // ============================================================
 
   Widget _sectionTitle(String title, String subtitle) {
     return Row(
@@ -373,15 +463,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             children: [
               Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
+                  color: _textColor,
                   fontSize: 17,
                   fontWeight: FontWeight.w800,
                 ),
               ),
+
               const SizedBox(height: 2),
+
               Text(
                 subtitle,
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                style: TextStyle(color: _mutedTextColor, fontSize: 12),
               ),
             ],
           ),
@@ -389,6 +482,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       ],
     );
   }
+
+  // ============================================================
+  // STATS GRID
+  // ============================================================
 
   Widget _statsGrid() {
     final items = [
@@ -448,20 +545,23 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       ),
       itemBuilder: (_, i) {
         final x = items[i];
+
         return InkWell(
           borderRadius: BorderRadius.circular(18),
           onTap: x.onTap,
           child: Container(
             padding: const EdgeInsets.all(15),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: _cardColor,
               borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: _borderColor),
               boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(.035),
-                  blurRadius: 12,
-                  offset: const Offset(0, 5),
-                ),
+                if (!_isDark)
+                  BoxShadow(
+                    color: Colors.black.withOpacity(.035),
+                    blurRadius: 12,
+                    offset: const Offset(0, 5),
+                  ),
               ],
             ),
             child: Column(
@@ -472,16 +572,21 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   backgroundColor: x.color.withOpacity(.10),
                   child: Icon(x.icon, color: x.color, size: 19),
                 ),
+
                 const Spacer(),
+
                 Text(
                   x.value.toString(),
-                  style: const TextStyle(
+                  style: TextStyle(
+                    color: _textColor,
                     fontSize: 23,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
+
                 const SizedBox(height: 2),
-                Text(x.title, style: TextStyle(color: Colors.grey.shade600)),
+
+                Text(x.title, style: TextStyle(color: _mutedTextColor)),
               ],
             ),
           ),
@@ -489,6 +594,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       },
     );
   }
+
+  // ============================================================
+  // MONEY
+  // ============================================================
 
   Widget _moneyOverview() {
     return Row(
@@ -501,7 +610,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             Colors.green,
           ),
         ),
+
         const SizedBox(width: 12),
+
         Expanded(
           child: _moneyCard(
             'Rider earnings',
@@ -518,25 +629,30 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: _cardColor,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: color.withOpacity(.10)),
+        border: Border.all(color: color.withOpacity(.12)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, color: color),
+
           const SizedBox(height: 12),
-          Text(
-            title,
-            style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-          ),
+
+          Text(title, style: TextStyle(color: _mutedTextColor, fontSize: 12)),
+
           const SizedBox(height: 4),
+
           FittedBox(
             alignment: Alignment.centerLeft,
             child: Text(
               value,
-              style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800),
+              style: TextStyle(
+                color: _textColor,
+                fontSize: 19,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
         ],
@@ -544,16 +660,23 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
+  // ============================================================
+  // OPERATIONS
+  // ============================================================
+
   Widget _operations() {
     final total = activeDeliveries + availablePackages + completedDeliveries;
+
     final activeRatio = total == 0 ? 0.0 : activeDeliveries / total;
+
     final completedRatio = total == 0 ? 0.0 : completedDeliveries / total;
 
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: _cardColor,
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: _borderColor),
       ),
       child: Column(
         children: [
@@ -563,14 +686,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             activeRatio,
             Colors.indigo,
           ),
+
           const SizedBox(height: 18),
+
           _progressRow(
             'Available packages',
             availablePackages,
             total == 0 ? 0 : availablePackages / total,
             Colors.orange,
           ),
+
           const SizedBox(height: 18),
+
           _progressRow(
             'Completed deliveries',
             completedDeliveries,
@@ -590,51 +717,66 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             Expanded(
               child: Text(
                 title,
-                style: const TextStyle(fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  color: _textColor,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
+
             Text(
               value.toString(),
               style: TextStyle(fontWeight: FontWeight.w800, color: color),
             ),
           ],
         ),
+
         const SizedBox(height: 8),
+
         ClipRRect(
           borderRadius: BorderRadius.circular(20),
           child: LinearProgressIndicator(
             minHeight: 8,
             value: ratio.clamp(0, 1),
             backgroundColor: color.withOpacity(.08),
-            valueColor: AlwaysStoppedAnimation(color),
+            valueColor: AlwaysStoppedAnimation<Color>(color),
           ),
         ),
       ],
     );
   }
 
+  // ============================================================
+  // ATTENTION
+  // ============================================================
+
   Widget _attention() {
     final cards = <Widget>[
       if (pendingRiders > 0)
         _attentionTile(
           Icons.person_search_rounded,
-          '$pendingRiders rider application${pendingRiders == 1 ? '' : 's'} pending',
+          '$pendingRiders rider application'
+              '${pendingRiders == 1 ? '' : 's'} pending',
           'Review rider profiles',
           Colors.orange,
           () => _go(const AdminRidersScreen()),
         ),
+
       if (pendingWithdrawals > 0)
         _attentionTile(
           Icons.payments_outlined,
-          '$pendingWithdrawals withdrawal${pendingWithdrawals == 1 ? '' : 's'} awaiting review',
+          '$pendingWithdrawals withdrawal'
+              '${pendingWithdrawals == 1 ? '' : 's'} awaiting review',
           'Open withdrawals',
           Colors.red,
           () => _go(const AdminWithdrawalScreen()),
         ),
+
       if (availablePackages > 0)
         _attentionTile(
           Icons.inventory_2_outlined,
-          '$availablePackages package${availablePackages == 1 ? '' : 's'} waiting for a rider',
+          '$availablePackages package'
+              '${availablePackages == 1 ? '' : 's'} waiting for a rider',
           'Open packages',
           Colors.blue,
           () => _go(const AdminPackagesScreen()),
@@ -645,14 +787,22 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       return Container(
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: Colors.green.withOpacity(.06),
+          color: Colors.green.withOpacity(.07),
           borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Colors.green.withOpacity(.12)),
         ),
-        child: const Row(
+        child: Row(
           children: [
-            Icon(Icons.check_circle_rounded, color: Colors.green),
-            SizedBox(width: 10),
-            Expanded(child: Text('No urgent admin actions right now.')),
+            const Icon(Icons.check_circle_rounded, color: Colors.green),
+
+            const SizedBox(width: 10),
+
+            Expanded(
+              child: Text(
+                'No urgent admin actions right now.',
+                style: TextStyle(color: _textColor),
+              ),
+            ),
           ],
         ),
       );
@@ -681,8 +831,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       child: Container(
         padding: const EdgeInsets.all(15),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: _cardColor,
           borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: _borderColor),
         ),
         child: Row(
           children: [
@@ -690,30 +841,42 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               backgroundColor: color.withOpacity(.10),
               child: Icon(icon, color: color),
             ),
+
             const SizedBox(width: 12),
+
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(fontWeight: FontWeight.w700),
+                    style: TextStyle(
+                      color: _textColor,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
+
                   const SizedBox(height: 3),
+
                   Text(action, style: TextStyle(color: color, fontSize: 12)),
                 ],
               ),
             ),
+
             Icon(
               Icons.arrow_forward_ios_rounded,
               size: 14,
-              color: Colors.grey.shade500,
+              color: _mutedTextColor,
             ),
           ],
         ),
       ),
     );
   }
+
+  // ============================================================
+  // QUICK ACTIONS
+  // ============================================================
 
   Widget _quickActions() {
     final actions = [
@@ -766,17 +929,21 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             width: 105,
             padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: _cardColor,
               borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: _borderColor),
             ),
             child: Column(
               children: [
                 Icon(a.icon, color: a.color),
+
                 const SizedBox(height: 7),
+
                 Text(
                   a.title,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
+                    color: _textColor,
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                   ),
@@ -789,11 +956,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
+  // ============================================================
+  // RECENT PACKAGES
+  // ============================================================
+
   Widget _recentPackages() {
-    // Make a copy so we don't modify the original API list.
     final sortedPackages = List.from(packages);
 
-    // Sort newest first.
     sortedPackages.sort((a, b) {
       final dateA =
           DateTime.tryParse((a['created_at'] ?? a['date'] ?? '').toString()) ??
@@ -806,7 +975,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       return dateB.compareTo(dateA);
     });
 
-    // ONLY SHOW THE FIRST 5.
     final recent = sortedPackages.take(5).toList();
 
     if (recent.isEmpty) {
@@ -815,8 +983,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: _cardColor,
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: _borderColor),
       ),
       child: Column(
         children: recent.map((p) {
@@ -828,29 +997,33 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
           final rider = (p['rider'] ?? 'Unassigned').toString();
 
+          final statusColor = _statusColor(status);
+
           return ListTile(
             dense: true,
 
             leading: CircleAvatar(
-              backgroundColor: _statusColor(status).withOpacity(.10),
-              child: Icon(
-                Icons.two_wheeler,
-                color: _statusColor(status),
-                size: 19,
-              ),
+              backgroundColor: statusColor.withOpacity(.10),
+              child: Icon(Icons.two_wheeler, color: statusColor, size: 19),
             ),
 
-            title: Text(id, maxLines: 1, overflow: TextOverflow.ellipsis),
+            title: Text(
+              id,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: _textColor, fontWeight: FontWeight.w600),
+            ),
 
             subtitle: Text(
               '$rider • ${status.toUpperCase()}',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: _mutedTextColor),
             ),
 
             trailing: Text(
               _money(amount),
-              style: const TextStyle(fontWeight: FontWeight.w800),
+              style: TextStyle(color: _textColor, fontWeight: FontWeight.w800),
             ),
           );
         }).toList(),
@@ -858,37 +1031,56 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  Widget _empty(String text) => Container(
-    width: double.infinity,
-    padding: const EdgeInsets.all(24),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(18),
-    ),
-    child: Center(
-      child: Text(text, style: TextStyle(color: Colors.grey.shade600)),
-    ),
-  );
+  // ============================================================
+  // EMPTY
+  // ============================================================
+
+  Widget _empty(String text) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: _cardColor,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: _borderColor),
+      ),
+      child: Center(
+        child: Text(text, style: TextStyle(color: _mutedTextColor)),
+      ),
+    );
+  }
+
+  // ============================================================
+  // STATUS COLOR
+  // ============================================================
 
   Color _statusColor(String status) {
     switch (status.toLowerCase()) {
       case 'delivered':
       case 'success':
         return Colors.green;
+
       case 'paid':
       case 'accepted':
       case 'picked_up':
         return Colors.blue;
+
       case 'pending':
         return Colors.orange;
+
       case 'cancelled':
       case 'failed':
         return Colors.red;
+
       default:
-        return Colors.grey;
+        return _mutedTextColor;
     }
   }
 }
+
+// ============================================================
+// STAT MODEL
+// ============================================================
 
 class _Stat {
   final String title;
@@ -899,6 +1091,10 @@ class _Stat {
 
   _Stat(this.title, this.value, this.icon, this.color, this.onTap);
 }
+
+// ============================================================
+// ACTION MODEL
+// ============================================================
 
 class _Action {
   final String title;
