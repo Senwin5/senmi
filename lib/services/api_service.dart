@@ -337,13 +337,14 @@ class ApiService {
       );
 
       if (response.statusCode == 200) {
-        return jsonDecode(response.body);
+        final decoded = jsonDecode(response.body);
+
+        return Map<String, dynamic>.from(decoded);
       }
 
       return {};
     } catch (e) {
       debugPrint("getCustomerDetail error: $e");
-
       return {};
     }
   }

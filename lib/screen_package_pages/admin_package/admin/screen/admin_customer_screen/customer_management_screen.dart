@@ -14,9 +14,31 @@ class CustomerManagementScreen extends StatefulWidget {
 
 class _CustomerManagementScreenState extends State<CustomerManagementScreen> {
   bool isLoading = true;
+
   List<Map<String, dynamic>> customers = [];
   List<Map<String, dynamic>> filteredCustomers = [];
+
   final searchController = TextEditingController();
+
+  // ============================================================
+  // THEME HELPERS
+  // ============================================================
+
+  Color get _backgroundColor => Theme.of(context).scaffoldBackgroundColor;
+
+  Color get _cardColor => Theme.of(context).cardColor;
+
+  Color get _textColor => Theme.of(context).colorScheme.onSurface;
+
+  Color get _mutedTextColor =>
+      Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(.65) ??
+      Colors.grey;
+
+  Color get _borderColor => Theme.of(context).dividerColor.withOpacity(.12);
+
+  Color get _searchBackground => Theme.of(context).brightness == Brightness.dark
+      ? const Color(0xff20242D)
+      : const Color(0xffF5F7FB);
 
   @override
   void initState() {
@@ -30,11 +52,18 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen> {
     super.dispose();
   }
 
+  // ============================================================
+  // LOAD CUSTOMERS
+  // ============================================================
+
   Future<void> loadCustomers() async {
-    if (mounted) setState(() => isLoading = true);
+    if (mounted) {
+      setState(() => isLoading = true);
+    }
 
     try {
       final data = await ApiService.getCustomers();
+
       if (!mounted) return;
 
       final list = (data)
@@ -45,29 +74,39 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen> {
         customers = list;
         isLoading = false;
       });
+
       _search(searchController.text);
     } catch (e) {
       debugPrint("Customer load error: $e");
+
       if (!mounted) return;
 
       setState(() => isLoading = false);
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("Failed to load customers: $e"),
-          backgroundColor: Colors.red.shade700,
+          backgroundColor: Theme.of(context).colorScheme.error,
           behavior: SnackBarBehavior.floating,
         ),
       );
     }
   }
 
+  // ============================================================
+  // SEARCH
+  // ============================================================
+
   void _search(String query) {
     final q = query.trim().toLowerCase();
 
     final result = customers.where((customer) {
       final username = (customer["username"] ?? "").toString().toLowerCase();
+
       final email = (customer["email"] ?? "").toString().toLowerCase();
+
       final userId = (customer["user_id"] ?? "").toString().toLowerCase();
+
       final phone = (customer["phone_number"] ?? "").toString().toLowerCase();
 
       return q.isEmpty ||
@@ -77,42 +116,77 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen> {
           phone.contains(q);
     }).toList();
 
-    if (mounted) setState(() => filteredCustomers = result);
+    if (mounted) {
+      setState(() => filteredCustomers = result);
+    }
   }
+
+  // ============================================================
+  // MONEY
+  // ============================================================
 
   String _money(dynamic value) {
     final number =
         double.tryParse(value?.toString().replaceAll(",", "") ?? "") ?? 0;
+
     return number.toStringAsFixed(2);
   }
+
+  // ============================================================
+  // BUILD
+  // ============================================================
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xffF5F7FB),
+      backgroundColor: _backgroundColor,
+
       appBar: AppBar(
         elevation: 0,
         scrolledUnderElevation: 0,
-        backgroundColor: Colors.white,
-        title: const Text(
+        backgroundColor: _cardColor,
+        surfaceTintColor: Colors.transparent,
+
+        title: Text(
           "Customers",
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.w800),
+          style: TextStyle(color: _textColor, fontWeight: FontWeight.w800),
         ),
-        iconTheme: const IconThemeData(color: Colors.black),
+
+        iconTheme: IconThemeData(color: _textColor),
       ),
+
       body: isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(
+              child: CircularProgressIndicator(
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            )
           : Column(
               children: [
+                // ==================================================
+                // SEARCH
+                // ==================================================
                 Container(
-                  color: Colors.white,
+                  color: _cardColor,
                   padding: const EdgeInsets.fromLTRB(16, 10, 16, 15),
                   child: TextField(
                     controller: searchController,
                     onChanged: _search,
+
+                    style: TextStyle(color: _textColor),
+
+                    cursorColor: Theme.of(context).colorScheme.primary,
+
                     decoration: InputDecoration(
                       hintText: "Search name, email, ID or phone",
-                      prefixIcon: const Icon(Icons.search_rounded),
+
+                      hintStyle: TextStyle(color: _mutedTextColor),
+
+                      prefixIcon: Icon(
+                        Icons.search_rounded,
+                        color: _mutedTextColor,
+                      ),
+
                       suffixIcon: searchController.text.isEmpty
                           ? null
                           : IconButton(
@@ -120,38 +194,76 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen> {
                                 searchController.clear();
                                 _search("");
                               },
-                              icon: const Icon(Icons.close_rounded),
+                              icon: Icon(
+                                Icons.close_rounded,
+                                color: _mutedTextColor,
+                              ),
                             ),
+
                       filled: true,
-                      fillColor: const Color(0xffF5F7FB),
+                      fillColor: _searchBackground,
+
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide.none,
                       ),
+
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
+
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.primary.withOpacity(.5),
+                        ),
+                      ),
                     ),
                   ),
                 ),
+
+                // ==================================================
+                // CUSTOMER LIST
+                // ==================================================
                 Expanded(
                   child: RefreshIndicator(
                     onRefresh: loadCustomers,
+
+                    color: Theme.of(context).colorScheme.primary,
+
                     child: filteredCustomers.isEmpty
                         ? ListView(
                             physics: const AlwaysScrollableScrollPhysics(),
-                            children: const [
-                              SizedBox(height: 120),
+
+                            children: [
+                              const SizedBox(height: 120),
+
                               Icon(
                                 Icons.people_outline,
                                 size: 54,
-                                color: Colors.grey,
+                                color: _mutedTextColor,
                               ),
-                              SizedBox(height: 12),
-                              Center(child: Text("No customers found")),
+
+                              const SizedBox(height: 12),
+
+                              Center(
+                                child: Text(
+                                  "No customers found",
+                                  style: TextStyle(color: _mutedTextColor),
+                                ),
+                              ),
                             ],
                           )
                         : ListView.builder(
                             physics: const AlwaysScrollableScrollPhysics(),
+
                             padding: const EdgeInsets.fromLTRB(12, 14, 12, 28),
+
                             itemCount: filteredCustomers.length,
+
                             itemBuilder: (_, index) =>
                                 _customerCard(filteredCustomers[index]),
                           ),
@@ -162,19 +274,34 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen> {
     );
   }
 
+  // ============================================================
+  // CUSTOMER CARD
+  // ============================================================
+
   Widget _customerCard(Map<String, dynamic> customer) {
     final username = (customer["username"] ?? "Customer").toString();
+
     final userId = (customer["user_id"] ?? "-").toString();
+
     final email = (customer["email"] ?? "").toString();
+
     final phone = (customer["phone_number"] ?? "").toString();
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
+
       elevation: 0,
-      color: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+
+      color: _cardColor,
+
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: _borderColor),
+      ),
+
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
+
         onTap: () {
           Navigator.push(
             context,
@@ -183,64 +310,95 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen> {
             ),
           );
         },
+
         child: Padding(
           padding: const EdgeInsets.all(16),
+
           child: Column(
             children: [
+              // ==================================================
+              // CUSTOMER HEADER
+              // ==================================================
               Row(
                 children: [
                   CircleAvatar(
                     radius: 25,
+
                     backgroundColor: Colors.blue.withOpacity(.10),
+
                     child: Text(
                       username.isNotEmpty
                           ? username.substring(0, 1).toUpperCase()
                           : "C",
+
                       style: const TextStyle(
                         color: Colors.blue,
                         fontWeight: FontWeight.w900,
                       ),
                     ),
                   ),
+
                   const SizedBox(width: 12),
+
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+
                       children: [
                         Text(
                           username,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+
+                          style: TextStyle(
+                            color: _textColor,
                             fontWeight: FontWeight.w800,
                             fontSize: 16,
                           ),
                         ),
+
                         const SizedBox(height: 3),
+
                         Text(
                           userId,
                           style: TextStyle(
-                            color: Colors.grey.shade600,
+                            color: _mutedTextColor,
                             fontSize: 12,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const Icon(
+
+                  Icon(
                     Icons.arrow_forward_ios_rounded,
                     size: 15,
-                    color: Colors.grey,
+                    color: _mutedTextColor,
                   ),
                 ],
               ),
+
               const SizedBox(height: 14),
+
+              // ==================================================
+              // EMAIL
+              // ==================================================
               if (email.isNotEmpty) _contactRow(Icons.email_outlined, email),
+
+              // ==================================================
+              // PHONE
+              // ==================================================
               if (phone.isNotEmpty) ...[
                 const SizedBox(height: 7),
+
                 _contactRow(Icons.phone_outlined, phone),
               ],
-              const Divider(height: 25),
+
+              Divider(height: 25, color: _borderColor),
+
+              // ==================================================
+              // CUSTOMER STATS
+              // ==================================================
               Row(
                 children: [
                   _stat(
@@ -249,6 +407,7 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen> {
                     Icons.inventory_2_outlined,
                     Colors.blue,
                   ),
+
                   _stat(
                     "Spent",
                     "₦${_money(customer["total_spent"])}",
@@ -264,38 +423,60 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen> {
     );
   }
 
+  // ============================================================
+  // CONTACT ROW
+  // ============================================================
+
   Widget _contactRow(IconData icon, String text) {
     return Row(
       children: [
-        Icon(icon, size: 17, color: Colors.grey.shade600),
+        Icon(icon, size: 17, color: _mutedTextColor),
+
         const SizedBox(width: 8),
+
         Expanded(
           child: Text(
             text,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: Colors.grey.shade800, fontSize: 13),
+
+            style: TextStyle(color: _textColor.withOpacity(.78), fontSize: 13),
           ),
         ),
       ],
     );
   }
 
+  // ============================================================
+  // STAT
+  // ============================================================
+
   Widget _stat(String title, String value, IconData icon, Color color) {
     return Expanded(
       child: Row(
         children: [
           Icon(icon, size: 20, color: color),
+
           const SizedBox(width: 8),
+
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+
             children: [
               Text(
                 title,
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
+                style: TextStyle(color: _mutedTextColor, fontSize: 11),
               ),
+
               const SizedBox(height: 2),
-              Text(value, style: const TextStyle(fontWeight: FontWeight.w900)),
+
+              Text(
+                value,
+                style: TextStyle(
+                  color: _textColor,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
             ],
           ),
         ],
