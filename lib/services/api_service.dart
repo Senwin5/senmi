@@ -269,15 +269,26 @@ class ApiService {
   static Future<void> sendNotification({
     required String title,
     required String body,
+    required String target,
+    int? userId,
   }) async {
-    await http.post(
+    final response = await http.post(
       Uri.parse("$baseUrl/send-notification/"),
       headers: {
         "Authorization": "Bearer $token",
         "Content-Type": "application/json",
       },
-      body: jsonEncode({"title": title, "body": body, "target": "all"}),
+      body: jsonEncode({
+        "title": title,
+        "body": body,
+        "target": target,
+        "user_id": ?userId,
+      }),
     );
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception("Failed to send notification: ${response.body}");
+    }
   }
 
   static Future<void> saveFcmToken(String token) async {
