@@ -49,6 +49,12 @@ class _AdminWithdrawalDetailsScreenState
 
   double get amount => double.tryParse(w["amount"].toString()) ?? 0;
 
+  double get walletBalance =>
+      double.tryParse(w["wallet_balance"]?.toString() ?? "") ?? 0;
+
+  double get walletTotalEarned =>
+      double.tryParse(w["wallet_total_earned"]?.toString() ?? "") ?? 0;
+
   Color statusColor() {
     switch (status) {
       case "pending":
@@ -656,6 +662,17 @@ class _AdminWithdrawalDetailsScreenState
             ]),
 
             // =================================================
+            // RIDER WALLET
+            // =================================================
+            section("Rider Wallet", Icons.account_balance_wallet, [
+              infoRow("Wallet Balance", "₦${walletBalance.toStringAsFixed(2)}"),
+              infoRow(
+                "Total Earned",
+                "₦${walletTotalEarned.toStringAsFixed(2)}",
+              ),
+            ]),
+
+            // =================================================
             // BANK
             // =================================================
             section("Bank Information", Icons.account_balance, [
@@ -809,7 +826,9 @@ class _AdminWithdrawalDetailsScreenState
                   child: const Text("Reject"),
                 ),
               ),
+
               const SizedBox(width: 10),
+
               Expanded(
                 child: ElevatedButton(
                   onPressed: approve,
