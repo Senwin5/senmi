@@ -18,11 +18,26 @@ class RiderCompleteProfile extends StatefulWidget {
 class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
   final _formKey = GlobalKey<FormState>();
 
+  // Personal information
   final TextEditingController fullNameController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
+  final TextEditingController ninNumberController = TextEditingController();
+  final TextEditingController dateOfBirthController = TextEditingController();
+
+  // Vehicle / address
   final TextEditingController vehicleController = TextEditingController();
   final TextEditingController addressController = TextEditingController();
-  final TextEditingController cityController = TextEditingController();
+  final TextEditingController stateController = TextEditingController();
+
+  // Emergency contact
+  final TextEditingController emergencyContactNameController =
+      TextEditingController();
+  final TextEditingController emergencyContactPhoneController =
+      TextEditingController();
+  final TextEditingController emergencyContactAddressController =
+      TextEditingController();
+  final TextEditingController emergencyContactRelationshipController =
+      TextEditingController();
 
   File? profilePicture;
   File? ninImage;
@@ -40,10 +55,44 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
   void dispose() {
     fullNameController.dispose();
     phoneController.dispose();
+    ninNumberController.dispose();
+    dateOfBirthController.dispose();
+
     vehicleController.dispose();
     addressController.dispose();
-    cityController.dispose();
+    stateController.dispose();
+
+    emergencyContactNameController.dispose();
+    emergencyContactPhoneController.dispose();
+    emergencyContactAddressController.dispose();
+    emergencyContactRelationshipController.dispose();
+
     super.dispose();
+  }
+
+  Future<void> _selectDateOfBirth() async {
+    FocusScope.of(context).unfocus();
+
+    final now = DateTime.now();
+
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime(now.year - 25),
+      firstDate: DateTime(1940),
+      lastDate: DateTime(now.year - 18, now.month, now.day),
+      helpText: 'Select date of birth',
+      cancelText: 'Cancel',
+      confirmText: 'Select',
+    );
+
+    if (pickedDate == null || !mounted) return;
+
+    final month = pickedDate.month.toString().padLeft(2, '0');
+    final day = pickedDate.day.toString().padLeft(2, '0');
+
+    setState(() {
+      dateOfBirthController.text = '${pickedDate.year}-$month-$day';
+    });
   }
 
   Future<void> pickImage(String type) async {
@@ -112,22 +161,21 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
                   onTap: () async {
                     Navigator.pop(context);
 
-                    var status = await Permission.camera.request();
+                    final status = await Permission.camera.request();
 
                     if (status.isGranted) {
                       final image = await _picker.pickImage(
                         source: ImageSource.camera,
+                        imageQuality: 85,
                       );
 
                       if (image != null && mounted) {
                         setState(() {
                           if (type == 'profile') {
                             profilePicture = File(image.path);
-                          }
-                          if (type == 'rider_nin_image') {
+                          } else if (type == 'rider_nin_image') {
                             ninImage = File(image.path);
-                          }
-                          if (type == 'withVehicle') {
+                          } else if (type == 'withVehicle') {
                             riderImageWithVehicle = File(image.path);
                           }
                         });
@@ -155,17 +203,16 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
 
                     final image = await _picker.pickImage(
                       source: ImageSource.gallery,
+                      imageQuality: 85,
                     );
 
                     if (image != null && mounted) {
                       setState(() {
                         if (type == 'profile') {
                           profilePicture = File(image.path);
-                        }
-                        if (type == 'rider_nin_image') {
+                        } else if (type == 'rider_nin_image') {
                           ninImage = File(image.path);
-                        }
-                        if (type == 'withVehicle') {
+                        } else if (type == 'withVehicle') {
                           riderImageWithVehicle = File(image.path);
                         }
                       });
@@ -180,138 +227,158 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
     );
   }
 
-  void submitProfile() async {
+  Future<void> submitProfile() async {
+    FocusScope.of(context).unfocus();
+
     if (!_formKey.currentState!.validate()) return;
 
     if (profilePicture == null ||
         ninImage == null ||
         riderImageWithVehicle == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('All images are required.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('All verification photos are required.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
       return;
     }
 
     setState(() => loading = true);
 
-    final res = await ApiService.updateRiderProfile(
-      fullNameController.text,
-      phoneController.text,
-      vehicleController.text,
-      addressController.text,
-      cityController.text,
-      profilePicture!,
-      ninImage!,
-      riderImageWithVehicle!,
-    );
+    try {
+      final res = await ApiService.updateRiderProfile(
+        fullNameController.text.trim(),
+        phoneController.text.trim(),
+        ninNumberController.text.trim(),
+        dateOfBirthController.text.trim(),
+        vehicleController.text.trim(),
+        addressController.text.trim(),
+        stateController.text.trim(),
+        emergencyContactNameController.text.trim(),
+        emergencyContactPhoneController.text.trim(),
+        emergencyContactAddressController.text.trim(),
+        emergencyContactRelationshipController.text.trim(),
+        profilePicture!,
+        ninImage!,
+        riderImageWithVehicle!,
+      );
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    setState(() => loading = false);
+      setState(() => loading = false);
 
-    if (res.containsKey('error')) {
+      if (res.containsKey('error')) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              res['error']?.toString() ?? 'Failed to submit profile.',
+            ),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+
+      if (res.containsKey('message')) {
+        await _showSuccessDialog(
+          res['message']?.toString() ??
+              'Your rider profile has been submitted for review.',
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to submit profile: ${res.toString()}'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() => loading = false);
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(res['error']),
+          content: Text('Something went wrong: $e'),
           behavior: SnackBarBehavior.floating,
         ),
       );
-      return;
     }
+  }
 
-    if (res.containsKey('message')) {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          contentPadding: const EdgeInsets.fromLTRB(24, 26, 24, 12),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 72,
-                height: 72,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFEDE9FE),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.check_circle_rounded,
-                  color: _primaryColor,
-                  size: 42,
-                ),
+  Future<void> _showSuccessDialog(String message) async {
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        contentPadding: const EdgeInsets.fromLTRB(24, 26, 24, 12),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: const BoxDecoration(
+                color: Color(0xFFEDE9FE),
+                shape: BoxShape.circle,
               ),
-              const SizedBox(height: 18),
-              const Text(
-                'Profile submitted',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 21, fontWeight: FontWeight.w800),
+              child: const Icon(
+                Icons.check_circle_rounded,
+                color: _primaryColor,
+                size: 42,
               ),
-              const SizedBox(height: 10),
-              Text(
-                res['message'],
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  height: 1.5,
-                  color: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.color?.withOpacity(0.70),
-                ),
-              ),
-            ],
-          ),
-          actionsPadding: const EdgeInsets.fromLTRB(24, 8, 24, 22),
-          actions: [
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const RiderPendingScreen(),
-                    ),
-                  );
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Profile submitted! Waiting for admin approval.',
-                      ),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _primaryColor,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(vertical: 15),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-                child: const Text(
-                  'Continue',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
-                ),
+            ),
+            const SizedBox(height: 18),
+            const Text(
+              'Profile submitted',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 21, fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                height: 1.5,
+                color: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.color?.withOpacity(0.70),
               ),
             ),
           ],
         ),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to submit profile: ${res.toString()}'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
+        actionsPadding: const EdgeInsets.fromLTRB(24, 8, 24, 22),
+        actions: [
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const RiderPendingScreen()),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _primaryColor,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(vertical: 15),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              child: const Text(
+                'Continue',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _bottomSheetOption({
@@ -435,6 +502,8 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
     required String? Function(String?) validator,
     TextInputType? keyboardType,
     int maxLines = 1,
+    bool readOnly = false,
+    VoidCallback? onTap,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -445,6 +514,8 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
         validator: validator,
         keyboardType: keyboardType,
         maxLines: maxLines,
+        readOnly: readOnly,
+        onTap: onTap,
         textInputAction: maxLines > 1
             ? TextInputAction.newline
             : TextInputAction.next,
@@ -465,6 +536,9 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
             padding: EdgeInsets.only(bottom: maxLines > 1 ? 56 : 0),
             child: Icon(icon, color: _primaryColor),
           ),
+          suffixIcon: readOnly
+              ? const Icon(Icons.calendar_month_rounded, color: _primaryColor)
+              : null,
           labelStyle: TextStyle(
             color: Theme.of(
               context,
@@ -669,6 +743,12 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
     );
   }
 
+  Widget _divider(bool isDark) {
+    return Divider(
+      color: isDark ? Colors.white.withOpacity(0.08) : const Color(0xFFECE6EF),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -798,6 +878,7 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
                 ),
               ),
 
+              // Verification information card
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
@@ -863,12 +944,12 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
                 ),
               ),
 
+              // Main form
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 40),
                   child: Container(
                     constraints: const BoxConstraints(maxWidth: 720),
-                    margin: const EdgeInsets.symmetric(horizontal: 0),
                     padding: const EdgeInsets.fromLTRB(18, 22, 18, 20),
                     decoration: BoxDecoration(
                       color: cardColor,
@@ -893,6 +974,7 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // PERSONAL INFORMATION
                           _sectionTitle(
                             icon: Icons.person_outline_rounded,
                             title: 'Personal information',
@@ -905,10 +987,12 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
                             label: 'Full name',
                             hint: 'Enter your full name',
                             icon: Icons.person_outline_rounded,
-                            validator: (val) =>
-                                val == null || val.trim().isEmpty
-                                ? 'Full name is required'
-                                : null,
+                            validator: (val) {
+                              if (val == null || val.trim().isEmpty) {
+                                return 'Full name is required';
+                              }
+                              return null;
+                            },
                             keyboardType: TextInputType.name,
                           ),
 
@@ -917,23 +1001,58 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
                             label: 'Phone number',
                             hint: 'Enter your active phone number',
                             icon: Icons.phone_outlined,
-                            validator: (val) =>
-                                val == null || val.trim().isEmpty
-                                ? 'Phone number is required'
-                                : null,
+                            validator: (val) {
+                              if (val == null || val.trim().isEmpty) {
+                                return 'Phone number is required';
+                              }
+                              return null;
+                            },
                             keyboardType: TextInputType.phone,
+                          ),
+
+                          _buildTextField(
+                            controller: ninNumberController,
+                            label: 'NIN number',
+                            hint: 'Enter your 11-digit NIN number',
+                            icon: Icons.badge_outlined,
+                            validator: (val) {
+                              final value = val?.trim() ?? '';
+
+                              if (value.isEmpty) {
+                                return 'NIN number is required';
+                              }
+
+                              if (!RegExp(r'^\d{11}$').hasMatch(value)) {
+                                return 'NIN must be exactly 11 digits';
+                              }
+
+                              return null;
+                            },
+                            keyboardType: TextInputType.number,
+                          ),
+
+                          _buildTextField(
+                            controller: dateOfBirthController,
+                            label: 'Date of birth',
+                            hint: 'Select your date of birth',
+                            icon: Icons.cake_outlined,
+                            validator: (val) {
+                              if (val == null || val.trim().isEmpty) {
+                                return 'Date of birth is required';
+                              }
+                              return null;
+                            },
+                            readOnly: true,
+                            onTap: _selectDateOfBirth,
                           ),
 
                           const SizedBox(height: 6),
 
-                          Divider(
-                            color: isDark
-                                ? Colors.white.withOpacity(0.08)
-                                : const Color(0xFFECE6EF),
-                          ),
+                          _divider(isDark),
 
                           const SizedBox(height: 20),
 
+                          // VEHICLE
                           _sectionTitle(
                             icon: Icons.two_wheeler_rounded,
                             title: 'Vehicle information',
@@ -946,23 +1065,22 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
                             label: 'Vehicle number',
                             hint: 'Enter your vehicle registration number',
                             icon: Icons.two_wheeler,
-                            validator: (val) =>
-                                val == null || val.trim().isEmpty
-                                ? 'Vehicle number is required'
-                                : null,
+                            validator: (val) {
+                              if (val == null || val.trim().isEmpty) {
+                                return 'Vehicle number is required';
+                              }
+                              return null;
+                            },
                             keyboardType: TextInputType.text,
                           ),
 
                           const SizedBox(height: 6),
 
-                          Divider(
-                            color: isDark
-                                ? Colors.white.withOpacity(0.08)
-                                : const Color(0xFFECE6EF),
-                          ),
+                          _divider(isDark),
 
                           const SizedBox(height: 20),
 
+                          // ADDRESS
                           _sectionTitle(
                             icon: Icons.location_on_outlined,
                             title: 'Address information',
@@ -974,36 +1092,108 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
                             label: 'Home address',
                             hint: 'Enter your full home address',
                             icon: Icons.home_outlined,
-                            validator: (val) =>
-                                val == null || val.trim().isEmpty
-                                ? 'Home address is required'
-                                : null,
+                            validator: (val) {
+                              if (val == null || val.trim().isEmpty) {
+                                return 'Home address is required';
+                              }
+                              return null;
+                            },
                             keyboardType: TextInputType.streetAddress,
                             maxLines: 2,
                           ),
 
                           _buildTextField(
-                            controller: cityController,
+                            controller: stateController,
                             label: 'State',
                             hint: 'Enter your state',
                             icon: Icons.location_city_outlined,
-                            validator: (val) =>
-                                val == null || val.trim().isEmpty
-                                ? 'State is required'
-                                : null,
+                            validator: (val) {
+                              if (val == null || val.trim().isEmpty) {
+                                return 'State is required';
+                              }
+                              return null;
+                            },
                             keyboardType: TextInputType.text,
                           ),
 
                           const SizedBox(height: 7),
 
-                          Divider(
-                            color: isDark
-                                ? Colors.white.withOpacity(0.08)
-                                : const Color(0xFFECE6EF),
-                          ),
+                          _divider(isDark),
 
                           const SizedBox(height: 20),
 
+                          // EMERGENCY CONTACT
+                          _sectionTitle(
+                            icon: Icons.contact_emergency_outlined,
+                            title: 'Emergency contact',
+                            subtitle:
+                                'Provide someone we can contact in case of an emergency.',
+                          ),
+
+                          _buildTextField(
+                            controller: emergencyContactNameController,
+                            label: 'Emergency contact name',
+                            hint: 'Enter emergency contact full name',
+                            icon: Icons.person_outline_rounded,
+                            validator: (val) {
+                              if (val == null || val.trim().isEmpty) {
+                                return 'Emergency contact name is required';
+                              }
+                              return null;
+                            },
+                            keyboardType: TextInputType.name,
+                          ),
+
+                          _buildTextField(
+                            controller: emergencyContactPhoneController,
+                            label: 'Emergency contact phone',
+                            hint: 'Enter emergency contact phone number',
+                            icon: Icons.phone_outlined,
+                            validator: (val) {
+                              if (val == null || val.trim().isEmpty) {
+                                return 'Emergency contact phone is required';
+                              }
+                              return null;
+                            },
+                            keyboardType: TextInputType.phone,
+                          ),
+
+                          _buildTextField(
+                            controller: emergencyContactRelationshipController,
+                            label: 'Relationship',
+                            hint: 'e.g. Brother, Sister, Parent, Spouse',
+                            icon: Icons.people_outline_rounded,
+                            validator: (val) {
+                              if (val == null || val.trim().isEmpty) {
+                                return 'Relationship is required';
+                              }
+                              return null;
+                            },
+                            keyboardType: TextInputType.text,
+                          ),
+
+                          _buildTextField(
+                            controller: emergencyContactAddressController,
+                            label: 'Emergency contact address',
+                            hint: 'Enter their full home address',
+                            icon: Icons.home_work_outlined,
+                            validator: (val) {
+                              if (val == null || val.trim().isEmpty) {
+                                return 'Emergency contact address is required';
+                              }
+                              return null;
+                            },
+                            keyboardType: TextInputType.streetAddress,
+                            maxLines: 2,
+                          ),
+
+                          const SizedBox(height: 7),
+
+                          _divider(isDark),
+
+                          const SizedBox(height: 20),
+
+                          // VERIFICATION PHOTOS
                           _sectionTitle(
                             icon: Icons.photo_camera_outlined,
                             title: 'Verification photos',
@@ -1075,6 +1265,7 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
 
                           const SizedBox(height: 23),
 
+                          // SUBMIT
                           SizedBox(
                             width: double.infinity,
                             height: 55,
@@ -1145,6 +1336,7 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
             ],
           ),
 
+          // LOADING OVERLAY
           if (loading)
             Positioned.fill(
               child: ColoredBox(

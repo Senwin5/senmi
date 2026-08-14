@@ -1201,9 +1201,15 @@ class ApiService {
   static Future<Map<String, dynamic>> updateRiderProfile(
     String fullName,
     String phone,
+    String ninNumber,
+    String dateOfBirth,
     String vehicle,
     String address,
     String city,
+    String emergencyContactName,
+    String emergencyContactPhone,
+    String emergencyContactAddress,
+    String emergencyContactRelationship,
     File? profile,
     File? riderNinImage,
     File? vehicleImg,
@@ -1213,65 +1219,75 @@ class ApiService {
 
       if (kDebugMode) {
         print("TOKEN BEFORE UPDATE: $token");
-      }
-      if (kDebugMode) {
         print("REFRESH BEFORE UPDATE: $refreshToken");
       }
 
-      var request = http.MultipartRequest(
+      final request = http.MultipartRequest(
         'PUT',
         Uri.parse("$baseUrl/rider-profile/"),
       );
 
       final headers = await getAuthHeaders();
 
-      if (kDebugMode) {
-        print(headers);
-      }
-
-      if (kDebugMode) {
-        print("========== RIDER PROFILE TOKEN ==========");
-      }
-      if (kDebugMode) {
-        print(headers);
-      }
-      if (kDebugMode) {
-        print("==========================================");
-      }
-
       headers.remove("Content-Type");
-
       request.headers.addAll(headers);
 
-      // Add fields
+      // ============================================================
+      // TEXT FIELDS
+      // ============================================================
+
       request.fields['full_name'] = fullName;
-      request.fields['phone_number'] = phone; // ✅ Correct
+      request.fields['phone_number'] = phone;
+      request.fields['nin_number'] = ninNumber;
+      request.fields['date_of_birth'] = dateOfBirth;
+
       request.fields['vehicle_number'] = vehicle;
       request.fields['address'] = address;
       request.fields['city'] = city;
 
-      // Add files with correct field names
+      request.fields['emergency_contact_name'] = emergencyContactName;
+      request.fields['emergency_contact_phone'] = emergencyContactPhone;
+      request.fields['emergency_contact_address'] = emergencyContactAddress;
+      request.fields['emergency_contact_relationship'] =
+          emergencyContactRelationship;
+
+      // ============================================================
+      // IMAGES
+      // ============================================================
+
       if (profile != null) {
         request.files.add(
           await http.MultipartFile.fromPath('profile_picture', profile.path),
         );
       }
+
       if (riderNinImage != null) {
         request.files.add(
           await http.MultipartFile.fromPath('nin_image', riderNinImage.path),
-        ); // ✅ corrected
+        );
       }
+
       if (vehicleImg != null) {
         request.files.add(
           await http.MultipartFile.fromPath(
             'rider_image_with_vehicle',
             vehicleImg.path,
           ),
-        ); // ✅ corrected
+        );
       }
+
+      // ============================================================
+      // SEND
+      // ============================================================
 
       final response = await request.send();
       final resBody = await response.stream.bytesToString();
+
+      if (kDebugMode) {
+        print("RIDER PROFILE STATUS: ${response.statusCode}");
+        print("RIDER PROFILE RESPONSE: $resBody");
+      }
+
       final data = jsonDecode(resBody);
 
       if (response.statusCode == 401) {
@@ -1281,6 +1297,10 @@ class ApiService {
 
       return data;
     } catch (e) {
+      if (kDebugMode) {
+        print("RIDER PROFILE ERROR: $e");
+      }
+
       return {"error": e.toString()};
     }
   }
