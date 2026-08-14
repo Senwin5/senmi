@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -31,13 +33,8 @@ class _AdminPackagesScreenState extends State<AdminPackagesScreen> {
     super.initState();
 
     loadPackages();
-
     connectSocket();
   }
-
-  // ============================================================
-  // SOCKET
-  // ============================================================
 
   void connectSocket() {
     socketService = AdminSocketService();
@@ -50,7 +47,6 @@ class _AdminPackagesScreenState extends State<AdminPackagesScreen> {
 
         if (!mounted) return;
 
-        // Refresh silently.
         loadPackages(showLoader: false);
       },
       onError: (error) {
@@ -61,10 +57,6 @@ class _AdminPackagesScreenState extends State<AdminPackagesScreen> {
       },
     );
   }
-
-  // ============================================================
-  // LOAD PACKAGES
-  // ============================================================
 
   Future<void> loadPackages({bool showLoader = true}) async {
     if (showLoader && mounted) {
@@ -103,10 +95,6 @@ class _AdminPackagesScreenState extends State<AdminPackagesScreen> {
     }
   }
 
-  // ============================================================
-  // FILTERS
-  // ============================================================
-
   void applyFiltersWithoutSetState() {
     final query = searchController.text.trim().toLowerCase();
 
@@ -141,16 +129,10 @@ class _AdminPackagesScreenState extends State<AdminPackagesScreen> {
     }
   }
 
-  // ============================================================
-  // FILTER CHIP
-  // ============================================================
-
   Widget filterChip(String label) {
     final theme = Theme.of(context);
-    final colors = theme.colorScheme;
 
     final value = label.toLowerCase();
-
     final selected = selectedFilter == value;
 
     return Padding(
@@ -159,16 +141,20 @@ class _AdminPackagesScreenState extends State<AdminPackagesScreen> {
         label: Text(
           label,
           style: TextStyle(
-            color: selected ? colors.onPrimary : colors.onSurfaceVariant,
+            color: selected
+                ? Colors.white
+                : theme.colorScheme.onSurface.withOpacity(0.65),
             fontWeight: FontWeight.w700,
             fontSize: 13,
           ),
         ),
         selected: selected,
-        selectedColor: colors.primary,
-        backgroundColor: colors.surfaceContainerHighest,
+        selectedColor: Colors.deepPurple,
+        backgroundColor: theme.cardColor,
         side: BorderSide(
-          color: selected ? colors.primary : colors.outlineVariant,
+          color: selected
+              ? Colors.deepPurple
+              : theme.dividerColor.withOpacity(0.35),
         ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         onSelected: (_) {
@@ -179,40 +165,28 @@ class _AdminPackagesScreenState extends State<AdminPackagesScreen> {
     );
   }
 
-  // ============================================================
-  // STATUS COLOR
-  // ============================================================
-
   Color getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case "pending":
         return Colors.orange;
-
       case "paid":
         return Colors.teal;
-
       case "accepted":
         return Colors.blue;
-
       case "picked_up":
         return Colors.deepPurple;
-
       case "delivered":
         return Colors.green;
-
       case "cancelled":
         return Colors.red;
-
       default:
         return Colors.grey;
     }
   }
 
-  // ============================================================
-  // PACKAGE CARD
-  // ============================================================
-
   Widget packageCard(dynamic package) {
+    final theme = Theme.of(context);
+
     final String packageId = package['package_id']?.toString() ?? '';
 
     final String status = package['status']?.toString() ?? 'pending';
@@ -231,11 +205,13 @@ class _AdminPackagesScreenState extends State<AdminPackagesScreen> {
     final statusColor = getStatusColor(status);
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 14),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      color: theme.cardColor,
+      margin: const EdgeInsets.only(bottom: 10),
+      elevation: 1,
+      shadowColor: Colors.black12,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: InkWell(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(18),
         onTap: () {
           Navigator.push(
             context,
@@ -248,28 +224,24 @@ class _AdminPackagesScreenState extends State<AdminPackagesScreen> {
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              // ==================================================
-              // HEADER
-              // ==================================================
               Row(
                 children: [
                   Expanded(
                     child: Text(
                       "Package #$packageId",
-                      style: const TextStyle(
+                      style: TextStyle(
+                        color: theme.colorScheme.onSurface,
                         fontWeight: FontWeight.w800,
                         fontSize: 17,
                       ),
                     ),
                   ),
-
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      // ignore: deprecated_member_use
                       color: statusColor.withOpacity(0.12),
                       borderRadius: BorderRadius.circular(30),
                     ),
@@ -284,33 +256,13 @@ class _AdminPackagesScreenState extends State<AdminPackagesScreen> {
                   ),
                 ],
               ),
-
               const SizedBox(height: 18),
-
-              // ==================================================
-              // CUSTOMER
-              // ==================================================
               _infoRow(Icons.person_outline, customer),
-
               const SizedBox(height: 10),
-
-              // ==================================================
-              // RIDER
-              // ==================================================
               _infoRow(Icons.delivery_dining, rider),
-
               const SizedBox(height: 10),
-
-              // ==================================================
-              // ADDRESS
-              // ==================================================
               _infoRow(Icons.location_on_outlined, address),
-
               const SizedBox(height: 16),
-
-              // ==================================================
-              // VIEW BUTTON
-              // ==================================================
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
@@ -323,8 +275,20 @@ class _AdminPackagesScreenState extends State<AdminPackagesScreen> {
                       ),
                     );
                   },
-                  icon: const Icon(Icons.visibility_outlined),
-                  label: const Text("View Package"),
+                  icon: const Icon(
+                    Icons.visibility_outlined,
+                    color: Colors.deepPurple,
+                  ),
+                  label: const Text(
+                    "View Package",
+                    style: TextStyle(color: Colors.deepPurple),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: Colors.deepPurple.withOpacity(0.5)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -335,11 +299,11 @@ class _AdminPackagesScreenState extends State<AdminPackagesScreen> {
   }
 
   Widget _infoRow(IconData icon, String text) {
-    final colors = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
 
     return Row(
       children: [
-        Icon(icon, size: 19, color: colors.onSurfaceVariant),
+        Icon(icon, size: 19, color: Colors.deepPurple),
         const SizedBox(width: 9),
         Expanded(
           child: Text(
@@ -347,7 +311,7 @@ class _AdminPackagesScreenState extends State<AdminPackagesScreen> {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              color: colors.onSurface,
+              color: theme.colorScheme.onSurface,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -356,76 +320,60 @@ class _AdminPackagesScreenState extends State<AdminPackagesScreen> {
     );
   }
 
-  // ============================================================
-  // EMPTY STATE
-  // ============================================================
-
   Widget emptyState() {
-    final colors = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
 
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       children: [
         const SizedBox(height: 100),
-
-        Icon(Icons.inventory_2_outlined, size: 70, color: colors.primary),
-
+        const Icon(
+          Icons.inventory_2_outlined,
+          size: 70,
+          color: Colors.deepPurple,
+        ),
         const SizedBox(height: 18),
-
         Center(
           child: Text(
             "No packages found",
             style: TextStyle(
-              color: colors.onSurface,
+              color: theme.colorScheme.onSurface,
               fontSize: 18,
               fontWeight: FontWeight.w800,
             ),
           ),
         ),
-
         const SizedBox(height: 8),
-
         Center(
           child: Text(
             "Try changing your search or filter.",
-            style: TextStyle(color: colors.onSurfaceVariant),
+            style: TextStyle(
+              color: theme.colorScheme.onSurface.withOpacity(0.65),
+            ),
           ),
         ),
       ],
     );
   }
 
-  // ============================================================
-  // DISPOSE
-  // ============================================================
-
   @override
   void dispose() {
     searchController.dispose();
-
     socketSubscription?.cancel();
-
     socketService.dispose();
-
     super.dispose();
   }
-
-  // ============================================================
-  // BUILD
-  // ============================================================
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colors = theme.colorScheme;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-
       appBar: AppBar(
         elevation: 0,
         scrolledUnderElevation: 0,
-        backgroundColor: colors.surface,
+        backgroundColor: theme.scaffoldBackgroundColor,
         surfaceTintColor: Colors.transparent,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -433,7 +381,7 @@ class _AdminPackagesScreenState extends State<AdminPackagesScreen> {
             Text(
               "Packages Management",
               style: TextStyle(
-                color: colors.onSurface,
+                color: theme.colorScheme.onSurface,
                 fontSize: 20,
                 fontWeight: FontWeight.w800,
               ),
@@ -441,48 +389,73 @@ class _AdminPackagesScreenState extends State<AdminPackagesScreen> {
             const SizedBox(height: 2),
             Text(
               "${packages.length} package${packages.length == 1 ? '' : 's'}",
-              style: TextStyle(color: colors.onSurfaceVariant, fontSize: 12),
+              style: TextStyle(
+                color: theme.colorScheme.onSurface.withOpacity(0.65),
+                fontSize: 12,
+              ),
             ),
           ],
         ),
+        iconTheme: IconThemeData(color: theme.colorScheme.onSurface),
       ),
-
       body: Column(
         children: [
-          // ======================================================
-          // SEARCH + FILTER
-          // ======================================================
           Container(
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-            color: colors.surface,
+            color: theme.scaffoldBackgroundColor,
             child: Column(
               children: [
                 TextField(
                   controller: searchController,
                   onChanged: (_) => applyFilters(),
+                  style: TextStyle(color: theme.colorScheme.onSurface),
                   decoration: InputDecoration(
                     hintText: "Search package, customer or rider",
-                    prefixIcon: const Icon(Icons.search_rounded),
+                    hintStyle: TextStyle(
+                      color: theme.colorScheme.onSurface.withOpacity(0.55),
+                    ),
+                    prefixIcon: const Icon(
+                      Icons.search_rounded,
+                      color: Colors.deepPurple,
+                    ),
                     suffixIcon: searchController.text.isNotEmpty
                         ? IconButton(
                             onPressed: () {
                               searchController.clear();
                               applyFilters();
                             },
-                            icon: const Icon(Icons.close),
+                            icon: Icon(
+                              Icons.close,
+                              color: theme.colorScheme.onSurface.withOpacity(
+                                0.55,
+                              ),
+                            ),
                           )
                         : null,
                     filled: true,
-                    fillColor: colors.surfaceContainerHighest,
+                    fillColor: theme.cardColor,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide.none,
+                      borderSide: BorderSide(
+                        color: theme.dividerColor.withOpacity(0.25),
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                        color: theme.dividerColor.withOpacity(0.25),
+                      ),
+                    ),
+                    focusedBorder: const OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(16)),
+                      borderSide: BorderSide(
+                        color: Colors.deepPurple,
+                        width: 1.5,
+                      ),
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 14),
-
                 SizedBox(
                   height: 38,
                   child: ListView(
@@ -501,17 +474,14 @@ class _AdminPackagesScreenState extends State<AdminPackagesScreen> {
               ],
             ),
           ),
-
-          // ======================================================
-          // LIST
-          // ======================================================
           Expanded(
             child: isLoading
-                ? Center(
-                    child: CircularProgressIndicator(color: colors.primary),
+                ? const Center(
+                    child: CircularProgressIndicator(color: Colors.deepPurple),
                   )
                 : RefreshIndicator(
-                    color: colors.primary,
+                    color: Colors.deepPurple,
+                    backgroundColor: theme.cardColor,
                     onRefresh: () => loadPackages(showLoader: false),
                     child: filteredPackages.isEmpty
                         ? emptyState()

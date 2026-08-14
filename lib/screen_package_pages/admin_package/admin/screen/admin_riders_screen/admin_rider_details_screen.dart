@@ -26,7 +26,6 @@ class _RiderDetailsScreenState extends State<RiderDetailsScreen> {
   @override
   void initState() {
     super.initState();
-
     rider = widget.rider;
   }
 
@@ -74,23 +73,36 @@ class _RiderDetailsScreenState extends State<RiderDetailsScreen> {
     required String title,
     required String value,
   }) {
-    final colors = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 10),
+      color: colors.surface,
       elevation: 1,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shadowColor: Colors.black12,
+      margin: const EdgeInsets.only(bottom: 10),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+
         leading: CircleAvatar(
           backgroundColor: colors.primary.withOpacity(0.10),
           child: Icon(icon, color: colors.primary),
         ),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+
+        title: Text(
+          title,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: colors.onSurface,
+          ),
+        ),
+
         subtitle: Padding(
           padding: const EdgeInsets.only(top: 4),
           child: Text(
             value.isEmpty ? "Not provided" : value,
-            style: const TextStyle(fontSize: 15),
+            style: TextStyle(fontSize: 15, color: colors.onSurfaceVariant),
           ),
         ),
       ),
@@ -102,12 +114,19 @@ class _RiderDetailsScreenState extends State<RiderDetailsScreen> {
   // ============================================================
 
   Widget imageSection(BuildContext context, String title, String? imageUrl) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           title,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: colors.onSurface,
+          ),
         ),
 
         const SizedBox(height: 12),
@@ -138,9 +157,13 @@ class _RiderDetailsScreenState extends State<RiderDetailsScreen> {
                       return child;
                     }
 
-                    return const SizedBox(
+                    return Container(
                       height: 220,
-                      child: Center(child: CircularProgressIndicator()),
+                      width: double.infinity,
+                      color: colors.surfaceContainerHighest,
+                      child: Center(
+                        child: CircularProgressIndicator(color: colors.primary),
+                      ),
                     );
                   },
 
@@ -159,17 +182,24 @@ class _RiderDetailsScreenState extends State<RiderDetailsScreen> {
     );
   }
 
+  // ============================================================
+  // IMAGE ERROR
+  // ============================================================
+
   Widget _imageError() {
-    final colors = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
 
     return Container(
       height: 220,
       width: double.infinity,
       alignment: Alignment.center,
+
       decoration: BoxDecoration(
         color: colors.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(18),
       ),
+
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -178,7 +208,9 @@ class _RiderDetailsScreenState extends State<RiderDetailsScreen> {
             size: 50,
             color: colors.onSurfaceVariant,
           ),
+
           const SizedBox(height: 10),
+
           Text(
             "No image uploaded",
             style: TextStyle(color: colors.onSurfaceVariant),
@@ -194,14 +226,40 @@ class _RiderDetailsScreenState extends State<RiderDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
 
     final isPending = rider.status.toLowerCase() == "pending";
 
     return Scaffold(
-      appBar: AppBar(title: Text(rider.username)),
+      backgroundColor: theme.scaffoldBackgroundColor,
 
+      // ========================================================
+      // APP BAR
+      // ========================================================
+      appBar: AppBar(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+
+        title: Text(
+          rider.username,
+          style: TextStyle(
+            color: colors.onSurface,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+
+        iconTheme: IconThemeData(color: colors.onSurface),
+      ),
+
+      // ========================================================
+      // BODY
+      // ========================================================
       body: RefreshIndicator(
+        color: colors.primary,
+        backgroundColor: colors.surface,
         onRefresh: _refresh,
 
         child: ListView(
@@ -210,14 +268,38 @@ class _RiderDetailsScreenState extends State<RiderDetailsScreen> {
           padding: const EdgeInsets.all(16),
 
           children: [
-            // ======================================================
-            // PROFILE
-            // ======================================================
-            Center(
+            // ====================================================
+            // PURPLE PROFILE HEADER
+            // ====================================================
+            Container(
+              padding: const EdgeInsets.all(24),
+
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(24),
+
+                gradient: const LinearGradient(
+                  colors: [Colors.deepPurple, Color(0xFF7E57C2)],
+
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.deepPurple.withOpacity(0.20),
+                    blurRadius: 15,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+
               child: Column(
                 children: [
+                  // PROFILE IMAGE
                   CircleAvatar(
                     radius: 55,
+
+                    backgroundColor: Colors.white,
 
                     backgroundImage:
                         rider.profileImage != null &&
@@ -228,57 +310,82 @@ class _RiderDetailsScreenState extends State<RiderDetailsScreen> {
                     child:
                         rider.profileImage == null ||
                             rider.profileImage!.isEmpty
-                        ? const Icon(Icons.person, size: 50)
+                        ? const Icon(
+                            Icons.person,
+                            size: 50,
+                            color: Colors.deepPurple,
+                          )
                         : null,
                   ),
 
                   const SizedBox(height: 16),
 
+                  // USERNAME
                   Text(
                     rider.username,
                     textAlign: TextAlign.center,
+
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   ),
 
                   const SizedBox(height: 8),
 
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 5,
-                    ),
-                    decoration: BoxDecoration(
-                      color: colors.primary.withOpacity(0.10),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      "ID: ${rider.riderId}",
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: colors.primary,
-                      ),
-                    ),
+                  // EMAIL
+                  Text(
+                    rider.email,
+                    textAlign: TextAlign.center,
+
+                    style: const TextStyle(color: Colors.white, fontSize: 16),
                   ),
 
                   const SizedBox(height: 12),
 
+                  // RIDER ID
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 8,
+                    ),
+
+                    decoration: BoxDecoration(
+                      color: Colors.white24,
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+
+                    child: Text(
+                      "ID: ${rider.riderId}",
+
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  // STATUS
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 8,
                     ),
+
                     decoration: BoxDecoration(
-                      color: statusColor().withOpacity(0.12),
+                      color: Colors.white24,
                       borderRadius: BorderRadius.circular(30),
                     ),
+
                     child: Text(
                       rider.status.toUpperCase(),
+
                       style: TextStyle(
-                        color: statusColor(),
+                        color: Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -289,9 +396,20 @@ class _RiderDetailsScreenState extends State<RiderDetailsScreen> {
 
             const SizedBox(height: 30),
 
-            // ======================================================
+            // ====================================================
             // INFORMATION
-            // ======================================================
+            // ====================================================
+            Text(
+              "Rider Information",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: colors.onSurface,
+              ),
+            ),
+
+            const SizedBox(height: 14),
+
             infoCard(icon: Icons.email, title: "Email", value: rider.email),
 
             infoCard(
@@ -312,14 +430,18 @@ class _RiderDetailsScreenState extends State<RiderDetailsScreen> {
               value: rider.address ?? "",
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
 
-            // ======================================================
+            // ====================================================
             // DOCUMENTS
-            // ======================================================
-            const Text(
+            // ====================================================
+            Text(
               "Rider Documents",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: colors.onSurface,
+              ),
             ),
 
             const SizedBox(height: 18),
@@ -335,9 +457,9 @@ class _RiderDetailsScreenState extends State<RiderDetailsScreen> {
         ),
       ),
 
-      // ============================================================
+      // ==========================================================
       // APPROVE / REJECT
-      // ============================================================
+      // ==========================================================
       bottomNavigationBar: isPending
           ? SafeArea(
               child: Container(
@@ -345,22 +467,34 @@ class _RiderDetailsScreenState extends State<RiderDetailsScreen> {
 
                 decoration: BoxDecoration(
                   color: colors.surface,
-                  boxShadow: const [
-                    BoxShadow(blurRadius: 10, color: Colors.black12),
+
+                  boxShadow: [
+                    BoxShadow(
+                      blurRadius: 10,
+                      color: theme.brightness == Brightness.dark
+                          ? Colors.black54
+                          : Colors.black12,
+                    ),
                   ],
                 ),
 
                 child: Row(
                   children: [
+                    // APPROVE
                     Expanded(
                       child: ElevatedButton.icon(
                         onPressed: widget.onApprove,
+
                         icon: const Icon(Icons.check),
+
                         label: const Text("Approve"),
+
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green,
                           foregroundColor: Colors.white,
+
                           padding: const EdgeInsets.symmetric(vertical: 14),
+
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
                           ),
@@ -370,15 +504,21 @@ class _RiderDetailsScreenState extends State<RiderDetailsScreen> {
 
                     const SizedBox(width: 12),
 
+                    // REJECT
                     Expanded(
                       child: ElevatedButton.icon(
                         onPressed: widget.onReject,
+
                         icon: const Icon(Icons.close),
+
                         label: const Text("Reject"),
+
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.red,
                           foregroundColor: Colors.white,
+
                           padding: const EdgeInsets.symmetric(vertical: 14),
+
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
                           ),
@@ -426,6 +566,7 @@ class FullImageScreen extends StatelessWidget {
           child: InteractiveViewer(
             minScale: 0.5,
             maxScale: 4,
+
             child: Image.network(
               imageUrl,
               fit: BoxFit.contain,
