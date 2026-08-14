@@ -1,9 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:senmi/screen_package_pages/admin_package/admin/screen/admin_package/admin_package_details_screen.dart';
 import 'package:senmi/services/api_service.dart';
+
 import '../../../services/admin_socket_service.dart';
+import 'admin_package_details_screen.dart';
 
 class AdminPackagesScreen extends StatefulWidget {
   const AdminPackagesScreen({super.key});
@@ -20,10 +21,9 @@ class _AdminPackagesScreenState extends State<AdminPackagesScreen> {
 
   String selectedFilter = "all";
 
-  final searchController = TextEditingController();
+  final TextEditingController searchController = TextEditingController();
 
   late AdminSocketService socketService;
-
   StreamSubscription? socketSubscription;
 
   @override
@@ -35,9 +35,9 @@ class _AdminPackagesScreenState extends State<AdminPackagesScreen> {
     connectSocket();
   }
 
-  // =========================
+  // ============================================================
   // SOCKET
-  // =========================
+  // ============================================================
 
   void connectSocket() {
     socketService = AdminSocketService();
@@ -48,54 +48,75 @@ class _AdminPackagesScreenState extends State<AdminPackagesScreen> {
       (event) {
         debugPrint("LIVE PACKAGE UPDATE: $event");
 
-        loadPackages();
-      },
+        if (!mounted) return;
 
+        // Refresh silently.
+        loadPackages(showLoader: false);
+      },
       onError: (error) {
-        debugPrint("Socket error: $error");
+        debugPrint("Package socket error: $error");
       },
-
       onDone: () {
-        debugPrint("Socket disconnected");
+        debugPrint("Package socket disconnected");
       },
     );
   }
 
-  // =========================
+  // ============================================================
   // LOAD PACKAGES
-  // =========================
+  // ============================================================
 
-  Future<void> loadPackages() async {
-    setState(() {
-      isLoading = true;
-    });
+  Future<void> loadPackages({bool showLoader = true}) async {
+    if (showLoader && mounted) {
+      setState(() {
+        isLoading = true;
+      });
+    }
 
-    final data = await ApiService.getAdminPackages();
+    try {
+      final data = await ApiService.getAdminPackages();
 
-    packages = data;
+      if (!mounted) return;
 
-    applyFilters();
+      packages = data;
 
-    if (!mounted) return;
+      applyFiltersWithoutSetState();
 
-    setState(() {
-      isLoading = false;
-    });
+      setState(() {
+        isLoading = false;
+      });
+    } catch (e) {
+      debugPrint("Load packages error: $e");
+
+      if (!mounted) return;
+
+      setState(() {
+        isLoading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Failed to load packages: $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
-  // =========================
+  // ============================================================
   // FILTERS
-  // =========================
+  // ============================================================
 
-  void applyFilters() {
-    final query = searchController.text.toLowerCase();
+  void applyFiltersWithoutSetState() {
+    final query = searchController.text.trim().toLowerCase();
 
     filteredPackages = packages.where((package) {
       final packageId = (package['package_id'] ?? '').toString().toLowerCase();
 
-      final customer = (package['customer_name'] ?? '')
-          .toString()
-          .toLowerCase();
+      final customer =
+          (package['sender_name'] ?? package['customer_name'] ?? '')
+              .toString()
+              .toLowerCase();
 
       final rider = (package['rider_name'] ?? '').toString().toLowerCase();
 
@@ -106,43 +127,61 @@ class _AdminPackagesScreenState extends State<AdminPackagesScreen> {
           customer.contains(query) ||
           rider.contains(query);
 
-      final matchesFilter = selectedFilter == "all"
-          ? true
-          : status == selectedFilter;
+      final matchesFilter = selectedFilter == "all" || status == selectedFilter;
 
       return matchesSearch && matchesFilter;
     }).toList();
-
-    setState(() {});
   }
 
-  // =========================
+  void applyFilters() {
+    applyFiltersWithoutSetState();
+
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  // ============================================================
   // FILTER CHIP
-  // =========================
+  // ============================================================
 
   Widget filterChip(String label) {
-    final isSelected = selectedFilter == label.toLowerCase();
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    final value = label.toLowerCase();
+
+    final selected = selectedFilter == value;
 
     return Padding(
-      padding: const EdgeInsets.only(right: 10),
-
+      padding: const EdgeInsets.only(right: 8),
       child: ChoiceChip(
-        label: Text(label),
-
-        selected: isSelected,
-
+        label: Text(
+          label,
+          style: TextStyle(
+            color: selected ? colors.onPrimary : colors.onSurfaceVariant,
+            fontWeight: FontWeight.w700,
+            fontSize: 13,
+          ),
+        ),
+        selected: selected,
+        selectedColor: colors.primary,
+        backgroundColor: colors.surfaceContainerHighest,
+        side: BorderSide(
+          color: selected ? colors.primary : colors.outlineVariant,
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         onSelected: (_) {
-          selectedFilter = label.toLowerCase();
-
+          selectedFilter = value;
           applyFilters();
         },
       ),
     );
   }
 
-  // =========================
+  // ============================================================
   // STATUS COLOR
-  // =========================
+  // ============================================================
 
   Color getStatusColor(String status) {
     switch (status.toLowerCase()) {
@@ -169,71 +208,77 @@ class _AdminPackagesScreenState extends State<AdminPackagesScreen> {
     }
   }
 
-  // =========================
+  // ============================================================
   // PACKAGE CARD
-  // =========================
+  // ============================================================
 
   Widget packageCard(dynamic package) {
-    final status = package['status'] ?? 'pending';
+    final String packageId = package['package_id']?.toString() ?? '';
 
-    final packageId = package['package_id']?.toString() ?? '';
+    final String status = package['status']?.toString() ?? 'pending';
+
+    final String customer =
+        package['sender_name']?.toString() ??
+        package['customer_name']?.toString() ??
+        'Unknown customer';
+
+    final String rider =
+        package['rider_name']?.toString() ?? 'No rider assigned';
+
+    final String address =
+        package['delivery_address']?.toString() ?? 'No address';
+
+    final statusColor = getStatusColor(status);
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-
+      margin: const EdgeInsets.only(bottom: 14),
       elevation: 2,
-
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
-
         onTap: () {
-          // NEXT:
-          // open package details
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => AdminPackageDetailsScreen(packageId: packageId),
+            ),
+          );
         },
-
         child: Padding(
           padding: const EdgeInsets.all(16),
-
           child: Column(
             children: [
+              // ==================================================
+              // HEADER
+              // ==================================================
               Row(
                 children: [
                   Expanded(
                     child: Text(
                       "Package #$packageId",
-
                       style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-
-                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 17,
                       ),
                     ),
                   ),
 
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
+                      horizontal: 12,
                       vertical: 6,
                     ),
-
                     decoration: BoxDecoration(
-                      color: getStatusColor(
-                        status,
-                        // ignore: deprecated_member_use
-                      ).withOpacity(0.12),
-
+                      // ignore: deprecated_member_use
+                      color: statusColor.withOpacity(0.12),
                       borderRadius: BorderRadius.circular(30),
                     ),
-
                     child: Text(
                       status.toUpperCase(),
-
                       style: TextStyle(
-                        color: getStatusColor(status),
-
-                        fontWeight: FontWeight.bold,
+                        color: statusColor,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 11,
                       ),
                     ),
                   ),
@@ -242,71 +287,45 @@ class _AdminPackagesScreenState extends State<AdminPackagesScreen> {
 
               const SizedBox(height: 18),
 
-              Row(
-                children: [
-                  const Icon(Icons.person, size: 18),
-
-                  const SizedBox(width: 8),
-
-                  Expanded(
-                    child: Text(package['sender_name'] ?? 'Unknown customer'),
-                  ),
-                ],
-              ),
+              // ==================================================
+              // CUSTOMER
+              // ==================================================
+              _infoRow(Icons.person_outline, customer),
 
               const SizedBox(height: 10),
 
-              Row(
-                children: [
-                  const Icon(Icons.delivery_dining, size: 18),
-
-                  const SizedBox(width: 8),
-
-                  Expanded(
-                    child: Text(package['rider_name'] ?? 'No rider assigned'),
-                  ),
-                ],
-              ),
+              // ==================================================
+              // RIDER
+              // ==================================================
+              _infoRow(Icons.delivery_dining, rider),
 
               const SizedBox(height: 10),
 
-              Row(
-                children: [
-                  const Icon(Icons.location_on, size: 18),
-
-                  const SizedBox(width: 8),
-
-                  Expanded(
-                    child: Text(package['delivery_address'] ?? 'No address'),
-                  ),
-                ],
-              ),
+              // ==================================================
+              // ADDRESS
+              // ==================================================
+              _infoRow(Icons.location_on_outlined, address),
 
               const SizedBox(height: 16),
 
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => AdminPackageDetailsScreen(
-                              packageId: packageId.toString(),
-                            ),
-                          ),
-                        );
-                      },
-
-                      icon: const Icon(Icons.visibility),
-
-                      label: const Text("View"),
-                    ),
-                  ),
-
-                  const SizedBox(width: 12),
-                ],
+              // ==================================================
+              // VIEW BUTTON
+              // ==================================================
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            AdminPackageDetailsScreen(packageId: packageId),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.visibility_outlined),
+                  label: const Text("View Package"),
+                ),
               ),
             ],
           ),
@@ -315,9 +334,70 @@ class _AdminPackagesScreenState extends State<AdminPackagesScreen> {
     );
   }
 
-  // =========================
+  Widget _infoRow(IconData icon, String text) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Row(
+      children: [
+        Icon(icon, size: 19, color: colors.onSurfaceVariant),
+        const SizedBox(width: 9),
+        Expanded(
+          child: Text(
+            text,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: colors.onSurface,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ============================================================
+  // EMPTY STATE
+  // ============================================================
+
+  Widget emptyState() {
+    final colors = Theme.of(context).colorScheme;
+
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      children: [
+        const SizedBox(height: 100),
+
+        Icon(Icons.inventory_2_outlined, size: 70, color: colors.primary),
+
+        const SizedBox(height: 18),
+
+        Center(
+          child: Text(
+            "No packages found",
+            style: TextStyle(
+              color: colors.onSurface,
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 8),
+
+        Center(
+          child: Text(
+            "Try changing your search or filter.",
+            style: TextStyle(color: colors.onSurfaceVariant),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ============================================================
   // DISPOSE
-  // =========================
+  // ============================================================
 
   @override
   void dispose() {
@@ -330,89 +410,121 @@ class _AdminPackagesScreenState extends State<AdminPackagesScreen> {
     super.dispose();
   }
 
-  // =========================
-  // UI
-  // =========================
+  // ============================================================
+  // BUILD
+  // ============================================================
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
     return Scaffold(
-      appBar: AppBar(title: const Text("Packages Management")),
+      backgroundColor: theme.scaffoldBackgroundColor,
+
+      appBar: AppBar(
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        backgroundColor: colors.surface,
+        surfaceTintColor: Colors.transparent,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Packages Management",
+              style: TextStyle(
+                color: colors.onSurface,
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              "${packages.length} package${packages.length == 1 ? '' : 's'}",
+              style: TextStyle(color: colors.onSurfaceVariant, fontSize: 12),
+            ),
+          ],
+        ),
+      ),
 
       body: Column(
         children: [
-          // =========================
-          // SEARCH
-          // =========================
-          Padding(
-            padding: const EdgeInsets.all(16),
-
-            child: TextField(
-              controller: searchController,
-
-              onChanged: (_) {
-                applyFilters();
-              },
-
-              decoration: InputDecoration(
-                hintText: "Search package, customer, rider",
-
-                prefixIcon: const Icon(Icons.search),
-
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-            ),
-          ),
-
-          // =========================
-          // FILTERS
-          // =========================
-          SizedBox(
-            height: 50,
-
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-
+          // ======================================================
+          // SEARCH + FILTER
+          // ======================================================
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+            color: colors.surface,
+            child: Column(
               children: [
-                filterChip("All"),
-                filterChip("Pending"),
-                filterChip("Paid"),
-                filterChip("Accepted"),
-                filterChip("Picked_Up"),
-                filterChip("Delivered"),
-                filterChip("Cancelled"),
+                TextField(
+                  controller: searchController,
+                  onChanged: (_) => applyFilters(),
+                  decoration: InputDecoration(
+                    hintText: "Search package, customer or rider",
+                    prefixIcon: const Icon(Icons.search_rounded),
+                    suffixIcon: searchController.text.isNotEmpty
+                        ? IconButton(
+                            onPressed: () {
+                              searchController.clear();
+                              applyFilters();
+                            },
+                            icon: const Icon(Icons.close),
+                          )
+                        : null,
+                    filled: true,
+                    fillColor: colors.surfaceContainerHighest,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 14),
+
+                SizedBox(
+                  height: 38,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    children: [
+                      filterChip("All"),
+                      filterChip("Pending"),
+                      filterChip("Paid"),
+                      filterChip("Accepted"),
+                      filterChip("Picked_Up"),
+                      filterChip("Delivered"),
+                      filterChip("Cancelled"),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
 
-          const SizedBox(height: 10),
-
-          // =========================
-          // PACKAGES
-          // =========================
+          // ======================================================
+          // LIST
+          // ======================================================
           Expanded(
             child: isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : filteredPackages.isEmpty
-                ? const Center(child: Text("No packages found"))
+                ? Center(
+                    child: CircularProgressIndicator(color: colors.primary),
+                  )
                 : RefreshIndicator(
-                    onRefresh: loadPackages,
-
-                    child: ListView.builder(
-                      padding: const EdgeInsets.all(16),
-
-                      itemCount: filteredPackages.length,
-
-                      itemBuilder: (context, index) {
-                        final package = filteredPackages[index];
-
-                        return packageCard(package);
-                      },
-                    ),
+                    color: colors.primary,
+                    onRefresh: () => loadPackages(showLoader: false),
+                    child: filteredPackages.isEmpty
+                        ? emptyState()
+                        : ListView.builder(
+                            physics: const AlwaysScrollableScrollPhysics(
+                              parent: BouncingScrollPhysics(),
+                            ),
+                            padding: const EdgeInsets.fromLTRB(16, 14, 16, 30),
+                            itemCount: filteredPackages.length,
+                            itemBuilder: (_, index) {
+                              return packageCard(filteredPackages[index]);
+                            },
+                          ),
                   ),
           ),
         ],

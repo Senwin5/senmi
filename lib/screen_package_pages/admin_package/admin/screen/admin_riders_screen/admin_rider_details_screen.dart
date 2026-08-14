@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'rider_model.dart';
 import 'package:senmi/services/api_service.dart';
@@ -24,8 +26,13 @@ class _RiderDetailsScreenState extends State<RiderDetailsScreen> {
   @override
   void initState() {
     super.initState();
+
     rider = widget.rider;
   }
+
+  // ============================================================
+  // REFRESH
+  // ============================================================
 
   Future<void> _refresh() async {
     try {
@@ -37,143 +44,13 @@ class _RiderDetailsScreenState extends State<RiderDetailsScreen> {
         rider = updatedRider;
       });
     } catch (e) {
-      debugPrint(e.toString());
+      debugPrint("Refresh rider error: $e");
     }
   }
 
-  Widget infoCard({
-    required IconData icon,
-    required String title,
-    required String value,
-  }) {
-    return Card(
-      elevation: 2,
-
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-
-      child: ListTile(
-        leading: CircleAvatar(child: Icon(icon)),
-
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 4),
-
-          child: Text(
-            value.isEmpty ? "Not provided" : value,
-            style: const TextStyle(fontSize: 15),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget imageSection(BuildContext context, String title, String? imageUrl) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-
-      children: [
-        Text(
-          title,
-
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-
-        const SizedBox(height: 12),
-
-        if (imageUrl != null && imageUrl.isNotEmpty)
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-
-                MaterialPageRoute(
-                  builder: (_) =>
-                      FullImageScreen(imageUrl: imageUrl, title: title),
-                ),
-              );
-            },
-
-            child: Hero(
-              tag: imageUrl,
-
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(18),
-
-                child: Image.network(
-                  imageUrl,
-                  height: 220,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) {
-                      return child;
-                    }
-
-                    return Container(
-                      height: 220,
-                      alignment: Alignment.center,
-
-                      child: const CircularProgressIndicator(),
-                    );
-                  },
-
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      height: 220,
-                      alignment: Alignment.center,
-
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade200,
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-
-                      child: const Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-
-                        children: [
-                          Icon(Icons.broken_image, size: 50),
-
-                          SizedBox(height: 10),
-
-                          Text("Failed to load image"),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-          )
-        else
-          Container(
-            height: 220,
-            width: double.infinity,
-            alignment: Alignment.center,
-
-            decoration: BoxDecoration(
-              color: Colors.grey.shade200,
-              borderRadius: BorderRadius.circular(18),
-            ),
-
-            child: const Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-
-              children: [
-                Icon(Icons.image_not_supported, size: 50),
-
-                SizedBox(height: 10),
-
-                Text("No image uploaded"),
-              ],
-            ),
-          ),
-
-        const SizedBox(height: 24),
-      ],
-    );
-  }
+  // ============================================================
+  // STATUS COLOR
+  // ============================================================
 
   Color statusColor() {
     switch (rider.status.toLowerCase()) {
@@ -188,20 +65,154 @@ class _RiderDetailsScreenState extends State<RiderDetailsScreen> {
     }
   }
 
+  // ============================================================
+  // INFO CARD
+  // ============================================================
+
+  Widget infoCard({
+    required IconData icon,
+    required String title,
+    required String value,
+  }) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 10),
+      elevation: 1,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: colors.primary.withOpacity(0.10),
+          child: Icon(icon, color: colors.primary),
+        ),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Text(
+            value.isEmpty ? "Not provided" : value,
+            style: const TextStyle(fontSize: 15),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ============================================================
+  // IMAGE SECTION
+  // ============================================================
+
+  Widget imageSection(BuildContext context, String title, String? imageUrl) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+
+        const SizedBox(height: 12),
+
+        if (imageUrl != null && imageUrl.isNotEmpty)
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) =>
+                      FullImageScreen(imageUrl: imageUrl, title: title),
+                ),
+              );
+            },
+            child: Hero(
+              tag: imageUrl,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(18),
+                child: Image.network(
+                  imageUrl,
+                  height: 220,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+
+                  loadingBuilder: (context, child, progress) {
+                    if (progress == null) {
+                      return child;
+                    }
+
+                    return const SizedBox(
+                      height: 220,
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  },
+
+                  errorBuilder: (context, error, stackTrace) {
+                    return _imageError();
+                  },
+                ),
+              ),
+            ),
+          )
+        else
+          _imageError(),
+
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+
+  Widget _imageError() {
+    final colors = Theme.of(context).colorScheme;
+
+    return Container(
+      height: 220,
+      width: double.infinity,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: colors.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.image_not_supported,
+            size: 50,
+            color: colors.onSurfaceVariant,
+          ),
+          const SizedBox(height: 10),
+          Text(
+            "No image uploaded",
+            style: TextStyle(color: colors.onSurfaceVariant),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ============================================================
+  // BUILD
+  // ============================================================
+
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    final isPending = rider.status.toLowerCase() == "pending";
+
     return Scaffold(
       appBar: AppBar(title: Text(rider.username)),
 
       body: RefreshIndicator(
         onRefresh: _refresh,
+
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
+
           padding: const EdgeInsets.all(16),
+
           children: [
-            // =========================
-            // PROFILE HEADER
-            // =========================
+            // ======================================================
+            // PROFILE
+            // ======================================================
             Center(
               child: Column(
                 children: [
@@ -225,49 +236,47 @@ class _RiderDetailsScreenState extends State<RiderDetailsScreen> {
 
                   Text(
                     rider.username,
-
+                    textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+
+                  const SizedBox(height: 8),
+
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
-                      vertical: 4,
+                      vertical: 5,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
+                      color: colors.primary.withOpacity(0.10),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
                       "ID: ${rider.riderId}",
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.blue,
+                        fontWeight: FontWeight.w700,
+                        color: colors.primary,
                       ),
                     ),
                   ),
 
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 12),
 
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 8,
                     ),
-
                     decoration: BoxDecoration(
-                      // ignore: deprecated_member_use
-                      color: statusColor().withOpacity(0.15),
-
+                      color: statusColor().withOpacity(0.12),
                       borderRadius: BorderRadius.circular(30),
                     ),
-
                     child: Text(
                       rider.status.toUpperCase(),
-
                       style: TextStyle(
                         color: statusColor(),
                         fontWeight: FontWeight.bold,
@@ -280,9 +289,9 @@ class _RiderDetailsScreenState extends State<RiderDetailsScreen> {
 
             const SizedBox(height: 30),
 
-            // =========================
-            // INFO SECTION
-            // =========================
+            // ======================================================
+            // INFORMATION
+            // ======================================================
             infoCard(icon: Icons.email, title: "Email", value: rider.email),
 
             infoCard(
@@ -303,29 +312,44 @@ class _RiderDetailsScreenState extends State<RiderDetailsScreen> {
               value: rider.address ?? "",
             ),
 
-            const SizedBox(height: 30),
+            const SizedBox(height: 24),
 
-            // =========================
+            // ======================================================
             // DOCUMENTS
-            // =========================
+            // ======================================================
+            const Text(
+              "Rider Documents",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+            ),
+
+            const SizedBox(height: 18),
+
             imageSection(context, "Profile Image", rider.profileImage),
 
             imageSection(context, "Rider NIN Image", rider.ninImage),
 
             imageSection(context, "Vehicle Image", rider.vehicleImage),
 
-            const SizedBox(height: 30),
+            const SizedBox(height: 100),
           ],
         ),
       ),
-      bottomNavigationBar: rider.status.toLowerCase() == "pending"
+
+      // ============================================================
+      // APPROVE / REJECT
+      // ============================================================
+      bottomNavigationBar: isPending
           ? SafeArea(
               child: Container(
                 padding: const EdgeInsets.all(12),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  boxShadow: [BoxShadow(blurRadius: 10, color: Colors.black12)],
+
+                decoration: BoxDecoration(
+                  color: colors.surface,
+                  boxShadow: const [
+                    BoxShadow(blurRadius: 10, color: Colors.black12),
+                  ],
                 ),
+
                 child: Row(
                   children: [
                     Expanded(
@@ -337,6 +361,9 @@ class _RiderDetailsScreenState extends State<RiderDetailsScreen> {
                           backgroundColor: Colors.green,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
                         ),
                       ),
                     ),
@@ -352,6 +379,9 @@ class _RiderDetailsScreenState extends State<RiderDetailsScreen> {
                           backgroundColor: Colors.red,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
                         ),
                       ),
                     ),
@@ -364,9 +394,9 @@ class _RiderDetailsScreenState extends State<RiderDetailsScreen> {
   }
 }
 
-// =======================================
-// FULL SCREEN IMAGE VIEWER
-// =======================================
+// ================================================================
+// FULL SCREEN IMAGE
+// ================================================================
 
 class FullImageScreen extends StatelessWidget {
   final String imageUrl;
@@ -386,7 +416,6 @@ class FullImageScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
-
         title: Text(title),
       ),
 
@@ -395,17 +424,30 @@ class FullImageScreen extends StatelessWidget {
           tag: imageUrl,
 
           child: InteractiveViewer(
+            minScale: 0.5,
+            maxScale: 4,
             child: Image.network(
               imageUrl,
-
               fit: BoxFit.contain,
 
-              loadingBuilder: (context, child, loadingProgress) {
-                if (loadingProgress == null) {
+              loadingBuilder: (context, child, progress) {
+                if (progress == null) {
                   return child;
                 }
 
-                return const Center(child: CircularProgressIndicator());
+                return const Center(
+                  child: CircularProgressIndicator(color: Colors.white),
+                );
+              },
+
+              errorBuilder: (context, error, stackTrace) {
+                return const Center(
+                  child: Icon(
+                    Icons.broken_image,
+                    color: Colors.white,
+                    size: 60,
+                  ),
+                );
               },
             ),
           ),

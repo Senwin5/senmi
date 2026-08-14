@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -161,10 +163,9 @@ class _AdminRidersScreenState extends State<AdminRidersScreen> {
       context: context,
       builder: (dialogContext) {
         final theme = Theme.of(dialogContext);
-        final colors = theme.colorScheme;
 
         return AlertDialog(
-          backgroundColor: colors.surface,
+          backgroundColor: theme.cardColor,
           surfaceTintColor: Colors.transparent,
           elevation: 10,
           shape: RoundedRectangleBorder(
@@ -173,7 +174,7 @@ class _AdminRidersScreenState extends State<AdminRidersScreen> {
           title: Text(
             "Reject Rider",
             style: TextStyle(
-              color: colors.onSurface,
+              color: theme.colorScheme.onSurface,
               fontSize: 21,
               fontWeight: FontWeight.w800,
             ),
@@ -184,37 +185,48 @@ class _AdminRidersScreenState extends State<AdminRidersScreen> {
             children: [
               Text(
                 "Please provide a reason for rejecting this rider.",
-                style: TextStyle(color: colors.onSurfaceVariant, fontSize: 14),
+                style: TextStyle(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontSize: 14,
+                ),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: controller,
                 maxLines: 4,
-                style: TextStyle(color: colors.onSurface),
+                style: TextStyle(color: theme.colorScheme.onSurface),
                 decoration: InputDecoration(
                   hintText: "Reason for rejection",
-                  hintStyle: TextStyle(color: colors.onSurfaceVariant),
+                  hintStyle: TextStyle(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                   filled: true,
-                  fillColor: colors.surfaceContainerHighest,
+                  fillColor: theme.cardColor,
                   prefixIcon: Padding(
                     padding: const EdgeInsets.only(
                       left: 14,
                       right: 8,
                       bottom: 52,
                     ),
-                    child: Icon(Icons.edit_note_rounded, color: colors.primary),
+                    child: const Icon(
+                      Icons.edit_note_rounded,
+                      color: Colors.deepPurple,
+                    ),
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
+                    borderSide: BorderSide(color: theme.dividerColor),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
+                    borderSide: BorderSide(color: theme.dividerColor),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(color: colors.primary, width: 1.5),
+                    borderSide: const BorderSide(
+                      color: Colors.deepPurple,
+                      width: 1.5,
+                    ),
                   ),
                   contentPadding: const EdgeInsets.all(16),
                 ),
@@ -224,11 +236,13 @@ class _AdminRidersScreenState extends State<AdminRidersScreen> {
           actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
+              onPressed: () {
+                Navigator.pop(dialogContext);
+              },
               child: Text(
                 "Cancel",
                 style: TextStyle(
-                  color: colors.onSurfaceVariant,
+                  color: theme.colorScheme.onSurfaceVariant,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -290,9 +304,13 @@ class _AdminRidersScreenState extends State<AdminRidersScreen> {
     }
   }
 
+  // ============================================================
+  // FILTER CHIP
+  // ============================================================
+
   Widget filterChip(String label) {
     final theme = Theme.of(context);
-    final colors = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
     final value = label.toLowerCase();
     final selected = selectedFilter == value;
@@ -305,17 +323,26 @@ class _AdminRidersScreenState extends State<AdminRidersScreen> {
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w700,
-            color: selected ? colors.onPrimary : colors.onSurfaceVariant,
+            color: selected ? Colors.white : theme.colorScheme.onSurface,
           ),
         ),
         selected: selected,
-        selectedColor: colors.primary,
-        backgroundColor: colors.surfaceContainerHighest,
+
+        // PURPLE WHEN SELECTED
+        selectedColor: Colors.deepPurple,
+
+        // WHITE IN LIGHT MODE
+        // DARK CARD COLOR IN DARK MODE
+        backgroundColor: isDark ? theme.cardColor : Colors.white,
+
         side: BorderSide(
-          color: selected ? colors.primary : colors.outlineVariant,
+          color: selected ? Colors.deepPurple : theme.dividerColor,
         ),
+
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+
         onSelected: (_) {
           selectedFilter = value;
           applyFilters();
@@ -328,36 +355,41 @@ class _AdminRidersScreenState extends State<AdminRidersScreen> {
     return riders.where((r) => r.status.toLowerCase() == status).length;
   }
 
+  // ============================================================
+  // HEADER
+  // ============================================================
+
   Widget _buildHeader(BuildContext context) {
     final theme = Theme.of(context);
-    final colors = theme.colorScheme;
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
       decoration: BoxDecoration(
-        color: colors.surface,
+        color: theme.scaffoldBackgroundColor,
         border: Border(
-          // ignore: deprecated_member_use
-          bottom: BorderSide(color: colors.outlineVariant.withOpacity(0.35)),
+          bottom: BorderSide(color: theme.dividerColor.withOpacity(0.5)),
         ),
       ),
       child: Column(
         children: [
+          // SEARCH
           TextField(
             controller: searchController,
             onChanged: (_) => applyFilters(),
+
             style: TextStyle(
-              color: colors.onSurface,
+              color: theme.colorScheme.onSurface,
               fontWeight: FontWeight.w500,
             ),
+
             decoration: InputDecoration(
               hintText: "Search name, email or phone",
-              hintStyle: TextStyle(color: colors.onSurfaceVariant),
-              prefixIcon: Icon(
-                Icons.search_rounded,
-                color: colors.onSurfaceVariant,
-              ),
+
+              hintStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+
+              prefixIcon: Icon(Icons.search_rounded, color: Colors.deepPurple),
+
               suffixIcon: searchController.text.isNotEmpty
                   ? IconButton(
                       onPressed: () {
@@ -366,31 +398,42 @@ class _AdminRidersScreenState extends State<AdminRidersScreen> {
                       },
                       icon: Icon(
                         Icons.close_rounded,
-                        color: colors.onSurfaceVariant,
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
                     )
                   : null,
+
+              // MATCH PROFILE CARDS
               filled: true,
-              fillColor: colors.surfaceContainerHighest,
+              fillColor: theme.cardColor,
+
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 18,
                 vertical: 16,
               ),
+
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(17),
-                borderSide: BorderSide.none,
+                borderSide: BorderSide(color: theme.dividerColor),
               ),
+
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(17),
-                borderSide: BorderSide.none,
+                borderSide: BorderSide(color: theme.dividerColor),
               ),
+
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(17),
-                borderSide: BorderSide(color: colors.primary, width: 1.5),
+                borderSide: const BorderSide(
+                  color: Colors.deepPurple,
+                  width: 1.5,
+                ),
               ),
             ),
           ),
+
           const SizedBox(height: 14),
+
           SizedBox(
             height: 38,
             child: ListView(
@@ -409,49 +452,61 @@ class _AdminRidersScreenState extends State<AdminRidersScreen> {
     );
   }
 
+  // ============================================================
+  // EMPTY STATE
+  // ============================================================
+
   Widget _buildEmptyState(BuildContext context) {
     final theme = Theme.of(context);
-    final colors = theme.colorScheme;
 
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       children: [
         const SizedBox(height: 90),
+
         Center(
           child: Container(
             width: 100,
             height: 100,
+
             decoration: BoxDecoration(
-              // ignore: deprecated_member_use
-              color: colors.primary.withOpacity(0.10),
+              color: Colors.deepPurple.withOpacity(0.10),
               shape: BoxShape.circle,
             ),
-            child: Icon(
+
+            child: const Icon(
               Icons.people_outline_rounded,
               size: 48,
-              color: colors.primary,
+              color: Colors.deepPurple,
             ),
           ),
         ),
+
         const SizedBox(height: 22),
+
         Center(
           child: Text(
             "No riders found",
             style: TextStyle(
-              color: colors.onSurface,
+              color: theme.colorScheme.onSurface,
               fontSize: 18,
               fontWeight: FontWeight.w800,
             ),
           ),
         ),
+
         const SizedBox(height: 7),
+
         Center(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 40),
             child: Text(
               "Try changing your search or filter to find riders.",
               textAlign: TextAlign.center,
-              style: TextStyle(color: colors.onSurfaceVariant, fontSize: 14),
+              style: TextStyle(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontSize: 14,
+              ),
             ),
           ),
         ),
@@ -459,18 +514,23 @@ class _AdminRidersScreenState extends State<AdminRidersScreen> {
     );
   }
 
+  // ============================================================
+  // BUILD
+  // ============================================================
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colors = theme.colorScheme;
 
     return Scaffold(
+      // SAME STYLE AS PROFILE
       backgroundColor: theme.scaffoldBackgroundColor,
 
       appBar: AppBar(
         elevation: 0,
         scrolledUnderElevation: 0,
-        backgroundColor: colors.surface,
+
+        backgroundColor: theme.scaffoldBackgroundColor,
         surfaceTintColor: Colors.transparent,
 
         titleSpacing: 16,
@@ -481,17 +541,19 @@ class _AdminRidersScreenState extends State<AdminRidersScreen> {
             Text(
               "Rider Management",
               style: TextStyle(
-                color: colors.onSurface,
+                color: theme.colorScheme.onSurface,
                 fontSize: 20,
                 fontWeight: FontWeight.w800,
                 letterSpacing: -0.3,
               ),
             ),
+
             const SizedBox(height: 2),
+
             Text(
               "${riders.length} rider${riders.length == 1 ? '' : 's'}",
               style: TextStyle(
-                color: colors.onSurfaceVariant,
+                color: theme.colorScheme.onSurfaceVariant,
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
               ),
@@ -499,7 +561,7 @@ class _AdminRidersScreenState extends State<AdminRidersScreen> {
           ],
         ),
 
-        iconTheme: IconThemeData(color: colors.onSurface),
+        iconTheme: IconThemeData(color: theme.colorScheme.onSurface),
       ),
 
       body: Column(
@@ -508,43 +570,55 @@ class _AdminRidersScreenState extends State<AdminRidersScreen> {
 
           Expanded(
             child: isLoading
-                ? Center(
-                    child: CircularProgressIndicator(color: colors.primary),
+                ? const Center(
+                    child: CircularProgressIndicator(color: Colors.deepPurple),
                   )
                 : RefreshIndicator(
-                    color: colors.primary,
-                    backgroundColor: colors.surface,
+                    color: Colors.deepPurple,
+
+                    backgroundColor: theme.cardColor,
+
                     onRefresh: () => loadRiders(showLoader: false),
+
                     child: filteredRiders.isEmpty
                         ? _buildEmptyState(context)
                         : ListView.builder(
                             physics: const AlwaysScrollableScrollPhysics(
                               parent: BouncingScrollPhysics(),
                             ),
+
                             padding: const EdgeInsets.fromLTRB(12, 14, 12, 28),
+
                             itemCount: filteredRiders.length,
+
                             itemBuilder: (_, index) {
                               final rider = filteredRiders[index];
 
                               return Padding(
                                 padding: const EdgeInsets.only(bottom: 10),
+
                                 child: RiderCard(
                                   rider: rider,
+
                                   onTap: () {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
                                         builder: (_) => RiderDetailsScreen(
                                           rider: rider,
+
                                           onApprove: () =>
                                               approveRider(rider.riderId),
+
                                           onReject: () =>
                                               rejectRider(rider.riderId),
                                         ),
                                       ),
                                     );
                                   },
+
                                   onApprove: () => approveRider(rider.riderId),
+
                                   onReject: () => rejectRider(rider.riderId),
                                 ),
                               );
