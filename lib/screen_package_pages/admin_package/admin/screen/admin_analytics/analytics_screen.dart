@@ -32,15 +32,16 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   String range = '30D';
 
   // ============================================================
-  // SENMI DARK THEME
+  // COLORS
   // ============================================================
 
-  static const Color background = Color(0xff080B10);
-  static const Color surface = Color(0xff11161D);
-  static const Color surface3 = Color(0xff1A2029);
+  static const Color background = Color(0xff070A0F);
+  static const Color surface = Color(0xff10151C);
+  static const Color surface2 = Color(0xff151B23);
+  static const Color surface3 = Color(0xff1B222C);
   static const Color border = Color(0xff252D38);
 
-  static const Color primary = Color(0xff7C5CFF);
+  static const Color primary = Color(0xff8065FF);
   static const Color blue = Color(0xff4C8DFF);
   static const Color green = Color(0xff2DD881);
   static const Color orange = Color(0xffffa726);
@@ -49,7 +50,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   static const Color yellow = Color(0xffffd54f);
 
   static const Color textPrimary = Color(0xffF5F7FA);
-  static const Color textSecondary = Color(0xff8D98A8);
+  static const Color textSecondary = Color(0xff929DAC);
   static const Color textMuted = Color(0xff626C7A);
 
   // ============================================================
@@ -120,17 +121,13 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   // ============================================================
 
   double d(dynamic value) {
-    if (value is num) {
-      return value.toDouble();
-    }
+    if (value is num) return value.toDouble();
 
     return double.tryParse(value?.toString() ?? '') ?? 0.0;
   }
 
   int i(dynamic value) {
-    if (value is num) {
-      return value.toInt();
-    }
+    if (value is num) return value.toInt();
 
     return int.tryParse(value?.toString() ?? '') ?? 0;
   }
@@ -143,7 +140,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   // TREND
   // ============================================================
 
-  List<Map<String, dynamic>> _trendPackages() {
+  List<Map<String, dynamic>> trendPackages() {
     final now = DateTime.now();
 
     final int days = range == '7D'
@@ -152,7 +149,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         ? 90
         : 30;
 
-    final List<Map<String, dynamic>> output = List.generate(
+    final output = List.generate(
       days,
       (_) => <String, dynamic>{'count': 0, 'revenue': 0.0},
     );
@@ -206,9 +203,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   double get totalRevenue {
     final apiValue = analytics['total_revenue'] ?? analytics['revenue'];
 
-    if (apiValue != null) {
-      return d(apiValue);
-    }
+    if (apiValue != null) return d(apiValue);
 
     double total = 0;
 
@@ -222,9 +217,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   double get totalCommission {
     final apiValue = analytics['total_commission'] ?? analytics['commission'];
 
-    if (apiValue != null) {
-      return d(apiValue);
-    }
+    if (apiValue != null) return d(apiValue);
 
     double total = 0;
 
@@ -239,9 +232,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     final apiValue =
         analytics['rider_earnings'] ?? analytics['total_rider_earnings'];
 
-    if (apiValue != null) {
-      return d(apiValue);
-    }
+    if (apiValue != null) return d(apiValue);
 
     double total = 0;
 
@@ -260,9 +251,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     final apiValue =
         analytics['completed_deliveries'] ?? analytics['completed_packages'];
 
-    if (apiValue != null) {
-      return i(apiValue);
-    }
+    if (apiValue != null) return i(apiValue);
 
     return statusCounts()['delivered'] ?? 0;
   }
@@ -362,17 +351,26 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       backgroundColor: background,
 
       appBar: AppBar(
+        backgroundColor: background,
         elevation: 0,
         scrolledUnderElevation: 0,
-        backgroundColor: background,
 
-        title: const Text(
-          'Analytics',
-          style: TextStyle(
-            color: textPrimary,
-            fontWeight: FontWeight.w800,
-            fontSize: 21,
-          ),
+        title: const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Analytics',
+              style: TextStyle(
+                color: textPrimary,
+                fontWeight: FontWeight.w800,
+                fontSize: 21,
+              ),
+            ),
+            Text(
+              'Senmi command center',
+              style: TextStyle(color: textMuted, fontSize: 10),
+            ),
+          ],
         ),
 
         iconTheme: const IconThemeData(color: textPrimary),
@@ -394,12 +392,12 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             ),
 
           IconButton(
-            tooltip: 'Refresh analytics',
+            tooltip: 'Refresh',
             onPressed: refreshing ? null : load,
             icon: const Icon(Icons.refresh_rounded),
           ),
 
-          const SizedBox(width: 6),
+          const SizedBox(width: 5),
         ],
       ),
 
@@ -413,29 +411,35 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               child: ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
 
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 50),
 
                 children: [
-                  _header(),
+                  _hero(),
 
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 22),
 
                   if (error != null) _error(),
 
-                  _sectionTitle(
-                    'Financial performance',
-                    'Your platform revenue at a glance',
+                  _sectionHeader(
+                    'Financial overview',
+                    'Money moving through your platform',
+                    onTap: () {
+                      _openDetails(AnalyticsDetailsType.financial);
+                    },
                   ),
 
                   const SizedBox(height: 11),
 
                   _financialCards(),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 25),
 
-                  _sectionTitle(
-                    'Delivery activity',
-                    'Track package movement over time',
+                  _sectionHeader(
+                    'Delivery analytics',
+                    'Monitor package activity and growth',
+                    onTap: () {
+                      _openDetails(AnalyticsDetailsType.delivery);
+                    },
                   ),
 
                   const SizedBox(height: 11),
@@ -446,42 +450,59 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
                   _chartCard(),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 25),
 
-                  _sectionTitle(
+                  _sectionHeader(
+                    'Daily operations',
+                    'See exactly how many packages you handle and deliver each day',
+                  ),
+
+                  const SizedBox(height: 11),
+
+                  _dailyOperationsCard(),
+
+                  const SizedBox(height: 25),
+
+                  _sectionHeader(
                     'Delivery status',
-                    'Live distribution of your packages',
+                    'Current package distribution',
                   ),
 
                   const SizedBox(height: 11),
 
                   _statusCard(),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 25),
 
-                  _sectionTitle(
+                  _sectionHeader(
                     'Platform health',
-                    'Users, wallets and payout activity',
+                    'Users, wallets and withdrawals',
+                    onTap: () {
+                      _openDetails(AnalyticsDetailsType.platform);
+                    },
                   ),
 
                   const SizedBox(height: 11),
 
                   _healthCard(),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 25),
 
-                  _sectionTitle(
-                    'Performance metrics',
+                  _sectionHeader(
+                    'Performance',
                     'Important operating ratios',
+                    onTap: () {
+                      _openDetails(AnalyticsDetailsType.performance);
+                    },
                   ),
 
                   const SizedBox(height: 11),
 
                   _metricGrid(),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 25),
 
-                  _sectionTitle(
+                  _sectionHeader(
                     'Business insights',
                     'Automatic observations from your data',
                   ),
@@ -489,8 +510,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   const SizedBox(height: 11),
 
                   _insightsCard(),
-
-                  const SizedBox(height: 30),
                 ],
               ),
             ),
@@ -498,10 +517,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 
   // ============================================================
-  // HEADER
+  // HERO
   // ============================================================
 
-  Widget _header() {
+  Widget _hero() {
     return Container(
       padding: const EdgeInsets.all(20),
 
@@ -512,130 +531,158 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
 
-          colors: [Color(0xff18152D), Color(0xff111827), Color(0xff11161D)],
+          colors: [Color(0xff19152E), Color(0xff111827), Color(0xff10151C)],
         ),
 
         border: Border.all(color: primary.withOpacity(.20)),
 
         boxShadow: [
           BoxShadow(
-            color: primary.withOpacity(.06),
+            color: primary.withOpacity(.07),
             blurRadius: 30,
             spreadRadius: 1,
           ),
         ],
       ),
 
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
 
-              children: [
-                Row(
+                decoration: BoxDecoration(
+                  color: primary.withOpacity(.13),
+                  borderRadius: BorderRadius.circular(13),
+                ),
+
+                child: const Icon(
+                  Icons.insights_rounded,
+                  color: primary,
+                  size: 21,
+                ),
+              ),
+
+              const SizedBox(width: 11),
+
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(9),
-
-                      decoration: BoxDecoration(
-                        color: primary.withOpacity(.13),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-
-                      child: const Icon(
-                        Icons.insights_rounded,
-                        color: primary,
-                        size: 20,
-                      ),
-                    ),
-
-                    const SizedBox(width: 10),
-
-                    const Text(
+                    Text(
                       'Senmi Analytics',
                       style: TextStyle(
                         color: textPrimary,
-                        fontSize: 22,
+                        fontSize: 21,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Your operations command center',
+                      style: TextStyle(color: textSecondary, fontSize: 11),
+                    ),
+                  ],
+                ),
+              ),
+
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+
+                decoration: BoxDecoration(
+                  color: green.withOpacity(.08),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: green.withOpacity(.16)),
+                ),
+
+                child: const Row(
+                  children: [
+                    Icon(Icons.circle, size: 6, color: green),
+                    SizedBox(width: 5),
+                    Text(
+                      'LIVE',
+                      style: TextStyle(
+                        color: green,
+                        fontSize: 9,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
                   ],
                 ),
+              ),
+            ],
+          ),
 
-                const SizedBox(height: 13),
+          const SizedBox(height: 20),
 
-                const Text(
-                  'Your operations command center.',
-                  style: TextStyle(
-                    color: textPrimary,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-
-                const SizedBox(height: 5),
-
-                const Text(
-                  'Monitor revenue, deliveries, riders and payouts from one place.',
-                  style: TextStyle(
-                    color: textSecondary,
-                    height: 1.4,
-                    fontSize: 12,
-                  ),
-                ),
-
-                const SizedBox(height: 15),
-
-                Row(
-                  children: [
-                    _miniHeaderStat(
-                      'Packages',
-                      packages.length.toString(),
-                      primary,
-                    ),
-
-                    const SizedBox(width: 18),
-
-                    _miniHeaderStat('Delivered', completed.toString(), green),
-
-                    const SizedBox(width: 18),
-
-                    _miniHeaderStat('Active', active.toString(), orange),
-                  ],
-                ),
-              ],
+          Text(
+            money(totalRevenue),
+            style: const TextStyle(
+              color: textPrimary,
+              fontSize: 30,
+              fontWeight: FontWeight.w900,
             ),
           ),
 
-          if (refreshing)
-            const Padding(
-              padding: EdgeInsets.only(left: 12),
-              child: CircularProgressIndicator(color: primary, strokeWidth: 2),
-            ),
+          const SizedBox(height: 3),
+
+          const Text(
+            'Total platform volume',
+            style: TextStyle(color: textSecondary, fontSize: 11),
+          ),
+
+          const SizedBox(height: 20),
+
+          Row(
+            children: [
+              _heroStat('Packages', packages.length.toString(), primary),
+
+              _heroDivider(),
+
+              _heroStat('Delivered', completed.toString(), green),
+
+              _heroDivider(),
+
+              _heroStat('Active', active.toString(), orange),
+
+              _heroDivider(),
+
+              _heroStat('Customers', customers.length.toString(), blue),
+            ],
+          ),
         ],
       ),
     );
   }
 
-  Widget _miniHeaderStat(String title, String value, Color color) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-
-      children: [
-        Text(
-          value,
-          style: TextStyle(
-            color: color,
-            fontSize: 15,
-            fontWeight: FontWeight.w800,
+  Widget _heroStat(String title, String value, Color color) {
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            value,
+            style: TextStyle(
+              color: color,
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+            ),
           ),
-        ),
+          const SizedBox(height: 3),
+          Text(title, style: const TextStyle(color: textMuted, fontSize: 9)),
+        ],
+      ),
+    );
+  }
 
-        const SizedBox(height: 2),
-
-        Text(title, style: const TextStyle(color: textMuted, fontSize: 9)),
-      ],
+  Widget _heroDivider() {
+    return Container(
+      width: 1,
+      height: 27,
+      margin: const EdgeInsets.symmetric(horizontal: 7),
+      color: border,
     );
   }
 
@@ -658,9 +705,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       child: const Row(
         children: [
           Icon(Icons.error_outline_rounded, color: red),
-
           SizedBox(width: 10),
-
           Expanded(
             child: Text(
               'Some analytics data could not be loaded. Pull down to retry.',
@@ -673,18 +718,15 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 
   // ============================================================
-  // SECTION TITLE
+  // SECTION HEADER
   // ============================================================
 
-  Widget _sectionTitle(String title, String subtitle) {
+  Widget _sectionHeader(String title, String subtitle, {VoidCallback? onTap}) {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
-
       children: [
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-
             children: [
               Text(
                 title,
@@ -694,22 +736,51 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   fontWeight: FontWeight.w800,
                 ),
               ),
-
               const SizedBox(height: 3),
-
               Text(
                 subtitle,
-                style: const TextStyle(color: textSecondary, fontSize: 12),
+                style: const TextStyle(color: textSecondary, fontSize: 11),
               ),
             ],
           ),
         ),
+
+        if (onTap != null)
+          GestureDetector(
+            onTap: onTap,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+              decoration: BoxDecoration(
+                color: surface2,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: border),
+              ),
+              child: const Row(
+                children: [
+                  Text(
+                    'Details',
+                    style: TextStyle(
+                      color: textSecondary,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  SizedBox(width: 4),
+                  Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    color: textMuted,
+                    size: 9,
+                  ),
+                ],
+              ),
+            ),
+          ),
       ],
     );
   }
 
   // ============================================================
-  // FINANCIAL CARDS
+  // FINANCIAL
   // ============================================================
 
   Widget _financialCards() {
@@ -721,9 +792,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       crossAxisSpacing: 11,
       mainAxisSpacing: 11,
 
-      // FIX:
-      // Slightly taller cards to prevent the
-      // 0.511px RenderFlex overflow.
       childAspectRatio: 1.42,
 
       children: [
@@ -732,31 +800,32 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           money(totalRevenue),
           Icons.payments_rounded,
           green,
-          '+ platform volume',
+          'Platform volume',
+          () => _openDetails(AnalyticsDetailsType.financial),
         ),
-
         _financialCard(
           'Commission',
           money(totalCommission),
           Icons.account_balance_rounded,
           primary,
           'Senmi earnings',
+          () => _openDetails(AnalyticsDetailsType.financial),
         ),
-
         _financialCard(
           'Rider earnings',
           money(riderEarnings),
           Icons.delivery_dining_rounded,
           blue,
           'Rider share',
+          () => _openDetails(AnalyticsDetailsType.financial),
         ),
-
         _financialCard(
           'Payouts',
           money(payoutTotal),
           Icons.outbound_rounded,
           orange,
-          'Processed payouts',
+          'Processed',
+          () => _openDetails(AnalyticsDetailsType.financial),
         ),
       ],
     );
@@ -768,99 +837,81 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     IconData icon,
     Color color,
     String caption,
+    VoidCallback onTap,
   ) {
-    return Container(
-      padding: const EdgeInsets.all(15),
+    return GestureDetector(
+      onTap: onTap,
 
-      decoration: BoxDecoration(
-        color: surface,
-        borderRadius: BorderRadius.circular(19),
+      child: Container(
+        padding: const EdgeInsets.all(15),
 
-        border: Border.all(color: border),
-
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-
-          colors: [surface, Color.lerp(surface, color, .035)!],
+        decoration: BoxDecoration(
+          color: surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: border),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [surface, Color.lerp(surface, color, .035)!],
+          ),
         ),
-      ),
 
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(9),
-
-                decoration: BoxDecoration(
-                  color: color.withOpacity(.10),
-                  borderRadius: BorderRadius.circular(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(9),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(.10),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: color, size: 18),
                 ),
+                const Spacer(),
+                Icon(Icons.arrow_outward_rounded, color: textMuted, size: 14),
+              ],
+            ),
 
-                child: Icon(icon, color: color, size: 18),
-              ),
+            const Spacer(),
 
-              const Spacer(),
+            Text(
+              title,
+              style: const TextStyle(color: textSecondary, fontSize: 11),
+            ),
 
-              Container(
-                width: 6,
-                height: 6,
+            const SizedBox(height: 4),
 
-                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-              ),
-            ],
-          ),
-
-          const Spacer(),
-
-          Text(
-            title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-
-            style: const TextStyle(color: textSecondary, fontSize: 11),
-          ),
-
-          const SizedBox(height: 3),
-
-          // FIX:
-          // Flexible prevents the FittedBox/Text from
-          // demanding more vertical space than the card has.
-          Flexible(
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
-
-              child: Text(
-                value,
-                maxLines: 1,
-
-                style: const TextStyle(
-                  color: textPrimary,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
+            Flexible(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  value,
+                  style: const TextStyle(
+                    color: textPrimary,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
             ),
-          ),
 
-          const SizedBox(height: 2),
+            const SizedBox(height: 3),
 
-          Text(
-            caption,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-
-            style: TextStyle(
-              color: color.withOpacity(.75),
-              fontSize: 9,
-              fontWeight: FontWeight.w600,
+            Text(
+              caption,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: color.withOpacity(.75),
+                fontSize: 9,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -875,45 +926,27 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         for (final value in ['7D', '30D', '90D'])
           Padding(
             padding: const EdgeInsets.only(right: 8),
-
             child: GestureDetector(
               onTap: () {
                 setState(() {
                   range = value;
                 });
               },
-
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 180),
-
                 padding: const EdgeInsets.symmetric(
                   horizontal: 15,
                   vertical: 9,
                 ),
-
                 decoration: BoxDecoration(
                   color: range == value ? primary : surface,
-
                   borderRadius: BorderRadius.circular(12),
-
                   border: Border.all(color: range == value ? primary : border),
-
-                  boxShadow: range == value
-                      ? [
-                          BoxShadow(
-                            color: primary.withOpacity(.18),
-                            blurRadius: 12,
-                          ),
-                        ]
-                      : null,
                 ),
-
                 child: Text(
                   value,
-
                   style: TextStyle(
                     color: range == value ? Colors.white : textSecondary,
-
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                   ),
@@ -930,7 +963,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   // ============================================================
 
   Widget _chartCard() {
-    final trend = _trendPackages();
+    final trend = trendPackages();
 
     final values = trend.map<double>((item) => d(item['count'])).toList();
 
@@ -948,7 +981,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       decoration: BoxDecoration(
         color: surface,
         borderRadius: BorderRadius.circular(21),
-
         border: Border.all(color: border),
       ),
 
@@ -958,12 +990,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
-
                 decoration: BoxDecoration(
                   color: primary.withOpacity(.10),
                   borderRadius: BorderRadius.circular(10),
                 ),
-
                 child: const Icon(
                   Icons.show_chart_rounded,
                   color: primary,
@@ -985,15 +1015,12 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-
                 decoration: BoxDecoration(
                   color: surface3,
                   borderRadius: BorderRadius.circular(8),
                 ),
-
                 child: Text(
                   '${totalInRange.round()} packages',
-
                   style: const TextStyle(
                     color: textSecondary,
                     fontSize: 10,
@@ -1009,7 +1036,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           Expanded(
             child: CustomPaint(
               painter: _LineChartPainter(values: values, max: maxValue),
-
               child: const SizedBox.expand(),
             ),
           ),
@@ -1040,7 +1066,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       decoration: BoxDecoration(
         color: surface,
         borderRadius: BorderRadius.circular(21),
-
         border: Border.all(color: border),
       ),
 
@@ -1049,13 +1074,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           Row(
             children: [
               _statusSummary('Completed', completed, green),
-
               const SizedBox(width: 10),
-
               _statusSummary('Active', active, primary),
-
               const SizedBox(width: 10),
-
               _statusSummary('Pending', pending, orange),
             ],
           ),
@@ -1073,7 +1094,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
             return Padding(
               padding: const EdgeInsets.only(bottom: 15),
-
               child: _statusRow(status, value, ratio),
             );
           }),
@@ -1086,34 +1106,25 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 12),
-
         decoration: BoxDecoration(
           color: color.withOpacity(.06),
-
           borderRadius: BorderRadius.circular(13),
-
           border: Border.all(color: color.withOpacity(.10)),
         ),
-
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-
           children: [
             Text(
               '$value',
-
               style: TextStyle(
                 color: color,
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
               ),
             ),
-
             const SizedBox(height: 3),
-
             Text(
               title,
-
               style: const TextStyle(color: textSecondary, fontSize: 9),
             ),
           ],
@@ -1134,7 +1145,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             Container(
               width: 7,
               height: 7,
-
               decoration: BoxDecoration(color: color, shape: BoxShape.circle),
             ),
 
@@ -1143,7 +1153,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             Expanded(
               child: Text(
                 status.replaceAll('_', ' ').toUpperCase(),
-
                 style: const TextStyle(
                   color: textSecondary,
                   fontSize: 11,
@@ -1154,7 +1163,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
             Text(
               '$value',
-
               style: TextStyle(color: color, fontWeight: FontWeight.w800),
             ),
 
@@ -1162,7 +1170,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
             Text(
               '${(ratio * 100).toStringAsFixed(1)}%',
-
               style: const TextStyle(color: textSecondary, fontSize: 10),
             ),
           ],
@@ -1172,14 +1179,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
         ClipRRect(
           borderRadius: BorderRadius.circular(20),
-
           child: LinearProgressIndicator(
             minHeight: 6,
-
             value: safeRatio,
-
             backgroundColor: color.withOpacity(.07),
-
             valueColor: AlwaysStoppedAnimation<Color>(color),
           ),
         ),
@@ -1188,7 +1191,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 
   // ============================================================
-  // PLATFORM HEALTH
+  // HEALTH
   // ============================================================
 
   Widget _healthCard() {
@@ -1198,7 +1201,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       decoration: BoxDecoration(
         color: surface,
         borderRadius: BorderRadius.circular(21),
-
         border: Border.all(color: border),
       ),
 
@@ -1210,35 +1212,30 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             Icons.people_alt_rounded,
             blue,
           ),
-
           _healthRow(
             'Riders',
             riders.length,
             Icons.delivery_dining_rounded,
             primary,
           ),
-
           _healthRow(
             'Wallets',
             wallets.length,
             Icons.account_balance_wallet_rounded,
             cyan,
           ),
-
           _healthRow(
             'Pending withdrawals',
             pendingWithdrawals,
             Icons.pending_actions_rounded,
             orange,
           ),
-
           _healthRow(
             'Wallet balance',
             money(walletBalance),
             Icons.account_balance_rounded,
             green,
           ),
-
           _healthRow(
             'Total payouts',
             money(payoutTotal),
@@ -1258,13 +1255,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         children: [
           Container(
             padding: const EdgeInsets.all(8),
-
             decoration: BoxDecoration(
               color: color.withOpacity(.10),
-
               borderRadius: BorderRadius.circular(11),
             ),
-
             child: Icon(icon, color: color, size: 17),
           ),
 
@@ -1273,14 +1267,12 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           Expanded(
             child: Text(
               title,
-
               style: const TextStyle(color: textSecondary, fontSize: 13),
             ),
           ),
 
           Text(
             value.toString(),
-
             style: const TextStyle(
               color: textPrimary,
               fontWeight: FontWeight.w800,
@@ -1299,14 +1291,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   Widget _metricGrid() {
     return GridView.count(
       crossAxisCount: 2,
-
       shrinkWrap: true,
-
       physics: const NeverScrollableScrollPhysics(),
-
       crossAxisSpacing: 11,
       mainAxisSpacing: 11,
-
       childAspectRatio: 1.45,
 
       children: [
@@ -1316,35 +1304,30 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           green,
           Icons.task_alt_rounded,
         ),
-
         _metric(
           'Cancellation rate',
           '${cancellationRate.toStringAsFixed(1)}%',
           red,
           Icons.cancel_outlined,
         ),
-
         _metric(
           'Average order',
           money(avgOrderValue),
           blue,
           Icons.receipt_long_rounded,
         ),
-
         _metric(
           'Revenue / delivery',
           money(revenuePerDelivery),
           primary,
           Icons.trending_up_rounded,
         ),
-
         _metric(
           'Active deliveries',
           '$active',
           orange,
           Icons.local_shipping_outlined,
         ),
-
         _metric(
           'Riders / customer',
           riderPerCustomer.toStringAsFixed(2),
@@ -1361,38 +1344,27 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
       decoration: BoxDecoration(
         color: surface,
-
         borderRadius: BorderRadius.circular(18),
-
         border: Border.all(color: border),
       ),
 
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-
-        mainAxisAlignment: MainAxisAlignment.center,
-
         children: [
           Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(7),
-
                 decoration: BoxDecoration(
                   color: color.withOpacity(.08),
-
                   borderRadius: BorderRadius.circular(9),
                 ),
-
                 child: Icon(icon, color: color, size: 17),
               ),
-
               const Spacer(),
-
               Container(
                 width: 6,
                 height: 6,
-
                 decoration: BoxDecoration(color: color, shape: BoxShape.circle),
               ),
             ],
@@ -1402,7 +1374,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
           Text(
             title,
-
             style: const TextStyle(color: textSecondary, fontSize: 11),
           ),
 
@@ -1412,10 +1383,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             child: FittedBox(
               fit: BoxFit.scaleDown,
               alignment: Alignment.centerLeft,
-
               child: Text(
                 value,
-
                 style: TextStyle(
                   color: color,
                   fontSize: 19,
@@ -1430,7 +1399,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 
   // ============================================================
-  // BUSINESS INSIGHTS
+  // INSIGHTS
   // ============================================================
 
   Widget _insightsCard() {
@@ -1445,7 +1414,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             'Once packages start coming in, Senmi will show operational insights here.',
       });
     } else {
-      // Completion
       if (completionRate >= 80) {
         insights.add({
           'icon': Icons.verified_rounded,
@@ -1472,7 +1440,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         });
       }
 
-      // Cancellation
       if (cancellationRate > 15) {
         insights.add({
           'icon': Icons.warning_rounded,
@@ -1491,7 +1458,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         });
       }
 
-      // Pending packages
       if (pending > active) {
         insights.add({
           'icon': Icons.schedule_rounded,
@@ -1502,7 +1468,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         });
       }
 
-      // Withdrawals
       if (pendingWithdrawals > 0) {
         insights.add({
           'icon': Icons.account_balance_wallet_outlined,
@@ -1513,29 +1478,16 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         });
       }
 
-      // Wallet
       if (walletBalance > 0) {
         insights.add({
           'icon': Icons.account_balance_rounded,
           'color': cyan,
-          'title': 'Rider wallet exposure',
+          'title': 'Rider wallet balance',
           'message':
               '${money(walletBalance)} is currently sitting across rider wallets.',
         });
       }
 
-      // Rider ratio
-      if (customers.isNotEmpty && riderPerCustomer < .10) {
-        insights.add({
-          'icon': Icons.people_outline_rounded,
-          'color': orange,
-          'title': 'Rider coverage is low',
-          'message':
-              'There are approximately ${riderPerCustomer.toStringAsFixed(2)} riders per customer. Consider growing your rider network as demand increases.',
-        });
-      }
-
-      // Revenue
       if (totalRevenue > 0 && totalCommission > 0) {
         final commissionRate = totalCommission / totalRevenue * 100;
 
@@ -1554,9 +1506,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
       decoration: BoxDecoration(
         color: surface,
-
         borderRadius: BorderRadius.circular(21),
-
         border: Border.all(color: border),
       ),
 
@@ -1570,7 +1520,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               padding: EdgeInsets.only(
                 bottom: index == insights.length - 1 ? 0 : 15,
               ),
-
               child: _insightRow(insight),
             );
           }),
@@ -1584,17 +1533,13 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
-
       children: [
         Container(
           padding: const EdgeInsets.all(9),
-
           decoration: BoxDecoration(
             color: color.withOpacity(.10),
-
             borderRadius: BorderRadius.circular(12),
           ),
-
           child: Icon(insight['icon'] as IconData, color: color, size: 19),
         ),
 
@@ -1603,11 +1548,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-
             children: [
               Text(
                 insight['title'].toString(),
-
                 style: const TextStyle(
                   color: textPrimary,
                   fontWeight: FontWeight.w700,
@@ -1619,7 +1562,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
               Text(
                 insight['message'].toString(),
-
                 style: const TextStyle(
                   color: textSecondary,
                   height: 1.4,
@@ -1630,6 +1572,550 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  // ============================================================
+  // DAILY OPERATIONS
+  // ============================================================
+
+  List<Map<String, dynamic>> dailyOperations() {
+    final Map<String, Map<String, dynamic>> grouped = {};
+
+    for (final package in packages) {
+      final rawDate =
+          package['delivered_at'] ?? package['created_at'] ?? package['date'];
+
+      final parsed = DateTime.tryParse(rawDate?.toString() ?? '');
+
+      if (parsed == null) continue;
+
+      final date = DateTime(
+        parsed.toLocal().year,
+        parsed.toLocal().month,
+        parsed.toLocal().day,
+      );
+
+      final key =
+          '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+
+      grouped.putIfAbsent(
+        key,
+        () => {
+          'date': key,
+          'packages': 0,
+          'delivered': 0,
+          'active': 0,
+          'pending': 0,
+          'cancelled': 0,
+          'revenue': 0.0,
+          'commission': 0.0,
+          'rider_earnings': 0.0,
+        },
+      );
+
+      final day = grouped[key]!;
+
+      day['packages'] = (day['packages'] as int) + 1;
+
+      final status = (package['status'] ?? 'unknown').toString().toLowerCase();
+
+      if (status == 'delivered') {
+        day['delivered'] = (day['delivered'] as int) + 1;
+      }
+
+      if (status == 'accepted' || status == 'picked_up') {
+        day['active'] = (day['active'] as int) + 1;
+      }
+
+      if (status == 'pending') {
+        day['pending'] = (day['pending'] as int) + 1;
+      }
+
+      if (status == 'cancelled') {
+        day['cancelled'] = (day['cancelled'] as int) + 1;
+      }
+
+      day['revenue'] = (day['revenue'] as double) + d(package['price']);
+
+      day['commission'] =
+          (day['commission'] as double) +
+          d(package['commission'] ?? package['service_fee']);
+
+      day['rider_earnings'] =
+          (day['rider_earnings'] as double) + d(package['rider_earning']);
+    }
+
+    final result = grouped.values.toList();
+
+    result.sort((a, b) => b['date'].toString().compareTo(a['date'].toString()));
+
+    return result;
+  }
+
+  Map<String, dynamic> get todayOperations {
+    final today = DateTime.now();
+
+    final key =
+        '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+
+    final operations = dailyOperations();
+
+    for (final day in operations) {
+      if (day['date'].toString() == key) {
+        return day;
+      }
+    }
+
+    return {
+      'date': key,
+      'packages': 0,
+      'delivered': 0,
+      'active': 0,
+      'pending': 0,
+      'cancelled': 0,
+      'revenue': 0.0,
+      'commission': 0.0,
+      'rider_earnings': 0.0,
+    };
+  }
+
+  String _formatDay(String date) {
+    final parsed = DateTime.tryParse(date);
+
+    if (parsed == null) return date;
+
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+
+    return '${months[parsed.month - 1]} ${parsed.day}, ${parsed.year}';
+  }
+
+  Widget _dailyOperationsCard() {
+    final days = dailyOperations();
+    final today = todayOperations;
+
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xff18152D), Color(0xff111827)],
+            ),
+            borderRadius: BorderRadius.circular(21),
+            border: Border.all(color: primary.withOpacity(.18)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(9),
+                    decoration: BoxDecoration(
+                      color: primary.withOpacity(.12),
+                      borderRadius: BorderRadius.circular(11),
+                    ),
+                    child: const Icon(
+                      Icons.today_rounded,
+                      color: primary,
+                      size: 19,
+                    ),
+                  ),
+
+                  const SizedBox(width: 10),
+
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Today',
+                          style: TextStyle(
+                            color: textPrimary,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          "Today's delivery performance",
+                          style: TextStyle(color: textSecondary, fontSize: 11),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  Text(
+                    _formatDay(today['date'].toString()),
+                    style: const TextStyle(color: textMuted, fontSize: 10),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 18),
+
+              Row(
+                children: [
+                  _todayStat(
+                    'Packages',
+                    '${today['packages']}',
+                    primary,
+                    Icons.inventory_2_rounded,
+                  ),
+                  const SizedBox(width: 10),
+                  _todayStat(
+                    'Delivered',
+                    '${today['delivered']}',
+                    green,
+                    Icons.check_circle_rounded,
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 10),
+
+              Row(
+                children: [
+                  _todayStat(
+                    'Handled',
+                    money(d(today['revenue'])),
+                    blue,
+                    Icons.payments_rounded,
+                  ),
+                  const SizedBox(width: 10),
+                  _todayStat(
+                    'Commission',
+                    money(d(today['commission'])),
+                    orange,
+                    Icons.account_balance_rounded,
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 15),
+
+              Row(
+                children: [
+                  _smallTodayValue('Active', '${today['active']}', orange),
+                  const SizedBox(width: 18),
+                  _smallTodayValue('Pending', '${today['pending']}', yellow),
+                  const SizedBox(width: 18),
+                  _smallTodayValue('Cancelled', '${today['cancelled']}', red),
+                ],
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: surface,
+            borderRadius: BorderRadius.circular(21),
+            border: Border.all(color: border),
+          ),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  const Icon(
+                    Icons.calendar_month_rounded,
+                    color: cyan,
+                    size: 19,
+                  ),
+                  const SizedBox(width: 9),
+                  const Expanded(
+                    child: Text(
+                      'Daily performance',
+                      style: TextStyle(
+                        color: textPrimary,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    '${days.length} days',
+                    style: const TextStyle(color: textMuted, fontSize: 10),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 15),
+
+              if (days.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.all(20),
+                  child: Text(
+                    'No daily activity yet.',
+                    style: TextStyle(color: textSecondary, fontSize: 12),
+                  ),
+                )
+              else
+                ...days.take(30).map((day) => _dailyRow(day)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _todayStat(String title, String value, Color color, IconData icon) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: color.withOpacity(.06),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: color.withOpacity(.10)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(7),
+              decoration: BoxDecoration(
+                color: color.withOpacity(.10),
+                borderRadius: BorderRadius.circular(9),
+              ),
+              child: Icon(icon, color: color, size: 16),
+            ),
+
+            const SizedBox(width: 8),
+
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: textMuted, fontSize: 9),
+                  ),
+
+                  const SizedBox(height: 3),
+
+                  FittedBox(
+                    alignment: Alignment.centerLeft,
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      value,
+                      style: TextStyle(
+                        color: color,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _smallTodayValue(String title, String value, Color color) {
+    return Row(
+      children: [
+        Container(
+          width: 6,
+          height: 6,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+
+        const SizedBox(width: 6),
+
+        Text('$title ', style: const TextStyle(color: textMuted, fontSize: 10)),
+
+        Text(
+          value,
+          style: TextStyle(
+            color: color,
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _dailyRow(Map<String, dynamic> day) {
+    final delivered = i(day['delivered']);
+    final packagesCount = i(day['packages']);
+
+    final deliveryRate = packagesCount == 0
+        ? 0.0
+        : delivered / packagesCount * 100;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: surface3.withOpacity(.45),
+        borderRadius: BorderRadius.circular(13),
+        border: Border.all(color: border.withOpacity(.7)),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: primary.withOpacity(.08),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.calendar_today_rounded,
+                  color: primary,
+                  size: 16,
+                ),
+              ),
+
+              const SizedBox(width: 10),
+
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _formatDay(day['date'].toString()),
+                      style: const TextStyle(
+                        color: textPrimary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                      ),
+                    ),
+
+                    const SizedBox(height: 3),
+
+                    Text(
+                      '$packagesCount packages',
+                      style: const TextStyle(
+                        color: textSecondary,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '$delivered delivered',
+                    style: const TextStyle(
+                      color: green,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 11,
+                    ),
+                  ),
+
+                  const SizedBox(height: 3),
+
+                  Text(
+                    '${deliveryRate.toStringAsFixed(0)}%',
+                    style: const TextStyle(color: textMuted, fontSize: 9),
+                  ),
+                ],
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 10),
+
+          Row(
+            children: [
+              Expanded(
+                child: _dailyMini('Handled', money(d(day['revenue'])), blue),
+              ),
+
+              Expanded(
+                child: _dailyMini(
+                  'Commission',
+                  money(d(day['commission'])),
+                  primary,
+                ),
+              ),
+
+              Expanded(
+                child: _dailyMini(
+                  'Rider earnings',
+                  money(d(day['rider_earnings'])),
+                  cyan,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _dailyMini(String title, String value, Color color) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: const TextStyle(color: textMuted, fontSize: 8)),
+
+        const SizedBox(height: 3),
+
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(
+            value,
+            style: TextStyle(
+              color: color,
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ============================================================
+  // DETAILS NAVIGATION
+  // ============================================================
+
+  void _openDetails(AnalyticsDetailsType type) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AnalyticsDetailsScreen(
+          type: type,
+          analytics: analytics,
+          packages: packages,
+          riders: riders,
+          customers: customers,
+          withdrawals: withdrawals,
+          wallets: wallets,
+        ),
+      ),
     );
   }
 
@@ -1661,9 +2147,795 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 }
 
-// ================================================================
-// LINE CHART PAINTER
-// ================================================================
+// ============================================================================
+// DETAILS TYPE
+// ============================================================================
+
+enum AnalyticsDetailsType { financial, delivery, platform, performance }
+
+// ============================================================================
+// DETAILS SCREEN
+// ============================================================================
+
+class AnalyticsDetailsScreen extends StatelessWidget {
+  final AnalyticsDetailsType type;
+
+  final Map<String, dynamic> analytics;
+
+  final List packages;
+  final List riders;
+  final List customers;
+  final List withdrawals;
+  final List wallets;
+
+  const AnalyticsDetailsScreen({
+    super.key,
+    required this.type,
+    required this.analytics,
+    required this.packages,
+    required this.riders,
+    required this.customers,
+    required this.withdrawals,
+    required this.wallets,
+  });
+
+  double d(dynamic value) {
+    if (value is num) {
+      return value.toDouble();
+    }
+
+    return double.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  String money(double value) {
+    return '₦${value.round().toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (match) => '${match.group(1)},')}';
+  }
+
+  Map<String, int> statusCounts() {
+    final Map<String, int> result = {};
+
+    for (final package in packages) {
+      final status = (package['status'] ?? 'unknown').toString().toLowerCase();
+
+      result[status] = (result[status] ?? 0) + 1;
+    }
+
+    return result;
+  }
+
+  int get completed {
+    final apiValue =
+        analytics['completed_deliveries'] ?? analytics['completed_packages'];
+
+    if (apiValue is num) {
+      return apiValue.toInt();
+    }
+
+    return statusCounts()['delivered'] ?? 0;
+  }
+
+  int get cancelled {
+    return statusCounts()['cancelled'] ?? 0;
+  }
+
+  int get active {
+    return (statusCounts()['accepted'] ?? 0) +
+        (statusCounts()['picked_up'] ?? 0);
+  }
+
+  int get pending {
+    return statusCounts()['pending'] ?? 0;
+  }
+
+  double get revenue {
+    final value = analytics['total_revenue'] ?? analytics['revenue'];
+
+    if (value != null) {
+      return d(value);
+    }
+
+    double total = 0;
+
+    for (final package in packages) {
+      total += d(package['price']);
+    }
+
+    return total;
+  }
+
+  double get commission {
+    final value = analytics['total_commission'] ?? analytics['commission'];
+
+    if (value != null) {
+      return d(value);
+    }
+
+    double total = 0;
+
+    for (final package in packages) {
+      total += d(package['commission'] ?? package['service_fee']);
+    }
+
+    return total;
+  }
+
+  double get riderEarnings {
+    final value =
+        analytics['rider_earnings'] ?? analytics['total_rider_earnings'];
+
+    if (value != null) {
+      return d(value);
+    }
+
+    double total = 0;
+
+    for (final package in packages) {
+      total += d(package['rider_earning']);
+    }
+
+    return total;
+  }
+
+  double get avgOrder {
+    if (packages.isEmpty) return 0;
+
+    double total = 0;
+
+    for (final package in packages) {
+      total += d(package['price']);
+    }
+
+    return total / packages.length;
+  }
+
+  double get walletBalance {
+    double total = 0;
+
+    for (final wallet in wallets) {
+      total += d(wallet['balance']);
+    }
+
+    return total;
+  }
+
+  double get payoutTotal {
+    double total = 0;
+
+    for (final withdrawal in withdrawals) {
+      final status = (withdrawal['status'] ?? '').toString().toLowerCase();
+
+      if (status == 'success' ||
+          status == 'processing' ||
+          status == 'approved') {
+        total += d(withdrawal['amount']);
+      }
+    }
+
+    return total;
+  }
+
+  String get title {
+    switch (type) {
+      case AnalyticsDetailsType.financial:
+        return 'Financial details';
+
+      case AnalyticsDetailsType.delivery:
+        return 'Delivery details';
+
+      case AnalyticsDetailsType.platform:
+        return 'Platform details';
+
+      case AnalyticsDetailsType.performance:
+        return 'Performance details';
+    }
+  }
+
+  String get subtitle {
+    switch (type) {
+      case AnalyticsDetailsType.financial:
+        return 'Revenue and payout breakdown';
+
+      case AnalyticsDetailsType.delivery:
+        return 'Package activity and status';
+
+      case AnalyticsDetailsType.platform:
+        return 'Users, riders and wallets';
+
+      case AnalyticsDetailsType.performance:
+        return 'Key operating metrics';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: _AnalyticsScreenState.background,
+
+      appBar: AppBar(
+        backgroundColor: _AnalyticsScreenState.background,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+
+        leading: IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: const Icon(
+            Icons.arrow_back_rounded,
+            color: _AnalyticsScreenState.textPrimary,
+          ),
+        ),
+
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(
+                color: _AnalyticsScreenState.textPrimary,
+                fontWeight: FontWeight.w800,
+                fontSize: 18,
+              ),
+            ),
+            Text(
+              subtitle,
+              style: const TextStyle(
+                color: _AnalyticsScreenState.textMuted,
+                fontSize: 10,
+              ),
+            ),
+          ],
+        ),
+      ),
+
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 40),
+        children: [
+          _detailsHero(),
+
+          const SizedBox(height: 22),
+
+          if (type == AnalyticsDetailsType.financial) _financialDetails(),
+
+          if (type == AnalyticsDetailsType.delivery) _deliveryDetails(),
+
+          if (type == AnalyticsDetailsType.platform) _platformDetails(),
+
+          if (type == AnalyticsDetailsType.performance) _performanceDetails(),
+        ],
+      ),
+    );
+  }
+
+  // ============================================================
+  // DETAILS HERO
+  // ============================================================
+
+  Widget _detailsHero() {
+    String mainValue;
+
+    Color color;
+
+    IconData icon;
+
+    switch (type) {
+      case AnalyticsDetailsType.financial:
+        mainValue = money(revenue);
+        color = _AnalyticsScreenState.green;
+        icon = Icons.account_balance_rounded;
+        break;
+
+      case AnalyticsDetailsType.delivery:
+        mainValue = packages.length.toString();
+        color = _AnalyticsScreenState.primary;
+        icon = Icons.local_shipping_rounded;
+        break;
+
+      case AnalyticsDetailsType.platform:
+        mainValue = customers.length.toString();
+        color = _AnalyticsScreenState.blue;
+        icon = Icons.dashboard_rounded;
+        break;
+
+      case AnalyticsDetailsType.performance:
+        mainValue =
+            '${packages.isEmpty ? 0 : (completed / packages.length * 100).toStringAsFixed(1)}%';
+        color = _AnalyticsScreenState.green;
+        icon = Icons.speed_rounded;
+        break;
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [color.withOpacity(.14), _AnalyticsScreenState.surface],
+        ),
+
+        border: Border.all(color: color.withOpacity(.18)),
+      ),
+
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(13),
+            decoration: BoxDecoration(
+              color: color.withOpacity(.10),
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Icon(icon, color: color, size: 25),
+          ),
+
+          const SizedBox(width: 14),
+
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                mainValue,
+                style: const TextStyle(
+                  color: _AnalyticsScreenState.textPrimary,
+                  fontSize: 27,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                title,
+                style: const TextStyle(
+                  color: _AnalyticsScreenState.textSecondary,
+                  fontSize: 11,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ============================================================
+  // FINANCIAL DETAILS
+  // ============================================================
+
+  Widget _financialDetails() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _detailSection('Money breakdown', [
+          _detailRow(
+            'Total revenue',
+            money(revenue),
+            _AnalyticsScreenState.green,
+            Icons.payments_rounded,
+          ),
+          _detailRow(
+            'Senmi commission',
+            money(commission),
+            _AnalyticsScreenState.primary,
+            Icons.account_balance_rounded,
+          ),
+          _detailRow(
+            'Rider earnings',
+            money(riderEarnings),
+            _AnalyticsScreenState.blue,
+            Icons.delivery_dining_rounded,
+          ),
+          _detailRow(
+            'Processed payouts',
+            money(payoutTotal),
+            _AnalyticsScreenState.orange,
+            Icons.outbound_rounded,
+          ),
+        ]),
+
+        const SizedBox(height: 18),
+
+        _detailSection('Average values', [
+          _detailRow(
+            'Average order value',
+            money(avgOrder),
+            _AnalyticsScreenState.cyan,
+            Icons.receipt_long_rounded,
+          ),
+          _detailRow(
+            'Revenue per delivery',
+            money(completed == 0 ? 0 : revenue / completed),
+            _AnalyticsScreenState.green,
+            Icons.trending_up_rounded,
+          ),
+          _detailRow(
+            'Commission percentage',
+            revenue == 0
+                ? '0%'
+                : '${(commission / revenue * 100).toStringAsFixed(1)}%',
+            _AnalyticsScreenState.primary,
+            Icons.percent_rounded,
+          ),
+        ]),
+      ],
+    );
+  }
+
+  // ============================================================
+  // DELIVERY DETAILS
+  // ============================================================
+
+  Widget _deliveryDetails() {
+    final statuses = statusCounts();
+
+    const order = [
+      'pending',
+      'paid',
+      'accepted',
+      'picked_up',
+      'delivered',
+      'cancelled',
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _detailSection('Delivery overview', [
+          _detailRow(
+            'Total packages',
+            packages.length.toString(),
+            _AnalyticsScreenState.primary,
+            Icons.inventory_2_rounded,
+          ),
+          _detailRow(
+            'Delivered',
+            completed.toString(),
+            _AnalyticsScreenState.green,
+            Icons.check_circle_rounded,
+          ),
+          _detailRow(
+            'Active',
+            active.toString(),
+            _AnalyticsScreenState.blue,
+            Icons.local_shipping_rounded,
+          ),
+          _detailRow(
+            'Pending',
+            pending.toString(),
+            _AnalyticsScreenState.orange,
+            Icons.schedule_rounded,
+          ),
+          _detailRow(
+            'Cancelled',
+            cancelled.toString(),
+            _AnalyticsScreenState.red,
+            Icons.cancel_rounded,
+          ),
+        ]),
+
+        const SizedBox(height: 18),
+
+        _detailSection(
+          'Status breakdown',
+          order.map((status) {
+            final value = statuses[status] ?? 0;
+
+            final percentage = packages.isEmpty
+                ? 0
+                : value / packages.length * 100;
+
+            return _detailRow(
+              status.replaceAll('_', ' ').toUpperCase(),
+              '$value  (${percentage.toStringAsFixed(1)}%)',
+              _statusColor(status),
+              Icons.circle,
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  // ============================================================
+  // PLATFORM DETAILS
+  // ============================================================
+
+  Widget _platformDetails() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _detailSection('Users', [
+          _detailRow(
+            'Customers',
+            customers.length.toString(),
+            _AnalyticsScreenState.blue,
+            Icons.people_alt_rounded,
+          ),
+          _detailRow(
+            'Riders',
+            riders.length.toString(),
+            _AnalyticsScreenState.primary,
+            Icons.delivery_dining_rounded,
+          ),
+          _detailRow(
+            'Rider / customer',
+            customers.isEmpty
+                ? '0'
+                : (riders.length / customers.length).toStringAsFixed(2),
+            _AnalyticsScreenState.cyan,
+            Icons.groups_rounded,
+          ),
+        ]),
+
+        const SizedBox(height: 18),
+
+        _detailSection('Wallets', [
+          _detailRow(
+            'Wallet accounts',
+            wallets.length.toString(),
+            _AnalyticsScreenState.cyan,
+            Icons.account_balance_wallet_rounded,
+          ),
+          _detailRow(
+            'Current wallet balance',
+            money(walletBalance),
+            _AnalyticsScreenState.green,
+            Icons.account_balance_rounded,
+          ),
+        ]),
+
+        const SizedBox(height: 18),
+
+        _detailSection('Withdrawals', [
+          _detailRow(
+            'Total requests',
+            withdrawals.length.toString(),
+            _AnalyticsScreenState.orange,
+            Icons.receipt_long_rounded,
+          ),
+          _detailRow(
+            'Pending',
+            withdrawals
+                .where(
+                  (item) =>
+                      (item['status'] ?? '').toString().toLowerCase() ==
+                      'pending',
+                )
+                .length
+                .toString(),
+            _AnalyticsScreenState.orange,
+            Icons.pending_actions_rounded,
+          ),
+          _detailRow(
+            'Processed value',
+            money(payoutTotal),
+            _AnalyticsScreenState.green,
+            Icons.outbound_rounded,
+          ),
+        ]),
+      ],
+    );
+  }
+
+  // ============================================================
+  // PERFORMANCE DETAILS
+  // ============================================================
+
+  Widget _performanceDetails() {
+    final completion = packages.isEmpty
+        ? 0.0
+        : completed / packages.length * 100;
+
+    final cancellation = packages.isEmpty
+        ? 0.0
+        : cancelled / packages.length * 100;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _detailSection('Operational performance', [
+          _detailRow(
+            'Completion rate',
+            '${completion.toStringAsFixed(1)}%',
+            _AnalyticsScreenState.green,
+            Icons.task_alt_rounded,
+          ),
+          _detailRow(
+            'Cancellation rate',
+            '${cancellation.toStringAsFixed(1)}%',
+            _AnalyticsScreenState.red,
+            Icons.cancel_outlined,
+          ),
+          _detailRow(
+            'Average order',
+            money(avgOrder),
+            _AnalyticsScreenState.blue,
+            Icons.receipt_long_rounded,
+          ),
+          _detailRow(
+            'Revenue / delivery',
+            money(completed == 0 ? 0 : revenue / completed),
+            _AnalyticsScreenState.primary,
+            Icons.trending_up_rounded,
+          ),
+          _detailRow(
+            'Active deliveries',
+            active.toString(),
+            _AnalyticsScreenState.orange,
+            Icons.local_shipping_outlined,
+          ),
+        ]),
+
+        const SizedBox(height: 18),
+
+        _performanceIndicator(
+          'Completion',
+          completion,
+          _AnalyticsScreenState.green,
+        ),
+
+        const SizedBox(height: 13),
+
+        _performanceIndicator(
+          'Cancellation',
+          cancellation,
+          _AnalyticsScreenState.red,
+        ),
+      ],
+    );
+  }
+
+  Widget _performanceIndicator(String title, double value, Color color) {
+    final safe = value.clamp(0.0, 100.0) / 100;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+
+      decoration: BoxDecoration(
+        color: _AnalyticsScreenState.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: _AnalyticsScreenState.border),
+      ),
+
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  color: _AnalyticsScreenState.textSecondary,
+                  fontSize: 12,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '${value.toStringAsFixed(1)}%',
+                style: TextStyle(
+                  color: color,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 10),
+
+          ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: LinearProgressIndicator(
+              value: safe.toDouble(),
+              minHeight: 8,
+              backgroundColor: color.withOpacity(.08),
+              valueColor: AlwaysStoppedAnimation<Color>(color),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ============================================================
+  // DETAIL SECTION
+  // ============================================================
+
+  Widget _detailSection(String title, List<Widget> children) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+
+      decoration: BoxDecoration(
+        color: _AnalyticsScreenState.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: _AnalyticsScreenState.border),
+      ),
+
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              color: _AnalyticsScreenState.textPrimary,
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+
+          const SizedBox(height: 15),
+
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  Widget _detailRow(String title, String value, Color color, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 13),
+
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(7),
+            decoration: BoxDecoration(
+              color: color.withOpacity(.08),
+              borderRadius: BorderRadius.circular(9),
+            ),
+            child: Icon(icon, color: color, size: 15),
+          ),
+
+          const SizedBox(width: 10),
+
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(
+                color: _AnalyticsScreenState.textSecondary,
+                fontSize: 12,
+              ),
+            ),
+          ),
+
+          Text(
+            value,
+            style: const TextStyle(
+              color: _AnalyticsScreenState.textPrimary,
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _statusColor(String status) {
+    switch (status) {
+      case 'delivered':
+        return _AnalyticsScreenState.green;
+
+      case 'cancelled':
+        return _AnalyticsScreenState.red;
+
+      case 'pending':
+        return _AnalyticsScreenState.orange;
+
+      case 'paid':
+        return _AnalyticsScreenState.blue;
+
+      case 'accepted':
+      case 'picked_up':
+        return _AnalyticsScreenState.primary;
+
+      default:
+        return _AnalyticsScreenState.textSecondary;
+    }
+  }
+}
+
+// ============================================================================
+// CHART
+// ============================================================================
 
 class _LineChartPainter extends CustomPainter {
   final List<double> values;
@@ -1673,10 +2945,6 @@ class _LineChartPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // ============================================================
-    // GRID
-    // ============================================================
-
     final grid = Paint()
       ..color = _AnalyticsScreenState.border
       ..strokeWidth = 1;
@@ -1687,13 +2955,7 @@ class _LineChartPainter extends CustomPainter {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), grid);
     }
 
-    if (values.isEmpty) {
-      return;
-    }
-
-    // ============================================================
-    // LINE
-    // ============================================================
+    if (values.isEmpty) return;
 
     final line = Paint()
       ..color = _AnalyticsScreenState.primary
@@ -1702,20 +2964,12 @@ class _LineChartPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
 
-    // ============================================================
-    // AREA
-    // ============================================================
-
     final fill = Paint()
       ..color = _AnalyticsScreenState.primary.withOpacity(.09)
       ..style = PaintingStyle.fill;
 
     final path = Path();
     final area = Path();
-
-    // ============================================================
-    // POINTS
-    // ============================================================
 
     for (int index = 0; index < values.length; index++) {
       final double x;
@@ -1728,7 +2982,7 @@ class _LineChartPainter extends CustomPainter {
 
       final normalized = (values[index] / max).clamp(0.0, 1.0).toDouble();
 
-      final y = size.height - (normalized * size.height * .85) - 5;
+      final y = size.height - normalized * size.height * .85 - 5;
 
       if (index == 0) {
         path.moveTo(x, y);
@@ -1742,31 +2996,14 @@ class _LineChartPainter extends CustomPainter {
       }
     }
 
-    // ============================================================
-    // CLOSE AREA
-    // ============================================================
-
     final lastX = values.length == 1 ? size.width / 2 : size.width;
 
     area.lineTo(lastX, size.height);
 
     area.close();
 
-    // ============================================================
-    // DRAW AREA
-    // ============================================================
-
     canvas.drawPath(area, fill);
-
-    // ============================================================
-    // DRAW LINE
-    // ============================================================
-
     canvas.drawPath(path, line);
-
-    // ============================================================
-    // DOTS
-    // ============================================================
 
     final dot = Paint()..color = _AnalyticsScreenState.primary;
 
@@ -1784,7 +3021,7 @@ class _LineChartPainter extends CustomPainter {
 
       final normalized = (values[index] / max).clamp(0.0, 1.0).toDouble();
 
-      final y = size.height - (normalized * size.height * .85) - 5;
+      final y = size.height - normalized * size.height * .85 - 5;
 
       if (index == values.length - 1 || values.length <= 14) {
         canvas.drawCircle(Offset(x, y), 7, glow);
