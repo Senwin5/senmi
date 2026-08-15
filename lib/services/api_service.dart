@@ -922,6 +922,8 @@ class ApiService {
     required double amount,
     required String accountNumber,
     required String bankCode,
+    required String bankName,
+    required String accountName,
   }) async {
     if (amount <= 0) {
       throw Exception("Amount must be greater than zero");
@@ -934,19 +936,40 @@ class ApiService {
         "amount": amount,
         "bank_account": accountNumber,
         "bank_code": bankCode,
+        "bank_name": bankName,
+        "account_name": accountName,
       }),
     );
 
-    final data = jsonDecode(response.body);
-
     debugPrint("WITHDRAW STATUS: ${response.statusCode}");
-    debugPrint("WITHDRAW BODY: $data");
+
+    debugPrint("WITHDRAW BODY: ${response.body}");
+
+    dynamic data;
+
+    try {
+      data = jsonDecode(response.body);
+    } catch (_) {
+      data = null;
+    }
 
     if (response.statusCode == 200 || response.statusCode == 201) {
       return true;
-    } else {
-      throw Exception(data['error'] ?? "Withdrawal failed");
     }
+
+    String errorMessage = "Withdrawal failed";
+
+    if (data is Map<String, dynamic>) {
+      if (data['error'] != null) {
+        errorMessage = data['error'].toString();
+      } else if (data['detail'] != null) {
+        errorMessage = data['detail'].toString();
+      } else if (data['message'] != null) {
+        errorMessage = data['message'].toString();
+      }
+    }
+
+    throw Exception(errorMessage);
   }
 
   static Future<List<Map<String, dynamic>>> getBanks() async {
@@ -1056,30 +1079,6 @@ class ApiService {
     return decoded;
   }
 
-  static Future<Map<String, dynamic>> approveWithdrawal(int id) async {
-    final res = await http.post(
-      Uri.parse("$baseUrl/admin/withdrawals/$id/approve/"),
-      headers: await getAuthHeaders(),
-    );
-
-    debugPrint(
-      "APPROVE withdrawal $id: "
-      "${res.statusCode} ${res.body}",
-    );
-
-    final decoded = jsonDecode(res.body);
-
-    if (res.statusCode < 200 || res.statusCode >= 300) {
-      throw Exception(
-        decoded['error'] ??
-            decoded['message'] ??
-            "Failed to approve withdrawal",
-      );
-    }
-
-    return Map<String, dynamic>.from(decoded);
-  }
-
   static Future<Map<String, dynamic>> rejectWithdrawal(
     int id,
     String reason,
@@ -1106,9 +1105,30 @@ class ApiService {
     return Map<String, dynamic>.from(decoded);
   }
 
-  // ==========================
-  // RETRY WITHDRAWAL
-  // ==========================
+  static Future<Map<String, dynamic>> approveWithdrawal(int id) async {
+    final res = await http.post(
+      Uri.parse("$baseUrl/admin/withdrawals/$id/approve/"),
+      headers: await getAuthHeaders(),
+    );
+
+    debugPrint(
+      "APPROVE withdrawal $id: "
+      "${res.statusCode} ${res.body}",
+    );
+
+    final decoded = jsonDecode(res.body);
+
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw Exception(
+        decoded['error'] ??
+            decoded['message'] ??
+            "Failed to approve withdrawal",
+      );
+    }
+
+    return Map<String, dynamic>.from(decoded);
+  }
+
   static Future<Map<String, dynamic>> retryWithdrawal(int id) async {
     final res = await http.post(
       Uri.parse("$baseUrl/admin/withdrawals/$id/retry/"),
@@ -1120,27 +1140,31 @@ class ApiService {
       "${res.statusCode} ${res.body}",
     );
 
-    Map<String, dynamic> decoded;
+    dynamic decoded;
 
     try {
-      final data = jsonDecode(res.body);
-
-      if (data is Map<String, dynamic>) {
-        decoded = data;
-      } else {
-        throw Exception("Invalid server response");
-      }
-    } catch (e) {
-      throw Exception("Invalid response from server: ${res.body}");
+      decoded = jsonDecode(res.body);
+    } catch (_) {
+      throw Exception("Invalid server response: ${res.statusCode}");
     }
 
     if (res.statusCode < 200 || res.statusCode >= 300) {
-      throw Exception(
-        decoded['error'] ?? decoded['message'] ?? "Failed to retry withdrawal",
-      );
+      if (decoded is Map<String, dynamic>) {
+        throw Exception(
+          decoded['error'] ??
+              decoded['message'] ??
+              "Failed to retry withdrawal",
+        );
+      }
+
+      throw Exception("Failed to retry withdrawal");
     }
 
-    return decoded;
+    if (decoded is Map<String, dynamic>) {
+      return decoded;
+    }
+
+    return {"message": "Withdrawal retry completed."};
   }
 
   static Future<List> getAdminRiderWallets() async {

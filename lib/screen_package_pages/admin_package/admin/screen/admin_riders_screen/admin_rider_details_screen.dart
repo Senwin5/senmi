@@ -27,6 +27,21 @@ class _RiderDetailsScreenState extends State<RiderDetailsScreen> {
   void initState() {
     super.initState();
     rider = widget.rider;
+    _loadDetails();
+  }
+
+  Future<void> _loadDetails() async {
+    try {
+      final updatedRider = await ApiService.getRiderDetails(rider.riderId);
+
+      if (!mounted) return;
+
+      setState(() {
+        rider = updatedRider;
+      });
+    } catch (e) {
+      debugPrint("Load rider details error: $e");
+    }
   }
 
   // ============================================================
@@ -395,7 +410,6 @@ class _RiderDetailsScreenState extends State<RiderDetailsScreen> {
             ),
 
             const SizedBox(height: 30),
-
             // ====================================================
             // INFORMATION
             // ====================================================
@@ -409,13 +423,24 @@ class _RiderDetailsScreenState extends State<RiderDetailsScreen> {
             ),
 
             const SizedBox(height: 14),
-
             infoCard(icon: Icons.email, title: "Email", value: rider.email),
 
             infoCard(
               icon: Icons.phone,
               title: "Phone",
               value: rider.phone ?? "",
+            ),
+
+            infoCard(
+              icon: Icons.badge,
+              title: "NIN Number",
+              value: rider.ninNumber ?? "",
+            ),
+
+            infoCard(
+              icon: Icons.cake,
+              title: "Date of Birth",
+              value: rider.dateOfBirth ?? "",
             ),
 
             infoCard(
@@ -428,6 +453,49 @@ class _RiderDetailsScreenState extends State<RiderDetailsScreen> {
               icon: Icons.home,
               title: "Address",
               value: rider.address ?? "",
+            ),
+
+            infoCard(
+              icon: Icons.two_wheeler,
+              title: "Vehicle Number",
+              value: rider.vehicleNumber ?? "",
+            ),
+
+            const SizedBox(height: 20),
+
+            Text(
+              "Emergency Contact",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: colors.onSurface,
+              ),
+            ),
+
+            const SizedBox(height: 14),
+
+            infoCard(
+              icon: Icons.person,
+              title: "Name",
+              value: rider.emergencyContactName ?? "",
+            ),
+
+            infoCard(
+              icon: Icons.phone,
+              title: "Phone",
+              value: rider.emergencyContactPhone ?? "",
+            ),
+
+            infoCard(
+              icon: Icons.home,
+              title: "Address",
+              value: rider.emergencyContactAddress ?? "",
+            ),
+
+            infoCard(
+              icon: Icons.family_restroom,
+              title: "Relationship",
+              value: rider.emergencyContactRelationship ?? "",
             ),
 
             const SizedBox(height: 20),
