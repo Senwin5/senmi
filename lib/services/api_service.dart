@@ -1039,7 +1039,7 @@ class ApiService {
   static Future<Map<String, dynamic>> getEarnings() async {
     try {
       final response = await http.get(
-        Uri.parse("$baseUrl/rider-earnings/"), // ✅ FIXED URL
+        Uri.parse("$baseUrl/rider-earnings/"), // FIXED URL
         headers: await ApiService.getAuthHeaders(),
       );
 
