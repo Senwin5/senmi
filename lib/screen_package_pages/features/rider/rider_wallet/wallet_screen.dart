@@ -1,7 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
-import 'package:senmi/screen_package_pages/features/rider/rider_history/rider_withdrawal_detail.dart';
+import 'package:senmi/screen_package_pages/features/rider/rider_wallet/rider_withdrawal_detail.dart';
 import 'package:senmi/screen_package_pages/features/rider/rider_package/rider_package_detail.dart';
 import 'package:senmi/services/api_service.dart';
 

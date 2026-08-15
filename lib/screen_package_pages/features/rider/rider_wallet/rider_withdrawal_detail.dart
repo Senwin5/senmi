@@ -48,7 +48,8 @@ class RiderWithdrawalDetailScreen extends StatelessWidget {
     final type = transaction['type']?.toString() ?? 'debit';
 
     final iconType = transaction['icon_type']?.toString() ?? 'withdrawal';
-    final status = transaction['status']?.toString().toLowerCase() ?? 'pending';
+    final status =
+        transaction['withdrawal_status']?.toString().toLowerCase() ?? 'pending';
 
     return Scaffold(
       appBar: AppBar(
