@@ -24,6 +24,10 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
   String? errorMessage;
   bool isSubmitting = false;
 
+  final TextEditingController _amountController = TextEditingController();
+
+  final TextEditingController _accountController = TextEditingController();
+
   double get avgEarning {
     if (totalDeliveries == 0) {
       return 0;
@@ -38,6 +42,12 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
     fetchWallet();
   }
 
+  @override
+  void dispose() {
+    _amountController.dispose();
+    _accountController.dispose();
+    super.dispose();
+  }
   // ============================================================
   // HELPERS
   // ============================================================
@@ -141,9 +151,9 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
     }
   }
 
-  // ============================================================
+  // =========================================
   // WITHDRAW
-  // ============================================================
+  // =========================================
 
   Future<void> withdraw() async {
     if (isSubmitting) {
@@ -153,9 +163,6 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
     setState(() {
       isSubmitting = true;
     });
-
-    final amountController = TextEditingController();
-    final accountController = TextEditingController();
 
     List<Map<String, dynamic>> banks = [];
 
@@ -197,15 +204,15 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
         );
       }
 
-      amountController.dispose();
-      accountController.dispose();
+      _amountController.dispose();
+      _accountController.dispose();
 
       return;
     }
 
     if (!mounted) {
-      amountController.dispose();
-      accountController.dispose();
+      _amountController.dispose();
+      _accountController.dispose();
       return;
     }
 
@@ -271,7 +278,7 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                       // REMAINING BALANCE
                       // ==================================================
                       ValueListenableBuilder<TextEditingValue>(
-                        valueListenable: amountController,
+                        valueListenable: _amountController,
                         builder: (amountContext, value, child) {
                           final amount =
                               double.tryParse(value.text.trim()) ?? 0;
@@ -299,7 +306,7 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                       // AMOUNT
                       // ==================================================
                       TextField(
-                        controller: amountController,
+                        controller: _amountController,
                         keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
                         ),
@@ -355,14 +362,14 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                           });
 
                           // Resolve account if already entered.
-                          if (accountController.text.trim().length == 10) {
+                          if (_accountController.text.trim().length == 10) {
                             setStateDialog(() {
                               verifying = true;
                             });
 
                             try {
                               final name = await ApiService.resolveAccount(
-                                accountNumber: accountController.text.trim(),
+                                accountNumber: _accountController.text.trim(),
                                 bankCode: value,
                               );
 
@@ -396,7 +403,7 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                       // ACCOUNT NUMBER
                       // ==================================================
                       TextField(
-                        controller: accountController,
+                        controller: _accountController,
                         keyboardType: TextInputType.number,
                         maxLength: 10,
                         decoration: const InputDecoration(
@@ -532,11 +539,11 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
 
                                   final amt =
                                       double.tryParse(
-                                        amountController.text.trim(),
+                                        _amountController.text.trim(),
                                       ) ??
                                       0;
 
-                                  final accountNumber = accountController.text
+                                  final accountNumber = _accountController.text
                                       .trim();
 
                                   if (amt <= 0) {
@@ -879,13 +886,6 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
         );
       },
     );
-
-    // ============================================================
-    // CLEANUP
-    // ============================================================
-
-    amountController.dispose();
-    accountController.dispose();
   }
 
   // ============================================================
