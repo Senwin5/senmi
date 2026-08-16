@@ -7,7 +7,7 @@ import 'package:senmi/screen_package_pages/features/customer/customer_profiles/a
 /// Customer Bottom Navigation
 class CustomerBottomNav extends StatefulWidget {
   final int initialIndex;
-  final String? packageId; // ✅ make nullable
+  final String? packageId;
 
   const CustomerBottomNav({super.key, this.initialIndex = 0, this.packageId});
 
@@ -18,6 +18,7 @@ class CustomerBottomNav extends StatefulWidget {
 class _CustomerBottomNavState extends State<CustomerBottomNav> {
   late int _currentIndex;
 
+  /// Controls light/dark mode
   final ValueNotifier<bool> darkModeNotifier = ValueNotifier<bool>(false);
 
   late final List<Widget> _screens;
@@ -43,9 +44,14 @@ class _CustomerBottomNavState extends State<CustomerBottomNav> {
       label: "Send Package",
     ),
     BottomNavigationBarItem(icon: Icon(Icons.history), label: "History"),
-    //BottomNavigationBarItem(icon: Icon(Icons.two_wheeler), label: "Track"),
     BottomNavigationBarItem(icon: Icon(Icons.person), label: "Account"),
   ];
+
+  @override
+  void dispose() {
+    darkModeNotifier.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,18 +60,48 @@ class _CustomerBottomNavState extends State<CustomerBottomNav> {
       builder: (context, isDark, _) {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
-          theme: ThemeData.light(),
-          darkTheme: ThemeData.dark(),
+
+          // Light theme
+          theme: ThemeData(
+            brightness: Brightness.light,
+            scaffoldBackgroundColor: Colors.white,
+            bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+              backgroundColor: Colors.white,
+              selectedItemColor: Colors.deepPurple,
+              unselectedItemColor: Colors.black54,
+              type: BottomNavigationBarType.fixed,
+            ),
+          ),
+
+          // Dark theme
+          darkTheme: ThemeData(
+            brightness: Brightness.dark,
+            scaffoldBackgroundColor: const Color(0xFF121212),
+            bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+              backgroundColor: Color(0xFF1E1E1E),
+              selectedItemColor: Colors.white,
+              unselectedItemColor: Colors.white60,
+              type: BottomNavigationBarType.fixed,
+            ),
+          ),
+
           themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
+
           home: Scaffold(
             body: _screens[_currentIndex],
+
             bottomNavigationBar: BottomNavigationBar(
               currentIndex: _currentIndex,
               items: _navItems,
               type: BottomNavigationBarType.fixed,
-              backgroundColor: Colors.white,
-              selectedItemColor: Colors.deepPurple,
-              unselectedItemColor: Colors.black54,
+
+              // Automatically changes with dark mode
+              backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+
+              selectedItemColor: isDark ? Colors.white : Colors.deepPurple,
+
+              unselectedItemColor: isDark ? Colors.white60 : Colors.black54,
+
               onTap: (index) {
                 setState(() {
                   _currentIndex = index;
