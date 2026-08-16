@@ -282,7 +282,7 @@ class ApiService {
         "title": title,
         "body": body,
         "target": target,
-        "user_id": ?userId,
+        "user_id": userId,
       }),
     );
 
@@ -1094,15 +1094,31 @@ class ApiService {
       "${res.statusCode} ${res.body}",
     );
 
-    final decoded = jsonDecode(res.body);
+    dynamic decoded;
 
-    if (res.statusCode < 200 || res.statusCode >= 300) {
-      throw Exception(
-        decoded['error'] ?? decoded['message'] ?? "Failed to reject withdrawal",
-      );
+    try {
+      decoded = jsonDecode(res.body);
+    } catch (_) {
+      throw Exception("Invalid server response: ${res.statusCode}");
     }
 
-    return Map<String, dynamic>.from(decoded);
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      if (decoded is Map) {
+        throw Exception(
+          decoded["error"] ??
+              decoded["message"] ??
+              "Failed to reject withdrawal",
+        );
+      }
+
+      throw Exception("Failed to reject withdrawal");
+    }
+
+    if (decoded is Map) {
+      return Map<String, dynamic>.from(decoded);
+    }
+
+    return {"success": true, "message": "Withdrawal rejected successfully."};
   }
 
   static Future<Map<String, dynamic>> approveWithdrawal(int id) async {
@@ -1116,17 +1132,31 @@ class ApiService {
       "${res.statusCode} ${res.body}",
     );
 
-    final decoded = jsonDecode(res.body);
+    dynamic decoded;
 
-    if (res.statusCode < 200 || res.statusCode >= 300) {
-      throw Exception(
-        decoded['error'] ??
-            decoded['message'] ??
-            "Failed to approve withdrawal",
-      );
+    try {
+      decoded = jsonDecode(res.body);
+    } catch (_) {
+      throw Exception("Invalid server response: ${res.statusCode}");
     }
 
-    return Map<String, dynamic>.from(decoded);
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      if (decoded is Map) {
+        throw Exception(
+          decoded["error"] ??
+              decoded["message"] ??
+              "Failed to approve withdrawal",
+        );
+      }
+
+      throw Exception("Failed to approve withdrawal");
+    }
+
+    if (decoded is Map) {
+      return Map<String, dynamic>.from(decoded);
+    }
+
+    return {"success": true, "message": "Withdrawal approved successfully."};
   }
 
   static Future<Map<String, dynamic>> markWithdrawalPaid(int id) async {

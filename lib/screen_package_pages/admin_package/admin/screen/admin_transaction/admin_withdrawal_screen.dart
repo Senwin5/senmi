@@ -120,7 +120,7 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
 
       final riderId = (w["rider_id"] ?? "").toString().toLowerCase();
 
-      final withdrawalId = (w["id"] ?? "").toString().toLowerCase();
+      final withdrawalId = (_withdrawalId(w)?.toString() ?? "").toLowerCase();
 
       final accountName = (w["account_name"] ?? "").toString().toLowerCase();
 
@@ -313,9 +313,17 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
   // =========================================================
 
   Future<void> confirmApprove(Map<String, dynamic> withdrawal) async {
-    final id = int.tryParse(withdrawal["id"].toString());
+    final id = _withdrawalId(withdrawal);
 
-    if (id == null) return;
+    if (id == null || id <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Invalid withdrawal ID."),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
 
     final amount = _money(withdrawal["amount"]);
 
@@ -369,9 +377,17 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
   // =========================================================
 
   Future<void> confirmReject(Map<String, dynamic> withdrawal) async {
-    final id = int.tryParse(withdrawal["id"].toString());
+    final id = _withdrawalId(withdrawal);
 
-    if (id == null) return;
+    if (id == null || id <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Invalid withdrawal ID."),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
 
     final controller = TextEditingController();
 
@@ -451,6 +467,15 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
   // =========================================================
   // HELPERS
   // =========================================================
+  int? _withdrawalId(Map<String, dynamic> withdrawal) {
+    final value = withdrawal["id"] ?? withdrawal["withdrawal_id"];
+
+    if (value is int) {
+      return value;
+    }
+
+    return int.tryParse(value?.toString() ?? "");
+  }
 
   double _number(dynamic value) {
     return double.tryParse(value?.toString().replaceAll(",", "") ?? "") ?? 0;
@@ -812,7 +837,7 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
                         const SizedBox(height: 3),
 
                         Text(
-                          "Withdrawal #${w["id"] ?? "-"}",
+                          "Withdrawal #${_withdrawalId(w) ?? "-"}",
                           style: TextStyle(
                             color: colors.onSurfaceVariant,
                             fontSize: 12,

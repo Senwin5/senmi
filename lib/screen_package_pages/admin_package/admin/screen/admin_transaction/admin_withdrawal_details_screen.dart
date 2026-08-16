@@ -72,7 +72,16 @@ class _AdminWithdrawalDetailsScreenState
 
   String get status => w["status"]?.toString().toLowerCase() ?? "unknown";
 
-  int get withdrawalId => int.tryParse(w["id"]?.toString() ?? "") ?? 0;
+  //int get withdrawalId => int.tryParse(w["id"]?.toString() ?? "") ?? 0;
+  int get withdrawalId {
+    final value = w["id"] ?? w["withdrawal_id"];
+
+    if (value is int) {
+      return value;
+    }
+
+    return int.tryParse(value?.toString() ?? "") ?? 0;
+  }
 
   double get amount =>
       double.tryParse(w["amount"]?.toString().replaceAll(",", "") ?? "") ?? 0;
@@ -214,6 +223,7 @@ class _AdminWithdrawalDetailsScreenState
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
+        behavior: SnackBarBehavior.fixed,
         content: Text("$label copied"),
         duration: const Duration(seconds: 1),
       ),
@@ -230,6 +240,7 @@ class _AdminWithdrawalDetailsScreenState
     if (widget.onApprove == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
+          behavior: SnackBarBehavior.fixed,
           content: Text("Approve action is not configured."),
           backgroundColor: Colors.red,
         ),
@@ -298,6 +309,7 @@ class _AdminWithdrawalDetailsScreenState
     if (widget.onMarkPaid == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
+          behavior: SnackBarBehavior.fixed,
           content: Text("Mark as Paid action is not configured."),
           backgroundColor: Colors.red,
         ),
@@ -368,6 +380,7 @@ class _AdminWithdrawalDetailsScreenState
     if (widget.onReject == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
+          behavior: SnackBarBehavior.fixed,
           content: Text("Reject action is not configured."),
           backgroundColor: Colors.red,
         ),
@@ -452,6 +465,7 @@ class _AdminWithdrawalDetailsScreenState
     if (widget.onRetry == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
+          behavior: SnackBarBehavior.fixed,
           content: Text("Retry action is not configured."),
           backgroundColor: Colors.red,
         ),
@@ -521,6 +535,8 @@ class _AdminWithdrawalDetailsScreenState
   }) async {
     if (actionLoading) return;
 
+    if (!mounted) return;
+
     setState(() {
       actionLoading = true;
     });
@@ -530,22 +546,29 @@ class _AdminWithdrawalDetailsScreenState
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(successMessage), backgroundColor: Colors.green),
-      );
-
+      // Refresh the withdrawal list/details first.
       if (widget.onRefresh != null) {
         await widget.onRefresh!();
       }
 
       if (!mounted) return;
 
-      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.fixed,
+          content: Text(successMessage),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      // Close this details screen after successful action.
+      Navigator.of(context).pop();
     } catch (e) {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
+          behavior: SnackBarBehavior.fixed,
           content: Text("$failurePrefix: $e"),
           backgroundColor: Colors.red,
         ),
@@ -882,15 +905,18 @@ class _AdminWithdrawalDetailsScreenState
       // =====================================================
       // BOTTOM ACTIONS
       // =====================================================
-      bottomNavigationBar: actionLoading
-          ? SafeArea(
-              child: Container(
+      bottomNavigationBar: SafeArea(
+        child: actionLoading
+            ? Container(
                 color: bottomBarColor,
-                padding: const EdgeInsets.all(16),
-                child: const Center(child: CircularProgressIndicator()),
-              ),
-            )
-          : _buildBottomActions(),
+                padding: const EdgeInsets.all(14),
+                child: const SizedBox(
+                  height: 48,
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+              )
+            : _buildBottomActions(),
+      ),
 
       // =====================================================
       // BODY
@@ -1061,39 +1087,38 @@ class _AdminWithdrawalDetailsScreenState
     // =======================================================
 
     if (status == "pending") {
-      return SafeArea(
-        child: Container(
-          color: bottomBarColor,
-          padding: const EdgeInsets.all(14),
-          child: Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: widget.onReject == null ? null : reject,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.red,
-                    side: const BorderSide(color: Colors.red),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                  child: const Text("Reject"),
+      return Container(
+        color: bottomBarColor,
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: widget.onReject == null ? null : reject,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.red,
+                  side: const BorderSide(color: Colors.red),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
+                child: const Text("Reject"),
               ),
+            ),
 
-              const SizedBox(width: 10),
+            const SizedBox(width: 10),
 
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: widget.onApprove == null ? null : approve,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                  child: const Text("Approve"),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: widget.onApprove == null ? null : approve,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
+                child: const Text("Approve"),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       );
     }
@@ -1103,23 +1128,21 @@ class _AdminWithdrawalDetailsScreenState
     // =======================================================
 
     if (status == "approved") {
-      return SafeArea(
-        child: Container(
-          color: bottomBarColor,
-          padding: const EdgeInsets.all(14),
-          child: SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: widget.onMarkPaid == null ? null : markPaid,
-              icon: const Icon(Icons.check_circle),
-              label: const Text("Mark as Paid"),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 15),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+      return Container(
+        color: bottomBarColor,
+        padding: const EdgeInsets.all(14),
+        child: SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: widget.onMarkPaid == null ? null : markPaid,
+            icon: const Icon(Icons.check_circle),
+            label: const Text("Mark as Paid"),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 15),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
               ),
             ),
           ),
@@ -1132,25 +1155,24 @@ class _AdminWithdrawalDetailsScreenState
     // =======================================================
 
     if (status == "processing") {
-      return SafeArea(
-        child: Container(
-          color: bottomBarColor,
-          padding: const EdgeInsets.all(14),
-          child: const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-              SizedBox(width: 10),
-              Text(
-                "Payment processing...",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
+      return Container(
+        color: bottomBarColor,
+        padding: const EdgeInsets.all(14),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            SizedBox(width: 10),
+            Text(
+              "Payment processing...",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ],
         ),
       );
     }
@@ -1160,21 +1182,19 @@ class _AdminWithdrawalDetailsScreenState
     // =======================================================
 
     if (status == "failed" || status == "reversed") {
-      return SafeArea(
-        child: Container(
-          color: bottomBarColor,
-          padding: const EdgeInsets.all(14),
-          child: SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: widget.onRetry == null ? null : retry,
-              icon: const Icon(Icons.refresh),
-              label: const Text("Retry Withdrawal"),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-              ),
+      return Container(
+        color: bottomBarColor,
+        padding: const EdgeInsets.all(14),
+        child: SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: widget.onRetry == null ? null : retry,
+            icon: const Icon(Icons.refresh),
+            label: const Text("Retry Withdrawal"),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 14),
             ),
           ),
         ),
@@ -1186,24 +1206,23 @@ class _AdminWithdrawalDetailsScreenState
     // =======================================================
 
     if (status == "success") {
-      return SafeArea(
-        child: Container(
-          color: bottomBarColor,
-          padding: const EdgeInsets.all(14),
-          child: const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.check_circle, color: Colors.green),
-              SizedBox(width: 8),
-              Text(
-                "Payment completed",
-                style: TextStyle(
-                  color: Colors.green,
-                  fontWeight: FontWeight.bold,
-                ),
+      return Container(
+        color: bottomBarColor,
+        padding: const EdgeInsets.all(14),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.check_circle, color: Colors.green),
+            SizedBox(width: 8),
+            Text(
+              "Payment completed",
+              style: TextStyle(
+                color: Colors.green,
+                fontWeight: FontWeight.bold,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       );
     }
@@ -1213,24 +1232,20 @@ class _AdminWithdrawalDetailsScreenState
     // =======================================================
 
     if (status == "rejected") {
-      return SafeArea(
-        child: Container(
-          color: bottomBarColor,
-          padding: const EdgeInsets.all(14),
-          child: const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.cancel, color: Colors.red),
-              SizedBox(width: 8),
-              Text(
-                "Withdrawal rejected",
-                style: TextStyle(
-                  color: Colors.red,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
+      return Container(
+        color: bottomBarColor,
+        padding: const EdgeInsets.all(14),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.cancel, color: Colors.red),
+            SizedBox(width: 8),
+            Text(
+              "Withdrawal rejected",
+              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+            ),
+          ],
         ),
       );
     }
