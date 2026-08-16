@@ -38,7 +38,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
   bool get _isDark => Theme.of(context).brightness == Brightness.dark;
 
   // =========================================================
-  // LOAD CUSTOMER
+  // INIT
   // =========================================================
 
   @override
@@ -46,6 +46,10 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
     super.initState();
     loadCustomer();
   }
+
+  // =========================================================
+  // LOAD CUSTOMER
+  // =========================================================
 
   Future<void> loadCustomer() async {
     try {
@@ -78,6 +82,19 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
   }
 
   // =========================================================
+  // OPEN PACKAGE DETAILS
+  // =========================================================
+
+  void _openPackageDetails(Map<String, dynamic> package) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CustomerPackageDetailsScreen(package: package),
+      ),
+    );
+  }
+
+  // =========================================================
   // SAFE VALUES
   // =========================================================
 
@@ -88,10 +105,17 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
       return [];
     }
 
-    return value
+    final packages = value
         .whereType<Map>()
         .map((item) => Map<String, dynamic>.from(item))
         .toList();
+
+    // =======================================================
+    // IMPORTANT:
+    // ONLY SHOW THE MOST RECENT 5 PACKAGES
+    // =======================================================
+
+    return packages.take(5).toList();
   }
 
   String stringValue(dynamic value, {String fallback = ""}) {
@@ -132,7 +156,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
             style: TextStyle(
               color: _textColor,
               fontWeight: FontWeight.bold,
-              fontSize: 18,
+              fontSize: 20,
             ),
           ),
 
@@ -166,6 +190,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
 
     for (final package in packages) {
       final lat = numberValue(package['delivery_lat']);
+
       final lng = numberValue(package['delivery_lng']);
 
       if (lat == 0 || lng == 0) {
@@ -200,7 +225,6 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
         scrolledUnderElevation: 0,
         backgroundColor: _cardColor,
         surfaceTintColor: Colors.transparent,
-
         foregroundColor: _textColor,
 
         title: Text(
@@ -242,23 +266,23 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.all(16),
                 children: [
-                  // =====================================
+                  // =================================
                   // PROFILE
-                  // =====================================
+                  // =================================
                   _profileCard(data),
 
                   const SizedBox(height: 16),
 
-                  // =====================================
+                  // =================================
                   // CONTACT
-                  // =====================================
+                  // =================================
                   _contactCard(data),
 
                   const SizedBox(height: 16),
 
-                  // =====================================
+                  // =================================
                   // STATISTICS
-                  // =====================================
+                  // =================================
                   GridView.count(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -268,23 +292,26 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                     childAspectRatio: 1.25,
                     children: [
                       statCard(
-                        "Packages",
+                        "Total Packages",
                         "${numberValue(data['total_packages'])}",
                         Icons.inventory_2,
                         Colors.blue,
                       ),
+
                       statCard(
                         "Delivered",
                         "${numberValue(data['delivered_packages'])}",
                         Icons.check_circle,
                         Colors.green,
                       ),
+
                       statCard(
                         "Pending",
                         "${numberValue(data['pending_packages'])}",
                         Icons.access_time,
                         Colors.orange,
                       ),
+
                       statCard(
                         "Cancelled",
                         "${numberValue(data['cancelled_packages'])}",
@@ -296,16 +323,23 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
 
                   const SizedBox(height: 16),
 
-                  // =====================================
+                  // =================================
+                  // STATUS SUMMARY
+                  // =================================
+                  _statusSummary(data),
+
+                  const SizedBox(height: 16),
+
+                  // =================================
                   // TOTAL SPENT
-                  // =====================================
+                  // =================================
                   _totalSpent(data),
 
                   const SizedBox(height: 24),
 
-                  // =====================================
+                  // =================================
                   // RECENT PACKAGES
-                  // =====================================
+                  // =================================
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -317,8 +351,9 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
+
                       Text(
-                        "${packages.length}",
+                        "${packages.length}/5",
                         style: TextStyle(
                           color: _mutedTextColor,
                           fontWeight: FontWeight.w600,
@@ -336,9 +371,9 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
 
                   const SizedBox(height: 24),
 
-                  // =====================================
+                  // =================================
                   // MAP
-                  // =====================================
+                  // =================================
                   Text(
                     "Delivery Locations",
                     style: TextStyle(
@@ -356,6 +391,116 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                 ],
               ),
             ),
+    );
+  }
+
+  // =========================================================
+  // STATUS SUMMARY
+  // =========================================================
+
+  Widget _statusSummary(Map<String, dynamic> data) {
+    final delivered = numberValue(data['delivered_packages']);
+
+    final pending = numberValue(data['pending_packages']);
+
+    final cancelled = numberValue(data['cancelled_packages']);
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: _cardColor,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: _borderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.analytics_outlined,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+
+              const SizedBox(width: 10),
+
+              Text(
+                "Package Status",
+                style: TextStyle(
+                  color: _textColor,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
+          _statusSummaryRow(
+            "Delivered",
+            delivered.toString(),
+            Colors.green,
+            Icons.check_circle,
+          ),
+
+          const SizedBox(height: 10),
+
+          _statusSummaryRow(
+            "Pending",
+            pending.toString(),
+            Colors.orange,
+            Icons.access_time,
+          ),
+
+          const SizedBox(height: 10),
+
+          _statusSummaryRow(
+            "Cancelled",
+            cancelled.toString(),
+            Colors.red,
+            Icons.cancel,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _statusSummaryRow(
+    String title,
+    String value,
+    Color color,
+    IconData icon,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(_isDark ? .10 : .06),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 22),
+
+          const SizedBox(width: 12),
+
+          Expanded(
+            child: Text(
+              title,
+              style: TextStyle(color: _textColor, fontWeight: FontWeight.w600),
+            ),
+          ),
+
+          Text(
+            value,
+            style: TextStyle(
+              color: color,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -552,7 +697,6 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text("Total Spent", style: TextStyle(color: Colors.white70)),
-                SizedBox(height: 4),
               ],
             ),
           ),
@@ -575,7 +719,10 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
   // =========================================================
 
   Widget _packageCard(Map<String, dynamic> package) {
-    final status = stringValue(package['status'], fallback: 'unknown');
+    final status = stringValue(
+      package['status'],
+      fallback: 'unknown',
+    ).toLowerCase();
 
     final statusColor = _statusColor(status);
 
@@ -587,11 +734,11 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
         border: Border.all(color: _borderColor),
       ),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
 
         leading: CircleAvatar(
           backgroundColor: statusColor.withOpacity(.10),
-          child: Icon(Icons.two_wheeler, color: statusColor),
+          child: Icon(_statusIcon(status), color: statusColor),
         ),
 
         title: Text(
@@ -602,21 +749,50 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
         ),
 
         subtitle: Padding(
-          padding: const EdgeInsets.only(top: 4),
-          child: Text(
-            status.toUpperCase(),
-            style: TextStyle(
-              fontSize: 11,
-              color: statusColor,
-              fontWeight: FontWeight.bold,
-            ),
+          padding: const EdgeInsets.only(top: 5),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _statusTitle(status).toUpperCase(),
+                style: TextStyle(
+                  fontSize: 11,
+                  color: statusColor,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+              const SizedBox(height: 3),
+
+              Text(
+                stringValue(package['package_id'], fallback: 'No package ID'),
+                style: TextStyle(fontSize: 11, color: _mutedTextColor),
+              ),
+            ],
           ),
         ),
 
-        trailing: Text(
-          "₦${stringValue(package['price'], fallback: '0')}",
-          style: TextStyle(color: _textColor, fontWeight: FontWeight.bold),
+        trailing: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              "₦${stringValue(package['price'], fallback: '0')}",
+              style: TextStyle(color: _textColor, fontWeight: FontWeight.bold),
+            ),
+
+            const SizedBox(height: 4),
+
+            Icon(Icons.chevron_right, color: _mutedTextColor),
+          ],
         ),
+
+        // ================================================
+        // CLICK PACKAGE
+        // ================================================
+        onTap: () {
+          _openPackageDetails(package);
+        },
       ),
     );
   }
@@ -694,5 +870,642 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
       default:
         return _mutedTextColor;
     }
+  }
+
+  // =========================================================
+  // STATUS ICON
+  // =========================================================
+
+  IconData _statusIcon(String status) {
+    switch (status.toLowerCase()) {
+      case "pending":
+        return Icons.access_time;
+
+      case "paid":
+        return Icons.payments;
+
+      case "accepted":
+        return Icons.check_circle_outline;
+
+      case "picked_up":
+        return Icons.two_wheeler;
+
+      case "delivered":
+        return Icons.check_circle;
+
+      case "cancelled":
+        return Icons.cancel;
+
+      case "failed":
+        return Icons.error;
+
+      default:
+        return Icons.inventory_2;
+    }
+  }
+
+  // =========================================================
+  // STATUS TITLE
+  // =========================================================
+
+  String _statusTitle(String status) {
+    switch (status.toLowerCase()) {
+      case "pending":
+        return "Pending";
+
+      case "paid":
+        return "Paid";
+
+      case "accepted":
+        return "Accepted";
+
+      case "picked_up":
+        return "Picked Up";
+
+      case "delivered":
+        return "Delivered";
+
+      case "cancelled":
+        return "Cancelled";
+
+      case "failed":
+        return "Failed";
+
+      default:
+        return status.replaceAll("_", " ");
+    }
+  }
+}
+
+// #################################################################
+// #################################################################
+// PACKAGE DETAILS SCREEN
+// #################################################################
+//
+// IMPORTANT:
+// This class MUST be OUTSIDE CustomerDetailsScreen's State class.
+// That was the main Dart error in your previous code.
+// #################################################################
+// #################################################################
+
+class CustomerPackageDetailsScreen extends StatelessWidget {
+  final Map<String, dynamic> package;
+
+  const CustomerPackageDetailsScreen({super.key, required this.package});
+
+  // =========================================================
+  // SAFE VALUES
+  // =========================================================
+
+  String stringValue(dynamic value, {String fallback = "-"}) {
+    if (value == null) return fallback;
+
+    final result = value.toString();
+
+    return result.isEmpty ? fallback : result;
+  }
+
+  // =========================================================
+  // STATUS COLOR
+  // =========================================================
+
+  Color statusColor(String status) {
+    switch (status.toLowerCase()) {
+      case "delivered":
+      case "success":
+        return Colors.green;
+
+      case "paid":
+      case "accepted":
+      case "picked_up":
+        return Colors.blue;
+
+      case "pending":
+        return Colors.orange;
+
+      case "cancelled":
+      case "failed":
+        return Colors.red;
+
+      default:
+        return Colors.grey;
+    }
+  }
+
+  // =========================================================
+  // STATUS TITLE
+  // =========================================================
+
+  String statusTitle(String status) {
+    switch (status.toLowerCase()) {
+      case "pending":
+        return "Pending";
+
+      case "paid":
+        return "Paid";
+
+      case "accepted":
+        return "Accepted";
+
+      case "picked_up":
+        return "Picked Up";
+
+      case "delivered":
+        return "Delivered";
+
+      case "cancelled":
+        return "Cancelled";
+
+      case "failed":
+        return "Failed";
+
+      default:
+        return status.replaceAll("_", " ");
+    }
+  }
+
+  // =========================================================
+  // STATUS DESCRIPTION
+  // =========================================================
+
+  String statusDescription(String status) {
+    switch (status.toLowerCase()) {
+      case "pending":
+        return "This package is waiting to be processed.";
+
+      case "paid":
+        return "Payment has been received and the package is awaiting rider processing.";
+
+      case "accepted":
+        return "A rider has accepted this delivery.";
+
+      case "picked_up":
+        return "The rider has picked up the package and is taking it to the destination.";
+
+      case "delivered":
+        return "This package has been successfully delivered.";
+
+      case "cancelled":
+        return "This package was cancelled.";
+
+      case "failed":
+        return "There was a problem processing this package.";
+
+      default:
+        return "Current package status.";
+    }
+  }
+
+  // =========================================================
+  // BUILD
+  // =========================================================
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    final cardColor = theme.cardColor;
+
+    final textColor = theme.colorScheme.onSurface;
+
+    final mutedColor =
+        theme.textTheme.bodyMedium?.color?.withOpacity(.65) ?? Colors.grey;
+
+    final borderColor = theme.dividerColor.withOpacity(.12);
+
+    // =======================================================
+    // PACKAGE VALUES
+    // =======================================================
+
+    final status = stringValue(
+      package["status"],
+      fallback: "unknown",
+    ).toLowerCase();
+
+    final color = statusColor(status);
+
+    final packageId = stringValue(package["package_id"]);
+
+    final description = stringValue(
+      package["description"],
+      fallback: "Package",
+    );
+
+    final price = stringValue(package["price"], fallback: "0");
+
+    final pickupAddress = stringValue(package["pickup_address"]);
+
+    final deliveryAddress = stringValue(package["delivery_address"]);
+
+    final receiverName = stringValue(package["receiver_name"]);
+
+    final receiverPhone = stringValue(package["receiver_phone"]);
+
+    final rider = stringValue(package["rider"], fallback: "Not assigned");
+
+    final createdAt = stringValue(package["created_at"]);
+
+    final deliveredAt = stringValue(package["delivered_at"]);
+
+    final paymentType = stringValue(package["payment_type"]);
+
+    final deliveryCode = stringValue(package["delivery_code"], fallback: "");
+
+    // =======================================================
+    // SCREEN
+    // =======================================================
+
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
+
+      appBar: AppBar(
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        backgroundColor: cardColor,
+        surfaceTintColor: Colors.transparent,
+        foregroundColor: textColor,
+
+        title: Text(
+          "Package Details",
+          style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
+        ),
+      ),
+
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            // =================================================
+            // CURRENT STATUS
+            // =================================================
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: cardColor,
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(color: borderColor),
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    width: 76,
+                    height: 76,
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(.10),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(_statusIcon(status), color: color, size: 38),
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  Text(
+                    "₦$price",
+                    style: TextStyle(
+                      color: textColor,
+                      fontSize: 30,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(.10),
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: Text(
+                      statusTitle(status).toUpperCase(),
+                      style: TextStyle(
+                        color: color,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  Text(
+                    statusDescription(status),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: mutedColor, fontSize: 13),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // =================================================
+            // STATUS INFORMATION
+            // =================================================
+            _statusInformation(context, status),
+
+            const SizedBox(height: 14),
+
+            // =================================================
+            // PACKAGE INFORMATION
+            // =================================================
+            _section(
+              context,
+              title: "Package Information",
+              icon: Icons.inventory_2,
+              children: [
+                _infoRow(context, "Package ID", packageId),
+                _infoRow(context, "Description", description),
+                _infoRow(context, "Amount", "₦$price"),
+                _infoRow(context, "Payment Type", paymentType),
+                _infoRow(context, "Created", createdAt),
+              ],
+            ),
+
+            const SizedBox(height: 14),
+
+            // =================================================
+            // DELIVERY INFORMATION
+            // =================================================
+            _section(
+              context,
+              title: "Delivery Information",
+              icon: Icons.local_shipping,
+              children: [
+                _infoRow(context, "Pickup", pickupAddress),
+                _infoRow(context, "Delivery", deliveryAddress),
+                _infoRow(context, "Rider", rider),
+              ],
+            ),
+
+            const SizedBox(height: 14),
+
+            // =================================================
+            // RECEIVER INFORMATION
+            // =================================================
+            _section(
+              context,
+              title: "Receiver Information",
+              icon: Icons.person,
+              children: [
+                _infoRow(context, "Name", receiverName),
+                _infoRow(context, "Phone", receiverPhone),
+              ],
+            ),
+
+            // =================================================
+            // DELIVERY CODE
+            // =================================================
+            if (deliveryCode.isNotEmpty) ...[
+              const SizedBox(height: 14),
+
+              _section(
+                context,
+                title: "Delivery Code",
+                icon: Icons.lock_outline,
+                children: [
+                  Center(
+                    child: Text(
+                      deliveryCode,
+                      style: TextStyle(
+                        color: color,
+                        fontSize: 28,
+                        letterSpacing: 5,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+
+            // =================================================
+            // DELIVERY COMPLETED
+            // =================================================
+            if (deliveredAt.isNotEmpty) ...[
+              const SizedBox(height: 14),
+
+              _section(
+                context,
+                title: "Delivery Completion",
+                icon: Icons.check_circle,
+                children: [_infoRow(context, "Delivered At", deliveredAt)],
+              ),
+            ],
+
+            const SizedBox(height: 30),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // =========================================================
+  // STATUS INFORMATION
+  // =========================================================
+
+  Widget _statusInformation(BuildContext context, String status) {
+    final theme = Theme.of(context);
+
+    final color = statusColor(status);
+
+    final textColor = theme.colorScheme.onSurface;
+
+    theme.dividerColor.withOpacity(.12);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(.06),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: color.withOpacity(.18)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: color.withOpacity(.10),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(_statusIcon(status), color: color),
+          ),
+
+          const SizedBox(width: 12),
+
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Current State",
+                  style: TextStyle(
+                    color: textColor,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+
+                const SizedBox(height: 4),
+
+                Text(
+                  statusTitle(status),
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+
+                const SizedBox(height: 5),
+
+                Text(
+                  statusDescription(status),
+                  style: TextStyle(
+                    color:
+                        theme.textTheme.bodyMedium?.color?.withOpacity(.65) ??
+                        Colors.grey,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // =========================================================
+  // STATUS ICON
+  // =========================================================
+
+  IconData _statusIcon(String status) {
+    switch (status.toLowerCase()) {
+      case "pending":
+        return Icons.access_time;
+
+      case "paid":
+        return Icons.payments;
+
+      case "accepted":
+        return Icons.check_circle_outline;
+
+      case "picked_up":
+        return Icons.two_wheeler;
+
+      case "delivered":
+        return Icons.check_circle;
+
+      case "cancelled":
+        return Icons.cancel;
+
+      case "failed":
+        return Icons.error;
+
+      default:
+        return Icons.inventory_2;
+    }
+  }
+
+  // =========================================================
+  // INFO ROW
+  // =========================================================
+
+  Widget _infoRow(BuildContext context, String label, String value) {
+    final theme = Theme.of(context);
+
+    final textColor = theme.colorScheme.onSurface;
+
+    final mutedColor =
+        theme.textTheme.bodyMedium?.color?.withOpacity(.65) ?? Colors.grey;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 9),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 115,
+            child: Text(
+              label,
+              style: TextStyle(color: mutedColor, fontSize: 13),
+            ),
+          ),
+
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                color: textColor,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // =========================================================
+  // SECTION
+  // =========================================================
+
+  Widget _section(
+    BuildContext context, {
+    required String title,
+    required IconData icon,
+    required List<Widget> children,
+  }) {
+    final theme = Theme.of(context);
+
+    final cardColor = theme.cardColor;
+
+    final textColor = theme.colorScheme.onSurface;
+
+    final borderColor = theme.dividerColor.withOpacity(.12);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: borderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: theme.colorScheme.primary),
+
+              const SizedBox(width: 10),
+
+              Text(
+                title,
+                style: TextStyle(
+                  color: textColor,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+
+          Divider(height: 24, color: borderColor),
+
+          ...children,
+        ],
+      ),
+    );
   }
 }
