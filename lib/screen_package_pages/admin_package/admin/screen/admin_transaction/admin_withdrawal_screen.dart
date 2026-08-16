@@ -18,6 +18,8 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
 
   final TextEditingController searchController = TextEditingController();
 
+  final FocusNode searchFocusNode = FocusNode();
+
   String searchQuery = "";
 
   List<Map<String, dynamic>> withdrawals = [];
@@ -35,11 +37,12 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
   @override
   void dispose() {
     searchController.dispose();
+    searchFocusNode.dispose();
     super.dispose();
   }
 
   // =========================================================
-  // FETCH WITHDRAWALS
+  // FETCH
   // =========================================================
 
   Future<void> fetchWithdrawals({bool showLoader = true}) async {
@@ -102,14 +105,9 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
   // =========================================================
 
   void _onSearchChanged(String value) {
-    final query = value.trim().toLowerCase();
-
     setState(() {
-      searchQuery = query;
+      searchQuery = value.trim().toLowerCase();
     });
-
-    debugPrint("SEARCH: $query");
-    debugPrint("RESULTS: ${filteredWithdrawals.length}");
   }
 
   List<Map<String, dynamic>> get filteredWithdrawals {
@@ -152,7 +150,7 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
   }
 
   // =========================================================
-  // OPEN SEARCH
+  // SEARCH OPEN
   // =========================================================
 
   void openSearch() {
@@ -160,16 +158,15 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
       searching = true;
     });
 
-    // Let the TextField receive focus after AppBar rebuilds.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
 
-      FocusScope.of(context).requestFocus(FocusNode());
+      searchFocusNode.requestFocus();
     });
   }
 
   // =========================================================
-  // CLOSE SEARCH
+  // SEARCH CLOSE
   // =========================================================
 
   void closeSearch() {
@@ -180,7 +177,7 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
       searching = false;
     });
 
-    FocusScope.of(context).unfocus();
+    searchFocusNode.unfocus();
   }
 
   // =========================================================
@@ -195,7 +192,7 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Withdrawal approved and sent for processing."),
+          content: Text("Withdrawal approved successfully."),
           backgroundColor: Colors.green,
           behavior: SnackBarBehavior.floating,
         ),
@@ -227,7 +224,7 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Withdrawal rejected and wallet refund requested."),
+          content: Text("Withdrawal rejected successfully."),
           backgroundColor: Colors.orange,
           behavior: SnackBarBehavior.floating,
         ),
@@ -240,6 +237,70 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("Rejection failed: $e"),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  // =========================================================
+  // MARK AS PAID
+  // =========================================================
+
+  Future<void> markPaid(int id) async {
+    try {
+      await ApiService.markWithdrawalPaid(id);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Withdrawal marked as paid."),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+
+      await fetchWithdrawals(showLoader: false);
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Failed to mark withdrawal as paid: $e"),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  // =========================================================
+  // RETRY
+  // =========================================================
+
+  Future<void> retry(int id) async {
+    try {
+      await ApiService.retryWithdrawal(id);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Withdrawal retry submitted successfully."),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+
+      await fetchWithdrawals(showLoader: false);
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Retry failed: $e"),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
         ),
@@ -274,9 +335,9 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
           ),
           content: Text(
             "Approve ₦$amount?\n\n"
-            "The backend will process the transfer. "
-            "The final result should be reflected by "
-            "the withdrawal status.",
+            "The withdrawal will move to the "
+            "approved state and continue through "
+            "the payment workflow.",
             style: TextStyle(color: colors.onSurfaceVariant, height: 1.4),
           ),
           actions: [
@@ -334,8 +395,8 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
             children: [
               Text(
                 "₦${_money(withdrawal["amount"])} "
-                "will be handled according to the "
-                "server-side refund logic.",
+                "will be handled according to "
+                "the server-side refund logic.",
                 style: TextStyle(color: colors.onSurfaceVariant, height: 1.4),
               ),
               const SizedBox(height: 16),
@@ -431,7 +492,7 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
         return "Waiting for admin approval";
 
       case "approved":
-        return "Approved for processing";
+        return "Approved for payment";
 
       case "processing":
         return "Transfer is being processed";
@@ -440,7 +501,7 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
         return "Money successfully transferred";
 
       case "failed":
-        return "Transfer failed";
+        return "Transfer failed — retry available";
 
       case "rejected":
         return "Rejected by Senmi admin";
@@ -489,9 +550,16 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
       MaterialPageRoute(
         builder: (_) => AdminWithdrawalDetailsScreen(
           withdrawal: withdrawal,
-          onRefresh: fetchWithdrawals,
+
+          onRefresh: () => fetchWithdrawals(showLoader: false),
+
           onApprove: approve,
+
           onReject: reject,
+
+          onMarkPaid: markPaid,
+
+          onRetry: retry,
         ),
       ),
     );
@@ -503,10 +571,6 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
 
   PreferredSizeWidget _buildAppBar() {
     final colors = Theme.of(context).colorScheme;
-
-    // -------------------------------------------------------
-    // SEARCH APP BAR
-    // -------------------------------------------------------
 
     if (searching) {
       return AppBar(
@@ -524,17 +588,12 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
 
         title: TextField(
           controller: searchController,
-
+          focusNode: searchFocusNode,
           autofocus: true,
-
           onChanged: _onSearchChanged,
-
           textInputAction: TextInputAction.search,
-
           style: TextStyle(color: colors.onSurface, fontSize: 16),
-
           cursorColor: colors.primary,
-
           decoration: InputDecoration(
             hintText: "Search withdrawals...",
             hintStyle: TextStyle(color: colors.onSurfaceVariant),
@@ -552,18 +611,15 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
                 setState(() {
                   searchQuery = "";
                 });
+
+                searchFocusNode.requestFocus();
               },
               icon: Icon(Icons.clear_rounded, color: colors.onSurface),
             ),
-
           const SizedBox(width: 6),
         ],
       );
     }
-
-    // -------------------------------------------------------
-    // NORMAL APP BAR
-    // -------------------------------------------------------
 
     return AppBar(
       elevation: 0,
@@ -604,6 +660,7 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
     final colors = theme.colorScheme;
 
     final isDark = theme.brightness == Brightness.dark;
@@ -623,16 +680,12 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
           ? Center(child: CircularProgressIndicator(color: colors.primary))
           : RefreshIndicator(
               onRefresh: _refresh,
-
               child: results.isEmpty
                   ? _emptyState(colors)
                   : ListView.builder(
                       physics: const AlwaysScrollableScrollPhysics(),
-
                       padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
-
                       itemCount: results.length,
-
                       itemBuilder: (_, index) {
                         return _withdrawalCard(results[index]);
                       },
@@ -648,7 +701,6 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
   Widget _emptyState(ColorScheme colors) {
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
-
       children: [
         const SizedBox(height: 150),
 
@@ -693,6 +745,7 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
 
   Widget _withdrawalCard(Map<String, dynamic> w) {
     final theme = Theme.of(context);
+
     final colors = theme.colorScheme;
 
     final isDark = theme.brightness == Brightness.dark;
@@ -715,37 +768,27 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
 
     return Card(
       margin: const EdgeInsets.only(bottom: 14),
-
       elevation: 0,
-
       color: colors.surface,
-
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
-
         onTap: () {
           openDetails(w);
         },
-
         child: Padding(
           padding: const EdgeInsets.all(17),
-
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-
             children: [
-              // -------------------------------------------------
+              // =================================================
               // TOP ROW
-              // -------------------------------------------------
+              // =================================================
               Row(
                 children: [
                   CircleAvatar(
                     radius: 23,
-
                     backgroundColor: statusClr.withOpacity(.10),
-
                     child: Icon(Icons.payments_outlined, color: statusClr),
                   ),
 
@@ -757,11 +800,8 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
                       children: [
                         Text(
                           rider,
-
                           maxLines: 1,
-
                           overflow: TextOverflow.ellipsis,
-
                           style: TextStyle(
                             color: colors.onSurface,
                             fontWeight: FontWeight.w800,
@@ -773,7 +813,6 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
 
                         Text(
                           "Withdrawal #${w["id"] ?? "-"}",
-
                           style: TextStyle(
                             color: colors.onSurfaceVariant,
                             fontSize: 12,
@@ -789,12 +828,11 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
 
               const SizedBox(height: 18),
 
-              // -------------------------------------------------
+              // =================================================
               // AMOUNT
-              // -------------------------------------------------
+              // =================================================
               Text(
                 "₦$amount",
-
                 style: TextStyle(
                   color: colors.onSurface,
                   fontSize: 26,
@@ -806,7 +844,6 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
 
               Text(
                 statusDescription(status),
-
                 style: TextStyle(
                   color: statusClr,
                   fontWeight: FontWeight.w600,
@@ -814,31 +851,25 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
                 ),
               ),
 
-              // -------------------------------------------------
+              // =================================================
               // BANK INFO
-              // -------------------------------------------------
+              // =================================================
               if (accountName.isNotEmpty || bankAccount.isNotEmpty) ...[
                 const SizedBox(height: 14),
 
                 Container(
                   width: double.infinity,
-
                   padding: const EdgeInsets.all(12),
-
                   decoration: BoxDecoration(
                     color: secondaryBoxColor,
-
                     borderRadius: BorderRadius.circular(14),
                   ),
-
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-
                     children: [
                       if (accountName.isNotEmpty)
                         Text(
                           accountName,
-
                           style: TextStyle(
                             color: colors.onSurface,
                             fontWeight: FontWeight.w700,
@@ -847,10 +878,8 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
 
                       if (bankAccount.isNotEmpty) ...[
                         const SizedBox(height: 3),
-
                         Text(
                           "•••• ${bankAccount.length > 4 ? bankAccount.substring(bankAccount.length - 4) : bankAccount}",
-
                           style: TextStyle(color: colors.onSurfaceVariant),
                         ),
                       ],
@@ -861,14 +890,13 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
 
               const SizedBox(height: 14),
 
-              // -------------------------------------------------
+              // =================================================
               // DETAILS
-              // -------------------------------------------------
+              // =================================================
               Row(
                 children: [
                   Text(
                     "View withdrawal details",
-
                     style: TextStyle(
                       color: colors.primary,
                       fontWeight: FontWeight.w700,
@@ -885,9 +913,9 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
                 ],
               ),
 
-              // -------------------------------------------------
+              // =================================================
               // APPROVE / REJECT
-              // -------------------------------------------------
+              // =================================================
               if (status.toLowerCase() == "pending") ...[
                 const SizedBox(height: 15),
 
@@ -898,13 +926,11 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
                         onPressed: () {
                           confirmApprove(w);
                         },
-
                         style: FilledButton.styleFrom(
                           backgroundColor: Colors.green.shade700,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 13),
                         ),
-
                         child: const Text("Approve"),
                       ),
                     ),
@@ -916,13 +942,11 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
                         onPressed: () {
                           confirmReject(w);
                         },
-
                         style: OutlinedButton.styleFrom(
                           foregroundColor: Colors.red.shade700,
                           side: BorderSide(color: Colors.red.shade300),
                           padding: const EdgeInsets.symmetric(vertical: 13),
                         ),
-
                         child: const Text("Reject"),
                       ),
                     ),

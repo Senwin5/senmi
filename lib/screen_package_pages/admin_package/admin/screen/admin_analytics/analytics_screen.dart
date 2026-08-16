@@ -1579,25 +1579,77 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   // DAILY OPERATIONS
   // ============================================================
 
+  // ============================================================
+  // DAILY OPERATIONS
+  // ============================================================
+
+  DateTime? _parseApiDate(dynamic value) {
+    if (value == null) return null;
+
+    final raw = value.toString().trim();
+
+    if (raw.isEmpty) return null;
+
+    DateTime? parsed = DateTime.tryParse(raw);
+
+    if (parsed == null) return null;
+
+    // Convert API UTC timestamps to the device's local timezone.
+    return parsed.toLocal();
+  }
+
+  String _dateKey(DateTime date) {
+    return '${date.year}-'
+        '${date.month.toString().padLeft(2, '0')}-'
+        '${date.day.toString().padLeft(2, '0')}';
+  }
+
   List<Map<String, dynamic>> dailyOperations() {
     final Map<String, Map<String, dynamic>> grouped = {};
 
     for (final package in packages) {
-      final rawDate =
-          package['delivered_at'] ?? package['created_at'] ?? package['date'];
+      // --------------------------------------------------------
+      // PACKAGE CREATION DATE
+      // --------------------------------------------------------
 
-      final parsed = DateTime.tryParse(rawDate?.toString() ?? '');
-
-      if (parsed == null) continue;
-
-      final date = DateTime(
-        parsed.toLocal().year,
-        parsed.toLocal().month,
-        parsed.toLocal().day,
+      final createdDate = _parseApiDate(
+        package['created_at'] ?? package['createdAt'] ?? package['date'],
       );
 
-      final key =
-          '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+      // --------------------------------------------------------
+      // DELIVERY DATE
+      // --------------------------------------------------------
+
+      final deliveredDate = _parseApiDate(
+        package['delivered_at'] ?? package['deliveredAt'],
+      );
+
+      final status = (package['status'] ?? 'unknown').toString().toLowerCase();
+
+      // --------------------------------------------------------
+      // Which date should represent this package in the daily
+      // operations list?
+      //
+      // Delivered packages:
+      //     use delivered_at when available.
+      //
+      // Other packages:
+      //     use created_at.
+      // --------------------------------------------------------
+
+      DateTime? operationDate;
+
+      if (status == 'delivered' && deliveredDate != null) {
+        operationDate = deliveredDate;
+      } else {
+        operationDate = createdDate;
+      }
+
+      if (operationDate == null) {
+        continue;
+      }
+
+      final key = _dateKey(operationDate);
 
       grouped.putIfAbsent(
         key,
@@ -1616,9 +1668,15 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
       final day = grouped[key]!;
 
+      // --------------------------------------------------------
+      // TOTAL PACKAGES
+      // --------------------------------------------------------
+
       day['packages'] = (day['packages'] as int) + 1;
 
-      final status = (package['status'] ?? 'unknown').toString().toLowerCase();
+      // --------------------------------------------------------
+      // STATUS
+      // --------------------------------------------------------
 
       if (status == 'delivered') {
         day['delivered'] = (day['delivered'] as int) + 1;
@@ -1635,6 +1693,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       if (status == 'cancelled') {
         day['cancelled'] = (day['cancelled'] as int) + 1;
       }
+
+      // --------------------------------------------------------
+      // MONEY
+      // --------------------------------------------------------
 
       day['revenue'] = (day['revenue'] as double) + d(package['price']);
 
@@ -1653,22 +1715,18 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     return result;
   }
 
+  // ============================================================
+  // TODAY OPERATIONS
+  // ============================================================
+
   Map<String, dynamic> get todayOperations {
-    final today = DateTime.now();
+    final now = DateTime.now();
 
-    final key =
-        '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+    final todayKey = _dateKey(now);
 
-    final operations = dailyOperations();
-
-    for (final day in operations) {
-      if (day['date'].toString() == key) {
-        return day;
-      }
-    }
-
-    return {
-      'date': key,
+    // Default values for today.
+    final today = {
+      'date': todayKey,
       'packages': 0,
       'delivered': 0,
       'active': 0,
@@ -1678,12 +1736,32 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       'commission': 0.0,
       'rider_earnings': 0.0,
     };
+
+    // ----------------------------------------------------------
+    // Find today's grouped operations.
+    // ----------------------------------------------------------
+
+    final operations = dailyOperations();
+
+    for (final day in operations) {
+      if (day['date'].toString() == todayKey) {
+        return day;
+      }
+    }
+
+    return today;
   }
+
+  // ============================================================
+  // FORMAT DATE
+  // ============================================================
 
   String _formatDay(String date) {
     final parsed = DateTime.tryParse(date);
 
-    if (parsed == null) return date;
+    if (parsed == null) {
+      return date;
+    }
 
     const months = [
       'Jan',
@@ -1700,7 +1778,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       'Dec',
     ];
 
-    return '${months[parsed.month - 1]} ${parsed.day}, ${parsed.year}';
+    return '${months[parsed.month - 1]} '
+        '${parsed.day}, '
+        '${parsed.year}';
   }
 
   Widget _dailyOperationsCard() {

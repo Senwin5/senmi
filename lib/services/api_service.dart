@@ -1129,6 +1129,44 @@ class ApiService {
     return Map<String, dynamic>.from(decoded);
   }
 
+  static Future<Map<String, dynamic>> markWithdrawalPaid(int id) async {
+    final res = await http.post(
+      Uri.parse("$baseUrl/admin/withdrawals/$id/paid/"),
+      headers: await getAuthHeaders(),
+    );
+
+    debugPrint(
+      "MARK PAID withdrawal $id: "
+      "${res.statusCode} ${res.body}",
+    );
+
+    dynamic decoded;
+
+    try {
+      decoded = jsonDecode(res.body);
+    } catch (_) {
+      throw Exception("Invalid server response: ${res.statusCode}");
+    }
+
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      if (decoded is Map<String, dynamic>) {
+        throw Exception(
+          decoded['error'] ??
+              decoded['message'] ??
+              "Failed to mark withdrawal as paid.",
+        );
+      }
+
+      throw Exception("Failed to mark withdrawal as paid.");
+    }
+
+    if (decoded is Map<String, dynamic>) {
+      return decoded;
+    }
+
+    return {"success": true, "message": "Withdrawal marked as paid."};
+  }
+
   static Future<Map<String, dynamic>> retryWithdrawal(int id) async {
     final res = await http.post(
       Uri.parse("$baseUrl/admin/withdrawals/$id/retry/"),

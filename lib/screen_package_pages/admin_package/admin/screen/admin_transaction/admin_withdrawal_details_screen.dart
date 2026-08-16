@@ -12,6 +12,8 @@ class AdminWithdrawalDetailsScreen extends StatefulWidget {
 
   final Future<void> Function(int id, String reason)? onReject;
 
+  final Future<void> Function(int id)? onMarkPaid;
+
   final Future<void> Function(int id)? onRetry;
 
   const AdminWithdrawalDetailsScreen({
@@ -20,6 +22,7 @@ class AdminWithdrawalDetailsScreen extends StatefulWidget {
     this.onRefresh,
     this.onApprove,
     this.onReject,
+    this.onMarkPaid,
     this.onRetry,
   });
 
@@ -53,7 +56,8 @@ class _AdminWithdrawalDetailsScreenState
 
   Color get primaryTextColor => isDark ? Colors.white : Colors.black;
 
-  Color get secondaryTextColor => isDark ? Colors.grey.shade400 : Colors.grey;
+  Color get secondaryTextColor =>
+      isDark ? Colors.grey.shade400 : Colors.grey.shade600;
 
   Color get dividerColor =>
       isDark ? Colors.grey.shade800 : Colors.grey.shade200;
@@ -70,39 +74,46 @@ class _AdminWithdrawalDetailsScreenState
 
   int get withdrawalId => int.tryParse(w["id"]?.toString() ?? "") ?? 0;
 
-  double get amount => double.tryParse(w["amount"]?.toString() ?? "") ?? 0;
+  double get amount =>
+      double.tryParse(w["amount"]?.toString().replaceAll(",", "") ?? "") ?? 0;
 
   double get walletBalance =>
-      double.tryParse(w["wallet_balance"]?.toString() ?? "") ?? 0;
+      double.tryParse(
+        w["wallet_balance"]?.toString().replaceAll(",", "") ?? "",
+      ) ??
+      0;
 
   double get walletTotalEarned =>
-      double.tryParse(w["wallet_total_earned"]?.toString() ?? "") ?? 0;
+      double.tryParse(
+        w["wallet_total_earned"]?.toString().replaceAll(",", "") ?? "",
+      ) ??
+      0;
 
   Color statusColor() {
     switch (status) {
       case "pending":
-        return Colors.orange;
+        return Colors.orange.shade700;
 
       case "approved":
-        return Colors.blue;
+        return Colors.blue.shade700;
 
       case "processing":
-        return Colors.indigo;
+        return Colors.indigo.shade700;
 
       case "success":
-        return Colors.green;
+        return Colors.green.shade700;
 
       case "failed":
-        return Colors.red;
+        return Colors.red.shade700;
 
       case "rejected":
-        return Colors.red;
+        return Colors.red.shade700;
 
       case "reversed":
-        return Colors.deepOrange;
+        return Colors.deepOrange.shade700;
 
       default:
-        return Colors.grey;
+        return Colors.grey.shade600;
     }
   }
 
@@ -115,7 +126,7 @@ class _AdminWithdrawalDetailsScreenState
         return "Approved";
 
       case "processing":
-        return "Processing";
+        return "Processing payment";
 
       case "success":
         return "Completed";
@@ -127,7 +138,7 @@ class _AdminWithdrawalDetailsScreenState
         return "Rejected";
 
       case "reversed":
-        return "Transfer reversed";
+        return "Payment reversed";
 
       default:
         return "Unknown status";
@@ -140,25 +151,53 @@ class _AdminWithdrawalDetailsScreenState
         return "This withdrawal is waiting for an admin decision.";
 
       case "approved":
-        return "This withdrawal has been approved and is awaiting payment.";
+        return "This withdrawal has been approved and is ready for payment.";
 
       case "processing":
-        return "This withdrawal is currently being processed.";
+        return "The withdrawal transfer is currently being processed.";
 
       case "success":
         return "This withdrawal has been completed successfully.";
 
       case "failed":
-        return "This withdrawal could not be completed.";
+        return "The withdrawal transfer failed. You can retry it.";
 
       case "rejected":
-        return "This withdrawal was rejected by Senmi.";
+        return "This withdrawal was rejected and the wallet refund was handled by the server.";
 
       case "reversed":
-        return "This withdrawal was reversed.";
+        return "The transfer was reversed. Check the server-side transaction result.";
 
       default:
         return "No additional information is available.";
+    }
+  }
+
+  IconData statusIcon() {
+    switch (status) {
+      case "pending":
+        return Icons.hourglass_empty;
+
+      case "approved":
+        return Icons.check_circle_outline;
+
+      case "processing":
+        return Icons.sync;
+
+      case "success":
+        return Icons.check_circle;
+
+      case "failed":
+        return Icons.error;
+
+      case "rejected":
+        return Icons.cancel;
+
+      case "reversed":
+        return Icons.undo;
+
+      default:
+        return Icons.account_balance_wallet;
     }
   }
 
@@ -186,6 +225,8 @@ class _AdminWithdrawalDetailsScreenState
   // =========================================================
 
   Future<void> approve() async {
+    if (status != "pending") return;
+
     if (widget.onApprove == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -209,9 +250,11 @@ class _AdminWithdrawalDetailsScreenState
           ),
           content: Text(
             "Approve ₦${amount.toStringAsFixed(2)} withdrawal?\n\n"
-            "This will approve the withdrawal for payment processing.",
+            "The withdrawal will be approved and the backend "
+            "will handle the next payment-processing stage.",
             style: TextStyle(
               color: dark ? Colors.grey.shade300 : Colors.black87,
+              height: 1.4,
             ),
           ),
           actions: [
@@ -238,38 +281,81 @@ class _AdminWithdrawalDetailsScreenState
 
     if (confirmed != true) return;
 
-    setState(() {
-      actionLoading = true;
-    });
+    await _runAction(
+      action: () => widget.onApprove!(withdrawalId),
+      successMessage: "Withdrawal approved successfully.",
+      failurePrefix: "Approval failed",
+    );
+  }
 
-    try {
-      await widget.onApprove!(withdrawalId);
+  // =========================================================
+  // MARK AS PAID
+  // =========================================================
 
-      if (!mounted) return;
+  Future<void> markPaid() async {
+    if (status != "approved") return;
 
-      if (widget.onRefresh != null) {
-        await widget.onRefresh!();
-      }
-
-      if (!mounted) return;
-
-      Navigator.pop(context);
-    } catch (e) {
-      if (!mounted) return;
-
+    if (widget.onMarkPaid == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Approval failed: $e"),
+        const SnackBar(
+          content: Text("Mark as Paid action is not configured."),
           backgroundColor: Colors.red,
         ),
       );
-    } finally {
-      if (mounted) {
-        setState(() {
-          actionLoading = false;
-        });
-      }
+      return;
     }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        final dark = Theme.of(dialogContext).brightness == Brightness.dark;
+
+        return AlertDialog(
+          backgroundColor: dark ? const Color(0xff1A1C20) : Colors.white,
+          title: Text(
+            "Mark Withdrawal as Paid?",
+            style: TextStyle(color: dark ? Colors.white : Colors.black),
+          ),
+          content: Text(
+            "Only continue if the rider has actually received "
+            "₦${amount.toStringAsFixed(2)}.\n\n"
+            "Account: ${w["bank_account"] ?? "-"}\n"
+            "Bank: ${w["bank_name"] ?? "-"}\n"
+            "Account Name: ${w["account_name"] ?? "-"}",
+            style: TextStyle(
+              color: dark ? Colors.grey.shade300 : Colors.black87,
+              height: 1.45,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext, false);
+              },
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(dialogContext, true);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text("Yes, Mark as Paid"),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) return;
+
+    await _runAction(
+      action: () => widget.onMarkPaid!(withdrawalId),
+      successMessage: "Withdrawal marked as paid.",
+      failurePrefix: "Failed to mark withdrawal as paid",
+    );
   }
 
   // =========================================================
@@ -277,6 +363,8 @@ class _AdminWithdrawalDetailsScreenState
   // =========================================================
 
   Future<void> reject() async {
+    if (status != "pending") return;
+
     if (widget.onReject == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -305,7 +393,7 @@ class _AdminWithdrawalDetailsScreenState
             maxLines: 3,
             style: TextStyle(color: dark ? Colors.white : Colors.black),
             decoration: InputDecoration(
-              hintText: "Reason",
+              hintText: "Reason for rejection",
               hintStyle: TextStyle(
                 color: dark ? Colors.grey.shade500 : Colors.grey.shade600,
               ),
@@ -345,38 +433,11 @@ class _AdminWithdrawalDetailsScreenState
 
     if (reason == null) return;
 
-    setState(() {
-      actionLoading = true;
-    });
-
-    try {
-      await widget.onReject!(withdrawalId, reason);
-
-      if (!mounted) return;
-
-      if (widget.onRefresh != null) {
-        await widget.onRefresh!();
-      }
-
-      if (!mounted) return;
-
-      Navigator.pop(context);
-    } catch (e) {
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Rejection failed: $e"),
-          backgroundColor: Colors.red,
-        ),
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          actionLoading = false;
-        });
-      }
-    }
+    await _runAction(
+      action: () => widget.onReject!(withdrawalId, reason),
+      successMessage: "Withdrawal rejected successfully.",
+      failurePrefix: "Rejection failed",
+    );
   }
 
   // =========================================================
@@ -384,7 +445,9 @@ class _AdminWithdrawalDetailsScreenState
   // =========================================================
 
   Future<void> retry() async {
-    if (status != "failed") return;
+    if (status != "failed" && status != "reversed") {
+      return;
+    }
 
     if (widget.onRetry == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -409,9 +472,11 @@ class _AdminWithdrawalDetailsScreenState
           ),
           content: Text(
             "Retry ₦${amount.toStringAsFixed(2)} withdrawal?\n\n"
-            "The withdrawal will be sent for processing again.",
+            "The backend will submit the withdrawal for "
+            "processing again.",
             style: TextStyle(
               color: dark ? Colors.grey.shade300 : Colors.black87,
+              height: 1.4,
             ),
           ),
           actions: [
@@ -438,20 +503,35 @@ class _AdminWithdrawalDetailsScreenState
 
     if (confirmed != true) return;
 
+    await _runAction(
+      action: () => widget.onRetry!(withdrawalId),
+      successMessage: "Withdrawal retry submitted successfully.",
+      failurePrefix: "Retry failed",
+    );
+  }
+
+  // =========================================================
+  // GENERIC ACTION HANDLER
+  // =========================================================
+
+  Future<void> _runAction({
+    required Future<void> Function() action,
+    required String successMessage,
+    required String failurePrefix,
+  }) async {
+    if (actionLoading) return;
+
     setState(() {
       actionLoading = true;
     });
 
     try {
-      await widget.onRetry!(withdrawalId);
+      await action();
 
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Withdrawal retry request submitted successfully."),
-          backgroundColor: Colors.green,
-        ),
+        SnackBar(content: Text(successMessage), backgroundColor: Colors.green),
       );
 
       if (widget.onRefresh != null) {
@@ -466,7 +546,7 @@ class _AdminWithdrawalDetailsScreenState
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Retry failed: $e"),
+          content: Text("$failurePrefix: $e"),
           backgroundColor: Colors.red,
         ),
       );
@@ -622,6 +702,134 @@ class _AdminWithdrawalDetailsScreenState
   }
 
   // =========================================================
+  // TIMELINE CONTENT
+  // =========================================================
+
+  List<Widget> buildTimeline() {
+    final items = <Widget>[];
+
+    items.add(
+      timelineItem(
+        "Withdrawal created",
+        "Rider requested ₦${amount.toStringAsFixed(2)}.",
+        Icons.add_circle,
+        Colors.blue,
+        last: false,
+      ),
+    );
+
+    if (status == "pending") {
+      items.add(
+        timelineItem(
+          "Awaiting admin",
+          "Admin must approve or reject this withdrawal.",
+          Icons.hourglass_empty,
+          Colors.orange,
+          last: true,
+        ),
+      );
+
+      return items;
+    }
+
+    if (status == "rejected") {
+      items.add(
+        timelineItem(
+          "Withdrawal rejected",
+          "The withdrawal was rejected and the wallet refund was handled by the server.",
+          Icons.cancel,
+          Colors.red,
+          last: true,
+        ),
+      );
+
+      return items;
+    }
+
+    items.add(
+      timelineItem(
+        "Admin approved",
+        "The withdrawal was approved for payment processing.",
+        Icons.check,
+        Colors.green,
+        last: false,
+      ),
+    );
+
+    if (status == "approved") {
+      items.add(
+        timelineItem(
+          "Awaiting payment",
+          "The withdrawal is approved and awaiting payment processing.",
+          Icons.account_balance,
+          Colors.blue,
+          last: true,
+        ),
+      );
+
+      return items;
+    }
+
+    if (status == "processing") {
+      items.add(
+        timelineItem(
+          "Payment processing",
+          "The transfer is currently being processed.",
+          Icons.sync,
+          Colors.indigo,
+          last: true,
+        ),
+      );
+
+      return items;
+    }
+
+    if (status == "success") {
+      items.add(
+        timelineItem(
+          "Payment completed",
+          "The withdrawal was paid successfully.",
+          Icons.check_circle,
+          Colors.green,
+          last: true,
+        ),
+      );
+
+      return items;
+    }
+
+    if (status == "failed") {
+      items.add(
+        timelineItem(
+          "Payment failed",
+          "The withdrawal transfer failed. You can retry the withdrawal.",
+          Icons.error,
+          Colors.red,
+          last: true,
+        ),
+      );
+
+      return items;
+    }
+
+    if (status == "reversed") {
+      items.add(
+        timelineItem(
+          "Payment reversed",
+          "The transfer was reversed by the payment provider.",
+          Icons.undo,
+          Colors.deepOrange,
+          last: true,
+        ),
+      );
+
+      return items;
+    }
+
+    return items;
+  }
+
+  // =========================================================
   // BUILD
   // =========================================================
 
@@ -635,9 +843,9 @@ class _AdminWithdrawalDetailsScreenState
 
     final bankAccount = w["bank_account"]?.toString() ?? "";
 
-    final bankCode = w["bank_code"]?.toString() ?? "";
+    final bankName = w["bank_name"]?.toString() ?? "";
 
-    final recipientCode = w["recipient_code"]?.toString() ?? "";
+    final bankCode = w["bank_code"]?.toString() ?? "";
 
     final reference = w["reference"]?.toString() ?? "";
 
@@ -646,6 +854,8 @@ class _AdminWithdrawalDetailsScreenState
     final reason = w["reason"]?.toString() ?? "";
 
     final createdAt = w["created_at"]?.toString() ?? "";
+
+    final paidAt = w["paid_at"]?.toString() ?? "";
 
     final color = statusColor();
 
@@ -658,6 +868,7 @@ class _AdminWithdrawalDetailsScreenState
       appBar: AppBar(
         backgroundColor: appBarColor,
         elevation: 0,
+        scrolledUnderElevation: 0,
         iconTheme: IconThemeData(color: primaryTextColor),
         title: Text(
           "Withdrawal Details",
@@ -707,23 +918,7 @@ class _AdminWithdrawalDetailsScreenState
                       color: color.withOpacity(.10),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(
-                      status == "success"
-                          ? Icons.check_circle
-                          : status == "failed"
-                          ? Icons.error
-                          : status == "processing"
-                          ? Icons.sync
-                          : status == "rejected"
-                          ? Icons.cancel
-                          : status == "approved"
-                          ? Icons.check_circle_outline
-                          : status == "reversed"
-                          ? Icons.undo
-                          : Icons.account_balance_wallet,
-                      color: color,
-                      size: 36,
-                    ),
+                    child: Icon(statusIcon(), color: color, size: 36),
                   ),
 
                   const SizedBox(height: 14),
@@ -800,16 +995,17 @@ class _AdminWithdrawalDetailsScreenState
             section("Bank Information", Icons.account_balance, [
               infoRow("Account Name", accountName),
               infoRow("Account Number", bankAccount, copyable: true),
+              infoRow("Bank Name", bankName),
               infoRow("Bank Code", bankCode, copyable: true),
             ]),
 
             // =================================================
-            // PAYSTACK
+            // PAYMENT INFORMATION
             // =================================================
-            section("Paystack Information", Icons.payments, [
-              infoRow("Recipient Code", recipientCode, copyable: true),
+            section("Payment Information", Icons.payments, [
               infoRow("Reference", reference, copyable: true),
-              infoRow("Transfer Code", transferCode, copyable: true),
+              if (transferCode.isNotEmpty)
+                infoRow("Transfer Code", transferCode, copyable: true),
             ]),
 
             // =================================================
@@ -819,6 +1015,7 @@ class _AdminWithdrawalDetailsScreenState
               infoRow("Amount", "₦${amount.toStringAsFixed(2)}"),
               infoRow("Created", createdAt),
               infoRow("Status", status.toUpperCase()),
+              if (paidAt.isNotEmpty) infoRow("Paid At", paidAt),
             ]),
 
             // =================================================
@@ -828,14 +1025,8 @@ class _AdminWithdrawalDetailsScreenState
               section(
                 status == "rejected"
                     ? "Rejection Information"
-                    : status == "reversed"
-                    ? "Reversal Information"
                     : "Failure Information",
-                status == "rejected"
-                    ? Icons.cancel
-                    : status == "reversed"
-                    ? Icons.undo
-                    : Icons.warning,
+                status == "rejected" ? Icons.cancel : Icons.warning,
                 [
                   Text(
                     reason,
@@ -851,92 +1042,7 @@ class _AdminWithdrawalDetailsScreenState
             // =================================================
             // TIMELINE
             // =================================================
-            section("Withdrawal Timeline", Icons.timeline, [
-              timelineItem(
-                "Withdrawal created",
-                "Rider requested ₦${amount.toStringAsFixed(2)}.",
-                Icons.add_circle,
-                Colors.blue,
-                last: status == "pending",
-              ),
-
-              // ADMIN DECISION
-              if (status != "pending")
-                timelineItem(
-                  "Admin decision",
-                  status == "rejected"
-                      ? "Withdrawal was rejected by Senmi."
-                      : "Withdrawal was approved for processing.",
-                  status == "rejected" ? Icons.close : Icons.check,
-                  status == "rejected" ? Colors.red : Colors.green,
-                  last: status == "rejected",
-                ),
-
-              // PROCESSING
-              if ([
-                "processing",
-                "success",
-                "failed",
-                "reversed",
-              ].contains(status))
-                timelineItem(
-                  "Withdrawal processing",
-                  "The approved withdrawal is being processed.",
-                  Icons.sync,
-                  Colors.indigo,
-                  last: status == "processing",
-                ),
-
-              // SUCCESS
-              if (status == "success")
-                timelineItem(
-                  "Transfer completed",
-                  "The transfer was completed successfully.",
-                  Icons.check_circle,
-                  Colors.green,
-                  last: true,
-                ),
-
-              // FAILED
-              if (status == "failed")
-                timelineItem(
-                  "Transfer failed",
-                  "The transfer could not be completed.",
-                  Icons.error,
-                  Colors.red,
-                  last: true,
-                ),
-
-              // REVERSED
-              if (status == "reversed")
-                timelineItem(
-                  "Transfer reversed",
-                  "The transfer was reversed.",
-                  Icons.undo,
-                  Colors.deepOrange,
-                  last: true,
-                ),
-
-              // PROCESSING WAIT
-              if (status == "processing")
-                timelineItem(
-                  "Waiting for final result",
-                  "The final transfer result is still pending.",
-                  Icons.hourglass_top,
-                  Colors.orange,
-                  last: true,
-                ),
-
-              // PENDING
-              if (status == "pending")
-                timelineItem(
-                  "Awaiting admin",
-                  "Admin must approve or reject this withdrawal.",
-                  Icons.hourglass_empty,
-                  Colors.orange,
-                  last: true,
-                ),
-            ]),
+            section("Withdrawal Timeline", Icons.timeline, buildTimeline()),
 
             const SizedBox(height: 30),
           ],
@@ -993,10 +1099,67 @@ class _AdminWithdrawalDetailsScreenState
     }
 
     // =======================================================
-    // FAILED
+    // APPROVED
     // =======================================================
 
-    if (status == "failed") {
+    if (status == "approved") {
+      return SafeArea(
+        child: Container(
+          color: bottomBarColor,
+          padding: const EdgeInsets.all(14),
+          child: SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: widget.onMarkPaid == null ? null : markPaid,
+              icon: const Icon(Icons.check_circle),
+              label: const Text("Mark as Paid"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 15),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // =======================================================
+    // PROCESSING
+    // =======================================================
+
+    if (status == "processing") {
+      return SafeArea(
+        child: Container(
+          color: bottomBarColor,
+          padding: const EdgeInsets.all(14),
+          child: const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              SizedBox(width: 10),
+              Text(
+                "Payment processing...",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // =======================================================
+    // FAILED / REVERSED
+    // =======================================================
+
+    if (status == "failed" || status == "reversed") {
       return SafeArea(
         child: Container(
           color: bottomBarColor,
@@ -1019,35 +1182,6 @@ class _AdminWithdrawalDetailsScreenState
     }
 
     // =======================================================
-    // PROCESSING
-    // =======================================================
-
-    if (status == "processing") {
-      return SafeArea(
-        child: Container(
-          color: bottomBarColor,
-          padding: const EdgeInsets.all(14),
-          child: Row(
-            children: [
-              const Icon(Icons.sync, color: Colors.indigo),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  "This withdrawal is being processed. "
-                  "No manual action is required.",
-                  style: TextStyle(
-                    color: isDark ? Colors.indigo.shade200 : Colors.indigo,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    // =======================================================
     // SUCCESS
     // =======================================================
 
@@ -1062,7 +1196,7 @@ class _AdminWithdrawalDetailsScreenState
               Icon(Icons.check_circle, color: Colors.green),
               SizedBox(width: 8),
               Text(
-                "Transfer completed",
+                "Payment completed",
                 style: TextStyle(
                   color: Colors.green,
                   fontWeight: FontWeight.bold,
@@ -1075,10 +1209,10 @@ class _AdminWithdrawalDetailsScreenState
     }
 
     // =======================================================
-    // REVERSED
+    // REJECTED
     // =======================================================
 
-    if (status == "reversed") {
+    if (status == "rejected") {
       return SafeArea(
         child: Container(
           color: bottomBarColor,
@@ -1086,12 +1220,12 @@ class _AdminWithdrawalDetailsScreenState
           child: const Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.undo, color: Colors.deepOrange),
+              Icon(Icons.cancel, color: Colors.red),
               SizedBox(width: 8),
               Text(
-                "Transfer reversed",
+                "Withdrawal rejected",
                 style: TextStyle(
-                  color: Colors.deepOrange,
+                  color: Colors.red,
                   fontWeight: FontWeight.bold,
                 ),
               ),
