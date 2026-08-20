@@ -4,8 +4,6 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
-import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 
 object CustomNotification {
@@ -15,31 +13,6 @@ object CustomNotification {
         title: String,
         body: String
     ) {
-
-        val remoteViews = RemoteViews(
-            context.packageName,
-            R.layout.custom_notification
-        )
-
-        remoteViews.setTextViewText(
-            R.id.title,
-            title
-        )
-
-        remoteViews.setTextViewText(
-            R.id.body,
-            body
-        )
-
-        remoteViews.setTextColor(
-            R.id.title,
-            Color.WHITE
-        )
-
-        remoteViews.setTextColor(
-            R.id.body,
-            Color.WHITE
-        )
 
         // =========================
         // 📲 OPEN SENMI WHEN TAPPED
@@ -63,30 +36,33 @@ object CustomNotification {
                 PendingIntent.FLAG_IMMUTABLE
         )
 
+        // =========================
+        // 🔔 NORMAL SMALL NOTIFICATION
+        // =========================
+
         val notification =
             NotificationCompat.Builder(
                 context,
                 "senmi_channel"
             )
                 .setSmallIcon(R.drawable.notification_icon)
-
-                .setCustomContentView(remoteViews)
-
-                .setCustomBigContentView(remoteViews)
-
-                .setStyle(
-                    NotificationCompat.DecoratedCustomViewStyle()
+                .setContentTitle(title)
+                .setContentText(body)
+                .setLargeIcon(
+                    android.graphics.BitmapFactory.decodeResource(
+                        context.resources,
+                        R.drawable.notification_icon
+                    )
                 )
-
                 .setPriority(
                     NotificationCompat.PRIORITY_HIGH
                 )
-
-                // 🔥 THIS MAKES THE NOTIFICATION CLICKABLE
                 .setContentIntent(pendingIntent)
-
                 .setAutoCancel(true)
-
+                .setStyle(
+                    NotificationCompat.BigTextStyle()
+                        .bigText(body)
+                )
                 .build()
 
         val manager =
