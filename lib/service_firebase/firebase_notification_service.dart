@@ -1,9 +1,12 @@
+import 'dart:convert';
+
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:senmi/service_firebase/native_notification.dart';
 
 import 'package:senmi/services/api_service.dart';
+import 'package:senmi/main.dart';
 
 class FirebaseNotificationService {
   static final FirebaseMessaging _messaging = FirebaseMessaging.instance;
@@ -68,7 +71,29 @@ class FirebaseNotificationService {
       iOS: iosSettings,
     );
 
-    await _localNotifications.initialize(settings: initSettings);
+    await _localNotifications.initialize(
+      settings: initSettings,
+      onDidReceiveNotificationResponse: (NotificationResponse response) {
+        if (kDebugMode) {
+          print("NOTIFICATION CLICKED");
+          print("PAYLOAD: ${response.payload}");
+        }
+
+        if (response.payload != null && response.payload!.isNotEmpty) {
+          try {
+            final data = jsonDecode(response.payload!);
+
+            _handleNotificationTap(data);
+          } catch (e) {
+            if (kDebugMode) {
+              print("NOTIFICATION PAYLOAD ERROR: $e");
+            }
+          }
+        } else {
+          _openApp();
+        }
+      },
+    );
 
     // =========================
     // 🔔 CHANNEL
@@ -96,13 +121,44 @@ class FirebaseNotificationService {
       );
     });
 
-    FirebaseMessaging.onMessageOpenedApp.listen((message) {});
+    // =========================
+    // 📲 APP OPENED FROM FCM
+    // =========================
+    FirebaseMessaging.onMessageOpenedApp.listen((message) {
+      if (kDebugMode) {
+        print("FCM NOTIFICATION CLICKED");
+        print("DATA: ${message.data}");
+      }
+
+      _handleNotificationTap(message.data);
+    });
+
+    // =========================
+    // 📲 APP OPENED FROM TERMINATED STATE
+    // =========================
+    final RemoteMessage? initialMessage =
+        await _messaging.getInitialMessage();
+
+    if (initialMessage != null) {
+      if (kDebugMode) {
+        print("APP OPENED FROM TERMINATED NOTIFICATION");
+        print("DATA: ${initialMessage.data}");
+      }
+
+      Future.delayed(const Duration(milliseconds: 500), () {
+        _handleNotificationTap(initialMessage.data);
+      });
+    }
   }
 
   // =========================
-  // 🔔 SHOW NOTIFICATION (FIXED)
+  // 🔔 SHOW NOTIFICATION
   // =========================
-  static Future<void> showNotification(String title, String body) async {
+  static Future<void> showNotification(
+    String title,
+    String body, {
+    Map<String, dynamic>? data,
+  }) async {
     const AndroidNotificationDetails androidDetails =
         AndroidNotificationDetails(
           'senmi_channel',
@@ -121,7 +177,29 @@ class FirebaseNotificationService {
       id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
       title: title,
       body: body,
-      notificationDetails: details, // 🔥 IMPORTANT FIX
+      notificationDetails: details,
+      payload: jsonEncode(data ?? {}),
     );
+  }
+
+  // =========================
+  // 📲 OPEN APP
+  // =========================
+  static void _openApp() {
+    navigatorKey.currentState?.popUntil((route) => route.isFirst);
+  }
+
+  // =========================
+  // 📲 NOTIFICATION TAP
+  // =========================
+  static void _handleNotificationTap(Map<String, dynamic> data) {
+    if (kDebugMode) {
+      print("================================");
+      print("NOTIFICATION TAP HANDLER");
+      print("DATA: $data");
+      print("================================");
+    }
+
+    _openApp();
   }
 }
