@@ -407,12 +407,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               color: primary,
               backgroundColor: surface,
               onRefresh: load,
-
               child: ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
-
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 50),
-
                 children: [
                   _hero(),
 
@@ -429,7 +426,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   ),
 
                   const SizedBox(height: 11),
-
                   _financialCards(),
 
                   const SizedBox(height: 25),
@@ -443,11 +439,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   ),
 
                   const SizedBox(height: 11),
-
                   _rangeSelector(),
 
                   const SizedBox(height: 11),
-
                   _chartCard(),
 
                   const SizedBox(height: 25),
@@ -458,7 +452,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   ),
 
                   const SizedBox(height: 11),
-
                   _dailyOperationsCard(),
 
                   const SizedBox(height: 25),
@@ -469,7 +462,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   ),
 
                   const SizedBox(height: 11),
-
                   _statusCard(),
 
                   const SizedBox(height: 25),
@@ -483,7 +475,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   ),
 
                   const SizedBox(height: 11),
-
                   _healthCard(),
 
                   const SizedBox(height: 25),
@@ -497,7 +488,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   ),
 
                   const SizedBox(height: 11),
-
                   _metricGrid(),
 
                   const SizedBox(height: 25),
@@ -508,7 +498,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   ),
 
                   const SizedBox(height: 11),
-
                   _insightsCard(),
                 ],
               ),

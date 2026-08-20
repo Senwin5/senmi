@@ -34,7 +34,7 @@ class _RiderSettingsScreenState extends State<RiderSettingsScreen> {
   }
 
   void openWhatsApp() async {
-    final phone = "+2347016087680";
+    final phone = "+2349117341739";
     final url = "https://wa.me/$phone";
 
     if (await canLaunchUrl(Uri.parse(url))) {
