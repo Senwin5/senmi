@@ -1,5 +1,5 @@
 // ignore_for_file: deprecated_member_use
-
+import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -20,6 +20,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   bool loading = true;
   bool refreshing = false;
   String? error;
+  int selectedDailyIndex = 0;
 
   Map<String, dynamic> analytics = {};
 
@@ -1575,12 +1576,38 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
     if (raw.isEmpty) return null;
 
+    // Handle DateTime objects directly.
+    if (value is DateTime) {
+      return value.toLocal();
+    }
+
+    // Handle normal ISO timestamps:
+    // 2026-08-20T14:30:00Z
+    // 2026-08-20T14:30:00+01:00
+    // 2026-08-20 14:30:00
     DateTime? parsed = DateTime.tryParse(raw);
 
-    if (parsed == null) return null;
+    if (parsed != null) {
+      return parsed.toLocal();
+    }
 
-    // Convert API UTC timestamps to the device's local timezone.
-    return parsed.toLocal();
+    // Handle date-only values:
+    // 2026-08-20
+    final dateOnly = RegExp(r'^(\d{4})-(\d{2})-(\d{2})$').firstMatch(raw);
+
+    if (dateOnly != null) {
+      final year = int.tryParse(dateOnly.group(1)!);
+      final month = int.tryParse(dateOnly.group(2)!);
+      final day = int.tryParse(dateOnly.group(3)!);
+
+      if (year != null && month != null && day != null) {
+        return DateTime(year, month, day);
+      }
+    }
+
+    debugPrint('Could not parse package date: $raw');
+
+    return null;
   }
 
   String _dateKey(DateTime date) {
@@ -1593,34 +1620,40 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     final Map<String, Map<String, dynamic>> grouped = {};
 
     for (final package in packages) {
-      // --------------------------------------------------------
-      // PACKAGE CREATION DATE
-      // --------------------------------------------------------
+      final status = (package['status'] ?? 'unknown')
+          .toString()
+          .trim()
+          .toLowerCase();
+
+      // ----------------------------------------------------------
+      // Find creation date
+      // ----------------------------------------------------------
 
       final createdDate = _parseApiDate(
-        package['created_at'] ?? package['createdAt'] ?? package['date'],
+        package['created_at'] ??
+            package['createdAt'] ??
+            package['created'] ??
+            package['created_date'] ??
+            package['created_on'] ??
+            package['date'],
       );
 
-      // --------------------------------------------------------
-      // DELIVERY DATE
-      // --------------------------------------------------------
+      // ----------------------------------------------------------
+      // Find delivery date
+      // ----------------------------------------------------------
 
       final deliveredDate = _parseApiDate(
-        package['delivered_at'] ?? package['deliveredAt'],
+        package['delivered_at'] ??
+            package['deliveredAt'] ??
+            package['delivery_date'] ??
+            package['deliveryDate'] ??
+            package['completed_at'] ??
+            package['completedAt'],
       );
 
-      final status = (package['status'] ?? 'unknown').toString().toLowerCase();
-
-      // --------------------------------------------------------
-      // Which date should represent this package in the daily
-      // operations list?
-      //
-      // Delivered packages:
-      //     use delivered_at when available.
-      //
-      // Other packages:
-      //     use created_at.
-      // --------------------------------------------------------
+      // ----------------------------------------------------------
+      // Decide which date represents the operation
+      // ----------------------------------------------------------
 
       DateTime? operationDate;
 
@@ -1630,11 +1663,17 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         operationDate = createdDate;
       }
 
+      // No usable date
       if (operationDate == null) {
+        debugPrint('PACKAGE HAS NO USABLE DATE: ${jsonEncode(package)}');
         continue;
       }
 
       final key = _dateKey(operationDate);
+
+      // ----------------------------------------------------------
+      // Create day
+      // ----------------------------------------------------------
 
       grouped.putIfAbsent(
         key,
@@ -1653,44 +1692,68 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
       final day = grouped[key]!;
 
-      // --------------------------------------------------------
-      // TOTAL PACKAGES
-      // --------------------------------------------------------
+      // ----------------------------------------------------------
+      // Package count
+      // ----------------------------------------------------------
 
       day['packages'] = (day['packages'] as int) + 1;
 
-      // --------------------------------------------------------
-      // STATUS
-      // --------------------------------------------------------
+      // ----------------------------------------------------------
+      // Status
+      // ----------------------------------------------------------
 
-      if (status == 'delivered') {
-        day['delivered'] = (day['delivered'] as int) + 1;
+      switch (status) {
+        case 'delivered':
+          day['delivered'] = (day['delivered'] as int) + 1;
+          break;
+
+        case 'accepted':
+        case 'picked_up':
+        case 'picked-up':
+        case 'in_transit':
+        case 'in-transit':
+          day['active'] = (day['active'] as int) + 1;
+          break;
+
+        case 'pending':
+          day['pending'] = (day['pending'] as int) + 1;
+          break;
+
+        case 'cancelled':
+        case 'canceled':
+          day['cancelled'] = (day['cancelled'] as int) + 1;
+          break;
       }
 
-      if (status == 'accepted' || status == 'picked_up') {
-        day['active'] = (day['active'] as int) + 1;
-      }
+      // ----------------------------------------------------------
+      // Financial values
+      // ----------------------------------------------------------
 
-      if (status == 'pending') {
-        day['pending'] = (day['pending'] as int) + 1;
-      }
-
-      if (status == 'cancelled') {
-        day['cancelled'] = (day['cancelled'] as int) + 1;
-      }
-
-      // --------------------------------------------------------
-      // MONEY
-      // --------------------------------------------------------
-
-      day['revenue'] = (day['revenue'] as double) + d(package['price']);
+      day['revenue'] =
+          (day['revenue'] as double) +
+          d(
+            package['price'] ??
+                package['amount'] ??
+                package['delivery_fee'] ??
+                package['deliveryFee'],
+          );
 
       day['commission'] =
           (day['commission'] as double) +
-          d(package['commission'] ?? package['service_fee']);
+          d(
+            package['commission'] ??
+                package['service_fee'] ??
+                package['serviceFee'],
+          );
 
       day['rider_earnings'] =
-          (day['rider_earnings'] as double) + d(package['rider_earning']);
+          (day['rider_earnings'] as double) +
+          d(
+            package['rider_earning'] ??
+                package['rider_earnings'] ??
+                package['riderEarning'] ??
+                package['riderEarnings'],
+          );
     }
 
     final result = grouped.values.toList();
@@ -1709,7 +1772,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
     final todayKey = _dateKey(now);
 
-    // Default values for today.
     final today = {
       'date': todayKey,
       'packages': 0,
@@ -1721,10 +1783,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       'commission': 0.0,
       'rider_earnings': 0.0,
     };
-
-    // ----------------------------------------------------------
-    // Find today's grouped operations.
-    // ----------------------------------------------------------
 
     final operations = dailyOperations();
 
@@ -1770,10 +1828,25 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
   Widget _dailyOperationsCard() {
     final days = dailyOperations();
-    final today = todayOperations;
+
+    // Newest day first because dailyOperations() already sorts descending.
+    final int safeIndex = days.isEmpty
+        ? 0
+        : selectedDailyIndex.clamp(0, days.length - 1);
+
+    final Map<String, dynamic> selectedDay = days.isEmpty
+        ? todayOperations
+        : days[safeIndex];
+
+    final bool isLatestDay = safeIndex == 0;
+    final bool canGoOlder = days.isNotEmpty && safeIndex < days.length - 1;
+    final bool canGoNewer = days.isNotEmpty && safeIndex > 0;
 
     return Column(
       children: [
+        // ============================================================
+        // SELECTED DAY
+        // ============================================================
         Container(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
@@ -1788,6 +1861,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // --------------------------------------------------------
+              // HEADER
+              // --------------------------------------------------------
               Row(
                 children: [
                   Container(
@@ -1797,7 +1873,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       borderRadius: BorderRadius.circular(11),
                     ),
                     child: const Icon(
-                      Icons.today_rounded,
+                      Icons.calendar_today_rounded,
                       color: primary,
                       size: 19,
                     ),
@@ -1805,48 +1881,64 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
                   const SizedBox(width: 10),
 
-                  const Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Today',
-                          style: TextStyle(
+                          isLatestDay ? 'Today' : 'Daily Performance',
+                          style: const TextStyle(
                             color: textPrimary,
                             fontSize: 16,
                             fontWeight: FontWeight.w800,
                           ),
                         ),
-                        SizedBox(height: 2),
+
+                        const SizedBox(height: 2),
+
                         Text(
-                          "Today's delivery performance",
-                          style: TextStyle(color: textSecondary, fontSize: 11),
+                          _formatDay(selectedDay['date'].toString()),
+                          style: const TextStyle(
+                            color: textSecondary,
+                            fontSize: 11,
+                          ),
                         ),
                       ],
                     ),
                   ),
 
-                  Text(
-                    _formatDay(today['date'].toString()),
-                    style: const TextStyle(color: textMuted, fontSize: 10),
-                  ),
+                  // Day counter
+                  if (days.isNotEmpty)
+                    Text(
+                      '${safeIndex + 1} / ${days.length}',
+                      style: const TextStyle(
+                        color: textMuted,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                 ],
               ),
 
               const SizedBox(height: 18),
 
+              // --------------------------------------------------------
+              // PACKAGES / DELIVERED
+              // --------------------------------------------------------
               Row(
                 children: [
                   _todayStat(
                     'Packages',
-                    '${today['packages']}',
+                    '${selectedDay['packages']}',
                     primary,
                     Icons.inventory_2_rounded,
                   ),
+
                   const SizedBox(width: 10),
+
                   _todayStat(
                     'Delivered',
-                    '${today['delivered']}',
+                    '${selectedDay['delivered']}',
                     green,
                     Icons.check_circle_rounded,
                   ),
@@ -1855,18 +1947,23 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
               const SizedBox(height: 10),
 
+              // --------------------------------------------------------
+              // REVENUE / COMMISSION
+              // --------------------------------------------------------
               Row(
                 children: [
                   _todayStat(
                     'Handled',
-                    money(d(today['revenue'])),
+                    money(d(selectedDay['revenue'])),
                     blue,
                     Icons.payments_rounded,
                   ),
+
                   const SizedBox(width: 10),
+
                   _todayStat(
                     'Commission',
-                    money(d(today['commission'])),
+                    money(d(selectedDay['commission'])),
                     orange,
                     Icons.account_balance_rounded,
                   ),
@@ -1875,13 +1972,32 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
               const SizedBox(height: 15),
 
+              // --------------------------------------------------------
+              // ACTIVE / PENDING / CANCELLED
+              // --------------------------------------------------------
               Row(
                 children: [
-                  _smallTodayValue('Active', '${today['active']}', orange),
+                  _smallTodayValue(
+                    'Active',
+                    '${selectedDay['active']}',
+                    orange,
+                  ),
+
                   const SizedBox(width: 18),
-                  _smallTodayValue('Pending', '${today['pending']}', yellow),
+
+                  _smallTodayValue(
+                    'Pending',
+                    '${selectedDay['pending']}',
+                    yellow,
+                  ),
+
                   const SizedBox(width: 18),
-                  _smallTodayValue('Cancelled', '${today['cancelled']}', red),
+
+                  _smallTodayValue(
+                    'Cancelled',
+                    '${selectedDay['cancelled']}',
+                    red,
+                  ),
                 ],
               ),
             ],
@@ -1890,52 +2006,72 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
         const SizedBox(height: 12),
 
+        // ============================================================
+        // ONE-DAY NAVIGATION
+        // ============================================================
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
             color: surface,
-            borderRadius: BorderRadius.circular(21),
+            borderRadius: BorderRadius.circular(18),
             border: Border.all(color: border),
           ),
-          child: Column(
+          child: Row(
             children: [
-              Row(
-                children: [
-                  const Icon(
-                    Icons.calendar_month_rounded,
-                    color: cyan,
-                    size: 19,
-                  ),
-                  const SizedBox(width: 9),
-                  const Expanded(
-                    child: Text(
+              // Previous / older day
+              IconButton(
+                tooltip: 'Previous day',
+                onPressed: canGoOlder
+                    ? () {
+                        setState(() {
+                          selectedDailyIndex++;
+                        });
+                      }
+                    : null,
+                icon: const Icon(Icons.chevron_left_rounded),
+                color: textPrimary,
+                disabledColor: textMuted.withOpacity(.35),
+              ),
+
+              Expanded(
+                child: Column(
+                  children: [
+                    const Text(
                       'Daily performance',
                       style: TextStyle(
                         color: textPrimary,
                         fontWeight: FontWeight.w800,
-                        fontSize: 15,
+                        fontSize: 14,
                       ),
                     ),
-                  ),
-                  Text(
-                    '${days.length} days',
-                    style: const TextStyle(color: textMuted, fontSize: 10),
-                  ),
-                ],
+
+                    const SizedBox(height: 3),
+
+                    Text(
+                      _formatDay(selectedDay['date'].toString()),
+                      style: const TextStyle(
+                        color: textSecondary,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
+                ),
               ),
 
-              const SizedBox(height: 15),
-
-              if (days.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.all(20),
-                  child: Text(
-                    'No daily activity yet.',
-                    style: TextStyle(color: textSecondary, fontSize: 12),
-                  ),
-                )
-              else
-                ...days.take(30).map((day) => _dailyRow(day)),
+              // Next / newer day
+              IconButton(
+                tooltip: 'Next day',
+                onPressed: canGoNewer
+                    ? () {
+                        setState(() {
+                          selectedDailyIndex--;
+                        });
+                      }
+                    : null,
+                icon: const Icon(Icons.chevron_right_rounded),
+                color: textPrimary,
+                disabledColor: textMuted.withOpacity(.35),
+              ),
             ],
           ),
         ),
@@ -2018,145 +2154,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             color: color,
             fontSize: 11,
             fontWeight: FontWeight.w800,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _dailyRow(Map<String, dynamic> day) {
-    final delivered = i(day['delivered']);
-    final packagesCount = i(day['packages']);
-
-    final deliveryRate = packagesCount == 0
-        ? 0.0
-        : delivered / packagesCount * 100;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: surface3.withOpacity(.45),
-        borderRadius: BorderRadius.circular(13),
-        border: Border.all(color: border.withOpacity(.7)),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: primary.withOpacity(.08),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(
-                  Icons.calendar_today_rounded,
-                  color: primary,
-                  size: 16,
-                ),
-              ),
-
-              const SizedBox(width: 10),
-
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _formatDay(day['date'].toString()),
-                      style: const TextStyle(
-                        color: textPrimary,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12,
-                      ),
-                    ),
-
-                    const SizedBox(height: 3),
-
-                    Text(
-                      '$packagesCount packages',
-                      style: const TextStyle(
-                        color: textSecondary,
-                        fontSize: 10,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    '$delivered delivered',
-                    style: const TextStyle(
-                      color: green,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 11,
-                    ),
-                  ),
-
-                  const SizedBox(height: 3),
-
-                  Text(
-                    '${deliveryRate.toStringAsFixed(0)}%',
-                    style: const TextStyle(color: textMuted, fontSize: 9),
-                  ),
-                ],
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 10),
-
-          Row(
-            children: [
-              Expanded(
-                child: _dailyMini('Handled', money(d(day['revenue'])), blue),
-              ),
-
-              Expanded(
-                child: _dailyMini(
-                  'Commission',
-                  money(d(day['commission'])),
-                  primary,
-                ),
-              ),
-
-              Expanded(
-                child: _dailyMini(
-                  'Rider earnings',
-                  money(d(day['rider_earnings'])),
-                  cyan,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _dailyMini(String title, String value, Color color) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(title, style: const TextStyle(color: textMuted, fontSize: 8)),
-
-        const SizedBox(height: 3),
-
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          alignment: Alignment.centerLeft,
-          child: Text(
-            value,
-            style: TextStyle(
-              color: color,
-              fontSize: 10,
-              fontWeight: FontWeight.w800,
-            ),
           ),
         ),
       ],
