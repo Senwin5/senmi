@@ -1568,10 +1568,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   // DAILY OPERATIONS
   // ============================================================
 
-  // ============================================================
-  // DAILY OPERATIONS
-  // ============================================================
-
   DateTime? _parseApiDate(dynamic value) {
     if (value == null) return null;
 
