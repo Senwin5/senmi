@@ -194,7 +194,7 @@ class FirebaseNotificationService {
   // =========================
   static void _handleNotificationTap(Map<String, dynamic> data) {
     if (kDebugMode) {
-      print("================================");
+      print("==============================");
       print("NOTIFICATION TAP HANDLER");
       print("DATA: $data");
       print("================================");
