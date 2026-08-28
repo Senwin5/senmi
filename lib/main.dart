@@ -16,7 +16,11 @@ ValueNotifier<bool> isDarkMode = ValueNotifier(false);
 /// BACKGROUND HANDLER (MUST BE TOP LEVEL)
 /// =======================================
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await Firebase.initializeApp();
+  FirebaseNotificationService.showNotification(
+    message.notification?.title ?? "Notification",
+    message.notification?.body ?? "",
+  );
 }
 
 void main() async {
@@ -121,4 +125,4 @@ class _MyAppState extends State<MyApp> {
       },
     );
   }
-}
+} 

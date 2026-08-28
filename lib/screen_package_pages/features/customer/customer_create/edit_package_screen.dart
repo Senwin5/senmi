@@ -298,7 +298,8 @@ class _EditPackageScreenState extends State<EditPackageScreen> {
         "pickup_lng": pickupLocation!.longitude,
         "delivery_lat": deliveryLocation!.latitude,
         "delivery_lng": deliveryLocation!.longitude,
-        "price": estimatedPrice?.toStringAsFixed(2),
+        'price': estimatedPrice!.round(),
+        //"price": estimatedPrice?.toStringAsFixed(0),
       };
 
       final res = await ApiService.editPackage(
