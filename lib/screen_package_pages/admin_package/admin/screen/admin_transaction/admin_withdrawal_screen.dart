@@ -79,7 +79,7 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("Failed to load withdrawals: $e"),
-          backgroundColor: Colors.red.shade700,
+          backgroundColor: Colors.deepPurple,
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -205,7 +205,7 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("Approval failed: $e"),
-          backgroundColor: Colors.red,
+          backgroundColor: Colors.deepPurple,
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -237,7 +237,7 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("Rejection failed: $e"),
-          backgroundColor: Colors.red,
+          backgroundColor: Colors.deepPurple,
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -269,7 +269,7 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("Failed to mark withdrawal as paid: $e"),
-          backgroundColor: Colors.red,
+          backgroundColor: Colors.deepPurple,
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -301,7 +301,7 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("Retry failed: $e"),
-          backgroundColor: Colors.red,
+          backgroundColor: Colors.deepPurple,
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -319,7 +319,7 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Invalid withdrawal ID."),
-          backgroundColor: Colors.red,
+          backgroundColor: Colors.deepPurple,
         ),
       );
       return;
@@ -383,7 +383,7 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Invalid withdrawal ID."),
-          backgroundColor: Colors.red,
+          backgroundColor: Colors.deepPurple,
         ),
       );
       return;
@@ -449,7 +449,7 @@ class _AdminWithdrawalScreenState extends State<AdminWithdrawalScreen> {
                       : controller.text.trim(),
                 );
               },
-              style: FilledButton.styleFrom(backgroundColor: Colors.red),
+              style: FilledButton.styleFrom(backgroundColor: Colors.deepPurple),
               child: const Text("Reject"),
             ),
           ],

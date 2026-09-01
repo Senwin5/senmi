@@ -582,7 +582,7 @@ class _RiderDetailsScreenState extends State<RiderDetailsScreen> {
                         label: const Text("Reject"),
 
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
+                          backgroundColor: Colors.deepPurple,
                           foregroundColor: Colors.white,
 
                           padding: const EdgeInsets.symmetric(vertical: 14),

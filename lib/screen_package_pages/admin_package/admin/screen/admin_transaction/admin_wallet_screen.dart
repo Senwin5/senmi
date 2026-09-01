@@ -56,7 +56,7 @@ class _AdminWalletScreenState extends State<AdminWalletScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("Failed to load rider wallets: $e"),
-          backgroundColor: Colors.red.shade700,
+          backgroundColor: Colors.deepPurple,
           behavior: SnackBarBehavior.floating,
           margin: const EdgeInsets.all(16),
           shape: RoundedRectangleBorder(

@@ -323,7 +323,7 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            backgroundColor: Colors.red,
+            backgroundColor: Colors.deepPurple,
             content: Text(
               result["error"] ?? "Payment failed",
               style: const TextStyle(color: Colors.white),

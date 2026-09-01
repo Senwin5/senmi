@@ -54,7 +54,7 @@ class _RiderSecurityScreenState extends State<RiderSecurityScreen> {
             child: const Text("Cancel"),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple),
             onPressed: () {
               Navigator.of(dialogContext).pop(true);
             },
@@ -89,9 +89,13 @@ class _RiderSecurityScreenState extends State<RiderSecurityScreen> {
         (_) => false,
       );
     } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Failed to delete account")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(ApiService.deleteAccountMessage),
+          backgroundColor: Colors.deepPurple,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     }
   }
 

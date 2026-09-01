@@ -242,7 +242,7 @@ class _AdminWithdrawalDetailsScreenState
         const SnackBar(
           behavior: SnackBarBehavior.fixed,
           content: Text("Approve action is not configured."),
-          backgroundColor: Colors.red,
+          backgroundColor: Colors.deepPurple,
         ),
       );
       return;
@@ -311,7 +311,7 @@ class _AdminWithdrawalDetailsScreenState
         const SnackBar(
           behavior: SnackBarBehavior.fixed,
           content: Text("Mark as Paid action is not configured."),
-          backgroundColor: Colors.red,
+          backgroundColor: Colors.deepPurple,
         ),
       );
       return;
@@ -382,7 +382,7 @@ class _AdminWithdrawalDetailsScreenState
         const SnackBar(
           behavior: SnackBarBehavior.fixed,
           content: Text("Reject action is not configured."),
-          backgroundColor: Colors.red,
+          backgroundColor: Colors.deepPurple,
         ),
       );
       return;
@@ -432,7 +432,7 @@ class _AdminWithdrawalDetailsScreenState
                 );
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
+                backgroundColor: Colors.deepPurple,
                 foregroundColor: Colors.white,
               ),
               child: const Text("Reject"),
@@ -467,7 +467,7 @@ class _AdminWithdrawalDetailsScreenState
         const SnackBar(
           behavior: SnackBarBehavior.fixed,
           content: Text("Retry action is not configured."),
-          backgroundColor: Colors.red,
+          backgroundColor: Colors.deepPurple,
         ),
       );
       return;
@@ -570,7 +570,7 @@ class _AdminWithdrawalDetailsScreenState
         SnackBar(
           behavior: SnackBarBehavior.fixed,
           content: Text("$failurePrefix: $e"),
-          backgroundColor: Colors.red,
+          backgroundColor: Colors.deepPurple,
         ),
       );
     } finally {

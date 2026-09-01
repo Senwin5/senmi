@@ -336,7 +336,7 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
                                           context,
                                         ).showSnackBar(
                                           const SnackBar(
-                                            backgroundColor: Colors.red,
+                                            backgroundColor: Colors.deepPurple,
                                             content: Text(
                                               "⚠ Finish your current delivery first",
                                               style: TextStyle(
@@ -370,7 +370,7 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
                       return ElevatedButton(
                         onPressed: null,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
+                          backgroundColor: Colors.deepPurple,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                         ),
                         child: const Text("Cancelled"),

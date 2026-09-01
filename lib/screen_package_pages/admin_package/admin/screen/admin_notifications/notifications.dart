@@ -98,7 +98,7 @@ class _AdminNotificationScreenState extends State<AdminNotificationScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("Failed to load notifications: $e"),
-          backgroundColor: Colors.red.shade700,
+          backgroundColor: Colors.deepPurple,
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -449,6 +449,7 @@ class _AdminNotificationScreenState extends State<AdminNotificationScreen> {
                         ScaffoldMessenger.of(dialogContext).showSnackBar(
                           const SnackBar(
                             content: Text("Title and message are required"),
+                            backgroundColor: Colors.deepPurple,
                           ),
                         );
 
@@ -464,6 +465,7 @@ class _AdminNotificationScreenState extends State<AdminNotificationScreen> {
                           ScaffoldMessenger.of(dialogContext).showSnackBar(
                             const SnackBar(
                               content: Text("Enter a valid user ID"),
+                              backgroundColor: Colors.deepPurple,
                             ),
                           );
 
@@ -511,7 +513,7 @@ class _AdminNotificationScreenState extends State<AdminNotificationScreen> {
                         ScaffoldMessenger.of(dialogContext).showSnackBar(
                           SnackBar(
                             content: Text("Failed to send notification: $e"),
-                            backgroundColor: Colors.red.shade700,
+                            backgroundColor: Colors.deepPurple,
                           ),
                         );
                       }

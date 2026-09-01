@@ -199,7 +199,7 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text("Failed to load banks"),
-            backgroundColor: Colors.red,
+            backgroundColor: Colors.deepPurple,
           ),
         );
       }
@@ -853,7 +853,7 @@ class _RiderWalletScreenState extends State<RiderWalletScreen> {
                                         content: Text(
                                           error.replaceFirst("Exception: ", ""),
                                         ),
-                                        backgroundColor: Colors.red,
+                                        backgroundColor: Colors.deepPurple,
                                       ),
                                     );
                                   }

@@ -231,7 +231,7 @@ class RiderCard extends StatelessWidget {
                         label: const Text("Reject"),
 
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
+                          backgroundColor: Colors.deepPurple,
                           foregroundColor: Colors.white,
 
                           elevation: 0,

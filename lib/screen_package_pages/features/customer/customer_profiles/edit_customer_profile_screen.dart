@@ -77,7 +77,7 @@ class _EditCustomerProfileScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Failed to update profile"),
-          backgroundColor: Colors.red,
+          backgroundColor: Colors.deepPurple
         ),
       );
     }

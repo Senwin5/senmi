@@ -89,7 +89,7 @@ class _AdminPackagesScreenState extends State<AdminPackagesScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("Failed to load packages: $e"),
-          backgroundColor: Colors.red,
+          backgroundColor: Colors.deepPurple,
         ),
       );
     }

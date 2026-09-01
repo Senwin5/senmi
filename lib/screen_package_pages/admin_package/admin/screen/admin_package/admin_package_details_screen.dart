@@ -177,7 +177,7 @@ class _AdminPackageDetailsScreenState extends State<AdminPackageDetailsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text("Failed to load package: $e"),
-            backgroundColor: Colors.red,
+            backgroundColor: Colors.deepPurple,
           ),
         );
       }
@@ -234,7 +234,7 @@ class _AdminPackageDetailsScreenState extends State<AdminPackageDetailsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("Failed to update status: $e"),
-          backgroundColor: Colors.red,
+          backgroundColor: Colors.deepPurple,
         ),
       );
     }

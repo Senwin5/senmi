@@ -249,7 +249,7 @@ class _AdminRidersScreenState extends State<AdminRidersScreen> {
             ),
             FilledButton.icon(
               style: FilledButton.styleFrom(
-                backgroundColor: Colors.red.shade600,
+                backgroundColor: Colors.deepPurple,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 18,

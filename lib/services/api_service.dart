@@ -35,6 +35,7 @@ class ApiService {
   static String? username;
   static String? accessToken;
   static bool isAdminUser = false;
+  static String deleteAccountMessage = "";
 
   // ✅ Track login state
   static ValueNotifier<bool> isLoggedIn = ValueNotifier(false);
@@ -1527,6 +1528,8 @@ class ApiService {
       if (kDebugMode) {
         print("DELETE ACCOUNT: No token");
       }
+
+      deleteAccountMessage = "You are not logged in.";
       return false;
     }
 
@@ -1535,8 +1538,6 @@ class ApiService {
 
       if (kDebugMode) {
         print("DELETE ACCOUNT URL: $url");
-      }
-      if (kDebugMode) {
         print("DELETE ACCOUNT: Sending request...");
       }
 
@@ -1550,9 +1551,19 @@ class ApiService {
 
       if (kDebugMode) {
         print("DELETE ACCOUNT STATUS: ${res.statusCode}");
-      }
-      if (kDebugMode) {
         print("DELETE ACCOUNT RESPONSE: ${res.body}");
+      }
+
+      // Get the message sent by Django
+      try {
+        final data = jsonDecode(res.body);
+
+        deleteAccountMessage =
+            data["message"]?.toString() ??
+            data["error"]?.toString() ??
+            "Unable to delete account.";
+      } catch (_) {
+        deleteAccountMessage = "Unable to delete account.";
       }
 
       return res.statusCode == 200 || res.statusCode == 204;
@@ -1560,6 +1571,10 @@ class ApiService {
       if (kDebugMode) {
         print("DELETE ACCOUNT ERROR: $e");
       }
+
+      deleteAccountMessage =
+          "Unable to connect to the server. Please try again.";
+
       return false;
     }
   }

@@ -46,7 +46,7 @@ class CustomerSecurityScreen extends StatelessWidget {
             child: const Text("Cancel"),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple),
             onPressed: () {
               Navigator.of(dialogContext).pop(true);
             },
@@ -66,6 +66,13 @@ class CustomerSecurityScreen extends StatelessWidget {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("Failed to delete account")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(ApiService.deleteAccountMessage),
+          backgroundColor: Colors.deepPurple,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
       return;
     }
 

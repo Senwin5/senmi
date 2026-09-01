@@ -176,7 +176,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
+                backgroundColor: Colors.deepPurple,
                 foregroundColor: Colors.white,
               ),
               onPressed: () async {
