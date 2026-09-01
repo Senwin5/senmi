@@ -5,7 +5,6 @@ import 'package:senmi/screen_package_pages/features/customer/customer_create/cre
 import 'package:senmi/screen_package_pages/features/customer/customer_create/create_package_screen.dart';
 import 'package:senmi/services/api_service.dart';
 
-
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
 
@@ -163,7 +162,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
       fetchPackages(); // 🔥 THIS refreshes list
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Package deleted successfully")),
+        const SnackBar(
+          content: Text("Package deleted successfully"),
+          backgroundColor: Colors.deepPurple,
+        ),
       );
     }
   }
@@ -196,9 +198,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
               fetchPackages();
 
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("History refreshed")
+                const SnackBar(
+                  content: Text("History refreshed"),
+                  backgroundColor: Colors.deepPurple,
                 ),
-                
               );
             },
           ),

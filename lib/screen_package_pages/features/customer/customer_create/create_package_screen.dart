@@ -248,7 +248,10 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
   Future<void> _createPackage() async {
     if (estimatedPrice == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please calculate price first")),
+        const SnackBar(
+          content: Text("Please calculate price first"),
+          backgroundColor: Colors.deepPurple,
+        ),
       );
       return;
     }

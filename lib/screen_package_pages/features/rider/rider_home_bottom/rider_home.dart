@@ -121,9 +121,13 @@ class _RiderHomeState extends State<RiderHome> {
   void accept(String id) async {
     bool success = await ApiService.acceptPackage(id);
     if (success && mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Accepted")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Accepted"),
+          backgroundColor: Colors.deepPurple,
+        ),
+      );
+
       loadData();
     }
   }

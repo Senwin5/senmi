@@ -175,7 +175,10 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
       await getAddress();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("⚠️ Could not get location")),
+        const SnackBar(
+          content: Text("⚠️ Could not get location"),
+          backgroundColor: Colors.deepPurple,
+        ),
       );
     }
   }

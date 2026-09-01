@@ -113,9 +113,12 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
     if (await canLaunchUrl(url)) {
       await launchUrl(url);
     } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Cannot make call")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Cannot make call"),
+          backgroundColor: Colors.deepPurple,
+        ),
+      );
     }
   }
 

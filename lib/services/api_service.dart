@@ -99,11 +99,15 @@ class ApiService {
     username = prefs.getString('username');
 
     if (kDebugMode) {
-      print("Authentication tokens loaded");
+      print("LOAD TOKEN = $token");
+    }
+    if (kDebugMode) {
+      print("LOAD REFRESH = $refreshToken");
     }
   }
 
-  // LOGIN
+ 
+  // 🔑 LOGIN
   static Future<Map<String, dynamic>> login(
     String email,
     String password,
