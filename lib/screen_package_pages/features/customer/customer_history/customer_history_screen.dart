@@ -196,7 +196,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
               fetchPackages();
 
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("History refreshed")),
+                const SnackBar(content: Text("History refreshed")
+                ),
+                
               );
             },
           ),
