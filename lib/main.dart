@@ -45,7 +45,7 @@ void main() async {
   /// Background handler (NOW SAFE)
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-  /// Deep links
+  /// Deep link
   final appLinks = AppLinks();
 
   appLinks.uriLinkStream.listen((uri) async {
@@ -125,4 +125,4 @@ class _MyAppState extends State<MyApp> {
       },
     );
   }
-} 
+}

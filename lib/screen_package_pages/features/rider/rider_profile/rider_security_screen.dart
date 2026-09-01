@@ -1,4 +1,6 @@
-// ignore_for_file: use_build_context_synchronously, deprecated_member_use
+// ignore_for_file, deprecated_member_use
+
+// ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
 import 'package:senmi/registration/auth/login.dart';
@@ -18,6 +20,8 @@ class _RiderSecurityScreenState extends State<RiderSecurityScreen> {
   Future<void> logout() async {
     await ApiService.logout();
 
+    if (!mounted) return;
+
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -28,7 +32,7 @@ class _RiderSecurityScreenState extends State<RiderSecurityScreen> {
   Future<void> deleteAccount() async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         title: Row(
           children: const [
@@ -44,12 +48,16 @@ class _RiderSecurityScreenState extends State<RiderSecurityScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () {
+              Navigator.of(dialogContext).pop(false);
+            },
             child: const Text("Cancel"),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () {
+              Navigator.of(dialogContext).pop(true);
+            },
             child: const Text("Delete", style: TextStyle(color: Colors.white)),
           ),
         ],
@@ -58,14 +66,22 @@ class _RiderSecurityScreenState extends State<RiderSecurityScreen> {
 
     if (confirmed != true) return;
 
+    if (!mounted) return;
+
     setState(() => deleting = true);
 
     final deleted = await ApiService.deleteUser();
+
+    // VERY IMPORTANT
+    if (!mounted) return;
 
     setState(() => deleting = false);
 
     if (deleted) {
       await ApiService.logout();
+
+      // VERY IMPORTANT
+      if (!mounted) return;
 
       Navigator.pushAndRemoveUntil(
         context,

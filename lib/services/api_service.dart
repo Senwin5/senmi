@@ -1524,17 +1524,42 @@ class ApiService {
     await loadToken();
 
     if (token == null) {
+      if (kDebugMode) {
+        print("DELETE ACCOUNT: No token");
+      }
       return false;
     }
 
     try {
+      final url = Uri.parse("$baseUrl/profile/hard-delete/");
+
+      if (kDebugMode) {
+        print("DELETE ACCOUNT URL: $url");
+      }
+      if (kDebugMode) {
+        print("DELETE ACCOUNT: Sending request...");
+      }
+
       final res = await http.delete(
-        Uri.parse("$baseUrl/profile/hard-delete/"),
-        headers: {"Authorization": "Bearer $token"},
+        url,
+        headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json",
+        },
       );
+
+      if (kDebugMode) {
+        print("DELETE ACCOUNT STATUS: ${res.statusCode}");
+      }
+      if (kDebugMode) {
+        print("DELETE ACCOUNT RESPONSE: ${res.body}");
+      }
 
       return res.statusCode == 200 || res.statusCode == 204;
     } catch (e) {
+      if (kDebugMode) {
+        print("DELETE ACCOUNT ERROR: $e");
+      }
       return false;
     }
   }

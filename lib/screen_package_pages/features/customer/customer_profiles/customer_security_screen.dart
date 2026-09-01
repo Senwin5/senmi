@@ -31,20 +31,25 @@ class CustomerSecurityScreen extends StatelessWidget {
   Future<void> deleteAccount(BuildContext context) async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
         title: const Text("Delete Account"),
         content: const Text(
-          "This action is permanent.\n\nAre you sure you want to delete your account?",
+          "This action is permanent.\n\n"
+          "Are you sure you want to delete your account?",
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () {
+              Navigator.of(dialogContext).pop(false);
+            },
             child: const Text("Cancel"),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () {
+              Navigator.of(dialogContext).pop(true);
+            },
             child: const Text("Delete", style: TextStyle(color: Colors.white)),
           ),
         ],
