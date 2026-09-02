@@ -212,9 +212,12 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
 
   Future<void> _calculatePrice() async {
     if (pickupLocation == null || deliveryLocation == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Select locations first")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Select locations first"),
+          backgroundColor: Colors.deepPurple,
+        ),
+      );
       return;
     }
 

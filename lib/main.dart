@@ -42,7 +42,7 @@ void main() async {
     debugPrint(details.stack.toString());
   };
 
-  /// Background handler (NOW SAFE)
+  /// Background handler
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   /// Deep link
