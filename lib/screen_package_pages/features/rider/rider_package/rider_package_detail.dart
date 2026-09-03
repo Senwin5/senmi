@@ -130,12 +130,12 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
     setState(() => accepting = false);
 
     if (success) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Package accepted")));
-      if (Navigator.canPop(context)) {
-        Navigator.pop(context, true);
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Package accepted"),
+          backgroundColor: Colors.deepPurple,
+        ),
+      );
     }
   }
 
@@ -317,6 +317,7 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
                                       content: Text(
                                         "Customer phone not available",
                                       ),
+                                      backgroundColor: Colors.deepPurple,
                                     ),
                                   );
                                 }
@@ -398,6 +399,7 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
                                       content: Text("Package picked up"),
+                                      backgroundColor: Colors.deepPurple,
                                     ),
                                   );
 
@@ -480,6 +482,7 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
                                         ).showSnackBar(
                                           const SnackBar(
                                             content: Text("Delivery cancelled"),
+                                            backgroundColor: Colors.deepPurple,
                                           ),
                                         );
 
@@ -490,6 +493,7 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
                                         ).showSnackBar(
                                           const SnackBar(
                                             content: Text("Cancel failed"),
+                                            backgroundColor: Colors.deepPurple,
                                           ),
                                         );
                                       }
@@ -539,6 +543,7 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
                                       content: Text(
                                         "Receiver phone not available",
                                       ),
+                                      backgroundColor: Colors.deepPurple,
                                     ),
                                   );
                                   return;
@@ -579,10 +584,14 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
   }
 
   Widget _card(String title, List<Widget> children) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
+      color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+      surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      elevation: 3,
+      elevation: isDark ? 0 : 3,
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Column(
@@ -590,7 +599,11 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
           children: [
             Text(
               title,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 15,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
             ),
             const SizedBox(height: 10),
             ...children,
@@ -601,6 +614,8 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
   }
 
   Widget _row(String label, dynamic value, {bool isHighlight = false}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -609,7 +624,10 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
             flex: 3,
             child: Text(
               "$label:",
-              style: const TextStyle(fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                color: isDark ? Colors.white70 : Colors.black87,
+              ),
             ),
           ),
           Expanded(
@@ -618,7 +636,9 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
               value?.toString() ?? "-",
               style: TextStyle(
                 fontWeight: isHighlight ? FontWeight.bold : FontWeight.normal,
-                color: isHighlight ? Color.fromARGB(255, 73, 135, 76) : null,
+                color: isHighlight
+                    ? const Color.fromARGB(255, 73, 135, 76)
+                    : (isDark ? Colors.white : Colors.black87),
               ),
             ),
           ),
