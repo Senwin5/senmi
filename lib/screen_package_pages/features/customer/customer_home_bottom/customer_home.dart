@@ -211,7 +211,7 @@ class _CustomerHomeState extends State<CustomerHome> {
                               MaterialPageRoute(
                                 builder: (_) => const HistoryScreen(),
                               ),
-                            ).then((_) => loadPackages());
+                            );
                           },
                         ),
 

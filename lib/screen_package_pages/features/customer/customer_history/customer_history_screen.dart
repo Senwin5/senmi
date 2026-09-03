@@ -25,7 +25,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
   @override
   void initState() {
     super.initState();
-    fetchPackages();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      fetchPackages();
+    });
   }
 
   void fetchPackages() async {
@@ -114,7 +117,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     return GestureDetector(
       onTap: () {
         setState(() {
-          selectedFilter = label; // still "Paid"
+          selectedFilter = label;
         });
       },
       child: AnimatedContainer(
@@ -122,19 +125,39 @@ class _HistoryScreenState extends State<HistoryScreen> {
         margin: const EdgeInsets.only(right: 10),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? primaryPurple : Theme.of(context).cardColor,
+          // Selected = purple
+          // Unselected = white in light mode, dark in dark mode
+          color: isSelected
+              ? primaryPurple
+              : (isDark ? const Color(0xFF1E1E1E) : Colors.white),
+
           borderRadius: BorderRadius.circular(30),
+
           border: Border.all(
-            color: isSelected ? primaryPurple : Theme.of(context).dividerColor,
+            color: isSelected
+                ? primaryPurple
+                : (isDark
+                      ? Colors.white.withOpacity(0.12)
+                      : const Color(0xFFE5E7EB)),
             width: 1.2,
           ),
+
+          boxShadow: [
+            if (!isDark && !isSelected)
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+          ],
         ),
+
         child: Text(
-          display ?? label, // 👈 THIS is what user sees
+          display ?? label,
           style: TextStyle(
             color: isSelected
                 ? Colors.white
-                : Theme.of(context).textTheme.bodyMedium?.color,
+                : (isDark ? Colors.white : const Color(0xFF374151)),
             fontWeight: FontWeight.w600,
             fontSize: 13,
           ),
