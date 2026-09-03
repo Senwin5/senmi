@@ -340,7 +340,7 @@ class _RiderPackageDetailScreenState extends State<RiderPackageDetailScreen> {
                                           context,
                                         ).showSnackBar(
                                           const SnackBar(
-                                            backgroundColor: Colors.deepPurple,
+                                            backgroundColor: Colors.red,
                                             content: Text(
                                               "⚠ Finish your current delivery first",
                                               style: TextStyle(

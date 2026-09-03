@@ -198,10 +198,12 @@ class _RiderTrackScreenState extends State<RiderTrackScreen> {
       if (!mounted) return;
 
       if (result != null && result["success"] == true) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("Delivery completed ✅")));
-
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Delivery completed ✅"),
+            backgroundColor: Colors.deepPurple,
+          ),
+        );
         // Stop GPS tracking
         await _positionStream?.cancel();
 
@@ -215,9 +217,12 @@ class _RiderTrackScreenState extends State<RiderTrackScreen> {
           (route) => false,
         );
       } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("Invalid code ❌")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Invalid code try again❌"),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     } catch (e) {
       debugPrint("Confirm delivery error: $e");
@@ -226,6 +231,7 @@ class _RiderTrackScreenState extends State<RiderTrackScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text("Something went wrong. Please try again."),
+            backgroundColor: Colors.red,
           ),
         );
       }
@@ -396,6 +402,7 @@ class _RiderTrackScreenState extends State<RiderTrackScreen> {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
                                   content: Text("Receiver phone not available"),
+                                  backgroundColor: Colors.deepPurple,
                                 ),
                               );
                               return;
@@ -409,6 +416,7 @@ class _RiderTrackScreenState extends State<RiderTrackScreen> {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
                                   content: Text("Cannot make call"),
+                                  backgroundColor: Colors.deepPurple,
                                 ),
                               );
                             }

@@ -244,6 +244,13 @@ class _RiderDeliveriesScreenState extends State<RiderDeliveriesScreen>
     );
   }
 
+  Widget _statusTab(String title) {
+    return SizedBox(
+      height: 42,
+      child: Center(child: Text(title, textAlign: TextAlign.center)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -260,18 +267,47 @@ class _RiderDeliveriesScreenState extends State<RiderDeliveriesScreen>
           ),
         ],
 
-        bottom: TabBar(
-          controller: _tabController,
-          isScrollable: true,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
-          indicatorColor: Colors.white,
-          tabs: const [
-            Tab(text: "Available"),
-            Tab(text: "Accepted"),
-            Tab(text: "In Transit"),
-            Tab(text: "Delivered"),
-          ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(58),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(8, 0, 8, 10),
+            child: TabBar(
+              controller: _tabController,
+              isScrollable: false,
+              dividerColor: Colors.transparent,
+
+              indicatorSize: TabBarIndicatorSize.tab,
+
+              indicator: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+              ),
+
+              indicatorPadding: const EdgeInsets.symmetric(horizontal: 3),
+
+              labelColor: Colors.deepPurple,
+              unselectedLabelColor: Colors.white,
+
+              labelStyle: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+              ),
+
+              unselectedLabelStyle: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+              ),
+
+              labelPadding: EdgeInsets.zero,
+
+              tabs: [
+                _statusTab("Available"),
+                _statusTab("Accepted"),
+                _statusTab("In Transit"),
+                _statusTab("Delivered"),
+              ],
+            ),
+          ),
         ),
       ),
       body: TabBarView(
