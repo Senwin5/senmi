@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:async';
-import 'package:senmi/screen_package_pages/admin_package/admin/screen/admin_riders_screen/rider_model.dart';
+import 'package:senmi/package_screens/admin_package/admin/screen/admin_riders_screen/rider_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // ignore: depend_on_referenced_packages
 import 'package:http/http.dart' as http;

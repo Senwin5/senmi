@@ -4,7 +4,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:senmi/service_firebase/firebase_options.dart';
-import 'package:senmi/screen_package_pages/features/customer/success/deliverycodescreen.dart';
+import 'package:senmi/package_screens/features/customer/success/deliverycodescreen.dart';
 import 'package:senmi/welcome/splash_screen.dart';
 import 'package:senmi/service_firebase/firebase_notification_service.dart';
 import 'package:senmi/services/api_service.dart';
