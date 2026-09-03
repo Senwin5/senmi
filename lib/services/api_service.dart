@@ -106,7 +106,6 @@ class ApiService {
     }
   }
 
- 
   // 🔑 LOGIN
   static Future<Map<String, dynamic>> login(
     String email,
@@ -1144,7 +1143,8 @@ class ApiService {
     if (res.statusCode < 200 || res.statusCode >= 300) {
       if (decoded is Map) {
         throw Exception(
-          decoded["error"] ??
+          decoded["detail"] ??
+              decoded["error"] ??
               decoded["message"] ??
               "Failed to approve withdrawal",
         );

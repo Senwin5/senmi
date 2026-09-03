@@ -23,7 +23,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final phone = TextEditingController();
   final password = TextEditingController();
 
-  String role = "customer"; // default
+  String role = "customer";
   bool loading = false;
   bool acceptedTerms = false;
 
@@ -70,6 +70,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       return;
     }
+
     if (!acceptedTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -97,6 +98,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           duration: const Duration(seconds: 3),
         ),
       );
+
       return;
     }
 
@@ -110,9 +112,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       role: role,
     );
 
+    if (!mounted) return;
+
     setState(() => loading = false);
 
-    // ✅ If backend returned access token
+    // If backend returned access token
     if (res.containsKey("access") && res['access'] != null) {
       await ApiService.saveTokenAndRole(
         res['access'],
@@ -121,24 +125,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
         username.text,
       );
 
+      if (!mounted) return;
+
       if (role == "rider") {
         Navigator.pushReplacement(
-          // ignore: use_build_context_synchronously
           context,
           MaterialPageRoute(builder: (_) => const RiderCompleteProfile()),
         );
       } else {
         Navigator.pushReplacement(
-          // ignore: use_build_context_synchronously
           context,
           MaterialPageRoute(builder: (_) => const CustomerBottomNav()),
         );
       }
     }
     // If user created but no token returned
-    //else if (res.containsKey("username") || res.containsKey("email"))
     else if (res["success"] == true) {
-      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Row(
@@ -165,13 +167,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
           duration: const Duration(seconds: 3),
         ),
       );
+
       Navigator.pushReplacement(
-        // ignore: use_build_context_synchronously
         context,
         MaterialPageRoute(builder: (_) => const LoginScreen()),
       );
     }
-    // ❌ Registration error
+    // Registration error
     else {
       String message = "Registration failed. Please try again.";
 
@@ -189,39 +191,42 @@ class _RegisterScreenState extends State<RegisterScreen> {
         message = res['detail'];
       }
 
-      // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(
-        // ignore: use_build_context_synchronously
-        context,
-      ).showSnackBar(SnackBar(content: Text(message)));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message), backgroundColor: Colors.red),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // Theme colors
+    final backgroundColor = isDark ? const Color(0xFF121212) : Colors.white;
+
+    final cardColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+
+    final textColor = isDark ? Colors.white : Colors.black87;
+
+    final secondaryTextColor = isDark ? Colors.white70 : Colors.grey;
+
+    final borderColor = isDark ? Colors.white24 : Colors.grey.shade400;
+
     return Scaffold(
+      backgroundColor: backgroundColor,
+
       body: Stack(
         children: [
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFF120024),
-                  Color(0xFF2A0A4A),
-                  Color(0xFF4A148C),
-                ],
-              ),
-            ),
-          ),
+          // Background
+          Container(color: backgroundColor),
 
           Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Card(
-                color: Theme.of(context).cardColor,
-                elevation: 8,
+                color: cardColor,
+                surfaceTintColor: Colors.transparent,
+                elevation: isDark ? 0 : 8,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
@@ -230,21 +235,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      // SENMI
                       Text(
                         "Senmi",
                         style: TextStyle(
                           fontSize: 34,
                           fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.primary,
+                          color: Colors.deepPurple,
                         ),
                       ),
+
                       const SizedBox(height: 12),
-                      const Text(
+
+                      // CREATE ACCOUNT
+                      Text(
                         "Create an account",
-                        style: TextStyle(fontSize: 16, color: Colors.grey),
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: secondaryTextColor,
+                        ),
                       ),
+
                       const SizedBox(height: 24),
-                      // ✅ Email
+
+                      // EMAIL
                       TextField(
                         controller: email,
                         keyboardType: TextInputType.emailAddress,
@@ -256,8 +270,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           prefixIcon: const Icon(Icons.email),
                         ),
                       ),
+
                       const SizedBox(height: 16),
-                      // ✅ Username
+
+                      // USERNAME
                       TextField(
                         controller: username,
                         decoration: InputDecoration(
@@ -268,8 +284,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           prefixIcon: const Icon(Icons.person),
                         ),
                       ),
+
                       const SizedBox(height: 16),
-                      // Phone Number (always visible)
+
+                      // PHONE
                       TextField(
                         controller: phone,
                         keyboardType: TextInputType.phone,
@@ -281,8 +299,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           prefixIcon: const Icon(Icons.phone),
                         ),
                       ),
+
                       const SizedBox(height: 16),
-                      // ✅ Password
+
+                      // PASSWORD
                       TextField(
                         controller: password,
                         obscureText: _obscurePassword,
@@ -306,17 +326,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                         ),
                       ),
+
                       const SizedBox(height: 16),
-                      // ✅ Role dropdown
-                      // ✅ Role Selection
+
+                      // ACCOUNT TYPE
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          Text(
                             "Choose account type",
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
+                              color: textColor,
                             ),
                           ),
 
@@ -324,6 +346,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                           Row(
                             children: [
+                              // CUSTOMER
                               Expanded(
                                 child: GestureDetector(
                                   onTap: () {
@@ -341,7 +364,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       border: Border.all(
                                         color: role == "customer"
                                             ? Colors.deepPurple
-                                            : Colors.grey.shade400,
+                                            : borderColor,
                                         width: 2,
                                       ),
                                     ),
@@ -352,27 +375,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                           size: 40,
                                           color: role == "customer"
                                               ? Colors.deepPurple
-                                              : Colors.grey,
+                                              : secondaryTextColor,
                                         ),
 
                                         const SizedBox(height: 8),
 
-                                        const Text(
+                                        Text(
                                           "Customer",
                                           style: TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 16,
+                                            color: textColor,
                                           ),
                                         ),
 
                                         const SizedBox(height: 5),
 
-                                        const Text(
+                                        Text(
                                           "Send packages\nand track deliveries",
                                           textAlign: TextAlign.center,
                                           style: TextStyle(
                                             fontSize: 12,
-                                            color: Colors.grey,
+                                            color: secondaryTextColor,
                                           ),
                                         ),
                                       ],
@@ -383,6 +407,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                               const SizedBox(width: 12),
 
+                              // RIDER
                               Expanded(
                                 child: GestureDetector(
                                   onTap: () {
@@ -400,7 +425,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       border: Border.all(
                                         color: role == "rider"
                                             ? Colors.green
-                                            : Colors.grey.shade400,
+                                            : borderColor,
                                         width: 2,
                                       ),
                                     ),
@@ -411,27 +436,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                           size: 40,
                                           color: role == "rider"
                                               ? Colors.green
-                                              : Colors.grey,
+                                              : secondaryTextColor,
                                         ),
 
                                         const SizedBox(height: 8),
 
-                                        const Text(
+                                        Text(
                                           "Rider",
                                           style: TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 16,
+                                            color: textColor,
                                           ),
                                         ),
 
                                         const SizedBox(height: 5),
 
-                                        const Text(
+                                        Text(
                                           "Deliver packages\nand earn money",
                                           textAlign: TextAlign.center,
                                           style: TextStyle(
                                             fontSize: 12,
-                                            color: Colors.grey,
+                                            color: secondaryTextColor,
                                           ),
                                         ),
                                       ],
@@ -443,8 +469,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                         ],
                       ),
+
                       const SizedBox(height: 20),
 
+                      // TERMS
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
@@ -464,9 +492,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             child: Wrap(
                               crossAxisAlignment: WrapCrossAlignment.center,
                               children: [
-                                const Text(
+                                Text(
                                   "I agree to the ",
-                                  style: TextStyle(fontSize: 13),
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: textColor,
+                                  ),
                                 ),
 
                                 GestureDetector(
@@ -510,6 +541,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                       const SizedBox(height: 16),
 
+                      // SIGN UP BUTTON
                       CustomButton(
                         text: "Sign Up",
                         onPressed: loading ? () {} : register,
@@ -517,11 +549,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         color: Colors.blue,
                       ),
+
                       const SizedBox(height: 16),
+
+                      // LOGIN
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Text("Already have an account? "),
+                          Text(
+                            "Already have an account? ",
+                            style: TextStyle(color: textColor),
+                          ),
+
                           GestureDetector(
                             onTap: () {
                               Navigator.pushReplacement(
@@ -547,11 +586,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
             ),
           ),
+
+          // LOADING OVERLAY
           if (loading)
             Container(
-              color: Colors.white.withOpacity(0.7),
+              color: isDark
+                  ? Colors.black.withOpacity(0.7)
+                  : Colors.white.withOpacity(0.7),
               child: const Center(
-                child: CircularProgressIndicator(color: Colors.blue),
+                child: CircularProgressIndicator(color: Colors.deepPurple),
               ),
             ),
         ],
