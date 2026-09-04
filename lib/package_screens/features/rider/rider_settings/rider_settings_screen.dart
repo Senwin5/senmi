@@ -165,12 +165,6 @@ class _RiderSettingsScreenState extends State<RiderSettingsScreen> {
                   },
                 ),
 
-                settingTile(
-                  icon: Icons.lock,
-                  title: "Change Password",
-                  onTap: () {},
-                ),
-
                 sectionTitle("SUPPORT & INFO"),
 
                 settingTile(
