@@ -196,7 +196,7 @@ class _RiderSettingsScreenState extends State<RiderSettingsScreen> {
 
                 settingTile(
                   icon: Icons.support_agent,
-                  title: "SUPPORT",
+                  title: "Support",
                   onTap: () async {
                     final url = Uri.parse("https://www.senmi.com.ng/support/");
 
