@@ -67,14 +67,29 @@ class _RiderSettingsScreenState extends State<RiderSettingsScreen> {
     Color iconColor = Colors.deepPurple,
     Widget? trailing,
   }) {
+    final isDark = widget.darkModeNotifier.value;
+
     return Card(
+      color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
       elevation: 1.5,
       margin: const EdgeInsets.symmetric(vertical: 6),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       child: ListTile(
         leading: Icon(icon, color: iconColor),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
-        trailing: trailing ?? const Icon(Icons.arrow_forward_ios, size: 16),
+        title: Text(
+          title,
+          style: TextStyle(
+            fontWeight: FontWeight.w500,
+            color: isDark ? Colors.white : Colors.black87,
+          ),
+        ),
+        trailing:
+            trailing ??
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: isDark ? Colors.white70 : Colors.black54,
+            ),
         onTap: onTap,
       ),
     );
@@ -160,7 +175,7 @@ class _RiderSettingsScreenState extends State<RiderSettingsScreen> {
 
                 settingTile(
                   icon: Icons.chat,
-                  title: "Chat Support",
+                  title: "Chat or Contact Support",
                   onTap: openWhatsApp,
                   iconColor: Colors.green,
                 ),
@@ -208,12 +223,21 @@ class _RiderSettingsScreenState extends State<RiderSettingsScreen> {
                 sectionTitle("PREFERENCES"),
 
                 Card(
+                  color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: SwitchListTile(
-                    secondary: const Icon(Icons.notifications),
-                    title: const Text("Notifications"),
+                    secondary: Icon(
+                      Icons.notifications,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                    title: Text(
+                      "Notifications",
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                    ),
                     value: notificationsEnabled,
                     onChanged: (val) {
                       setState(() {
@@ -226,12 +250,21 @@ class _RiderSettingsScreenState extends State<RiderSettingsScreen> {
                 const SizedBox(height: 10),
 
                 Card(
+                  color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: SwitchListTile(
-                    secondary: const Icon(Icons.dark_mode),
-                    title: const Text("Dark Mode"),
+                    secondary: Icon(
+                      Icons.dark_mode,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                    title: Text(
+                      "Dark Mode",
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                    ),
                     value: widget.darkModeNotifier.value,
                     onChanged: (val) {
                       setState(() {

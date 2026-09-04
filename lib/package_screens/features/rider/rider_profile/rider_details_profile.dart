@@ -9,28 +9,35 @@ class RiderDetailsProfile extends StatelessWidget {
   const RiderDetailsProfile({super.key, required this.rider});
 
   Widget _buildProfileCard(
+    BuildContext context,
     String title,
     String value, {
     IconData? icon,
     bool highlight = false,
   }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Card(
-      elevation: highlight ? 3 : 2,
+      elevation: isDark ? 1 : (highlight ? 3 : 2),
+      color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
       margin: const EdgeInsets.symmetric(vertical: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
-        leading: icon != null
-            ? Icon(
-                icon,
-                color: highlight ? Colors.deepPurple : Colors.deepPurple,
-              )
-            : null,
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        leading: icon != null ? Icon(icon, color: Colors.deepPurple) : null,
+        title: Text(
+          title,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: theme.textTheme.bodyLarge?.color,
+          ),
+        ),
         subtitle: Text(
           value,
           style: TextStyle(
             fontWeight: highlight ? FontWeight.bold : FontWeight.normal,
             fontSize: highlight ? 16 : 14,
+            color: theme.textTheme.bodyMedium?.color,
           ),
         ),
       ),
@@ -169,7 +176,12 @@ class RiderDetailsProfile extends StatelessWidget {
             // RIDER ID - IMPORTANT SUPPORT IDENTIFIER
             // =====================================================
             Card(
-              elevation: 4,
+              elevation: Theme.of(context).brightness == Brightness.dark
+                  ? 1
+                  : 4,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? const Color(0xFF1E1E1E)
+                  : Colors.white,
               margin: const EdgeInsets.only(bottom: 20),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
@@ -194,11 +206,12 @@ class RiderDetailsProfile extends StatelessWidget {
 
                     const SizedBox(height: 8),
 
-                    const Text(
+                    Text(
                       "Rider ID",
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
                       ),
                     ),
 
@@ -230,27 +243,46 @@ class RiderDetailsProfile extends StatelessWidget {
               ),
             ),
 
-            _buildProfileCard("Full Name", fullName, icon: Icons.person),
+            _buildProfileCard(
+              context,
+              "Full Name",
+              fullName,
+              icon: Icons.person,
+            ),
 
-            _buildProfileCard("Email", email, icon: Icons.email),
+            _buildProfileCard(context, "Email", email, icon: Icons.email),
 
-            _buildProfileCard("Phone", phone, icon: Icons.phone),
+            _buildProfileCard(context, "Phone", phone, icon: Icons.phone),
 
             _buildProfileCard(
+              context,
               "Vehicle Number",
               vehicleNumber,
               icon: Icons.two_wheeler,
             ),
 
-            _buildProfileCard("Address", address, icon: Icons.location_on),
+            _buildProfileCard(
+              context,
+              "Address",
+              address,
+              icon: Icons.location_on,
+            ),
 
-            _buildProfileCard("State", city, icon: Icons.location_city),
+            _buildProfileCard(
+              context,
+              "State",
+              city,
+              icon: Icons.location_city,
+            ),
 
-            _buildProfileCard("Status", status, icon: Icons.verified),
+            _buildProfileCard(context, "Status", status, icon: Icons.verified),
 
             const SizedBox(height: 20),
 
             Card(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? const Color(0xFF1E1E1E)
+                  : Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
               ),
