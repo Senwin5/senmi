@@ -39,10 +39,10 @@ void main() async {
   FlutterError.onError = (FlutterErrorDetails details) {
     FlutterError.presentError(details);
     debugPrint("FLUTTER ERROR: ${details.exception}");
-    debugPrint(details.stack.toString());
+    debugPrint(details.stack.toString()); 
   };
 
-  /// Background handler
+  /// Background handler 
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   /// Deep link
