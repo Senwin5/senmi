@@ -442,7 +442,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                         const SizedBox(height: 8),
 
                                         Text(
-                                          "Rider",
+                                          "Courier",
                                           style: TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 16,
