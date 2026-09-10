@@ -65,9 +65,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
     _loadRecentLocations();
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      if (widget.useCurrentLocation) {
-        await useMyLocation();
-      } else {
+      if (!widget.useCurrentLocation) {
         await getAddress();
       }
     });
@@ -337,9 +335,12 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
             myLocationEnabled: true,
             myLocationButtonEnabled: false,
 
-            // CHANGED ONLY THIS PART
-            onMapCreated: (c) {
+            onMapCreated: (c) async {
               mapController = c;
+
+              if (widget.useCurrentLocation) {
+                await useMyLocation();
+              }
             },
 
             onCameraMove: (pos) {
