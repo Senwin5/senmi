@@ -1,4 +1,6 @@
+
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:senmi/main.dart';
 import 'package:senmi/package_screens/admin_package/admin/screen/admin_home_bottom/admin_bottom_nav.dart';
@@ -7,6 +9,7 @@ import 'package:senmi/package_screens/features/rider/rider_home_bottom/rider_bot
 import 'package:senmi/registration/auth/login.dart';
 import 'package:senmi/welcome/onboarding_screen.dart';
 import 'package:senmi/services/api_service.dart';
+import 'package:senmi/service_firebase/firebase_notification_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SwipeScreen extends StatelessWidget {
@@ -15,7 +18,9 @@ class SwipeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Swipe / Home")),
+      appBar: AppBar(
+        title: const Text("Swipe / Home"),
+      ),
       body: const Center(
         child: Text(
           "Welcome! This is your Swipe/Home screen.",
@@ -30,20 +35,27 @@ class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  State<SplashScreen> createState() =>
+      _SplashScreenState();
 }
 
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
+
   late AnimationController _controller;
   late Animation<double> _animation;
 
   @override
   void initState() {
     super.initState();
+
     _setupAnimation();
     _startSplashTimer();
   }
+
+  // =========================================================
+  // SPLASH ANIMATION
+  // =========================================================
 
   void _setupAnimation() {
     _controller = AnimationController(
@@ -54,52 +66,140 @@ class _SplashScreenState extends State<SplashScreen>
     _animation = Tween<double>(
       begin: 0.8,
       end: 1.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeOut,
+      ),
+    );
   }
+
+  // =========================================================
+  // SPLASH TIMER
+  // =========================================================
 
   void _startSplashTimer() {
-    Timer(const Duration(seconds: 3), _navigate);
+    Timer(
+      const Duration(seconds: 3),
+      _navigate,
+    );
   }
 
-  //  FIXED NAVIGATION LOGIC
-  Future<void> _navigate() async {
-    if (openedFromPayment) return;
-    if (!mounted) return;
+  // =========================================================
+  // NAVIGATION
+  // =========================================================
 
-    final prefs = await SharedPreferences.getInstance();
-    final onboardingCompleted = prefs.getBool('onboarding_completed') ?? false;
+  Future<void> _navigate() async {
+
+    // Payment deep link is handling navigation.
+    if (openedFromPayment) {
+      return;
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    final prefs =
+        await SharedPreferences.getInstance();
+
+    final onboardingCompleted =
+        prefs.getBool(
+              'onboarding_completed',
+            ) ??
+            false;
 
     Widget nextPage;
 
+    // =======================================================
     // 1. ONBOARDING CHECK
+    // =======================================================
+
     if (!onboardingCompleted) {
-      nextPage = const OnboardingScreen();
+
+      nextPage =
+          const OnboardingScreen();
+
     } else {
+
+      // =====================================================
       // 2. LOGIN CHECK
+      // =====================================================
+
       await ApiService.loadToken();
 
       if (ApiService.token != null) {
+
         if (ApiService.userRole == "admin" ||
             ApiService.userRole == "support") {
-          nextPage = const AdminBottomNav();
-        } else if (ApiService.userRole == "rider") {
-          nextPage = const RiderBottomNav();
+
+          nextPage =
+              const AdminBottomNav();
+
+        } else if (
+            ApiService.userRole == "rider") {
+
+          nextPage =
+              const RiderBottomNav();
+
         } else {
-          nextPage = const CustomerBottomNav();
+
+          nextPage =
+              const CustomerBottomNav();
         }
+
       } else {
-        nextPage = const LoginScreen();
+
+        nextPage =
+            const LoginScreen();
       }
     }
 
-    // 3. NAVIGATE
-    if (mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => nextPage),
-      );
+    // =======================================================
+    // 3. NAVIGATE AWAY FROM SPLASH
+    // =======================================================
+
+    if (!mounted) {
+      return;
     }
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => nextPage,
+      ),
+    );
+
+
+    // =======================================================
+    // 4. HANDLE NOTIFICATION
+    // =======================================================
+    //
+    // If the app was opened by tapping a package
+    // notification while completely closed, the
+    // notification data was stored as pending.
+    //
+    // We wait briefly for the home screen/navigation
+    // stack to become ready, then open the package.
+    // =======================================================
+
+    Future.delayed(
+      const Duration(milliseconds: 700),
+      () {
+
+        if (!mounted) {
+          return;
+        }
+
+        FirebaseNotificationService
+            .handlePendingNotification();
+      },
+    );
   }
+
+  // =========================================================
+  // DISPOSE
+  // =========================================================
 
   @override
   void dispose() {
@@ -107,24 +207,40 @@ class _SplashScreenState extends State<SplashScreen>
     super.dispose();
   }
 
+  // =========================================================
+  // UI
+  // =========================================================
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+
       body: Center(
         child: ScaleTransition(
           scale: _animation,
+
           child: Column(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisSize:
+                MainAxisSize.min,
+
             children: [
+
               Image.asset(
                 'assets/splash/logo.png',
                 height: 120,
                 fit: BoxFit.contain,
               ),
-              const SizedBox(height: 20),
+
+              const SizedBox(
+                height: 20,
+              ),
+
               const CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.deepPurple),
+                valueColor:
+                    AlwaysStoppedAnimation<Color>(
+                  Colors.deepPurple,
+                ),
               ),
             ],
           ),
@@ -133,3 +249,4 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 }
+
