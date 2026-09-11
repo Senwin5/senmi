@@ -135,7 +135,8 @@ class MainActivity : FlutterFragmentActivity() {
         )
 
         if (
-            notificationType == "package" &&
+            (notificationType == "package" ||
+            notificationType == "new_package") &&
             !packageId.isNullOrEmpty()
         ) {
 

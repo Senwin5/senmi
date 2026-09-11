@@ -82,7 +82,6 @@ void main() async {
   );
 
   /// Deep link
-
   final appLinks = AppLinks();
 
   appLinks.uriLinkStream.listen(
@@ -91,10 +90,8 @@ void main() async {
 
         final packageId =
             uri.queryParameters["package_id"] ?? "";
-
         final deliveryCode =
             uri.queryParameters["delivery_code"] ?? "";
-
 
         navigatorKey.currentState?.pushAndRemoveUntil(
           MaterialPageRoute(

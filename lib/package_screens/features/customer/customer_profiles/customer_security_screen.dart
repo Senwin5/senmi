@@ -1,4 +1,4 @@
-// ignore_for_file: use_build_context_synchronously, deprecated_member_use
+// ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
 import 'package:senmi/registration/auth/login.dart';
@@ -66,6 +66,7 @@ class CustomerSecurityScreen extends StatelessWidget {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("Failed to delete account")));
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(ApiService.deleteAccountMessage),
@@ -73,6 +74,7 @@ class CustomerSecurityScreen extends StatelessWidget {
           behavior: SnackBarBehavior.floating,
         ),
       );
+
       return;
     }
 
@@ -89,6 +91,7 @@ class CustomerSecurityScreen extends StatelessWidget {
 
   Widget buildTile({
     required BuildContext context,
+    required bool isDark,
     required IconData icon,
     required String title,
     required String subtitle,
@@ -96,6 +99,7 @@ class CustomerSecurityScreen extends StatelessWidget {
     Color? iconColor,
   }) {
     return Card(
+      color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
       elevation: 2,
       margin: const EdgeInsets.only(bottom: 14),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
@@ -126,9 +130,9 @@ class CustomerSecurityScreen extends StatelessWidget {
       valueListenable: darkModeNotifier,
       builder: (context, isDark, _) {
         return Scaffold(
-          backgroundColor: isDark
-              ? const Color(0xFF111111)
-              : const Color(0xFFF5F6FA),
+          // WHITE in light mode
+          // DARK in dark mode
+          backgroundColor: isDark ? const Color(0xFF111111) : Colors.white,
 
           appBar: AppBar(
             elevation: 0,
@@ -196,6 +200,7 @@ class CustomerSecurityScreen extends StatelessWidget {
 
               buildTile(
                 context: context,
+                isDark: isDark,
                 icon: Icons.edit_outlined,
                 title: "Edit Profile",
                 subtitle: "Update username, email and phone",
@@ -219,6 +224,7 @@ class CustomerSecurityScreen extends StatelessWidget {
 
               buildTile(
                 context: context,
+                isDark: isDark,
                 icon: Icons.lock_outline,
                 title: "Change Password",
                 subtitle: "Update your account password",
@@ -233,6 +239,7 @@ class CustomerSecurityScreen extends StatelessWidget {
               ),
 
               Card(
+                color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
                 elevation: 2,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(18),
@@ -265,6 +272,7 @@ class CustomerSecurityScreen extends StatelessWidget {
 
               buildTile(
                 context: context,
+                isDark: isDark,
                 icon: Icons.logout,
                 iconColor: Colors.orange,
                 title: "Sign Out",
@@ -287,6 +295,7 @@ class CustomerSecurityScreen extends StatelessWidget {
 
               buildTile(
                 context: context,
+                isDark: isDark,
                 icon: Icons.delete_forever,
                 iconColor: Colors.red,
                 title: "Delete Account",

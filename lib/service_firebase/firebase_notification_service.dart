@@ -7,11 +7,9 @@ import 'package:senmi/service_firebase/native_notification.dart';
 import 'package:senmi/services/api_service.dart';
 
 class FirebaseNotificationService {
-  static final FirebaseMessaging _messaging =
-      FirebaseMessaging.instance;
+  static final FirebaseMessaging _messaging = FirebaseMessaging.instance;
 
-  static final FlutterLocalNotificationsPlugin
-      _localNotifications =
+  static final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
 
   // =========================================================
@@ -20,9 +18,7 @@ class FirebaseNotificationService {
 
   static GlobalKey<NavigatorState>? _navigatorKey;
 
-  static void setNavigatorKey(
-    GlobalKey<NavigatorState> key,
-  ) {
+  static void setNavigatorKey(GlobalKey<NavigatorState> key) {
     _navigatorKey = key;
 
     if (kDebugMode) {
@@ -44,8 +40,7 @@ class FirebaseNotificationService {
   // =========================================================
 
   static Future<void> initialize() async {
-    final NotificationSettings settings =
-        await _messaging.requestPermission(
+    final NotificationSettings settings = await _messaging.requestPermission(
       alert: true,
       badge: true,
       sound: true,
@@ -63,8 +58,7 @@ class FirebaseNotificationService {
     // =======================================================
 
     try {
-      final String? token =
-          await _messaging.getToken();
+      final String? token = await _messaging.getToken();
 
       if (kDebugMode) {
         print("FCM TOKEN: $token");
@@ -79,17 +73,13 @@ class FirebaseNotificationService {
           }
         } catch (e) {
           if (kDebugMode) {
-            print(
-              "FCM TOKEN SAVE ERROR: $e",
-            );
+            print("FCM TOKEN SAVE ERROR: $e");
           }
         }
       }
     } catch (e) {
       if (kDebugMode) {
-        print(
-          "FCM TOKEN GET ERROR: $e",
-        );
+        print("FCM TOKEN GET ERROR: $e");
       }
     }
 
@@ -97,32 +87,24 @@ class FirebaseNotificationService {
     // LOCAL NOTIFICATIONS
     // =======================================================
 
-    const AndroidInitializationSettings
-        androidSettings =
-        AndroidInitializationSettings(
-      '@mipmap/ic_launcher',
-    );
+    const AndroidInitializationSettings androidSettings =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    const DarwinInitializationSettings
-        iosSettings =
+    const DarwinInitializationSettings iosSettings =
         DarwinInitializationSettings();
 
-    const InitializationSettings initSettings =
-        InitializationSettings(
+    const InitializationSettings initSettings = InitializationSettings(
       android: androidSettings,
       iOS: iosSettings,
     );
 
-    await _localNotifications.initialize(
-      settings: initSettings,
-    );
+    await _localNotifications.initialize(settings: initSettings);
 
     // =======================================================
     // NOTIFICATION CHANNEL
     // =======================================================
 
-    const AndroidNotificationChannel channel =
-        AndroidNotificationChannel(
+    const AndroidNotificationChannel channel = AndroidNotificationChannel(
       'senmi_channel',
       'Senmi Notifications',
       description: 'Important notifications',
@@ -131,111 +113,75 @@ class FirebaseNotificationService {
 
     await _localNotifications
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.createNotificationChannel(channel);
 
     // =======================================================
     // NATIVE ANDROID NOTIFICATION TAP
     // =======================================================
 
-    NativeNotification.setNotificationTapHandler(
-      (data) {
-        if (kDebugMode) {
-          print(
-            "📲 NATIVE NOTIFICATION TAPPED",
-          );
+    NativeNotification.setNotificationTapHandler((data) {
+      if (kDebugMode) {
+        print("📲 NATIVE NOTIFICATION TAPPED");
 
-          print(
-            "📦 NATIVE DATA: $data",
-          );
-        }
+        print("📦 NATIVE DATA: $data");
+      }
 
-        _handleNotificationTap(data);
-      },
-    );
+      _handleNotificationTap(data);
+    });
 
     // =======================================================
     // FOREGROUND FCM
     // =======================================================
 
-    FirebaseMessaging.onMessage.listen(
-      (RemoteMessage message) async {
-        final String title =
-            message.notification?.title ??
-                message.data['title'] ??
-                "Notification";
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+      final String title =
+          message.notification?.title ??
+          message.data['title'] ??
+          "Notification";
 
-        final String body =
-            message.notification?.body ??
-                message.data['body'] ??
-                "";
+      final String body =
+          message.notification?.body ?? message.data['body'] ?? "";
 
-        final String? packageId =
-            message.data['package_id']
-                ?.toString();
+      final String? packageId = message.data['package_id']?.toString();
 
-        if (kDebugMode) {
-          print(
-            "📩 FOREGROUND NOTIFICATION",
-          );
+      if (kDebugMode) {
+        print("📩 FOREGROUND NOTIFICATION");
 
-          print(
-            "📌 TYPE: ${message.data['type']}",
-          );
+        print("📌 TYPE: ${message.data['type']}");
 
-          print(
-            "📦 PACKAGE ID: $packageId",
-          );
+        print("📦 PACKAGE ID: $packageId");
 
-          print(
-            "📦 ALL DATA: ${message.data}",
-          );
-        }
+        print("📦 ALL DATA: ${message.data}");
+      }
 
-        await NativeNotification.show(
-          title,
-          body,
-          packageId,
-        );
-      },
-    );
+      await NativeNotification.show(title, body, packageId);
+    });
 
     // =======================================================
     // BACKGROUND FCM NOTIFICATION TAP
     // =======================================================
 
-    FirebaseMessaging.onMessageOpenedApp.listen(
-      (RemoteMessage message) {
-        if (kDebugMode) {
-          print(
-            "📲 FCM NOTIFICATION TAPPED",
-          );
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      if (kDebugMode) {
+        print("📲 FCM NOTIFICATION TAPPED");
 
-          print(
-            "📦 FCM DATA: ${message.data}",
-          );
-        }
+        print("📦 FCM DATA: ${message.data}");
+      }
 
-        _handleNotificationTap(
-          Map<String, dynamic>.from(
-            message.data,
-          ),
-        );
-      },
-    );
+      _handleNotificationTap(Map<String, dynamic>.from(message.data));
+    });
 
     // =======================================================
     // TERMINATED FCM NOTIFICATION
     // =======================================================
 
-    final RemoteMessage? initialMessage =
-        await _messaging.getInitialMessage();
+    final RemoteMessage? initialMessage = await _messaging.getInitialMessage();
 
     if (initialMessage != null) {
       if (kDebugMode) {
-        print(
-          "📲 APP OPENED FROM FCM NOTIFICATION",
-        );
+        print("📲 APP OPENED FROM FCM NOTIFICATION");
 
         print(
           "📦 INITIAL FCM DATA: "
@@ -243,10 +189,7 @@ class FirebaseNotificationService {
         );
       }
 
-      _pendingNotification =
-          Map<String, dynamic>.from(
-        initialMessage.data,
-      );
+      _pendingNotification = Map<String, dynamic>.from(initialMessage.data);
     }
 
     // =======================================================
@@ -254,9 +197,7 @@ class FirebaseNotificationService {
     // =======================================================
 
     try {
-      final nativeData =
-          await NativeNotification
-              .getNotificationData();
+      final nativeData = await NativeNotification.getNotificationData();
 
       if (nativeData != null) {
         if (kDebugMode) {
@@ -265,15 +206,10 @@ class FirebaseNotificationService {
             "NOTIFICATION",
           );
 
-          print(
-            "📦 NATIVE DATA: $nativeData",
-          );
+          print("📦 NATIVE DATA: $nativeData");
         }
 
-        _pendingNotification =
-            Map<String, dynamic>.from(
-          nativeData,
-        );
+        _pendingNotification = Map<String, dynamic>.from(nativeData);
       }
     } catch (e) {
       if (kDebugMode) {
@@ -301,64 +237,40 @@ class FirebaseNotificationService {
   // NOTIFICATION ROUTER
   // =========================================================
 
-  static void _handleNotificationTap(
-    Map<String, dynamic> data,
-  ) {
+  static void _handleNotificationTap(Map<String, dynamic> data) {
     if (kDebugMode) {
-      print(
-        "====================================",
-      );
+      print("====================================");
 
-      print(
-        "🔔 NOTIFICATION ROUTER",
-      );
+      print("🔔 NOTIFICATION ROUTER");
 
-      print(
-        "📦 DATA: $data",
-      );
+      print("📦 DATA: $data");
     }
 
     final String? type =
-        data['type']?.toString() ??
-        data['notification_type']?.toString();
+        data['type']?.toString() ?? data['notification_type']?.toString();
 
-    final String? packageId =
-        data['package_id']?.toString();
+    final String? packageId = data['package_id']?.toString();
 
     if (kDebugMode) {
-      print(
-        "🔔 TYPE: $type",
-      );
+      print("🔔 TYPE: $type");
 
-      print(
-        "📦 PACKAGE ID: $packageId",
-      );
+      print("📦 PACKAGE ID: $packageId");
     }
 
     // =======================================================
     // PACKAGE
     // =======================================================
 
-    if (
-      type == 'package' &&
-      packageId != null &&
-      packageId.isNotEmpty
-    ) {
-      if (kDebugMode) {
-        print(
-          "✅ VALID PACKAGE NOTIFICATION",
-        );
-      }
-
+    if ((type == 'package' || type == 'new_package') &&
+        packageId != null &&
+        packageId.isNotEmpty) {
       _openPackageWhenReady(packageId);
 
       return;
     }
 
     if (kDebugMode) {
-      print(
-        "⚠️ NOT A PACKAGE NOTIFICATION",
-      );
+      print("⚠️ NOT A PACKAGE NOTIFICATION");
     }
   }
 
@@ -366,9 +278,7 @@ class FirebaseNotificationService {
   // WAIT FOR NAVIGATOR THEN OPEN PACKAGE
   // =========================================================
 
-  static void _openPackageWhenReady(
-    String packageId,
-  ) {
+  static void _openPackageWhenReady(String packageId) {
     if (kDebugMode) {
       print(
         "🚀 REQUEST TO OPEN PACKAGE: "
@@ -376,24 +286,16 @@ class FirebaseNotificationService {
       );
     }
 
-    final navigator =
-        _navigatorKey?.currentState;
+    final navigator = _navigatorKey?.currentState;
 
     if (navigator == null) {
       if (kDebugMode) {
-        print(
-          "⏳ NAVIGATOR NOT READY",
-        );
+        print("⏳ NAVIGATOR NOT READY");
 
-        print(
-          "💾 SAVING PACKAGE: $packageId",
-        );
+        print("💾 SAVING PACKAGE: $packageId");
       }
 
-      _pendingNotification = {
-        'type': 'package',
-        'package_id': packageId,
-      };
+      _pendingNotification = {'type': 'package', 'package_id': packageId};
 
       return;
     }
@@ -405,23 +307,15 @@ class FirebaseNotificationService {
   // OPEN PACKAGE DETAILS
   // =========================================================
 
-  static void _openPackage(
-    String packageId,
-  ) {
-    final navigator =
-        _navigatorKey?.currentState;
+  static void _openPackage(String packageId) {
+    final navigator = _navigatorKey?.currentState;
 
     if (navigator == null) {
       if (kDebugMode) {
-        print(
-          "❌ NAVIGATOR STILL NULL",
-        );
+        print("❌ NAVIGATOR STILL NULL");
       }
 
-      _pendingNotification = {
-        'type': 'package',
-        'package_id': packageId,
-      };
+      _pendingNotification = {'type': 'package', 'package_id': packageId};
 
       return;
     }
@@ -441,29 +335,18 @@ class FirebaseNotificationService {
     _lastOpenedPackageId = packageId;
 
     if (kDebugMode) {
-      print(
-        "====================================",
-      );
+      print("====================================");
 
-      print(
-        "📦 OPENING PACKAGE DETAILS",
-      );
+      print("📦 OPENING PACKAGE DETAILS");
 
-      print(
-        "📦 PACKAGE ID: $packageId",
-      );
+      print("📦 PACKAGE ID: $packageId");
 
-      print(
-        "====================================",
-      );
+      print("====================================");
     }
 
     navigator.push(
       MaterialPageRoute(
-        builder: (_) =>
-            PackageDetailsScreen(
-          packageId: packageId,
-        ),
+        builder: (_) => PackageDetailsScreen(packageId: packageId),
       ),
     );
   }
@@ -477,22 +360,16 @@ class FirebaseNotificationService {
 
     if (data == null) {
       if (kDebugMode) {
-        print(
-          "ℹ️ NO PENDING NOTIFICATION",
-        );
+        print("ℹ️ NO PENDING NOTIFICATION");
       }
 
       return;
     }
 
     if (kDebugMode) {
-      print(
-        "🚀 HANDLING PENDING NOTIFICATION",
-      );
+      print("🚀 HANDLING PENDING NOTIFICATION");
 
-      print(
-        "📦 DATA: $data",
-      );
+      print("📦 DATA: $data");
     }
 
     _pendingNotification = null;
@@ -502,37 +379,25 @@ class FirebaseNotificationService {
 
   // ======================================
   // SHOW NOTIFICATION
-  // ======================================
+  // =======================================
 
-  static Future<void> showNotification(
-    String title,
-    String body,
-  ) async {
-    const AndroidNotificationDetails
-        androidDetails =
+  static Future<void> showNotification(String title, String body) async {
+    const AndroidNotificationDetails androidDetails =
         AndroidNotificationDetails(
-      'senmi_channel',
-      'Senmi Notifications',
-      channelDescription:
-          'Important notifications',
-      importance: Importance.max,
-      priority: Priority.high,
-      largeIcon:
-          DrawableResourceAndroidBitmap(
-        'notification_icon',
-      ),
-    );
+          'senmi_channel',
+          'Senmi Notifications',
+          channelDescription: 'Important notifications',
+          importance: Importance.max,
+          priority: Priority.high,
+          largeIcon: DrawableResourceAndroidBitmap('notification_icon'),
+        );
 
-    const NotificationDetails details =
-        NotificationDetails(
+    const NotificationDetails details = NotificationDetails(
       android: androidDetails,
     );
 
     await _localNotifications.show(
-      id:
-          DateTime.now()
-              .millisecondsSinceEpoch ~/
-          1000,
+      id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
       title: title,
       body: body,
       notificationDetails: details,
