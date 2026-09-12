@@ -147,38 +147,64 @@ class _CustomerSearchScreenState extends State<CustomerSearchScreen> {
 
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
                         borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: isDark
+                              ? Colors.white.withOpacity(0.08)
+                              : Colors.transparent,
+                        ),
                       ),
                       child: TextField(
                         controller: trackController,
                         textInputAction: TextInputAction.search,
                         onSubmitted: (_) => searchPackage(),
+
+                        style: TextStyle(
+                          color: isDark ? Colors.white : Colors.black87,
+                          fontSize: 15,
+                        ),
+
+                        cursorColor: isDark ? Colors.white : Colors.deepPurple,
+
                         decoration: InputDecoration(
                           hintText: "Enter tracking number",
-                          prefixIcon: const Icon(
-                            Icons.search,
-                            color: Colors.deepPurple,
+
+                          hintStyle: TextStyle(
+                            color: isDark ? Colors.white54 : Colors.black45,
                           ),
+
+                          prefixIcon: Icon(
+                            Icons.search,
+                            color: isDark ? Colors.white70 : Colors.deepPurple,
+                          ),
+
                           suffixIcon: searching
-                              ? const Padding(
-                                  padding: EdgeInsets.all(13),
+                              ? Padding(
+                                  padding: const EdgeInsets.all(13),
                                   child: SizedBox(
                                     width: 20,
                                     height: 20,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
+                                      color: isDark
+                                          ? Colors.white
+                                          : Colors.deepPurple,
                                     ),
                                   ),
                                 )
                               : IconButton(
-                                  icon: const Icon(
+                                  icon: Icon(
                                     Icons.arrow_forward,
-                                    color: Colors.deepPurple,
+                                    color: isDark
+                                        ? Colors.white
+                                        : Colors.deepPurple,
                                   ),
                                   onPressed: searchPackage,
                                 ),
+
                           border: InputBorder.none,
+
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 12,
                             vertical: 16,
