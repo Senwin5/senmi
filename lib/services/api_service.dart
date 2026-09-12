@@ -623,7 +623,9 @@ class ApiService {
     );
 
     if (response.statusCode != 200) {
-      throw Exception("Failed to update status");
+      throw Exception(
+        "Failed to update status: ${response.statusCode} ${response.body}",
+      );
     }
   }
 
