@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:senmi/package_screens/features/customer/customer_home_bottom/customer_search_screen.dart';
 import 'customer_home.dart';
@@ -39,38 +41,79 @@ class _CustomerBottomNavState extends State<CustomerBottomNav> {
     ];
   }
 
-  final List<BottomNavigationBarItem> _navItems = const [
-    BottomNavigationBarItem(
-      icon: Icon(Icons.home_outlined),
-      activeIcon: Icon(Icons.home),
-      label: "Home",
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(Icons.search_outlined),
-      activeIcon: Icon(Icons.search),
-      label: "Search",
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(Icons.two_wheeler_outlined),
-      activeIcon: Icon(Icons.two_wheeler),
-      label: "Send",
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(Icons.history_outlined),
-      activeIcon: Icon(Icons.history),
-      label: "History",
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(Icons.person_outline),
-      activeIcon: Icon(Icons.person),
-      label: "Account",
-    ),
-  ];
-
   @override
   void dispose() {
     darkModeNotifier.dispose();
     super.dispose();
+  }
+
+  /// Modern navigation button
+  Widget _navButton({
+    required int index,
+    required IconData icon,
+    required IconData activeIcon,
+    required String label,
+    required bool isDark,
+  }) {
+    final bool selected = _currentIndex == index;
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _currentIndex = index;
+        });
+      },
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOut,
+        padding: EdgeInsets.symmetric(
+          horizontal: selected ? 13 : 10,
+          vertical: 8,
+        ),
+        decoration: BoxDecoration(
+          color: selected
+              ? (isDark
+                    ? Colors.deepPurple.withOpacity(0.25)
+                    : Colors.deepPurple.withOpacity(0.10))
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 180),
+              transitionBuilder: (child, animation) {
+                return ScaleTransition(scale: animation, child: child);
+              },
+              child: Icon(
+                selected ? activeIcon : icon,
+                key: ValueKey('${index}_$selected'),
+                size: 24,
+                color: selected
+                    ? (isDark ? Colors.white : Colors.deepPurple)
+                    : (isDark ? Colors.white60 : Colors.black45),
+              ),
+            ),
+
+            const SizedBox(height: 3),
+
+            AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 180),
+              style: TextStyle(
+                fontSize: selected ? 11 : 10,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                color: selected
+                    ? (isDark ? Colors.white : Colors.deepPurple)
+                    : (isDark ? Colors.white60 : Colors.black45),
+              ),
+              child: Text(label),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -81,52 +124,111 @@ class _CustomerBottomNavState extends State<CustomerBottomNav> {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
 
-          // Light theme
+          // =========================
+          // LIGHT THEME
+          // =========================
           theme: ThemeData(
             brightness: Brightness.light,
             scaffoldBackgroundColor: Colors.white,
-            bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-              backgroundColor: Colors.white,
-              selectedItemColor: Colors.deepPurple,
-              unselectedItemColor: Colors.black54,
-              type: BottomNavigationBarType.fixed,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: Colors.deepPurple,
+              brightness: Brightness.light,
             ),
           ),
 
-          // Dark theme
+          // =========================
+          // DARK THEME
+          // =========================
           darkTheme: ThemeData(
             brightness: Brightness.dark,
             scaffoldBackgroundColor: const Color(0xFF121212),
-            bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-              backgroundColor: Color(0xFF1E1E1E),
-              selectedItemColor: Colors.white,
-              unselectedItemColor: Colors.white60,
-              type: BottomNavigationBarType.fixed,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: Colors.deepPurple,
+              brightness: Brightness.dark,
             ),
           ),
 
           themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
 
           home: Scaffold(
+            extendBody: true,
+
+            // =========================
+            // CURRENT SCREEN
+            // =========================
             body: _screens[_currentIndex],
 
-            bottomNavigationBar: BottomNavigationBar(
-              currentIndex: _currentIndex,
-              items: _navItems,
-              type: BottomNavigationBarType.fixed,
+            // =========================
+            // MODERN FLOATING NAV BAR
+            // =========================
+            bottomNavigationBar: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
+                child: Container(
+                  height: 70,
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(isDark ? 0.25 : 0.10),
+                        blurRadius: 20,
+                        spreadRadius: 0,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      // HOME
+                      _navButton(
+                        index: 0,
+                        icon: Icons.home_outlined,
+                        activeIcon: Icons.home,
+                        label: "Home",
+                        isDark: isDark,
+                      ),
 
-              // Automatically changes with dark mode
-              backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                      // SEARCH
+                      _navButton(
+                        index: 1,
+                        icon: Icons.search_outlined,
+                        activeIcon: Icons.search,
+                        label: "Search",
+                        isDark: isDark,
+                      ),
 
-              selectedItemColor: isDark ? Colors.white : Colors.deepPurple,
+                      // SEND PACKAGE
+                      _navButton(
+                        index: 2,
+                        icon: Icons.two_wheeler_outlined,
+                        activeIcon: Icons.two_wheeler,
+                        label: "Send",
+                        isDark: isDark,
+                      ),
 
-              unselectedItemColor: isDark ? Colors.white60 : Colors.black54,
+                      // HISTORY
+                      _navButton(
+                        index: 3,
+                        icon: Icons.history_outlined,
+                        activeIcon: Icons.history,
+                        label: "History",
+                        isDark: isDark,
+                      ),
 
-              onTap: (index) {
-                setState(() {
-                  _currentIndex = index;
-                });
-              },
+                      // ACCOUNT
+                      _navButton(
+                        index: 4,
+                        icon: Icons.person_outline,
+                        activeIcon: Icons.person,
+                        label: "Account",
+                        isDark: isDark,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ),
         );
