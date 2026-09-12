@@ -72,8 +72,6 @@ void main() async {
     _firebaseMessagingBackgroundHandler,
   );
 
-
-  /// Give FirebaseNotificationService
   /// access to the SAME navigatorKey used
   /// by MaterialApp.
 
