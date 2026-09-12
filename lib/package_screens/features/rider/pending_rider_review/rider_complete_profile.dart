@@ -311,7 +311,7 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
     await showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         contentPadding: const EdgeInsets.fromLTRB(24, 26, 24, 12),
         content: Column(
@@ -343,7 +343,7 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
               style: TextStyle(
                 height: 1.5,
                 color: Theme.of(
-                  context,
+                  dialogContext,
                 ).textTheme.bodyMedium?.color?.withOpacity(0.70),
               ),
             ),
@@ -355,9 +355,7 @@ class _RiderCompleteProfileState extends State<RiderCompleteProfile> {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () {
-                Navigator.of(context).pop();
-
-                Navigator.of(context).push(
+                Navigator.of(dialogContext).push(
                   MaterialPageRoute(builder: (_) => const RiderPendingScreen()),
                 );
               },
