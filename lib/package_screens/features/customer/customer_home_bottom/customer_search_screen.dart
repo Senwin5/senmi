@@ -45,7 +45,10 @@ class _CustomerSearchScreenState extends State<CustomerSearchScreen> {
 
       if (result == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("❌ Tracking code not found")),
+          const SnackBar(
+            content: Text("❌ Tracking code not found"),
+            backgroundColor: Colors.deepPurple,
+          ),
         );
         return;
       }

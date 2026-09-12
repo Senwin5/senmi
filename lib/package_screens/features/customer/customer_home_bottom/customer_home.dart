@@ -61,7 +61,10 @@ class _CustomerHomeState extends State<CustomerHome> {
     if (result == null) {
       // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("❌ Tracking code not found")),
+        const SnackBar(
+          content: Text("❌ Tracking code not found"),
+          backgroundColor: Colors.deepPurple,
+        ),
       );
       return;
     }
