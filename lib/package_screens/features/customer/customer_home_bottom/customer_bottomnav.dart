@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:senmi/package_screens/features/customer/customer_home_bottom/customer_search_screen.dart';
 import 'customer_home.dart';
 import '../customer_create/create_package_screen.dart';
 import '../customer_history/customer_history_screen.dart';
@@ -31,6 +32,7 @@ class _CustomerBottomNavState extends State<CustomerBottomNav> {
 
     _screens = [
       const CustomerHome(),
+      const CustomerSearchScreen(),
       const CreatePackageScreen(),
       const HistoryScreen(),
       CustomerProfileScreen(darkModeNotifier: darkModeNotifier),
@@ -38,13 +40,31 @@ class _CustomerBottomNavState extends State<CustomerBottomNav> {
   }
 
   final List<BottomNavigationBarItem> _navItems = const [
-    BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
     BottomNavigationBarItem(
-      icon: Icon(Icons.two_wheeler),
-      label: "Send Package",
+      icon: Icon(Icons.home_outlined),
+      activeIcon: Icon(Icons.home),
+      label: "Home",
     ),
-    BottomNavigationBarItem(icon: Icon(Icons.history), label: "History"),
-    BottomNavigationBarItem(icon: Icon(Icons.person), label: "Account"),
+    BottomNavigationBarItem(
+      icon: Icon(Icons.search_outlined),
+      activeIcon: Icon(Icons.search),
+      label: "Search",
+    ),
+    BottomNavigationBarItem(
+      icon: Icon(Icons.two_wheeler_outlined),
+      activeIcon: Icon(Icons.two_wheeler),
+      label: "Send",
+    ),
+    BottomNavigationBarItem(
+      icon: Icon(Icons.history_outlined),
+      activeIcon: Icon(Icons.history),
+      label: "History",
+    ),
+    BottomNavigationBarItem(
+      icon: Icon(Icons.person_outline),
+      activeIcon: Icon(Icons.person),
+      label: "Account",
+    ),
   ];
 
   @override
