@@ -204,7 +204,7 @@ class _CustomerBottomNavState extends State<CustomerBottomNav> {
                         index: 2,
                         icon: Icons.two_wheeler_outlined,
                         activeIcon: Icons.two_wheeler,
-                        label: "Send",
+                        label: "Order",
                         isDark: isDark,
                       ),
 
