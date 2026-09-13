@@ -51,13 +51,24 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
   final String apiKey = "AIzaSyANfJatY_6y8gzmUrvV2_n2aR9ms7Xe_ZY";
 
   void _resetForm() {
+    // Reset the form first
+    _formKey.currentState?.reset();
+
+    // Then clear all text fields
     pickupController.clear();
     deliveryController.clear();
-
     receiverNameController.clear();
     receiverPhoneController.clear();
 
+    // Make absolutely sure the controllers are empty
+    pickupController.value = const TextEditingValue();
+    deliveryController.value = const TextEditingValue();
+    receiverNameController.value = const TextEditingValue();
+    receiverPhoneController.value = const TextEditingValue();
+
     setState(() {
+      senderName = '';
+      senderPhone = '';
       receiverName = '';
       receiverPhone = '';
 
@@ -72,7 +83,6 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
     });
 
     FocusScope.of(context).unfocus();
-    _formKey.currentState?.reset();
   }
 
   void _autoCalculatePrice() {
