@@ -151,7 +151,7 @@ class _CustomerBottomNavState extends State<CustomerBottomNav> {
           themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
 
           home: Scaffold(
-            extendBody: true,
+            extendBody: false,
 
             // =========================
             // CURRENT SCREEN
