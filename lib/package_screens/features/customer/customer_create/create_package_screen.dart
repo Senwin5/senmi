@@ -51,17 +51,16 @@ class _CreatePackageScreenState extends State<CreatePackageScreen> {
   final String apiKey = "AIzaSyANfJatY_6y8gzmUrvV2_n2aR9ms7Xe_ZY";
 
   void _resetForm() {
+    pickupController.clear();
+    deliveryController.clear();
+
+    receiverNameController.clear();
+    receiverPhoneController.clear();
+
     setState(() {
-      pickupController.clear();
-      deliveryController.clear();
-
-      receiverNameController.clear();
-      receiverPhoneController.clear();
-
       receiverName = '';
       receiverPhone = '';
 
-      // description = '';
       pickupAddress = '';
       deliveryAddress = '';
 
