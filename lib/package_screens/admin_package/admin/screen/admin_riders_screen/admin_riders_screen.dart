@@ -115,9 +115,15 @@ class _AdminRidersScreenState extends State<AdminRidersScreen> {
           rider.email.toLowerCase().contains(query) ||
           (rider.phone ?? '').toLowerCase().contains(query);
 
-      final matchesFilter =
-          selectedFilter == "all" ||
-          rider.status.toLowerCase() == selectedFilter;
+      bool matchesFilter;
+
+      if (selectedFilter == "all") {
+        matchesFilter = true;
+      } else if (selectedFilter == "deactivated") {
+        matchesFilter = !rider.isActive;
+      } else {
+        matchesFilter = rider.status.toLowerCase() == selectedFilter;
+      }
 
       return matchesSearch && matchesFilter;
     }).toList();
@@ -444,6 +450,7 @@ class _AdminRidersScreenState extends State<AdminRidersScreen> {
                 filterChip("Pending"),
                 filterChip("Approved"),
                 filterChip("Rejected"),
+                filterChip("Deactivated"),
               ],
             ),
           ),

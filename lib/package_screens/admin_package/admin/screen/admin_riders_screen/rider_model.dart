@@ -13,6 +13,12 @@ class RiderModel {
   final String status;
 
   // ============================================================
+  // ACCOUNT STATUS
+  // ============================================================
+
+  final bool isActive;
+
+  // ============================================================
   // CONTACT INFORMATION
   // ============================================================
 
@@ -66,6 +72,7 @@ class RiderModel {
     required this.email,
     required this.fullName,
     required this.status,
+    required this.isActive,
 
     this.phone,
 
@@ -92,6 +99,28 @@ class RiderModel {
   // ============================================================
 
   factory RiderModel.fromJson(Map<String, dynamic> json) {
+    // ==========================================================
+    // ACCOUNT STATUS
+    //
+    // Handles:
+    // true
+    // false
+    // 1
+    // 0
+    // "true"
+    // "false"
+    // "1"
+    // "0"
+    // ==========================================================
+
+    final activeValue = json['is_active'];
+
+    final bool parsedIsActive =
+        activeValue == true ||
+        activeValue == 1 ||
+        activeValue?.toString().trim().toLowerCase() == 'true' ||
+        activeValue?.toString().trim() == '1';
+
     if (kDebugMode) {
       print('========================================');
       print('RIDER JSON');
@@ -103,6 +132,11 @@ class RiderModel {
       print('USERNAME => ${json['username']}');
       print('EMAIL => ${json['email']}');
       print('FULL NAME => ${json['full_name']}');
+      print('STATUS => ${json['status']}');
+
+      // IMPORTANT DEBUG
+      print('RAW IS ACTIVE => $activeValue');
+      print('PARSED IS ACTIVE => $parsedIsActive');
 
       print(
         'PHONE => '
@@ -157,7 +191,11 @@ class RiderModel {
       // ========================================================
       // BASIC INFORMATION
       // ========================================================
-      id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
+
+      id: int.tryParse(
+            json['id']?.toString() ?? '',
+          ) ??
+          0,
 
       riderId: json['rider_id']?.toString() ?? '',
 
@@ -170,13 +208,23 @@ class RiderModel {
       status: json['status']?.toString() ?? 'pending',
 
       // ========================================================
+      // ACCOUNT STATUS
+      // ========================================================
+
+      isActive: parsedIsActive,
+
+      // ========================================================
       // CONTACT
       // ========================================================
-      phone: json['phone_number']?.toString() ?? json['phone']?.toString(),
+
+      phone:
+          json['phone_number']?.toString() ??
+          json['phone']?.toString(),
 
       // ========================================================
       // IDENTITY
       // ========================================================
+
       ninNumber: json['nin_number']?.toString(),
 
       dateOfBirth: json['date_of_birth']?.toString(),
@@ -184,6 +232,7 @@ class RiderModel {
       // ========================================================
       // ADDRESS
       // ========================================================
+
       address: json['address']?.toString(),
 
       city: json['city']?.toString(),
@@ -191,28 +240,37 @@ class RiderModel {
       // ========================================================
       // VEHICLE
       // ========================================================
+
       vehicleNumber: json['vehicle_number']?.toString(),
 
       // ========================================================
       // EMERGENCY CONTACT
       // ========================================================
-      emergencyContactName: json['emergency_contact_name']?.toString(),
 
-      emergencyContactPhone: json['emergency_contact_phone']?.toString(),
+      emergencyContactName:
+          json['emergency_contact_name']?.toString(),
 
-      emergencyContactAddress: json['emergency_contact_address']?.toString(),
+      emergencyContactPhone:
+          json['emergency_contact_phone']?.toString(),
 
-      emergencyContactRelationship: json['emergency_contact_relationship']
-          ?.toString(),
+      emergencyContactAddress:
+          json['emergency_contact_address']?.toString(),
+
+      emergencyContactRelationship:
+          json['emergency_contact_relationship']?.toString(),
 
       // ========================================================
       // IMAGES
       // ========================================================
-      profileImage: json['profile_picture']?.toString(),
 
-      ninImage: json['nin_image']?.toString(),
+      profileImage:
+          json['profile_picture']?.toString(),
 
-      vehicleImage: json['rider_image_with_vehicle']?.toString(),
+      ninImage:
+          json['nin_image']?.toString(),
+
+      vehicleImage:
+          json['rider_image_with_vehicle']?.toString(),
     );
   }
 
@@ -231,6 +289,12 @@ class RiderModel {
       'full_name': fullName,
       'status': status,
 
+      // ========================================================
+      // ACCOUNT STATUS
+      // ========================================================
+
+      'is_active': isActive,
+
       // Django field
       'phone_number': phone,
 
@@ -242,18 +306,23 @@ class RiderModel {
 
       'vehicle_number': vehicleNumber,
 
-      'emergency_contact_name': emergencyContactName,
+      'emergency_contact_name':
+          emergencyContactName,
 
-      'emergency_contact_phone': emergencyContactPhone,
+      'emergency_contact_phone':
+          emergencyContactPhone,
 
-      'emergency_contact_address': emergencyContactAddress,
+      'emergency_contact_address':
+          emergencyContactAddress,
 
-      'emergency_contact_relationship': emergencyContactRelationship,
+      'emergency_contact_relationship':
+          emergencyContactRelationship,
 
       // Django image fields
       'profile_picture': profileImage,
       'nin_image': ninImage,
-      'rider_image_with_vehicle': vehicleImage,
+      'rider_image_with_vehicle':
+          vehicleImage,
     };
   }
 }

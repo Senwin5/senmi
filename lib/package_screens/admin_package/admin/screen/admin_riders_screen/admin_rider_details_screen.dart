@@ -244,7 +244,13 @@ class _RiderDetailsScreenState extends State<RiderDetailsScreen> {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
-    final isPending = rider.status.toLowerCase() == "pending";
+    final isDeactivated = !rider.isActive;
+
+    final isPending = rider.status.toLowerCase() == "pending" && rider.isActive;
+
+    final displayStatus = isDeactivated
+        ? "DEACTIVATED"
+        : rider.status.toUpperCase();
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -397,7 +403,7 @@ class _RiderDetailsScreenState extends State<RiderDetailsScreen> {
                     ),
 
                     child: Text(
-                      rider.status.toUpperCase(),
+                      displayStatus,
 
                       style: TextStyle(
                         color: Colors.white,
