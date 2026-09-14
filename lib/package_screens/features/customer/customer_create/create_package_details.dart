@@ -236,15 +236,11 @@ class _PackageDetailsScreenState extends State<PackageDetailsScreen> {
           ),
           TextButton(
             onPressed: () async {
-              final url =
-                  "https://wa.me/?text=${Uri.encodeComponent("Pay for your delivery here: $link")}";
-              final uri = Uri.parse(url);
-              if (await canLaunchUrl(uri)) {
-                await launchUrl(uri, mode: LaunchMode.externalApplication);
+              final Uri uri = Uri.parse(
+                'https://wa.me/?text=${Uri.encodeComponent("Pay for your delivery here: $link")}',
+              );
 
-                ///await Future.delayed(const Duration(seconds: 60));
-                await _fetchPackage();
-              }
+              await launchUrl(uri, mode: LaunchMode.externalApplication);
             },
             child: const Text("WhatsApp"),
           ),
