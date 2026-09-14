@@ -33,17 +33,10 @@ class _RiderSettingsScreenState extends State<RiderSettingsScreen> {
     );
   }
 
-  void openWhatsApp() async {
-    final phone = "+2349117341739";
-    final url = "https://wa.me/$phone";
+  Future<void> openWhatsApp() async {
+    final Uri url = Uri.parse('https://wa.me/2349117341739');
 
-    if (await canLaunchUrl(Uri.parse(url))) {
-      await launchUrl(Uri.parse(url));
-    } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Could not open WhatsApp")));
-    }
+    await launchUrl(url, mode: LaunchMode.externalApplication);
   }
 
   Widget sectionTitle(String title) {
