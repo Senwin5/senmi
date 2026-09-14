@@ -156,6 +156,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   },
                 ),
               ),
+
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(
@@ -173,27 +174,35 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   ),
                 ),
               ),
+
               const SizedBox(height: 20),
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.deepPurple,
-                      foregroundColor: Colors.white, // Text color
-                      padding: const EdgeInsets.all(16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+
+              // Moves the actual button 30 pixels upward
+              Transform.translate(
+                offset: const Offset(0, -30),
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.deepPurple,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.all(16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
-                    ),
-                    onPressed: nextPage,
-                    child: Text(
-                      currentPage == pages.length - 1 ? "Get Started" : "Next",
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.5,
+                      onPressed: nextPage,
+                      child: Text(
+                        currentPage == pages.length - 1
+                            ? "Get Started"
+                            : "Next",
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.5,
+                        ),
                       ),
                     ),
                   ),
@@ -201,6 +210,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
               ),
             ],
           ),
+
           Positioned(
             top: 50,
             right: 20,
