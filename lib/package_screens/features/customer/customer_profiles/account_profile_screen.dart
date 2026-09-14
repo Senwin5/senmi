@@ -88,13 +88,10 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
     }
   }
 
-  void openWhatsApp() async {
-    const phone = "+2349117341739";
-    final url = Uri.parse("https://wa.me/$phone");
+  Future<void> openWhatsApp() async {
+    final Uri url = Uri.parse('https://wa.me/2349117341739');
 
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url);
-    }
+    await launchUrl(url, mode: LaunchMode.externalApplication);
   }
 
   @override

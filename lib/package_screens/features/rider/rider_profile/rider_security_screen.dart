@@ -354,7 +354,7 @@ class _RiderSecurityScreenState extends State<RiderSecurityScreen> {
                 Navigator.of(dialogContext).pop();
 
                 final whatsappUrl = Uri.parse(
-                  'https://wa.me/2349117341739?text=${Uri.encodeComponent('Hello Senmi Admin, I need help with my rider account.')}',
+                  'https://wa.me/2349117341739?text=${Uri.encodeComponent('Hello Senmi Admin.')}',
                 );
 
                 if (await canLaunchUrl(whatsappUrl)) {
