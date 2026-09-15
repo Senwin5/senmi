@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:senmi/package_screens/features/customer/customer_home_bottom/customer_bottomnav.dart';
 import 'package:senmi/package_screens/features/rider/pending_rider_review/rider_complete_profile.dart';
+import 'package:senmi/service_firebase/firebase_service.dart';
 import 'package:senmi/widgets/custom_buttom.dart';
 import '../../services/api_service.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -124,6 +125,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         role,
         username.text,
       );
+      FirebaseService.init();
 
       if (!mounted) return;
 

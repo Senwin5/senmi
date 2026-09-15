@@ -41,10 +41,11 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
 
     if (res.containsKey("access")) {
-      await FirebaseService.init();
+      // Start FCM registration in the background.
+      // Do NOT wait for it before opening the app.
+      FirebaseService.init();
 
       // Ask once if the user wants Face ID/Fingerprint login
-
       await askToEnableBiometric();
       if (!mounted) return;
 
