@@ -3,32 +3,76 @@ import 'package:flutter/foundation.dart';
 import 'package:senmi/services/api_service.dart';
 
 class FirebaseService {
+  static bool _initialized = false;
+
   static Future<void> init() async {
     try {
       final messaging = FirebaseMessaging.instance;
 
-      await messaging
-          .requestPermission()
-          .timeout(const Duration(seconds: 10));
+      // Request notification permission
+      await messaging.requestPermission(alert: true, badge: true, sound: true);
 
-      final token = await messaging
-          .getToken()
-          .timeout(const Duration(seconds: 10));
+      // Get FCM token
+      final token = await messaging.getToken();
 
       if (kDebugMode) {
-        print("FCM TOKEN: $token");
+        print("=================================");
+        print("FCM INIT STARTED");
+        print("FCM TOKEN EXISTS: ${token != null && token.isNotEmpty}");
+        print("AUTH TOKEN EXISTS: ${ApiService.token != null}");
+        print("=================================");
       }
 
+      // Save token only when authenticated
       if (token != null && token.isNotEmpty) {
-        await ApiService.saveFcmToken(token)
-            .timeout(const Duration(seconds: 10));
+        await _saveToken(token);
       }
-    } catch (e) {
+
+      // Listen for future token changes
+      if (!_initialized) {
+        _initialized = true;
+
+        messaging.onTokenRefresh.listen((newToken) async {
+          if (kDebugMode) {
+            print("FCM TOKEN REFRESHED");
+          }
+
+          await _saveToken(newToken);
+        });
+      }
+    } catch (e, stackTrace) {
       if (kDebugMode) {
         print("FCM INIT ERROR: $e");
+        print(stackTrace);
+      }
+    }
+  }
+
+  static Future<void> _saveToken(String token) async {
+    try {
+      final accessToken = ApiService.token;
+
+      if (accessToken == null || accessToken.isEmpty) {
+        if (kDebugMode) {
+          print("FCM NOT SAVED: NO AUTH TOKEN");
+        }
+        return;
       }
 
-      // FCM failure should NEVER stop login.
+      if (kDebugMode) {
+        print("FCM SAVING TOKEN...");
+      }
+
+      await ApiService.saveFcmToken(token);
+
+      if (kDebugMode) {
+        print("FCM TOKEN SAVED SUCCESSFULLY");
+      }
+    } catch (e, stackTrace) {
+      if (kDebugMode) {
+        print("FCM TOKEN SAVE ERROR: $e");
+        print(stackTrace);
+      }
     }
   }
 }

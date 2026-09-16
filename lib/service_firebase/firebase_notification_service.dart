@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:senmi/package_screens/features/customer/customer_create/create_package_details.dart';
 import 'package:senmi/service_firebase/native_notification.dart';
-import 'package:senmi/services/api_service.dart';
 
 class FirebaseNotificationService {
   static final FirebaseMessaging _messaging = FirebaseMessaging.instance;
@@ -51,36 +50,6 @@ class FirebaseNotificationService {
         "NOTIFICATION PERMISSION: "
         "${settings.authorizationStatus}",
       );
-    }
-
-    // =======================================================
-    // FCM TOKEN
-    // =======================================================
-
-    try {
-      final String? token = await _messaging.getToken();
-
-      if (kDebugMode) {
-        print("FCM TOKEN: $token");
-      }
-
-      if (token != null) {
-        try {
-          await ApiService.saveFcmToken(token);
-
-          if (kDebugMode) {
-            print("FCM TOKEN SENT TO SERVER");
-          }
-        } catch (e) {
-          if (kDebugMode) {
-            print("FCM TOKEN SAVE ERROR: $e");
-          }
-        }
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print("FCM TOKEN GET ERROR: $e");
-      }
     }
 
     // =======================================================

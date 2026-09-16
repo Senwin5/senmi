@@ -125,7 +125,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         role,
         username.text,
       );
-      FirebaseService.init();
+      await FirebaseService.init();
 
       if (!mounted) return;
 

@@ -42,8 +42,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (res.containsKey("access")) {
       // Start FCM registration in the background.
-      // Do NOT wait for it before opening the app.
-      FirebaseService.init();
+      
+      await FirebaseService.init();
 
       // Ask once if the user wants Face ID/Fingerprint login
       await askToEnableBiometric();
@@ -203,6 +203,8 @@ class _LoginScreenState extends State<LoginScreen> {
         setState(() => loading = false);
         return;
       }
+      // Register FCM token after successful auto-login.
+      await FirebaseService.init();
 
       try {
         // ADMIN

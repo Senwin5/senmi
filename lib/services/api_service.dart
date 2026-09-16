@@ -292,7 +292,14 @@ class ApiService {
   }
 
   static Future<void> saveFcmToken(String token) async {
-    final accessToken = ApiService.token; // ✅ use existing variable
+    final accessToken = ApiService.token;
+
+    if (accessToken == null || accessToken.isEmpty) {
+      if (kDebugMode) {
+        print("FCM SAVE SKIPPED: NO AUTH TOKEN");
+      }
+      return;
+    }
 
     final res = await http.post(
       Uri.parse("$baseUrl/save-fcm-token/"),
@@ -308,9 +315,11 @@ class ApiService {
 
     if (kDebugMode) {
       print("FCM SAVE STATUS: ${res.statusCode}");
-    }
-    if (kDebugMode) {
       print("FCM SAVE BODY: ${res.body}");
+    }
+
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw Exception("FCM token registration failed: ${res.statusCode}");
     }
   }
 

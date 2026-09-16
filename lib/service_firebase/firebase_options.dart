@@ -51,7 +51,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyCvdhOD0no9ky85rSTU--eMq86cyp2DWPU',
-    appId: '1:48776237975:android:3f29c4268521165645aad2',
+    appId: '1:48776237975:android:f886bf6433c6141f45aad2',
     messagingSenderId: '48776237975',
     projectId: 'senmi-94326',
     storageBucket: 'senmi-94326.firebasestorage.app',
