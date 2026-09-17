@@ -13,14 +13,27 @@ class FirebaseService {
       await messaging.requestPermission(alert: true, badge: true, sound: true);
 
       // Get FCM token
+      if (kDebugMode) {
+        print("=================================");
+      }
+      if (kDebugMode) {
+        print("FCM INIT STARTED");
+      }
+      if (kDebugMode) {
+        print("AUTH TOKEN EXISTS: ${ApiService.token != null}");
+      }
+      if (kDebugMode) {
+        print("ABOUT TO GET FCM TOKEN");
+      }
+      if (kDebugMode) {
+        print("=================================");
+      }
+
+      // Get FCM token
       final token = await messaging.getToken();
 
       if (kDebugMode) {
-        print("=================================");
-        print("FCM INIT STARTED");
         print("FCM TOKEN EXISTS: ${token != null && token.isNotEmpty}");
-        print("AUTH TOKEN EXISTS: ${ApiService.token != null}");
-        print("=================================");
       }
 
       // Save token only when authenticated
@@ -43,6 +56,8 @@ class FirebaseService {
     } catch (e, stackTrace) {
       if (kDebugMode) {
         print("FCM INIT ERROR: $e");
+      }
+      if (kDebugMode) {
         print(stackTrace);
       }
     }
@@ -71,6 +86,8 @@ class FirebaseService {
     } catch (e, stackTrace) {
       if (kDebugMode) {
         print("FCM TOKEN SAVE ERROR: $e");
+      }
+      if (kDebugMode) {
         print(stackTrace);
       }
     }
