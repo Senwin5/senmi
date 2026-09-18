@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:senmi/package_screens/features/customer/customer_home_bottom/customer_search_screen.dart';
 import 'customer_home.dart';
 import '../customer_create/create_package_screen.dart';
-import '../customer_history/customer_history_screen.dart';
+//import '../customer_history/customer_history_screen.dart';
 import 'package:senmi/package_screens/features/customer/customer_profiles/account_profile_screen.dart';
 
 /// Customer Bottom Navigation
@@ -34,9 +34,8 @@ class _CustomerBottomNavState extends State<CustomerBottomNav> {
 
     _screens = [
       const CustomerHome(),
-      const CustomerSearchScreen(),
       const CreatePackageScreen(),
-      const HistoryScreen(),
+      const CustomerSearchScreen(),
       CustomerProfileScreen(darkModeNotifier: darkModeNotifier),
     ];
   }
@@ -189,37 +188,27 @@ class _CustomerBottomNavState extends State<CustomerBottomNav> {
                         label: "Home",
                         isDark: isDark,
                       ),
-
-                      // SEARCH
-                      _navButton(
-                        index: 1,
-                        icon: Icons.search_outlined,
-                        activeIcon: Icons.search,
-                        label: "Search",
-                        isDark: isDark,
-                      ),
-
                       // SEND PACKAGE
                       _navButton(
-                        index: 2,
+                        index: 1,
                         icon: Icons.two_wheeler_outlined,
                         activeIcon: Icons.two_wheeler,
                         label: "Order",
                         isDark: isDark,
                       ),
 
-                      // HISTORY
+                      // SEARCH
                       _navButton(
-                        index: 3,
-                        icon: Icons.history_outlined,
-                        activeIcon: Icons.history,
-                        label: "History",
+                        index: 2,
+                        icon: Icons.search_outlined,
+                        activeIcon: Icons.search,
+                        label: "Search",
                         isDark: isDark,
                       ),
 
                       // ACCOUNT
                       _navButton(
-                        index: 4,
+                        index: 3,
                         icon: Icons.person_outline,
                         activeIcon: Icons.person,
                         label: "Account",
