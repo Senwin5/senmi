@@ -170,6 +170,43 @@ class RideService {
   }
 
   // ============================================================
+  // PASSENGER RIDE HISTORY
+  // ============================================================
+
+  static Future<List<dynamic>> getRideHistory() async {
+    final response = await http
+        .get(
+          Uri.parse(
+            "$baseUrl/ride/rides/passenger/history/",
+          ),
+          headers: await headers(),
+        )
+        .timeout(
+          const Duration(seconds: 30),
+        );
+
+    if (response.statusCode < 200 ||
+        response.statusCode >= 300) {
+      final data = decodeResponse(response);
+
+      throw Exception(
+        data["detail"]?.toString() ??
+            "Unable to load ride history.",
+      );
+    }
+
+    try {
+      final decoded = jsonDecode(response.body);
+
+      if (decoded is List) {
+        return decoded;
+      }
+    } catch (_) {}
+
+    return [];
+  }
+
+  // ============================================================
   // RIDE DETAILS
   // ============================================================
 

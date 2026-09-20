@@ -16,18 +16,13 @@ const Color senmiRideLightPurple = Color(0xFF7C3AED);
 class RideTrackingScreen extends StatefulWidget {
   final String rideId;
 
-  const RideTrackingScreen({
-    super.key,
-    required this.rideId,
-  });
+  const RideTrackingScreen({super.key, required this.rideId});
 
   @override
-  State<RideTrackingScreen> createState() =>
-      _RideTrackingScreenState();
+  State<RideTrackingScreen> createState() => _RideTrackingScreenState();
 }
 
-class _RideTrackingScreenState
-    extends State<RideTrackingScreen> {
+class _RideTrackingScreenState extends State<RideTrackingScreen> {
   // ============================================================
   // GOOGLE ROUTE KEY
   // ============================================================
@@ -97,12 +92,9 @@ class _RideTrackingScreenState
 
     _loadRide();
 
-    refreshTimer = Timer.periodic(
-      const Duration(seconds: 5),
-      (_) {
-        _refreshRide();
-      },
-    );
+    refreshTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+      _refreshRide();
+    });
   }
 
   // ============================================================
@@ -116,10 +108,7 @@ class _RideTrackingScreenState
         errorMessage = "";
       });
 
-      final data =
-          await RideService.getRideDetails(
-        widget.rideId,
-      );
+      final data = await RideService.getRideDetails(widget.rideId);
 
       if (!mounted) return;
 
@@ -137,12 +126,7 @@ class _RideTrackingScreenState
 
       setState(() {
         loading = false;
-        errorMessage = e
-            .toString()
-            .replaceFirst(
-              "Exception: ",
-              "",
-            );
+        errorMessage = e.toString().replaceFirst("Exception: ", "");
       });
 
       _connectWebSocket();
@@ -155,24 +139,18 @@ class _RideTrackingScreenState
 
   Future<void> _refreshRide() async {
     try {
-      final data =
-          await RideService.getRideDetails(
-        widget.rideId,
-      );
+      final data = await RideService.getRideDetails(widget.rideId);
 
       if (!mounted) return;
 
-      final oldPickup =
-          pickupLocation;
+      final oldPickup = pickupLocation;
 
-      final oldDestination =
-          destinationLocation;
+      final oldDestination = destinationLocation;
 
       _applyRideData(data);
 
       if (oldPickup != pickupLocation ||
-          oldDestination !=
-              destinationLocation) {
+          oldDestination != destinationLocation) {
         await _getRoute();
       }
 
@@ -184,18 +162,14 @@ class _RideTrackingScreenState
   // APPLY RIDE DATA
   // ============================================================
 
-  void _applyRideData(
-    Map<String, dynamic> data,
-  ) {
+  void _applyRideData(Map<String, dynamic> data) {
     // ----------------------------------------------------------
     // STATUS
     // ----------------------------------------------------------
 
-    final serverStatus =
-        data["status"]?.toString();
+    final serverStatus = data["status"]?.toString();
 
-    if (serverStatus != null &&
-        serverStatus.isNotEmpty) {
+    if (serverStatus != null && serverStatus.isNotEmpty) {
       status = serverStatus;
     }
 
@@ -203,101 +177,64 @@ class _RideTrackingScreenState
     // FARE
     // ----------------------------------------------------------
 
-    fare = _toDouble(
-      data["fare"],
-    );
+    fare = _toDouble(data["fare"]);
 
-    estimatedDistanceKm =
-        _toDouble(
-      data["estimated_distance_km"],
-    );
+    estimatedDistanceKm = _toDouble(data["estimated_distance_km"]);
 
-    estimatedDurationMinutes =
-        _toInt(
-      data["estimated_duration_minutes"],
-    );
+    estimatedDurationMinutes = _toInt(data["estimated_duration_minutes"]);
 
-    etaMinutes =
-        _toInt(
-      data["eta_minutes"],
-    );
+    etaMinutes = _toInt(data["eta_minutes"]);
 
     // ----------------------------------------------------------
     // PICKUP
     // ----------------------------------------------------------
 
-    final pickupLat =
-        _toDouble(
-      data["pickup_lat"],
-    );
+    final pickupLat = _toDouble(data["pickup_lat"]);
 
-    final pickupLng =
-        _toDouble(
-      data["pickup_lng"],
-    );
+    final pickupLng = _toDouble(data["pickup_lng"]);
 
-    if (pickupLat != null &&
-        pickupLng != null) {
-      pickupLocation = LatLng(
-        pickupLat,
-        pickupLng,
-      );
+    if (pickupLat != null && pickupLng != null) {
+      pickupLocation = LatLng(pickupLat, pickupLng);
     }
 
     // ----------------------------------------------------------
     // DESTINATION
     // ----------------------------------------------------------
 
-    final destinationLat =
-        _toDouble(
-      data["destination_lat"],
-    );
+    final destinationLat = _toDouble(data["destination_lat"]);
 
-    final destinationLng =
-        _toDouble(
-      data["destination_lng"],
-    );
+    final destinationLng = _toDouble(data["destination_lng"]);
 
-    if (destinationLat != null &&
-        destinationLng != null) {
-      destinationLocation =
-          LatLng(
-        destinationLat,
-        destinationLng,
-      );
+    if (destinationLat != null && destinationLng != null) {
+      destinationLocation = LatLng(destinationLat, destinationLng);
     }
 
     // ----------------------------------------------------------
     // DRIVER
     // ----------------------------------------------------------
 
-    final driver =
-        data["driver"];
+    final driver = data["driver"];
 
     if (driver is Map) {
-      driverName =
-          _firstString([
+      driverName = _firstString([
         driver["name"],
         driver["full_name"],
         driver["username"],
       ]);
 
-      driverPhone =
-          _firstString([
+      driverPhone = _firstString([
         driver["phone"],
         driver["phone_number"],
         driver["mobile"],
       ]);
 
-      driverImage =
-          _firstString([
+      driverImage = _firstString([
         driver["profile_picture"],
         driver["profile_image"],
         driver["photo"],
       ]);
 
-      vehicleNumber =
-          _firstString([
+      vehicleNumber = _firstString([
         driver["vehicle_number"],
         driver["vehicle_plate"],
         driver["plate_number"],
@@ -308,27 +245,23 @@ class _RideTrackingScreenState
     // FLAT DRIVER FIELDS
     // ----------------------------------------------------------
 
-    driverName ??=
-        _firstString([
+    driverName ??= _firstString([
       data["driver_name"],
       data["driver_full_name"],
     ]);
 
-    driverPhone ??=
-        _firstString([
+    driverPhone ??= _firstString([
       data["driver_phone"],
       data["driver_phone_number"],
     ]);
 
-    driverImage ??=
-        _firstString([
+    driverImage ??= _firstString([
       data["driver_profile_picture"],
       data["driver_image"],
       data["driver_photo"],
     ]);
 
-    vehicleNumber ??=
-        _firstString([
+    vehicleNumber ??= _firstString([
       data["vehicle_number"],
       data["vehicle_plate"],
       data["plate_number"],
@@ -338,29 +271,17 @@ class _RideTrackingScreenState
     // DRIVER LOCATION
     // ----------------------------------------------------------
 
-    final driverLat =
-        _toDouble(
-      data["driver_lat"],
-    );
+    final driverLat = _toDouble(data["driver_lat"]);
 
-    final driverLng =
-        _toDouble(
-      data["driver_lng"],
-    );
+    final driverLng = _toDouble(data["driver_lng"]);
 
-    if (driverLat != null &&
-        driverLng != null) {
-      driverLocation = LatLng(
-        driverLat,
-        driverLng,
-      );
+    if (driverLat != null && driverLng != null) {
+      driverLocation = LatLng(driverLat, driverLng);
     }
 
     _updateMarkers();
 
-    if (!_mapMovedToDriver &&
-        driverLocation != null &&
-        mapController != null) {
+    if (!_mapMovedToDriver && driverLocation != null && mapController != null) {
       _moveCameraToDriver();
 
       _mapMovedToDriver = true;
@@ -372,8 +293,7 @@ class _RideTrackingScreenState
   // ============================================================
 
   Future<void> _getRoute() async {
-    if (pickupLocation == null ||
-        destinationLocation == null) {
+    if (pickupLocation == null || destinationLocation == null) {
       return;
     }
 
@@ -388,58 +308,36 @@ class _RideTrackingScreenState
     }
 
     try {
-      final polylinePoints =
-          PolylinePoints(
-        apiKey: googleMapsApiKey,
-      );
+      final polylinePoints = PolylinePoints(apiKey: googleMapsApiKey);
 
-      final result =
-          await polylinePoints
-              .getRouteBetweenCoordinates(
-        request:
-            PolylineRequest(
+      final result = await polylinePoints.getRouteBetweenCoordinates(
+        request: PolylineRequest(
           origin: PointLatLng(
             pickupLocation!.latitude,
             pickupLocation!.longitude,
           ),
-          destination:
-              PointLatLng(
-            destinationLocation!
-                .latitude,
-            destinationLocation!
-                .longitude,
+          destination: PointLatLng(
+            destinationLocation!.latitude,
+            destinationLocation!.longitude,
           ),
-          mode:
-              TravelMode.driving,
+          mode: TravelMode.driving,
         ),
       );
 
       if (result.points.isNotEmpty) {
         routePoints = result.points
-            .map(
-              (point) => LatLng(
-                point.latitude,
-                point.longitude,
-              ),
-            )
+            .map((point) => LatLng(point.latitude, point.longitude))
             .toList();
 
         polylines = {
           Polyline(
-            polylineId:
-                const PolylineId(
-              "ride_route",
-            ),
+            polylineId: const PolylineId("ride_route"),
             points: routePoints,
-            color:
-                senmiRidePurple,
+            color: senmiRidePurple,
             width: 6,
-            startCap:
-                Cap.roundCap,
-            endCap:
-                Cap.roundCap,
-            jointType:
-                JointType.round,
+            startCap: Cap.roundCap,
+            endCap: Cap.roundCap,
+            jointType: JointType.round,
           ),
         };
       }
@@ -467,34 +365,24 @@ class _RideTrackingScreenState
     connectingSocket = true;
 
     try {
-      final uri = Uri.parse(
-        "wss://www.senmi.com.ng/ws/ride/${widget.rideId}/",
-      );
+      final uri = Uri.parse("wss://www.senmi.com.ng/ws/ride/${widget.rideId}/");
 
-      channel =
-          WebSocketChannel.connect(uri);
+      channel = WebSocketChannel.connect(uri);
 
-      wsSubscription =
-          channel!.stream.listen(
+      wsSubscription = channel!.stream.listen(
         (data) {
           connectingSocket = false;
 
           try {
-            final parsed =
-                jsonDecode(data);
+            final parsed = jsonDecode(data);
 
             if (parsed is! Map) {
               return;
             }
 
-            final event =
-                Map<String, dynamic>.from(
-              parsed,
-            );
+            final event = Map<String, dynamic>.from(parsed);
 
-            _handleWebSocketEvent(
-              event,
-            );
+            _handleWebSocketEvent(event);
           } catch (_) {}
         },
         onError: (_) {
@@ -514,22 +402,17 @@ class _RideTrackingScreenState
   // WEBSOCKET EVENT HANDLER
   // ============================================================
 
-  void _handleWebSocketEvent(
-    Map<String, dynamic> data,
-  ) {
-    final eventType =
-        data["type"]?.toString();
+  void _handleWebSocketEvent(Map<String, dynamic> data) {
+    final eventType = data["type"]?.toString();
 
     // ----------------------------------------------------------
     // RIDE STATUS
     // ----------------------------------------------------------
 
     if (eventType == "ride_status") {
-      final newStatus =
-          data["status"]?.toString();
+      final newStatus = data["status"]?.toString();
 
-      if (newStatus != null &&
-          newStatus.isNotEmpty) {
+      if (newStatus != null && newStatus.isNotEmpty) {
         status = newStatus;
       }
 
@@ -546,38 +429,22 @@ class _RideTrackingScreenState
     // DRIVER LOCATION
     // ----------------------------------------------------------
 
-    if (eventType ==
-        "driver_location") {
-      final lat =
-          _toDouble(
-        data["lat"],
-      );
+    if (eventType == "driver_location") {
+      final lat = _toDouble(data["lat"]);
 
-      final lng =
-          _toDouble(
-        data["lng"],
-      );
+      final lng = _toDouble(data["lng"]);
 
-      if (lat != null &&
-          lng != null) {
-        driverLocation = LatLng(
-          lat,
-          lng,
-        );
+      if (lat != null && lng != null) {
+        driverLocation = LatLng(lat, lng);
       }
 
-      final newStatus =
-          data["status"]?.toString();
+      final newStatus = data["status"]?.toString();
 
-      if (newStatus != null &&
-          newStatus.isNotEmpty) {
+      if (newStatus != null && newStatus.isNotEmpty) {
         status = newStatus;
       }
 
-      etaMinutes =
-          _toInt(
-        data["eta_minutes"],
-      );
+      etaMinutes = _toInt(data["eta_minutes"]);
 
       _updateMarkers();
 
@@ -597,12 +464,9 @@ class _RideTrackingScreenState
     // ----------------------------------------------------------
 
     if (eventType == "error") {
-      final message =
-          data["message"]?.toString();
+      final message = data["message"]?.toString();
 
-      if (message != null &&
-          message.isNotEmpty &&
-          mounted) {
+      if (message != null && message.isNotEmpty && mounted) {
         setState(() {
           errorMessage = message;
         });
@@ -615,8 +479,7 @@ class _RideTrackingScreenState
   // ============================================================
 
   void _updateMarkers() {
-    final newMarkers =
-        <Marker>{};
+    final newMarkers = <Marker>{};
 
     // ----------------------------------------------------------
     // PICKUP
@@ -625,20 +488,12 @@ class _RideTrackingScreenState
     if (pickupLocation != null) {
       newMarkers.add(
         Marker(
-          markerId:
-              const MarkerId(
-            "pickup",
-          ),
-          position:
-              pickupLocation!,
-          icon:
-              BitmapDescriptor.defaultMarkerWithHue(
+          markerId: const MarkerId("pickup"),
+          position: pickupLocation!,
+          icon: BitmapDescriptor.defaultMarkerWithHue(
             BitmapDescriptor.hueGreen,
           ),
-          infoWindow:
-              const InfoWindow(
-            title: "Pickup",
-          ),
+          infoWindow: const InfoWindow(title: "Pickup"),
         ),
       );
     }
@@ -647,24 +502,13 @@ class _RideTrackingScreenState
     // DESTINATION
     // ----------------------------------------------------------
 
-    if (destinationLocation !=
-        null) {
+    if (destinationLocation != null) {
       newMarkers.add(
         Marker(
-          markerId:
-              const MarkerId(
-            "destination",
-          ),
-          position:
-              destinationLocation!,
-          icon:
-              BitmapDescriptor.defaultMarkerWithHue(
-            BitmapDescriptor.hueRed,
-          ),
-          infoWindow:
-              const InfoWindow(
-            title: "Destination",
-          ),
+          markerId: const MarkerId("destination"),
+          position: destinationLocation!,
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+          infoWindow: const InfoWindow(title: "Destination"),
         ),
       );
     }
@@ -673,26 +517,15 @@ class _RideTrackingScreenState
     // DRIVER
     // ----------------------------------------------------------
 
-    if (driverLocation !=
-        null) {
+    if (driverLocation != null) {
       newMarkers.add(
         Marker(
-          markerId:
-              const MarkerId(
-            "driver",
-          ),
-          position:
-              driverLocation!,
-          icon:
-              BitmapDescriptor.defaultMarkerWithHue(
+          markerId: const MarkerId("driver"),
+          position: driverLocation!,
+          icon: BitmapDescriptor.defaultMarkerWithHue(
             BitmapDescriptor.hueViolet,
           ),
-          infoWindow:
-              InfoWindow(
-            title:
-                driverName ??
-                    "Driver",
-          ),
+          infoWindow: InfoWindow(title: driverName ?? "Driver"),
         ),
       );
     }
@@ -708,21 +541,15 @@ class _RideTrackingScreenState
   // MOVE CAMERA
   // ============================================================
 
-  Future<void>
-      _moveCameraToDriver() async {
-    if (mapController == null ||
-        driverLocation == null) {
+  Future<void> _moveCameraToDriver() async {
+    if (mapController == null || driverLocation == null) {
       return;
     }
 
     try {
       await mapController!.animateCamera(
         CameraUpdate.newCameraPosition(
-          CameraPosition(
-            target:
-                driverLocation!,
-            zoom: 16,
-          ),
+          CameraPosition(target: driverLocation!, zoom: 16),
         ),
       );
     } catch (_) {}
@@ -733,14 +560,11 @@ class _RideTrackingScreenState
   // ============================================================
 
   Future<void> _callDriver() async {
-    if (driverPhone == null ||
-        driverPhone!.isEmpty) {
+    if (driverPhone == null || driverPhone!.isEmpty) {
       return;
     }
 
-    final uri = Uri.parse(
-      "tel:$driverPhone",
-    );
+    final uri = Uri.parse("tel:$driverPhone");
 
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
@@ -749,13 +573,7 @@ class _RideTrackingScreenState
 
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(
-        const SnackBar(
-          content: Text(
-            "Cannot make call",
-          ),
-        ),
-      );
+      ).showSnackBar(const SnackBar(content: Text("Cannot make call")));
     }
   }
 
@@ -788,12 +606,7 @@ class _RideTrackingScreenState
         return "RIDE CANCELLED";
 
       default:
-        return status
-            .replaceAll(
-              "_",
-              " ",
-            )
-            .toUpperCase();
+        return status.replaceAll("_", " ").toUpperCase();
     }
   }
 
@@ -806,8 +619,7 @@ class _RideTrackingScreenState
       return "$etaMinutes min away";
     }
 
-    if (estimatedDurationMinutes !=
-        null) {
+    if (estimatedDurationMinutes != null) {
       return "$estimatedDurationMinutes min estimated";
     }
 
@@ -818,60 +630,33 @@ class _RideTrackingScreenState
   // STATUS STEP
   // ============================================================
 
-  Widget _step(
-    String title,
-    bool active,
-    bool completed,
-  ) {
-    final color =
-        completed || active
-            ? senmiRidePurple
-            : Colors.grey.shade300;
+  Widget _step(String title, bool active, bool completed) {
+    final color = completed || active ? senmiRidePurple : Colors.grey.shade300;
 
     return Column(
       children: [
         Container(
           width: 38,
           height: 38,
-          decoration:
-              BoxDecoration(
-            color: color,
-            shape:
-                BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           child: Icon(
-            completed
-                ? Icons.check
-                : Icons.circle,
-            color:
-                Colors.white,
+            completed ? Icons.check : Icons.circle,
+            color: Colors.white,
             size: 18,
           ),
         ),
-        const SizedBox(
-          height: 7,
-        ),
+        const SizedBox(height: 7),
         SizedBox(
           width: 62,
           child: Text(
             title,
-            textAlign:
-                TextAlign.center,
+            textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 10.5,
-              fontWeight:
-                  active ||
-                          completed
-                      ? FontWeight
-                          .w700
-                      : FontWeight
-                          .w500,
-              color:
-                  active ||
-                          completed
-                      ? Colors
-                          .black87
-                      : Colors.grey,
+              fontWeight: active || completed
+                  ? FontWeight.w700
+                  : FontWeight.w500,
+              color: active || completed ? Colors.black87 : Colors.grey,
             ),
           ),
         ),
@@ -883,36 +668,17 @@ class _RideTrackingScreenState
   // CARD
   // ============================================================
 
-  Widget _card({
-    required Widget child,
-    Color? color,
-  }) {
+  Widget _card({required Widget child, Color? color}) {
     return Container(
-      padding:
-          const EdgeInsets.all(
-        15,
-      ),
-      decoration:
-          BoxDecoration(
-        color: color ?? 
-            Theme.of(context)
-                .cardColor,
-        borderRadius:
-            BorderRadius.circular(
-          18,
-        ),
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: color ?? Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.black
-                .withOpacity(
-              0.04,
-            ),
+            color: Colors.black.withOpacity(0.04),
             blurRadius: 10,
-            offset:
-                const Offset(
-              0,
-              4,
-            ),
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -924,49 +690,32 @@ class _RideTrackingScreenState
   // DRIVER CARD
   // ============================================================
 
-  Widget _driverCard(
-    bool isDark,
-  ) {
-    if (status != "accepted" &&
-        status != "arrived" &&
-        status != "started") {
+  Widget _driverCard(bool isDark) {
+    if (status != "accepted" && status != "arrived" && status != "started") {
       return _card(
         child: Row(
           children: [
             Container(
               width: 46,
               height: 46,
-              decoration:
-                  BoxDecoration(
-                color: senmiRidePurple
-                    .withOpacity(
-                  0.08,
-                ),
-                shape:
-                    BoxShape.circle,
+              decoration: BoxDecoration(
+                color: senmiRidePurple.withOpacity(0.08),
+                shape: BoxShape.circle,
               ),
               child: const Icon(
-                Icons
-                    .person_search_rounded,
-                color:
-                    senmiRidePurple,
+                Icons.person_search_rounded,
+                color: senmiRidePurple,
                 size: 25,
               ),
             ),
-            const SizedBox(
-              width: 13,
-            ),
+            const SizedBox(width: 13),
             Expanded(
               child: Text(
                 "We are looking for a nearby driver for you.",
-                style:
-                    TextStyle(
+                style: TextStyle(
                   fontSize: 14,
-                  fontWeight:
-                      FontWeight.w600,
-                  color: isDark
-                      ? Colors.white70
-                      : Colors.black87,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.white70 : Colors.black87,
                 ),
               ),
             ),
@@ -976,27 +725,14 @@ class _RideTrackingScreenState
     }
 
     return Container(
-      padding:
-          const EdgeInsets.all(
-        17,
-      ),
-      decoration:
-          BoxDecoration(
-        gradient:
-            const LinearGradient(
-          colors: [
-            senmiRidePurple,
-            senmiRideLightPurple,
-          ],
-          begin:
-              Alignment.topLeft,
-          end:
-              Alignment.bottomRight,
+      padding: const EdgeInsets.all(17),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [senmiRidePurple, senmiRideLightPurple],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        borderRadius:
-            BorderRadius.circular(
-          22,
-        ),
+        borderRadius: BorderRadius.circular(22),
       ),
       child: Column(
         children: [
@@ -1004,88 +740,44 @@ class _RideTrackingScreenState
             children: [
               CircleAvatar(
                 radius: 32,
-                backgroundColor:
-                    Colors.white,
-                backgroundImage:
-                    driverImage !=
-                                null &&
-                            driverImage!
-                                .isNotEmpty
-                        ? NetworkImage(
-                            driverImage!,
-                          )
-                        : null,
-                child:
-                    driverImage ==
-                                null ||
-                            driverImage!
-                                .isEmpty
-                        ? const Icon(
-                            Icons.person,
-                            color:
-                                senmiRidePurple,
-                            size: 34,
-                          )
-                        : null,
+                backgroundColor: Colors.white,
+                backgroundImage: driverImage != null && driverImage!.isNotEmpty
+                    ? NetworkImage(driverImage!)
+                    : null,
+                child: driverImage == null || driverImage!.isEmpty
+                    ? const Icon(Icons.person, color: senmiRidePurple, size: 34)
+                    : null,
               ),
-              const SizedBox(
-                width: 14,
-              ),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment
-                          .start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      driverName ??
-                          "Your Driver",
-                      style:
-                          const TextStyle(
-                        color:
-                            Colors.white,
+                      driverName ?? "Your Driver",
+                      style: const TextStyle(
+                        color: Colors.white,
                         fontSize: 19,
-                        fontWeight:
-                            FontWeight
-                                .w800,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
-                    const SizedBox(
-                      height: 4,
-                    ),
+                    const SizedBox(height: 4),
                     const Text(
                       "Senmi Driver",
-                      style:
-                          TextStyle(
-                        color:
-                            Colors.white70,
-                        fontSize: 12.5,
-                      ),
+                      style: TextStyle(color: Colors.white70, fontSize: 12.5),
                     ),
-                    const SizedBox(
-                      height: 8,
-                    ),
+                    const SizedBox(height: 8),
                     Row(
                       children: [
                         const Icon(
-                          Icons
-                              .verified_rounded,
-                          color:
-                              Colors.greenAccent,
+                          Icons.verified_rounded,
+                          color: Colors.greenAccent,
                           size: 18,
                         ),
-                        const SizedBox(
-                          width: 5,
-                        ),
+                        const SizedBox(width: 5),
                         const Text(
                           "Verified",
-                          style:
-                              TextStyle(
-                            color:
-                                Colors.white70,
-                            fontSize:
-                                12,
-                          ),
+                          style: TextStyle(color: Colors.white70, fontSize: 12),
                         ),
                       ],
                     ),
@@ -1093,68 +785,39 @@ class _RideTrackingScreenState
                 ),
               ),
               Container(
-                decoration:
-                    BoxDecoration(
-                  color: Colors
-                      .white
-                      .withOpacity(
-                    0.15,
-                  ),
-                  borderRadius:
-                      BorderRadius.circular(
-                    15,
-                  ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(15),
                 ),
                 child: IconButton(
-                  icon:
-                      const Icon(
-                    Icons.call,
-                    color:
-                        Colors.white,
-                  ),
-                  onPressed:
-                      _callDriver,
+                  icon: const Icon(Icons.call, color: Colors.white),
+                  onPressed: _callDriver,
                 ),
               ),
             ],
           ),
 
-          const SizedBox(
-            height: 16,
-          ),
+          const SizedBox(height: 16),
 
-          const Divider(
-            color: Colors.white24,
-          ),
+          const Divider(color: Colors.white24),
 
-          const SizedBox(
-            height: 12,
-          ),
+          const SizedBox(height: 12),
 
           Row(
             children: [
               const Icon(
-                Icons
-                    .directions_car_rounded,
-                color:
-                    Colors.white70,
+                Icons.directions_car_rounded,
+                color: Colors.white70,
                 size: 21,
               ),
-              const SizedBox(
-                width: 9,
-              ),
+              const SizedBox(width: 9),
               Expanded(
                 child: Text(
-                  vehicleNumber ??
-                      "Vehicle not assigned",
-                  style:
-                      const TextStyle(
-                    color:
-                        Colors.white,
-                    fontSize:
-                        14.5,
-                    fontWeight:
-                        FontWeight.w600,
+                  vehicleNumber ?? "Vehicle not assigned",
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
@@ -1169,9 +832,7 @@ class _RideTrackingScreenState
   // HELPERS
   // ============================================================
 
-  double? _toDouble(
-    dynamic value,
-  ) {
+  double? _toDouble(dynamic value) {
     if (value == null) {
       return null;
     }
@@ -1180,14 +841,10 @@ class _RideTrackingScreenState
       return value.toDouble();
     }
 
-    return double.tryParse(
-      value.toString(),
-    );
+    return double.tryParse(value.toString());
   }
 
-  int? _toInt(
-    dynamic value,
-  ) {
+  int? _toInt(dynamic value) {
     if (value == null) {
       return null;
     }
@@ -1196,24 +853,18 @@ class _RideTrackingScreenState
       return value.toInt();
     }
 
-    return int.tryParse(
-      value.toString(),
-    );
+    return int.tryParse(value.toString());
   }
 
-  String? _firstString(
-    List<dynamic> values,
-  ) {
+  String? _firstString(List<dynamic> values) {
     for (final value in values) {
       if (value == null) {
         continue;
       }
 
-      final text =
-          value.toString().trim();
+      final text = value.toString().trim();
 
-      if (text.isNotEmpty &&
-          text != "null") {
+      if (text.isNotEmpty && text != "null") {
         return text;
       }
     }
@@ -1241,42 +892,26 @@ class _RideTrackingScreenState
   // ============================================================
 
   @override
-  Widget build(
-    BuildContext context,
-  ) {
-    final theme =
-        Theme.of(context);
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
 
-    final isDark =
-        theme.brightness ==
-            Brightness.dark;
+    final isDark = theme.brightness == Brightness.dark;
 
     final initialMapPosition =
         driverLocation ??
-            pickupLocation ??
-            destinationLocation ??
-            const LatLng(
-              6.5244,
-              3.3792,
-            );
+        pickupLocation ??
+        destinationLocation ??
+        const LatLng(6.5244, 3.3792);
 
-    final isCompleted =
-        status == "completed" ||
-            status ==
-                "completed_ride";
+    final isCompleted = status == "completed" || status == "completed_ride";
 
-    final isCancelled =
-        status == "cancelled" ||
-            status == "canceled";
+    final isCancelled = status == "cancelled" || status == "canceled";
 
     return Scaffold(
       appBar: AppBar(
         title: const Text(
           "Ride Tracking",
-          style: TextStyle(
-            fontWeight:
-                FontWeight.w800,
-          ),
+          style: TextStyle(fontWeight: FontWeight.w800),
         ),
         centerTitle: true,
       ),
@@ -1286,33 +921,23 @@ class _RideTrackingScreenState
           // ======================================================
           // MAP
           // ======================================================
-
           GoogleMap(
-            initialCameraPosition:
-                CameraPosition(
-              target:
-                  initialMapPosition,
+            initialCameraPosition: CameraPosition(
+              target: initialMapPosition,
               zoom: 14.5,
             ),
             markers: markers,
             polylines: polylines,
-            myLocationEnabled:
-                false,
-            myLocationButtonEnabled:
-                false,
-            zoomControlsEnabled:
-                false,
+            myLocationEnabled: false,
+            myLocationButtonEnabled: false,
+            zoomControlsEnabled: false,
             compassEnabled: true,
-            onMapCreated: (
-              controller,
-            ) {
-              mapController =
-                  controller;
+            onMapCreated: (controller) {
+              mapController = controller;
 
               _updateMarkers();
 
-              if (driverLocation !=
-                  null) {
+              if (driverLocation != null) {
                 _moveCameraToDriver();
               }
 
@@ -1323,97 +948,58 @@ class _RideTrackingScreenState
           // ======================================================
           // STATUS
           // ======================================================
-
           Positioned(
             top: 16,
             left: 16,
             right: 16,
             child: Center(
               child: Container(
-                padding:
-                    const EdgeInsets
-                        .symmetric(
+                padding: const EdgeInsets.symmetric(
                   horizontal: 17,
                   vertical: 11,
                 ),
-                decoration:
-                    BoxDecoration(
-                  color: isDark
-                      ? const Color(
-                          0xFF1E1E22,
-                        )
-                      : Colors.white,
-                  borderRadius:
-                      BorderRadius.circular(
-                    30,
-                  ),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1E1E22) : Colors.white,
+                  borderRadius: BorderRadius.circular(30),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black
-                          .withOpacity(
-                        0.12,
-                      ),
+                      color: Colors.black.withOpacity(0.12),
                       blurRadius: 12,
-                      offset:
-                          const Offset(
-                        0,
-                        4,
-                      ),
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
                 child: Row(
-                  mainAxisSize:
-                      MainAxisSize.min,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
                       width: 34,
                       height: 34,
-                      decoration:
-                          BoxDecoration(
-                        color:
-                            senmiRidePurple
-                                .withOpacity(
-                          0.10,
-                        ),
-                        shape:
-                            BoxShape.circle,
+                      decoration: BoxDecoration(
+                        color: senmiRidePurple.withOpacity(0.10),
+                        shape: BoxShape.circle,
                       ),
-                      child:
-                          Icon(
+                      child: Icon(
                         isCompleted
-                            ? Icons
-                                .check_circle
+                            ? Icons.check_circle
                             : isCancelled
-                                ? Icons
-                                    .cancel
-                                : Icons
-                                    .local_taxi_rounded,
-                        color:
-                            isCompleted
-                                ? Colors.green
-                                : isCancelled
-                                    ? Colors.redAccent
-                                    : senmiRidePurple,
+                            ? Icons.cancel
+                            : Icons.local_taxi_rounded,
+                        color: isCompleted
+                            ? Colors.green
+                            : isCancelled
+                            ? Colors.redAccent
+                            : senmiRidePurple,
                         size: 19,
                       ),
                     ),
-                    const SizedBox(
-                      width: 9,
-                    ),
+                    const SizedBox(width: 9),
                     Text(
                       displayStatus,
-                      style:
-                          TextStyle(
-                        fontSize:
-                            12.5,
-                        fontWeight:
-                            FontWeight
-                                .w800,
-                        color:
-                            isDark
-                                ? Colors.white
-                                : Colors.black87,
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w800,
+                        color: isDark ? Colors.white : Colors.black87,
                       ),
                     ),
                   ],
@@ -1425,84 +1011,54 @@ class _RideTrackingScreenState
           // ======================================================
           // ETA / TIME
           // ======================================================
-
           Positioned(
             top: 76,
             left: 20,
             right: 20,
             child: Center(
               child: Container(
-                padding:
-                    const EdgeInsets
-                        .symmetric(
+                padding: const EdgeInsets.symmetric(
                   horizontal: 17,
                   vertical: 10,
                 ),
-                decoration:
-                    BoxDecoration(
+                decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius:
-                      BorderRadius.circular(
-                    26,
-                  ),
+                  borderRadius: BorderRadius.circular(26),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black
-                          .withOpacity(
-                        0.12,
-                      ),
+                      color: Colors.black.withOpacity(0.12),
                       blurRadius: 10,
-                      offset:
-                          const Offset(
-                        0,
-                        4,
-                      ),
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
                 child: Row(
-                  mainAxisSize:
-                      MainAxisSize.min,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     const Icon(
-                      Icons
-                          .access_time_rounded,
-                      color:
-                          Colors.green,
+                      Icons.access_time_rounded,
+                      color: Colors.green,
                       size: 19,
                     ),
-                    const SizedBox(
-                      width: 8,
-                    ),
+                    const SizedBox(width: 8),
                     Column(
-                      crossAxisAlignment:
-                          CrossAxisAlignment
-                              .start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          etaMinutes !=
-                                  null
+                          etaMinutes != null
                               ? "Estimated arrival"
                               : "Estimated trip time",
-                          style:
-                              const TextStyle(
-                            fontSize:
-                                11,
-                            color:
-                                Colors.grey,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey,
                           ),
                         ),
                         Text(
                           timeText,
-                          style:
-                              const TextStyle(
-                            fontSize:
-                                15,
-                            color:
-                                Colors.green,
-                            fontWeight:
-                                FontWeight
-                                    .w800,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            color: Colors.green,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
                       ],
@@ -1516,231 +1072,137 @@ class _RideTrackingScreenState
           // ======================================================
           // BOTTOM SHEET
           // ======================================================
-
           DraggableScrollableSheet(
-            initialChildSize:
-                0.38,
-            minChildSize:
-                0.25,
-            maxChildSize:
-                0.82,
-            builder: (
-              context,
-              scrollController,
-            ) {
+            initialChildSize: 0.38,
+            minChildSize: 0.25,
+            maxChildSize: 0.82,
+            builder: (context, scrollController) {
               return Container(
-                decoration:
-                    BoxDecoration(
-                  color: theme
-                      .cardColor,
-                  borderRadius:
-                      const BorderRadius
-                          .vertical(
-                    top:
-                        Radius.circular(
-                      32,
-                    ),
+                decoration: BoxDecoration(
+                  color: theme.cardColor,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(32),
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors
-                          .black
-                          .withOpacity(
-                        0.10,
-                      ),
-                      blurRadius:
-                          20,
-                      offset:
-                          const Offset(
-                        0,
-                        -5,
-                      ),
+                      color: Colors.black.withOpacity(0.10),
+                      blurRadius: 20,
+                      offset: const Offset(0, -5),
                     ),
                   ],
                 ),
-                child:
-                    Column(
+                child: Column(
                   children: [
-                    const SizedBox(
-                      height: 10,
-                    ),
+                    const SizedBox(height: 10),
 
                     Container(
                       width: 50,
                       height: 5,
-                      decoration:
-                          BoxDecoration(
-                        color: Colors
-                            .grey
-                            .shade400,
-                        borderRadius:
-                            BorderRadius
-                                .circular(
-                          20,
-                        ),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade400,
+                        borderRadius: BorderRadius.circular(20),
                       ),
                     ),
 
-                    const SizedBox(
-                      height: 10,
-                    ),
+                    const SizedBox(height: 10),
 
                     Expanded(
-                      child:
-                          ListView(
-                        controller:
-                            scrollController,
-                        padding:
-                            const EdgeInsets
-                                .fromLTRB(
-                          16,
-                          10,
-                          16,
-                          35,
-                        ),
+                      child: ListView(
+                        controller: scrollController,
+                        padding: const EdgeInsets.fromLTRB(16, 10, 16, 35),
                         children: [
                           // ======================================
                           // HEADER
                           // ======================================
-
                           Row(
-                            mainAxisAlignment:
-                                MainAxisAlignment
-                                    .spaceBetween,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               const Text(
                                 "Tracking Details",
-                                style:
-                                    TextStyle(
-                                  fontSize:
-                                      21,
-                                  fontWeight:
-                                      FontWeight
-                                          .w800,
+                                style: TextStyle(
+                                  fontSize: 21,
+                                  fontWeight: FontWeight.w800,
                                 ),
                               ),
-                              if (fare !=
-                                  null)
+                              if (fare != null)
                                 Text(
                                   "₦${fare!.toStringAsFixed(0)}",
-                                  style:
-                                      const TextStyle(
-                                    fontSize:
-                                        21,
-                                    fontWeight:
-                                        FontWeight
-                                            .w800,
-                                    color:
-                                        senmiRidePurple,
+                                  style: const TextStyle(
+                                    fontSize: 21,
+                                    fontWeight: FontWeight.w800,
+                                    color: senmiRidePurple,
                                   ),
                                 ),
                             ],
                           ),
 
-                          const SizedBox(
-                            height: 12,
-                          ),
+                          const SizedBox(height: 12),
 
                           // ======================================
                           // TIME + DISTANCE
                           // ======================================
-
                           _card(
-                            child:
-                                Row(
+                            child: Row(
                               children: [
                                 Expanded(
-                                  child:
-                                      _tripInfo(
-                                    Icons
-                                        .route_rounded,
-                                    estimatedDistanceKm !=
-                                            null
+                                  child: _tripInfo(
+                                    Icons.route_rounded,
+                                    estimatedDistanceKm != null
                                         ? "${estimatedDistanceKm!.toStringAsFixed(2)} km"
                                         : "Distance unavailable",
                                   ),
                                 ),
                                 Container(
-                                  width:
-                                      1,
-                                  height:
-                                      36,
-                                  color:
-                                      Colors.grey.shade300,
+                                  width: 1,
+                                  height: 36,
+                                  color: Colors.grey.shade300,
                                 ),
                                 Expanded(
-                                  child:
-                                      _tripInfo(
-                                    Icons
-                                        .schedule_rounded,
-                                    etaMinutes !=
-                                            null
+                                  child: _tripInfo(
+                                    Icons.schedule_rounded,
+                                    etaMinutes != null
                                         ? "$etaMinutes min"
-                                        : estimatedDurationMinutes !=
-                                                null
-                                            ? "$estimatedDurationMinutes min"
-                                            : "Time unavailable",
+                                        : estimatedDurationMinutes != null
+                                        ? "$estimatedDurationMinutes min"
+                                        : "Time unavailable",
                                   ),
                                 ),
                               ],
                             ),
                           ),
 
-                          const SizedBox(
-                            height: 12,
-                          ),
+                          const SizedBox(height: 12),
 
                           // ======================================
                           // RIDE ID
                           // ======================================
-
                           _card(
-                            child:
-                                Row(
+                            child: Row(
                               children: [
                                 const Icon(
-                                  Icons
-                                      .confirmation_number_outlined,
-                                  color:
-                                      senmiRidePurple,
+                                  Icons.confirmation_number_outlined,
+                                  color: senmiRidePurple,
                                 ),
-                                const SizedBox(
-                                  width:
-                                      10,
-                                ),
+                                const SizedBox(width: 10),
                                 Expanded(
-                                  child:
-                                      Column(
+                                  child: Column(
                                     crossAxisAlignment:
-                                        CrossAxisAlignment
-                                            .start,
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         "Ride ID",
-                                        style:
-                                            TextStyle(
-                                          color:
-                                              Colors.grey.shade600,
-                                          fontSize:
-                                              12,
+                                        style: TextStyle(
+                                          color: Colors.grey.shade600,
+                                          fontSize: 12,
                                         ),
                                       ),
-                                      const SizedBox(
-                                        height:
-                                            4,
-                                      ),
+                                      const SizedBox(height: 4),
                                       Text(
-                                        widget
-                                            .rideId,
-                                        style:
-                                            const TextStyle(
-                                          fontSize:
-                                              15,
-                                          fontWeight:
-                                              FontWeight
-                                                  .w800,
-                                          color:
-                                              senmiRidePurple,
+                                        widget.rideId,
+                                        style: const TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w800,
+                                          color: senmiRidePurple,
                                         ),
                                       ),
                                     ],
@@ -1750,55 +1212,33 @@ class _RideTrackingScreenState
                             ),
                           ),
 
-                          const SizedBox(
-                            height: 12,
-                          ),
+                          const SizedBox(height: 12),
 
                           // ======================================
                           // STATUS
                           // ======================================
-
                           _card(
-                            child:
-                                Row(
+                            child: Row(
                               children: [
                                 Container(
-                                  width:
-                                      44,
-                                  height:
-                                      44,
-                                  decoration:
-                                      BoxDecoration(
-                                    color:
-                                        senmiRidePurple,
-                                    borderRadius:
-                                        BorderRadius.circular(
-                                      13,
-                                    ),
+                                  width: 44,
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    color: senmiRidePurple,
+                                    borderRadius: BorderRadius.circular(13),
                                   ),
-                                  child:
-                                      const Icon(
-                                    Icons
-                                        .local_taxi_rounded,
-                                    color:
-                                        Colors.white,
+                                  child: const Icon(
+                                    Icons.local_taxi_rounded,
+                                    color: Colors.white,
                                   ),
                                 ),
-                                const SizedBox(
-                                  width:
-                                      12,
-                                ),
+                                const SizedBox(width: 12),
                                 Expanded(
-                                  child:
-                                      Text(
+                                  child: Text(
                                     displayStatus,
-                                    style:
-                                        const TextStyle(
-                                      fontSize:
-                                          14.5,
-                                      fontWeight:
-                                          FontWeight
-                                              .w700,
+                                    style: const TextStyle(
+                                      fontSize: 14.5,
+                                      fontWeight: FontWeight.w700,
                                     ),
                                   ),
                                 ),
@@ -1806,168 +1246,107 @@ class _RideTrackingScreenState
                             ),
                           ),
 
-                          const SizedBox(
-                            height: 12,
-                          ),
+                          const SizedBox(height: 12),
 
                           // ======================================
                           // PROGRESS
                           // ======================================
-
                           _card(
-                            child:
-                                Row(
-                              mainAxisAlignment:
-                                  MainAxisAlignment
-                                      .spaceBetween,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 _step(
                                   "Finding",
-                                  status ==
-                                          "pending" ||
-                                      status ==
-                                          "created" ||
-                                      status ==
-                                          "searching",
-                                  status !=
-                                          "pending" &&
-                                      status !=
-                                          "created" &&
-                                      status !=
-                                          "searching",
+                                  status == "pending" ||
+                                      status == "created" ||
+                                      status == "searching",
+                                  status != "pending" &&
+                                      status != "created" &&
+                                      status != "searching",
                                 ),
                                 _step(
                                   "Accepted",
-                                  status ==
-                                          "accepted" ||
-                                      status ==
-                                          "arrived" ||
-                                      status ==
-                                          "started" ||
+                                  status == "accepted" ||
+                                      status == "arrived" ||
+                                      status == "started" ||
                                       isCompleted,
-                                  status ==
-                                          "arrived" ||
-                                      status ==
-                                          "started" ||
+                                  status == "arrived" ||
+                                      status == "started" ||
                                       isCompleted,
                                 ),
                                 _step(
                                   "Arrived",
-                                  status ==
-                                          "arrived" ||
-                                      status ==
-                                          "started" ||
+                                  status == "arrived" ||
+                                      status == "started" ||
                                       isCompleted,
-                                  status ==
-                                          "started" ||
-                                      isCompleted,
+                                  status == "started" || isCompleted,
                                 ),
                                 _step(
                                   "Ride",
-                                  status ==
-                                          "started" ||
-                                      isCompleted,
+                                  status == "started" || isCompleted,
                                   isCompleted,
                                 ),
                               ],
                             ),
                           ),
 
-                          const SizedBox(
-                            height: 12,
-                          ),
+                          const SizedBox(height: 12),
 
                           // ======================================
                           // DRIVER
                           // ======================================
+                          _driverCard(isDark),
 
-                          _driverCard(
-                            isDark,
-                          ),
-
-                          const SizedBox(
-                            height: 12,
-                          ),
+                          const SizedBox(height: 12),
 
                           // ======================================
                           // ROUTE INFO
                           // ======================================
-
                           _card(
-                            child:
-                                Column(
-                              crossAxisAlignment:
-                                  CrossAxisAlignment
-                                      .start,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
                                   children: [
                                     const Icon(
-                                      Icons
-                                          .route_rounded,
-                                      color:
-                                          senmiRidePurple,
+                                      Icons.route_rounded,
+                                      color: senmiRidePurple,
                                     ),
-                                    const SizedBox(
-                                      width:
-                                          9,
-                                    ),
+                                    const SizedBox(width: 9),
                                     const Expanded(
-                                      child:
-                                          Text(
+                                      child: Text(
                                         "Trip route",
-                                        style:
-                                            TextStyle(
-                                          fontSize:
-                                              14,
-                                          fontWeight:
-                                              FontWeight
-                                                  .w800,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w800,
                                         ),
                                       ),
                                     ),
                                     if (loadingRoute)
                                       const SizedBox(
-                                        width:
-                                            18,
-                                        height:
-                                            18,
-                                        child:
-                                            CircularProgressIndicator(
-                                          strokeWidth:
-                                              2,
-                                          color:
-                                              senmiRidePurple,
+                                        width: 18,
+                                        height: 18,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: senmiRidePurple,
                                         ),
                                       ),
                                   ],
                                 ),
-                                const SizedBox(
-                                  height:
-                                      12,
-                                ),
-                                if (pickupLocation !=
-                                        null &&
-                                    destinationLocation !=
-                                        null)
+                                const SizedBox(height: 12),
+                                if (pickupLocation != null &&
+                                    destinationLocation != null)
                                   Column(
                                     children: [
                                       _locationRow(
-                                        Icons
-                                            .my_location_rounded,
-                                        Colors
-                                            .green,
+                                        Icons.my_location_rounded,
+                                        Colors.green,
                                         "Pickup",
                                       ),
-                                      const SizedBox(
-                                        height:
-                                            10,
-                                      ),
+                                      const SizedBox(height: 10),
                                       _locationRow(
-                                        Icons
-                                            .location_on_rounded,
-                                        Colors
-                                            .redAccent,
+                                        Icons.location_on_rounded,
+                                        Colors.redAccent,
                                         "Destination",
                                       ),
                                     ],
@@ -1976,41 +1355,23 @@ class _RideTrackingScreenState
                             ),
                           ),
 
-                          if (errorMessage
-                              .isNotEmpty) ...[
-                            const SizedBox(
-                              height:
-                                  12,
-                            ),
+                          if (errorMessage.isNotEmpty) ...[
+                            const SizedBox(height: 12),
                             _card(
-                              color: Colors
-                                  .redAccent
-                                  .withOpacity(
-                                0.08,
-                              ),
-                              child:
-                                  Row(
+                              color: Colors.redAccent.withOpacity(0.08),
+                              child: Row(
                                 children: [
                                   const Icon(
-                                    Icons
-                                        .error_outline_rounded,
-                                    color:
-                                        Colors.redAccent,
+                                    Icons.error_outline_rounded,
+                                    color: Colors.redAccent,
                                   ),
-                                  const SizedBox(
-                                    width:
-                                        9,
-                                  ),
+                                  const SizedBox(width: 9),
                                   Expanded(
-                                    child:
-                                        Text(
+                                    child: Text(
                                       errorMessage,
-                                      style:
-                                          const TextStyle(
-                                        color:
-                                            Colors.redAccent,
-                                        fontSize:
-                                            13,
+                                      style: const TextStyle(
+                                        color: Colors.redAccent,
+                                        fontSize: 13,
                                       ),
                                     ),
                                   ),
@@ -2021,18 +1382,10 @@ class _RideTrackingScreenState
 
                           if (loading)
                             const Padding(
-                              padding:
-                                  EdgeInsets
-                                      .only(
-                                top:
-                                    18,
-                              ),
-                              child:
-                                  Center(
-                                child:
-                                    CircularProgressIndicator(
-                                  color:
-                                      senmiRidePurple,
+                              padding: EdgeInsets.only(top: 18),
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  color: senmiRidePurple,
                                 ),
                               ),
                             ),
@@ -2053,34 +1406,17 @@ class _RideTrackingScreenState
   // TRIP INFO
   // ============================================================
 
-  Widget _tripInfo(
-    IconData icon,
-    String text,
-  ) {
+  Widget _tripInfo(IconData icon, String text) {
     return Row(
-      mainAxisAlignment:
-          MainAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(
-          icon,
-          size: 18,
-          color:
-              senmiRidePurple,
-        ),
-        const SizedBox(
-          width: 7,
-        ),
+        Icon(icon, size: 18, color: senmiRidePurple),
+        const SizedBox(width: 7),
         Flexible(
           child: Text(
             text,
-            textAlign:
-                TextAlign.center,
-            style:
-                const TextStyle(
-              fontSize: 13,
-              fontWeight:
-                  FontWeight.w700,
-            ),
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
           ),
         ),
       ],
@@ -2091,41 +1427,22 @@ class _RideTrackingScreenState
   // LOCATION ROW
   // ============================================================
 
-  Widget _locationRow(
-    IconData icon,
-    Color color,
-    String title,
-  ) {
+  Widget _locationRow(IconData icon, Color color, String title) {
     return Row(
       children: [
         Container(
           width: 34,
           height: 34,
-          decoration:
-              BoxDecoration(
-            color: color.withOpacity(
-              0.10,
-            ),
-            shape:
-                BoxShape.circle,
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.10),
+            shape: BoxShape.circle,
           ),
-          child: Icon(
-            icon,
-            color: color,
-            size: 18,
-          ),
+          child: Icon(icon, color: color, size: 18),
         ),
-        const SizedBox(
-          width: 10,
-        ),
+        const SizedBox(width: 10),
         Text(
           title,
-          style:
-              const TextStyle(
-            fontSize: 13,
-            fontWeight:
-                FontWeight.w600,
-          ),
+          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
         ),
       ],
     );

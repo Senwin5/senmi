@@ -181,11 +181,6 @@ class _RideHomeState extends State<RideHome> {
 
       final rideId = data["ride_id"]?.toString() ?? "";
 
-      // ========================================================
-      // RIDE CREATED SUCCESSFULLY
-      // OPEN RIDE TRACKING SCREEN
-      // ========================================================
-
       if (rideId.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -260,7 +255,7 @@ class _RideHomeState extends State<RideHome> {
       }
 
       return parts.toSet().join(", ");
-    } catch (e) {
+    } catch (_) {
       return "Unknown location";
     }
   }
@@ -321,8 +316,8 @@ class _RideHomeState extends State<RideHome> {
       });
 
       // =========================================================
-      // AFTER PICKUP IS CONFIRMED
-      // AUTOMATICALLY OPEN DESTINATION MAP
+      // AFTER PICKUP
+      // AUTOMATICALLY OPEN DESTINATION
       // =========================================================
 
       if (isPickup && mounted) {
@@ -330,7 +325,7 @@ class _RideHomeState extends State<RideHome> {
       }
 
       // =========================================================
-      // CALCULATE FARE AFTER DESTINATION
+      // CALCULATE FARE
       // =========================================================
 
       if (!isPickup &&
@@ -383,7 +378,7 @@ class _RideHomeState extends State<RideHome> {
   }
 
   // ============================================================
-  // RIDE READY CHECK
+  // RIDE READY
   // ============================================================
 
   bool get locationsSelected {
@@ -391,7 +386,7 @@ class _RideHomeState extends State<RideHome> {
   }
 
   // ============================================================
-  // FARE DISPLAY
+  // FARE FORMAT
   // ============================================================
 
   String _formatFare(double? value) {
@@ -409,12 +404,12 @@ class _RideHomeState extends State<RideHome> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
     final isDark = theme.brightness == Brightness.dark;
 
-    final backgroundColor = theme.scaffoldBackgroundColor;
-
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
+
       body: SafeArea(
         child: Column(
           children: [
@@ -422,7 +417,7 @@ class _RideHomeState extends State<RideHome> {
             // TOP BAR
             // ==================================================
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 14, 20, 10),
+              padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
               child: Row(
                 children: [
                   _TopIconButton(
@@ -441,14 +436,14 @@ class _RideHomeState extends State<RideHome> {
                         Text(
                           "Ride",
                           style: TextStyle(
-                            fontSize: 22,
+                            fontSize: 21,
                             fontWeight: FontWeight.w800,
                             color: isDark ? Colors.white : Colors.black87,
                           ),
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          "Move where you need to go.",
+                          "Where are you going?",
                           style: TextStyle(
                             fontSize: 12.5,
                             color: isDark ? Colors.white54 : Colors.black54,
@@ -475,7 +470,7 @@ class _RideHomeState extends State<RideHome> {
             ),
 
             // ==================================================
-            // BODY
+            // CONTENT
             // ==================================================
             Expanded(
               child: SingleChildScrollView(
@@ -485,163 +480,86 @@ class _RideHomeState extends State<RideHome> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // ==================================================
-                    // HERO
+                    // LOCATION CARD
                     // ==================================================
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.all(20),
+                      padding: const EdgeInsets.all(18),
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(24),
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: isDark
-                              ? const [Color(0xFF2A123B), Color(0xFF17101C)]
-                              : const [Color(0xFF581C87), Color(0xFF7C3AED)],
+                        color: isDark ? const Color(0xFF1E1E22) : Colors.white,
+                        borderRadius: BorderRadius.circular(22),
+                        border: Border.all(
+                          color: isDark
+                              ? Colors.white.withOpacity(0.07)
+                              : Colors.black.withOpacity(0.06),
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: senmiRidePurple.withOpacity(
-                              isDark ? 0.16 : 0.18,
+                            color: Colors.black.withOpacity(
+                              isDark ? 0.12 : 0.04,
                             ),
-                            blurRadius: 20,
-                            offset: const Offset(0, 8),
+                            blurRadius: 14,
+                            offset: const Offset(0, 6),
                           ),
                         ],
                       ),
-                      child: Row(
+                      child: Column(
                         children: [
-                          Container(
-                            width: 52,
-                            height: 52,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.14),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: const Icon(
-                              Icons.directions_car_rounded,
-                              color: Colors.white,
-                              size: 27,
-                            ),
+                          _LocationField(
+                            icon: Icons.my_location_rounded,
+                            iconColor: Colors.green,
+                            title: "Pickup",
+                            value: pickupAddress.isEmpty
+                                ? "Choose pickup location"
+                                : pickupAddress,
+                            isDark: isDark,
+                            loading: selectingPickup,
+                            hasLocation: pickupLocation != null,
+                            onTap: () {
+                              _pickLocation(isPickup: true);
+                            },
+                            onClear: pickupLocation != null
+                                ? _clearPickup
+                                : null,
                           ),
 
-                          const SizedBox(width: 14),
-
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                          Padding(
+                            padding: const EdgeInsets.only(left: 24),
+                            child: Row(
                               children: [
-                                const Text(
-                                  "Ready for a ride?",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-
-                                const SizedBox(height: 5),
-
-                                Text(
-                                  "Set your pickup and "
-                                  "destination to get started.",
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.76),
-                                    fontSize: 12.5,
-                                    height: 1.45,
-                                  ),
+                                Container(
+                                  width: 2,
+                                  height: 20,
+                                  color: isDark
+                                      ? Colors.white12
+                                      : Colors.black12,
                                 ),
                               ],
                             ),
                           ),
+
+                          _LocationField(
+                            icon: Icons.location_on_rounded,
+                            iconColor: Colors.redAccent,
+                            title: "Destination",
+                            value: destinationAddress.isEmpty
+                                ? "Where do you want to go?"
+                                : destinationAddress,
+                            isDark: isDark,
+                            loading: selectingDestination,
+                            hasLocation: destinationLocation != null,
+                            onTap: () {
+                              _pickLocation(isPickup: false);
+                            },
+                            onClear: destinationLocation != null
+                                ? _clearDestination
+                                : null,
+                          ),
                         ],
                       ),
                     ),
 
-                    const SizedBox(height: 26),
-
-                    // ==================================================
-                    // YOUR TRIP
-                    // ==================================================
-                    Text(
-                      "Your trip",
-                      style: TextStyle(
-                        fontSize: 19,
-                        fontWeight: FontWeight.w800,
-                        color: isDark ? Colors.white : Colors.black87,
-                      ),
-                    ),
-
-                    const SizedBox(height: 6),
-
-                    Text(
-                      "Choose where you are and where "
-                      "you want to go.",
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: isDark ? Colors.white54 : Colors.black54,
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // ==================================================
-                    // PICKUP
-                    // ==================================================
-                    _LocationField(
-                      icon: Icons.my_location_rounded,
-                      iconColor: Colors.green,
-                      title: "Pickup location",
-                      value: pickupAddress.isEmpty
-                          ? "Choose your pickup location"
-                          : pickupAddress,
-                      isDark: isDark,
-                      loading: selectingPickup,
-                      hasLocation: pickupLocation != null,
-                      onTap: () {
-                        _pickLocation(isPickup: true);
-                      },
-                      onClear: pickupLocation != null ? _clearPickup : null,
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    Padding(
-                      padding: const EdgeInsets.only(left: 29),
-                      child: Container(
-                        width: 2,
-                        height: 16,
-                        decoration: BoxDecoration(
-                          color: isDark ? Colors.white12 : Colors.black12,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    // ==================================================
-                    // DESTINATION
-                    // ==================================================
-                    _LocationField(
-                      icon: Icons.location_on_rounded,
-                      iconColor: Colors.redAccent,
-                      title: "Destination",
-                      value: destinationAddress.isEmpty
-                          ? "Where do you want to go?"
-                          : destinationAddress,
-                      isDark: isDark,
-                      loading: selectingDestination,
-                      hasLocation: destinationLocation != null,
-                      onTap: () {
-                        _pickLocation(isPickup: false);
-                      },
-                      onClear: destinationLocation != null
-                          ? _clearDestination
-                          : null,
-                    ),
-
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 24),
 
                     // ==================================================
                     // RIDE TYPE
@@ -649,23 +567,23 @@ class _RideHomeState extends State<RideHome> {
                     Text(
                       "Choose your ride",
                       style: TextStyle(
-                        fontSize: 19,
+                        fontSize: 18,
                         fontWeight: FontWeight.w800,
                         color: isDark ? Colors.white : Colors.black87,
                       ),
                     ),
 
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 5),
 
                     Text(
-                      "Select the ride that suits you.",
+                      "Pick the option that works for you.",
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 12.5,
                         color: isDark ? Colors.white54 : Colors.black54,
                       ),
                     ),
 
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 14),
 
                     Row(
                       children: [
@@ -692,7 +610,7 @@ class _RideHomeState extends State<RideHome> {
                           ),
                         ),
 
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 10),
 
                         Expanded(
                           child: _RideTypeCard(
@@ -719,234 +637,213 @@ class _RideHomeState extends State<RideHome> {
                       ],
                     ),
 
-                    const SizedBox(height: 24),
+                    // ==================================================
+                    // FARE
+                    // ==================================================
+                    if (locationsSelected) ...[
+                      const SizedBox(height: 20),
 
-                    // ==================================================
-                    // FARE PREVIEW
-                    // ==================================================
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? const Color(0xFF1B1B1F)
-                            : const Color(0xFFF8F7FA),
-                        borderRadius: BorderRadius.circular(22),
-                        border: Border.all(
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(18),
+                        decoration: BoxDecoration(
                           color: isDark
-                              ? Colors.white.withOpacity(0.07)
-                              : Colors.black.withOpacity(0.06),
+                              ? const Color(0xFF1E1E22)
+                              : const Color(0xFFF8F7FA),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: isDark
+                                ? Colors.white.withOpacity(0.07)
+                                : Colors.black.withOpacity(0.06),
+                          ),
                         ),
-                      ),
-                      child: Column(
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      "Estimated fare",
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                        color: isDark
-                                            ? Colors.white54
-                                            : Colors.black54,
-                                      ),
-                                    ),
-
-                                    const SizedBox(height: 5),
-
-                                    Text(
-                                      !locationsSelected
-                                          ? "Select both locations first"
-                                          : calculatingFare
-                                          ? "Calculating fare..."
-                                          : fareError.isNotEmpty
-                                          ? fareError
-                                          : "Estimated ${selectedRideType == "premium" ? "Premium" : "Basic"} fare",
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: fareError.isNotEmpty
-                                            ? Colors.redAccent
-                                            : isDark
-                                            ? Colors.white38
-                                            : Colors.black38,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-
-                              if (calculatingFare)
-                                const SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2.5,
-                                    color: senmiRidePurple,
-                                  ),
-                                )
-                              else
-                                Text(
-                                  _formatFare(estimatedFare),
-                                  style: TextStyle(
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.w800,
-                                    color: isDark
-                                        ? Colors.white
-                                        : Colors.black87,
-                                  ),
-                                ),
-                            ],
-                          ),
-
-                          const SizedBox(height: 16),
-
-                          Divider(
-                            height: 1,
-                            color: isDark ? Colors.white10 : Colors.black12,
-                          ),
-
-                          const SizedBox(height: 14),
-
-                          Row(
-                            children: [
-                              Icon(
-                                selectedRideType == "premium"
-                                    ? Icons.star_rounded
-                                    : Icons.check_circle_outline_rounded,
-                                size: 18,
-                                color: senmiRidePurple,
-                              ),
-
-                              const SizedBox(width: 8),
-
-                              Expanded(
-                                child: Text(
-                                  selectedRideType == "premium"
-                                      ? "Premium selected"
-                                      : "Basic selected",
-                                  style: TextStyle(
-                                    fontSize: 12.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: isDark
-                                        ? Colors.white70
-                                        : Colors.black87,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          if (estimatedDistanceKm != null ||
-                              estimatedDurationMinutes != null) ...[
-                            const SizedBox(height: 12),
-
+                        child: Column(
+                          children: [
                             Row(
                               children: [
-                                if (estimatedDistanceKm != null)
-                                  Expanded(
-                                    child: _FareInfo(
-                                      icon: Icons.route_rounded,
-                                      label:
-                                          "${estimatedDistanceKm!.toStringAsFixed(2)} km",
-                                      isDark: isDark,
-                                    ),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "Estimated fare",
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: isDark
+                                              ? Colors.white54
+                                              : Colors.black54,
+                                        ),
+                                      ),
+
+                                      const SizedBox(height: 5),
+
+                                      if (fareError.isNotEmpty)
+                                        Text(
+                                          fareError,
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.redAccent,
+                                          ),
+                                        )
+                                      else
+                                        Text(
+                                          selectedRideType == "premium"
+                                              ? "Premium ride"
+                                              : "Basic ride",
+                                          style: TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w700,
+                                            color: isDark
+                                                ? Colors.white
+                                                : Colors.black87,
+                                          ),
+                                        ),
+                                    ],
                                   ),
+                                ),
 
-                                if (estimatedDistanceKm != null &&
-                                    estimatedDurationMinutes != null)
-                                  const SizedBox(width: 10),
-
-                                if (estimatedDurationMinutes != null)
-                                  Expanded(
-                                    child: _FareInfo(
-                                      icon: Icons.schedule_rounded,
-                                      label: "$estimatedDurationMinutes min",
-                                      isDark: isDark,
+                                if (calculatingFare)
+                                  const SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.5,
+                                      color: senmiRidePurple,
+                                    ),
+                                  )
+                                else
+                                  Text(
+                                    _formatFare(estimatedFare),
+                                    style: TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.w800,
+                                      color: isDark
+                                          ? Colors.white
+                                          : senmiRidePurple,
                                     ),
                                   ),
                               ],
                             ),
+
+                            if (estimatedDistanceKm != null ||
+                                estimatedDurationMinutes != null) ...[
+                              const SizedBox(height: 15),
+
+                              Divider(
+                                height: 1,
+                                color: isDark ? Colors.white10 : Colors.black12,
+                              ),
+
+                              const SizedBox(height: 13),
+
+                              Row(
+                                children: [
+                                  if (estimatedDistanceKm != null)
+                                    Expanded(
+                                      child: _FareInfo(
+                                        icon: Icons.route_rounded,
+                                        label:
+                                            "${estimatedDistanceKm!.toStringAsFixed(2)} km",
+                                        isDark: isDark,
+                                      ),
+                                    ),
+
+                                  if (estimatedDistanceKm != null &&
+                                      estimatedDurationMinutes != null)
+                                    const SizedBox(width: 10),
+
+                                  if (estimatedDurationMinutes != null)
+                                    Expanded(
+                                      child: _FareInfo(
+                                        icon: Icons.schedule_rounded,
+                                        label: "$estimatedDurationMinutes min",
+                                        isDark: isDark,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ],
                           ],
-                        ],
+                        ),
                       ),
-                    ),
 
-                    const SizedBox(height: 24),
+                      const SizedBox(height: 18),
 
-                    // ==================================================
-                    // REQUEST RIDE
-                    // ==================================================
-                    SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: ElevatedButton(
-                        onPressed:
-                            locationsSelected &&
-                                estimatedFare != null &&
-                                !calculatingFare
-                            ? _requestRide
-                            : null,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: senmiRidePurple,
-                          foregroundColor: Colors.white,
-                          disabledBackgroundColor: isDark
-                              ? Colors.white10
-                              : Colors.black12,
-                          disabledForegroundColor: isDark
-                              ? Colors.white30
-                              : Colors.black38,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(17),
+                      // ==================================================
+                      // REQUEST BUTTON
+                      // ==================================================
+                      SizedBox(
+                        width: double.infinity,
+                        height: 56,
+                        child: ElevatedButton(
+                          onPressed:
+                              estimatedFare != null &&
+                                  estimatedDistanceKm != null &&
+                                  estimatedDurationMinutes != null &&
+                                  !calculatingFare
+                              ? _requestRide
+                              : null,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: senmiRidePurple,
+                            foregroundColor: Colors.white,
+                            disabledBackgroundColor: isDark
+                                ? Colors.white10
+                                : Colors.black12,
+                            disabledForegroundColor: isDark
+                                ? Colors.white30
+                                : Colors.black38,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(17),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.local_taxi_rounded, size: 21),
+
+                              const SizedBox(width: 8),
+
+                              Text(
+                                estimatedFare != null
+                                    ? "Request ${selectedRideType == "premium" ? "Premium" : "Basic"} Ride"
+                                    : "Calculating fare...",
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.local_taxi_rounded, size: 21),
-
-                            const SizedBox(width: 9),
-
-                            Text(
-                              locationsSelected && estimatedFare != null
-                                  ? "Request ${selectedRideType == "premium" ? "Premium" : "Basic"} Ride"
-                                  : "Select Locations First",
-                              style: const TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                          ],
-                        ),
                       ),
-                    ),
+                    ],
 
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 18),
 
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.verified_user_outlined,
-                          size: 15,
-                          color: isDark ? Colors.white38 : Colors.black38,
-                        ),
-
-                        const SizedBox(width: 6),
-
-                        Text(
-                          "Safe, reliable rides with Senmi",
-                          style: TextStyle(
-                            fontSize: 11.5,
+                    // ==================================================
+                    // FOOTER
+                    // ==================================================
+                    Center(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.verified_user_outlined,
+                            size: 14,
                             color: isDark ? Colors.white38 : Colors.black38,
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 5),
+                          Text(
+                            "Safe, reliable rides with Senmi",
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: isDark ? Colors.white38 : Colors.black38,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -962,9 +859,7 @@ class _RideHomeState extends State<RideHome> {
 // ============================================================
 // RIDE MAP PICKER
 //
-// IMPORTANT:
-// This is Ride-only.
-// It wraps the existing shared MapPickerScreen.
+// This wraps the existing shared MapPickerScreen.
 // MapPickerScreen itself is NOT changed.
 // ============================================================
 
@@ -1174,41 +1069,34 @@ class _LocationField extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(19),
+        borderRadius: BorderRadius.circular(16),
         child: Ink(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E1E22) : Colors.white,
-            borderRadius: BorderRadius.circular(19),
+            color: isDark ? const Color(0xFF25252A) : const Color(0xFFF9F8FA),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: hasLocation
                   ? senmiRidePurple
                   : isDark
-                  ? Colors.white.withOpacity(0.08)
-                  : Colors.black.withOpacity(0.07),
+                  ? Colors.white.withOpacity(0.06)
+                  : Colors.black.withOpacity(0.05),
               width: hasLocation ? 1.2 : 1,
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(isDark ? 0.10 : 0.04),
-                blurRadius: 12,
-                offset: const Offset(0, 5),
-              ),
-            ],
           ),
           child: Row(
             children: [
               Container(
-                width: 44,
-                height: 44,
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
                   color: iconColor.withOpacity(0.10),
-                  borderRadius: BorderRadius.circular(13),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: iconColor, size: 21),
+                child: Icon(icon, color: iconColor, size: 20),
               ),
 
-              const SizedBox(width: 13),
+              const SizedBox(width: 11),
 
               Expanded(
                 child: Column(
@@ -1217,30 +1105,30 @@ class _LocationField extends StatelessWidget {
                     Text(
                       title,
                       style: TextStyle(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w700,
                         color: isDark ? Colors.white54 : Colors.black54,
                       ),
                     ),
 
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 3),
 
                     if (loading)
                       Row(
                         children: [
                           const SizedBox(
-                            width: 14,
-                            height: 14,
+                            width: 13,
+                            height: 13,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
                               color: senmiRidePurple,
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: 7),
                           Text(
                             "Opening map...",
                             style: TextStyle(
-                              fontSize: 13,
+                              fontSize: 12.5,
                               color: isDark ? Colors.white54 : Colors.black54,
                             ),
                           ),
@@ -1252,7 +1140,7 @@ class _LocationField extends StatelessWidget {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 13.5,
                           fontWeight: FontWeight.w600,
                           color: hasLocation
                               ? isDark
@@ -1270,9 +1158,10 @@ class _LocationField extends StatelessWidget {
               if (hasLocation && onClear != null)
                 IconButton(
                   visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
                   icon: Icon(
                     Icons.close_rounded,
-                    size: 19,
+                    size: 18,
                     color: isDark ? Colors.white38 : Colors.black38,
                   ),
                   onPressed: onClear,
@@ -1280,6 +1169,7 @@ class _LocationField extends StatelessWidget {
               else
                 Icon(
                   Icons.chevron_right_rounded,
+                  size: 20,
                   color: isDark ? Colors.white38 : Colors.black38,
                 ),
             ],
@@ -1313,90 +1203,81 @@ class _RideTypeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final background = selected
-        ? senmiRidePurple.withOpacity(0.08)
-        : isDark
-        ? const Color(0xFF1E1E22)
-        : Colors.white;
-
-    final border = selected
-        ? senmiRidePurple
-        : isDark
-        ? Colors.white.withOpacity(0.08)
-        : Colors.black.withOpacity(0.07);
-
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(18),
         child: Ink(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: background,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: border, width: selected ? 1.4 : 1),
+            color: selected
+                ? senmiRidePurple.withOpacity(0.08)
+                : isDark
+                ? const Color(0xFF1E1E22)
+                : Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: selected
+                  ? senmiRidePurple
+                  : isDark
+                  ? Colors.white.withOpacity(0.07)
+                  : Colors.black.withOpacity(0.06),
+              width: selected ? 1.3 : 1,
+            ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Row(
             children: [
-              Row(
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: selected
-                          ? senmiRidePurple
-                          : senmiRidePurple.withOpacity(0.08),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      icon,
-                      size: 20,
-                      color: selected ? Colors.white : senmiRidePurple,
-                    ),
-                  ),
-
-                  const Spacer(),
-
-                  if (selected)
-                    Container(
-                      width: 22,
-                      height: 22,
-                      decoration: const BoxDecoration(
-                        color: senmiRidePurple,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.check_rounded,
-                        size: 15,
-                        color: Colors.white,
-                      ),
-                    ),
-                ],
-              ),
-
-              const SizedBox(height: 14),
-
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w800,
-                  color: isDark ? Colors.white : Colors.black87,
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: selected
+                      ? senmiRidePurple
+                      : senmiRidePurple.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  icon,
+                  size: 20,
+                  color: selected ? Colors.white : senmiRidePurple,
                 ),
               ),
 
-              const SizedBox(height: 4),
+              const SizedBox(width: 10),
 
-              Text(
-                subtitle,
-                style: TextStyle(
-                  fontSize: 11.5,
-                  color: isDark ? Colors.white54 : Colors.black54,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                    ),
+
+                    const SizedBox(height: 3),
+
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        color: isDark ? Colors.white54 : Colors.black54,
+                      ),
+                    ),
+                  ],
                 ),
               ),
+
+              if (selected)
+                const Icon(
+                  Icons.check_circle_rounded,
+                  color: senmiRidePurple,
+                  size: 20,
+                ),
             ],
           ),
         ),
@@ -1423,7 +1304,7 @@ class _FareInfo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
       decoration: BoxDecoration(
         color: isDark
             ? Colors.white.withOpacity(0.04)
@@ -1433,12 +1314,12 @@ class _FareInfo extends StatelessWidget {
       child: Row(
         children: [
           Icon(icon, size: 16, color: senmiRidePurple),
-
           const SizedBox(width: 6),
-
           Expanded(
             child: Text(
               label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 11.5,
                 fontWeight: FontWeight.w700,
