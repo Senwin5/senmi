@@ -1,8 +1,11 @@
-// ignore_for_file: deprecated_member_use
+// ignore_for_file: deprecated_member_use, use_build_context_synchronously
 
 import 'package:flutter/material.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:senmi/main.dart';
 import 'package:senmi/senmi_shared_account/customer_profiles/account_profile_screen.dart';
+import 'package:senmi/senmi_shared_account/map/map_picker_screen.dart';
 
 const Color senmiRidePurple = Color(0xFF581C87);
 const Color senmiRideLightPurple = Color(0xFF7C3AED);
@@ -15,7 +18,166 @@ class RideHome extends StatefulWidget {
 }
 
 class _RideHomeState extends State<RideHome> {
+  // ============================================================
+  // RIDE STATE
+  // ============================================================
+
   String selectedRideType = "basic";
+
+  LatLng? pickupLocation;
+  LatLng? destinationLocation;
+
+  String pickupAddress = "";
+  String destinationAddress = "";
+
+  bool selectingPickup = false;
+  bool selectingDestination = false;
+
+  // Default Lagos location.
+  static const LatLng defaultLagosLocation = LatLng(6.5244, 3.3792);
+
+  // ============================================================
+  // GET ADDRESS
+  // ============================================================
+
+  Future<String> _getAddressFromLatLng(LatLng position) async {
+    try {
+      final placemarks = await placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+
+      if (placemarks.isEmpty) {
+        return "Unknown location";
+      }
+
+      final place = placemarks.first;
+
+      final parts = <String>[];
+
+      if (place.street?.isNotEmpty == true) {
+        parts.add(place.street!);
+      }
+
+      if (place.locality?.isNotEmpty == true) {
+        parts.add(place.locality!);
+      }
+
+      if (place.administrativeArea?.isNotEmpty == true) {
+        parts.add(place.administrativeArea!);
+      }
+
+      if (place.country?.isNotEmpty == true) {
+        parts.add(place.country!);
+      }
+
+      if (parts.isEmpty) {
+        return "Unknown location";
+      }
+
+      return parts.toSet().join(", ");
+    } catch (e) {
+      return "Unknown location";
+    }
+  }
+
+  // ============================================================
+  // PICK LOCATION
+  // ============================================================
+  Future<void> _pickLocation({required bool isPickup}) async {
+    if (isPickup) {
+      setState(() {
+        selectingPickup = true;
+      });
+    } else {
+      setState(() {
+        selectingDestination = true;
+      });
+    }
+
+    try {
+      final LatLng startingLocation = isPickup
+          ? (pickupLocation ?? defaultLagosLocation)
+          : (destinationLocation ?? pickupLocation ?? defaultLagosLocation);
+
+      final selected = await Navigator.of(context).push<LatLng>(
+        MaterialPageRoute(
+          builder: (_) => MapPickerScreen(
+            initialLocation: startingLocation,
+            useCurrentLocation: isPickup,
+          ),
+        ),
+      );
+
+      if (selected == null) {
+        return;
+      }
+
+      final address = await _getAddressFromLatLng(selected);
+
+      if (!mounted) return;
+
+      setState(() {
+        if (isPickup) {
+          pickupLocation = selected;
+          pickupAddress = address;
+        } else {
+          destinationLocation = selected;
+          destinationAddress = address;
+        }
+      });
+
+      // =========================================================
+      // AFTER PICKUP IS CONFIRMED
+      // AUTOMATICALLY OPEN DESTINATION MAP
+      // =========================================================
+      if (isPickup && mounted) {
+        await _pickLocation(isPickup: false);
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          selectingPickup = false;
+          selectingDestination = false;
+        });
+      }
+    }
+  }
+
+  // ============================================================
+  // CLEAR LOCATION
+  // ============================================================
+
+  void _clearPickup() {
+    setState(() {
+      pickupLocation = null;
+      pickupAddress = "";
+
+      // If pickup is cleared, destination is cleared too
+      // because the destination should belong to the new trip.
+      destinationLocation = null;
+      destinationAddress = "";
+    });
+  }
+
+  void _clearDestination() {
+    setState(() {
+      destinationLocation = null;
+      destinationAddress = "";
+    });
+  }
+
+  // ============================================================
+  // RIDE READY CHECK
+  // ============================================================
+
+  bool get locationsSelected {
+    return pickupLocation != null && destinationLocation != null;
+  }
+
+  // ============================================================
+  // BUILD
+  // ============================================================
 
   @override
   Widget build(BuildContext context) {
@@ -175,7 +337,7 @@ class _RideHomeState extends State<RideHome> {
                     const SizedBox(height: 26),
 
                     // ==================================================
-                    // LOCATION SECTION
+                    // YOUR TRIP
                     // ==================================================
                     Text(
                       "Your trip",
@@ -189,7 +351,8 @@ class _RideHomeState extends State<RideHome> {
                     const SizedBox(height: 6),
 
                     Text(
-                      "Where are you going?",
+                      "Choose where you are and where you "
+                      "want to go.",
                       style: TextStyle(
                         fontSize: 13,
                         color: isDark ? Colors.white54 : Colors.black54,
@@ -198,48 +361,66 @@ class _RideHomeState extends State<RideHome> {
 
                     const SizedBox(height: 16),
 
-                    // Pickup
+                    // ==================================================
+                    // PICKUP
+                    // ==================================================
                     _LocationField(
                       icon: Icons.my_location_rounded,
                       iconColor: Colors.green,
                       title: "Pickup location",
-                      value: "Choose your pickup location",
+                      value: pickupAddress.isEmpty
+                          ? "Choose your pickup location"
+                          : pickupAddress,
                       isDark: isDark,
+                      loading: selectingPickup,
+                      hasLocation: pickupLocation != null,
                       onTap: () {
-                        _showComingSoonLocationDialog(
-                          context,
-                          "Pickup location",
-                        );
+                        _pickLocation(isPickup: true);
                       },
+                      onClear: pickupLocation != null ? _clearPickup : null,
                     ),
 
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
 
-                    // Connecting line
+                    // ==================================================
+                    // CONNECTING LINE
+                    // ==================================================
                     Padding(
-                      padding: const EdgeInsets.only(left: 27),
+                      padding: const EdgeInsets.only(left: 29),
                       child: Container(
                         width: 2,
-                        height: 12,
-                        color: isDark ? Colors.white12 : Colors.black12,
+                        height: 16,
+                        decoration: BoxDecoration(
+                          color: isDark ? Colors.white12 : Colors.black12,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
                       ),
                     ),
 
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
 
-                    // Destination
+                    // ==================================================
+                    // DESTINATION
+                    // ==================================================
                     _LocationField(
                       icon: Icons.location_on_rounded,
                       iconColor: Colors.redAccent,
                       title: "Destination",
-                      value: "Where do you want to go?",
+                      value: destinationAddress.isEmpty
+                          ? "Where do you want to go?"
+                          : destinationAddress,
                       isDark: isDark,
+                      loading: selectingDestination,
+                      hasLocation: destinationLocation != null,
                       onTap: () {
-                        _showComingSoonLocationDialog(context, "Destination");
+                        _pickLocation(isPickup: false);
                       },
+                      onClear: destinationLocation != null
+                          ? _clearDestination
+                          : null,
                     ),
 
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 28),
 
                     // ==================================================
                     // RIDE TYPE
@@ -342,7 +523,9 @@ class _RideHomeState extends State<RideHome> {
                                     const SizedBox(height: 5),
 
                                     Text(
-                                      "Calculated after locations",
+                                      locationsSelected
+                                          ? "Fare will be calculated"
+                                          : "Select both locations first",
                                       style: TextStyle(
                                         fontSize: 12,
                                         color: isDark
@@ -407,18 +590,26 @@ class _RideHomeState extends State<RideHome> {
                     const SizedBox(height: 24),
 
                     // ==================================================
-                    // REQUEST BUTTON
+                    // REQUEST RIDE
                     // ==================================================
                     SizedBox(
                       width: double.infinity,
                       height: 56,
                       child: ElevatedButton(
-                        onPressed: () {
-                          _showRideSetupDialog(context);
-                        },
+                        onPressed: locationsSelected
+                            ? () {
+                                _showRideSetupDialog(context);
+                              }
+                            : null,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: senmiRidePurple,
                           foregroundColor: Colors.white,
+                          disabledBackgroundColor: isDark
+                              ? Colors.white10
+                              : Colors.black12,
+                          disabledForegroundColor: isDark
+                              ? Colors.white30
+                              : Colors.black38,
                           elevation: 0,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(17),
@@ -430,7 +621,9 @@ class _RideHomeState extends State<RideHome> {
                             const Icon(Icons.local_taxi_rounded, size: 21),
                             const SizedBox(width: 9),
                             Text(
-                              "Request ${selectedRideType == "premium" ? "Premium" : "Basic"} Ride",
+                              locationsSelected
+                                  ? "Request ${selectedRideType == "premium" ? "Premium" : "Basic"} Ride"
+                                  : "Select Locations First",
                               style: const TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w800,
@@ -444,7 +637,7 @@ class _RideHomeState extends State<RideHome> {
                     const SizedBox(height: 14),
 
                     // ==================================================
-                    // SMALL TRUST MESSAGE
+                    // TRUST MESSAGE
                     // ==================================================
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -475,56 +668,7 @@ class _RideHomeState extends State<RideHome> {
   }
 
   // ============================================================
-  // LOCATION DIALOG
-  // ============================================================
-
-  void _showComingSoonLocationDialog(BuildContext context, String field) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    showDialog(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor: isDark ? const Color(0xFF1E1E22) : Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(22),
-          ),
-          title: Text(
-            field,
-            style: TextStyle(
-              fontWeight: FontWeight.w800,
-              color: isDark ? Colors.white : Colors.black87,
-            ),
-          ),
-          content: Text(
-            "Location selection will be connected next. "
-            "The ride screen is ready for the location flow.",
-            style: TextStyle(
-              height: 1.5,
-              color: isDark ? Colors.white60 : Colors.black54,
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(dialogContext);
-              },
-              child: const Text(
-                "Okay",
-                style: TextStyle(
-                  color: senmiRidePurple,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  // ============================================================
-  // REQUEST DIALOG
+  // TEMPORARY REQUEST DIALOG
   // ============================================================
 
   void _showRideSetupDialog(BuildContext context) {
@@ -552,10 +696,12 @@ class _RideHomeState extends State<RideHome> {
                   color: senmiRidePurple,
                 ),
               ),
+
               const SizedBox(width: 12),
+
               Expanded(
                 child: Text(
-                  "Almost ready",
+                  "Ride ready",
                   style: TextStyle(
                     fontSize: 19,
                     fontWeight: FontWeight.w800,
@@ -566,9 +712,9 @@ class _RideHomeState extends State<RideHome> {
             ],
           ),
           content: Text(
-            "Once your pickup and destination are selected, "
-            "Senmi will calculate your fare and help you "
-            "request your ride.",
+            "Your pickup and destination have been "
+            "selected. Ride fare calculation will be "
+            "connected next.",
             style: TextStyle(
               fontSize: 14,
               height: 1.5,
@@ -647,7 +793,10 @@ class _LocationField extends StatelessWidget {
   final String title;
   final String value;
   final bool isDark;
+  final bool loading;
+  final bool hasLocation;
   final VoidCallback onTap;
+  final VoidCallback? onClear;
 
   const _LocationField({
     required this.icon,
@@ -655,7 +804,10 @@ class _LocationField extends StatelessWidget {
     required this.title,
     required this.value,
     required this.isDark,
+    required this.loading,
+    required this.hasLocation,
     required this.onTap,
+    required this.onClear,
   });
 
   @override
@@ -671,9 +823,12 @@ class _LocationField extends StatelessWidget {
             color: isDark ? const Color(0xFF1E1E22) : Colors.white,
             borderRadius: BorderRadius.circular(19),
             border: Border.all(
-              color: isDark
-                  ? Colors.white.withOpacity(0.08)
-                  : Colors.black.withOpacity(0.07),
+              color: hasLocation
+                  ? senmiRidePurple
+                  : (isDark
+                        ? Colors.white.withOpacity(0.08)
+                        : Colors.black.withOpacity(0.07)),
+              width: hasLocation ? 1.2 : 1,
             ),
             boxShadow: [
               BoxShadow(
@@ -712,24 +867,59 @@ class _LocationField extends StatelessWidget {
 
                     const SizedBox(height: 4),
 
-                    Text(
-                      value,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: isDark ? Colors.white : Colors.black87,
+                    if (loading)
+                      Row(
+                        children: [
+                          SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: senmiRidePurple,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            "Opening map...",
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: isDark ? Colors.white54 : Colors.black54,
+                            ),
+                          ),
+                        ],
+                      )
+                    else
+                      Text(
+                        value,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: hasLocation
+                              ? (isDark ? Colors.white : Colors.black87)
+                              : (isDark ? Colors.white54 : Colors.black54),
+                        ),
                       ),
-                    ),
                   ],
                 ),
               ),
 
-              Icon(
-                Icons.chevron_right_rounded,
-                color: isDark ? Colors.white38 : Colors.black38,
-              ),
+              if (hasLocation && onClear != null)
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  icon: Icon(
+                    Icons.close_rounded,
+                    size: 19,
+                    color: isDark ? Colors.white38 : Colors.black38,
+                  ),
+                  onPressed: onClear,
+                )
+              else
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: isDark ? Colors.white38 : Colors.black38,
+                ),
             ],
           ),
         ),
