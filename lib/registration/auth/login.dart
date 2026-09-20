@@ -1,17 +1,18 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:senmi/registration/forgotten/forgot_password.dart';
-import 'package:senmi/senmi_package_screens/admin_package/admin/screen/admin_home_bottom/admin_bottom_nav.dart';
-import 'package:senmi/senmi_package_screens/features/customer/customer_home_bottom/customer_bottomnav.dart';
-import 'package:senmi/senmi_package_screens/features/rider/rider_home_bottom/rider_bottom_nav.dart';
+import 'package:senmi/admin_package/admin/screen/admin_home_bottom/admin_bottom_nav.dart';
+import 'package:senmi/senmi_main_customer_home/main_customer_home.dart';
+import 'package:senmi/senmi_package_screens/package_features/customer/customer_home_bottom/customer_bottomnav.dart';
+import 'package:senmi/senmi_package_screens/package_features/rider/rider_home_bottom/rider_bottom_nav.dart';
 import 'package:senmi/service_firebase/firebase_service.dart';
 import 'package:senmi/widgets/custom_buttom.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:senmi/services/biometric_service.dart';
 import '../../services/api_service.dart';
 import '../auth/signup.dart';
-import '../../senmi_package_screens/features/rider/pending_rider_review/rider_complete_profile.dart';
-import '../../senmi_package_screens/features/rider/pending_rider_review/rider_pending_screen.dart';
+import '../../senmi_package_screens/package_features/rider/pending_rider_review/rider_complete_profile.dart';
+import '../../senmi_package_screens/package_features/rider/pending_rider_review/rider_pending_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -42,7 +43,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (res.containsKey("access")) {
       // Start FCM registration in the background.
-      
+
       await FirebaseService.init();
 
       // Ask once if the user wants Face ID/Fingerprint login
@@ -271,12 +272,11 @@ class _LoginScreenState extends State<LoginScreen> {
         }
 
         // CUSTOMER
-        Navigator.pushReplacement(
-          // ignore: use_build_context_synchronously
-          context,
-          MaterialPageRoute(
-            builder: (_) => const CustomerBottomNav(initialIndex: 0),
-          ),
+
+        // ignore: use_build_context_synchronously
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const MainCustomerHome()),
+          (route) => false,
         );
       } finally {
         if (mounted) setState(() => loading = false);

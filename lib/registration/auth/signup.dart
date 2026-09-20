@@ -1,8 +1,8 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
-import 'package:senmi/senmi_package_screens/features/customer/customer_home_bottom/customer_bottomnav.dart';
-import 'package:senmi/senmi_package_screens/features/rider/pending_rider_review/rider_complete_profile.dart';
+import 'package:senmi/senmi_main_customer_home/main_customer_home.dart';
+import 'package:senmi/senmi_package_screens/package_features/rider/pending_rider_review/rider_complete_profile.dart';
 import 'package:senmi/service_firebase/firebase_service.dart';
 import 'package:senmi/widgets/custom_buttom.dart';
 import '../../services/api_service.dart';
@@ -135,9 +135,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
           MaterialPageRoute(builder: (_) => const RiderCompleteProfile()),
         );
       } else {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const CustomerBottomNav()),
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const MainCustomerHome()),
+          (route) => false,
         );
       }
     }
