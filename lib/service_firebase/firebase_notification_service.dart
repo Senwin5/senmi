@@ -2,7 +2,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:senmi/package_screens/features/customer/customer_create/create_package_details.dart';
+import 'package:senmi/senmi_package_screens/features/customer/customer_create/create_package_details.dart';
 import 'package:senmi/service_firebase/native_notification.dart';
 
 class FirebaseNotificationService {

@@ -3,9 +3,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:senmi/main.dart';
-import 'package:senmi/package_screens/admin_package/admin/screen/admin_home_bottom/admin_bottom_nav.dart';
-import 'package:senmi/package_screens/features/customer/customer_home_bottom/customer_bottomnav.dart';
-import 'package:senmi/package_screens/features/rider/rider_home_bottom/rider_bottom_nav.dart';
+import 'package:senmi/senmi_package_screens/admin_package/admin/screen/admin_home_bottom/admin_bottom_nav.dart';
+import 'package:senmi/senmi_package_screens/features/customer/customer_home_bottom/customer_bottomnav.dart';
+import 'package:senmi/senmi_package_screens/features/rider/rider_home_bottom/rider_bottom_nav.dart';
 import 'package:senmi/registration/auth/login.dart';
 import 'package:senmi/welcome/onboarding_screen.dart';
 import 'package:senmi/services/api_service.dart';
