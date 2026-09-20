@@ -1,9 +1,13 @@
 // ignore_for_file: deprecated_member_use, use_build_context_synchronously
 
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:http/http.dart' as http;
 import 'package:senmi/main.dart';
+import 'package:senmi/services/api_service.dart';
 import 'package:senmi/senmi_shared_account/customer_profiles/account_profile_screen.dart';
 import 'package:senmi/senmi_shared_account/map/map_picker_screen.dart';
 
@@ -33,7 +37,130 @@ class _RideHomeState extends State<RideHome> {
   bool selectingPickup = false;
   bool selectingDestination = false;
 
+  // ============================================================
+  // FARE STATE
+  // ============================================================
+
+  double? estimatedFare;
+  double? estimatedDistanceKm;
+  int? estimatedDurationMinutes;
+
+  bool calculatingFare = false;
+  String fareError = "";
+
   static const LatLng defaultLagosLocation = LatLng(6.5244, 3.3792);
+
+  // ============================================================
+  // RIDE API
+  // ============================================================
+
+  static const String rideBaseUrl = "https://www.senmi.com.ng/api";
+
+  Future<Map<String, dynamic>> _getRideFareQuote() async {
+    if (pickupLocation == null || destinationLocation == null) {
+      throw Exception("Select pickup and destination first.");
+    }
+
+    final token = ApiService.token;
+
+    if (token == null || token.isEmpty) {
+      throw Exception("Your session has expired. Please log in again.");
+    }
+
+    final response = await http
+        .post(
+          Uri.parse("$rideBaseUrl/ride/rides/quote/"),
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer $token",
+          },
+          body: jsonEncode({
+            "pickup_lat": pickupLocation!.latitude,
+            "pickup_lng": pickupLocation!.longitude,
+            "destination_lat": destinationLocation!.latitude,
+            "destination_lng": destinationLocation!.longitude,
+            "service_type": selectedRideType,
+          }),
+        )
+        .timeout(const Duration(seconds: 30));
+
+    Map<String, dynamic> data = {};
+
+    try {
+      final decoded = jsonDecode(response.body);
+
+      if (decoded is Map) {
+        data = Map<String, dynamic>.from(decoded);
+      }
+    } catch (_) {}
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(
+        data["detail"]?.toString() ?? "Unable to calculate ride fare.",
+      );
+    }
+
+    return data;
+  }
+
+  // ============================================================
+  // CALCULATE FARE
+  // ============================================================
+
+  Future<void> _calculateFare() async {
+    if (!locationsSelected) {
+      return;
+    }
+
+    if (mounted) {
+      setState(() {
+        calculatingFare = true;
+        fareError = "";
+      });
+    }
+
+    try {
+      final data = await _getRideFareQuote();
+
+      final fareValue = double.tryParse(data["fare"]?.toString() ?? "");
+
+      final distanceValue = double.tryParse(
+        data["estimated_distance_km"]?.toString() ?? "",
+      );
+
+      final durationValue = int.tryParse(
+        data["estimated_duration_minutes"]?.toString() ?? "",
+      );
+
+      if (!mounted) return;
+
+      if (fareValue == null) {
+        throw Exception("Invalid fare returned by the server.");
+      }
+
+      setState(() {
+        estimatedFare = fareValue;
+        estimatedDistanceKm = distanceValue;
+        estimatedDurationMinutes = durationValue;
+        fareError = "";
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        estimatedFare = null;
+        estimatedDistanceKm = null;
+        estimatedDurationMinutes = null;
+        fareError = e.toString().replaceFirst("Exception: ", "");
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          calculatingFare = false;
+        });
+      }
+    }
+  }
 
   // ============================================================
   // GET ADDRESS
@@ -122,6 +249,15 @@ class _RideHomeState extends State<RideHome> {
         if (isPickup) {
           pickupLocation = selected;
           pickupAddress = address;
+
+          // Existing destination becomes invalid
+          // when pickup changes.
+          if (destinationLocation != null) {
+            estimatedFare = null;
+            estimatedDistanceKm = null;
+            estimatedDurationMinutes = null;
+            fareError = "";
+          }
         } else {
           destinationLocation = selected;
           destinationAddress = address;
@@ -135,6 +271,17 @@ class _RideHomeState extends State<RideHome> {
 
       if (isPickup && mounted) {
         await _pickLocation(isPickup: false);
+      }
+
+      // =========================================================
+      // CALCULATE FARE AFTER DESTINATION
+      // =========================================================
+
+      if (!isPickup &&
+          pickupLocation != null &&
+          destinationLocation != null &&
+          mounted) {
+        await _calculateFare();
       }
     } finally {
       if (mounted) {
@@ -157,6 +304,12 @@ class _RideHomeState extends State<RideHome> {
 
       destinationLocation = null;
       destinationAddress = "";
+
+      estimatedFare = null;
+      estimatedDistanceKm = null;
+      estimatedDurationMinutes = null;
+
+      fareError = "";
     });
   }
 
@@ -164,6 +317,12 @@ class _RideHomeState extends State<RideHome> {
     setState(() {
       destinationLocation = null;
       destinationAddress = "";
+
+      estimatedFare = null;
+      estimatedDistanceKm = null;
+      estimatedDurationMinutes = null;
+
+      fareError = "";
     });
   }
 
@@ -173,6 +332,18 @@ class _RideHomeState extends State<RideHome> {
 
   bool get locationsSelected {
     return pickupLocation != null && destinationLocation != null;
+  }
+
+  // ============================================================
+  // FARE DISPLAY
+  // ============================================================
+
+  String _formatFare(double? value) {
+    if (value == null) {
+      return "—";
+    }
+
+    return "₦${value.toStringAsFixed(0)}";
   }
 
   // ============================================================
@@ -198,7 +369,6 @@ class _RideHomeState extends State<RideHome> {
               padding: const EdgeInsets.fromLTRB(20, 14, 20, 10),
               child: Row(
                 children: [
-                  // Back
                   _TopIconButton(
                     icon: Icons.arrow_back_rounded,
                     onTap: () {
@@ -208,7 +378,6 @@ class _RideHomeState extends State<RideHome> {
 
                   const SizedBox(width: 14),
 
-                  // Title
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -233,7 +402,6 @@ class _RideHomeState extends State<RideHome> {
                     ),
                   ),
 
-                  // Shared account/profile
                   _TopIconButton(
                     icon: Icons.person_outline_rounded,
                     onTap: () {
@@ -319,8 +487,8 @@ class _RideHomeState extends State<RideHome> {
                                 const SizedBox(height: 5),
 
                                 Text(
-                                  "Set your pickup and destination "
-                                  "to get started.",
+                                  "Set your pickup and "
+                                  "destination to get started.",
                                   style: TextStyle(
                                     color: Colors.white.withOpacity(0.76),
                                     fontSize: 12.5,
@@ -382,9 +550,6 @@ class _RideHomeState extends State<RideHome> {
 
                     const SizedBox(height: 10),
 
-                    // ==================================================
-                    // CONNECTING LINE
-                    // ==================================================
                     Padding(
                       padding: const EdgeInsets.only(left: 29),
                       child: Container(
@@ -455,10 +620,18 @@ class _RideHomeState extends State<RideHome> {
                             icon: Icons.directions_car_outlined,
                             selected: selectedRideType == "basic",
                             isDark: isDark,
-                            onTap: () {
+                            onTap: () async {
+                              if (selectedRideType == "basic") {
+                                return;
+                              }
+
                               setState(() {
                                 selectedRideType = "basic";
                               });
+
+                              if (locationsSelected) {
+                                await _calculateFare();
+                              }
                             },
                           ),
                         ),
@@ -472,10 +645,18 @@ class _RideHomeState extends State<RideHome> {
                             icon: Icons.star_outline_rounded,
                             selected: selectedRideType == "premium",
                             isDark: isDark,
-                            onTap: () {
+                            onTap: () async {
+                              if (selectedRideType == "premium") {
+                                return;
+                              }
+
                               setState(() {
                                 selectedRideType = "premium";
                               });
+
+                              if (locationsSelected) {
+                                await _calculateFare();
+                              }
                             },
                           ),
                         ),
@@ -523,12 +704,18 @@ class _RideHomeState extends State<RideHome> {
                                     const SizedBox(height: 5),
 
                                     Text(
-                                      locationsSelected
-                                          ? "Fare will be calculated"
-                                          : "Select both locations first",
+                                      !locationsSelected
+                                          ? "Select both locations first"
+                                          : calculatingFare
+                                          ? "Calculating fare..."
+                                          : fareError.isNotEmpty
+                                          ? fareError
+                                          : "Estimated ${selectedRideType == "premium" ? "Premium" : "Basic"} fare",
                                       style: TextStyle(
                                         fontSize: 12,
-                                        color: isDark
+                                        color: fareError.isNotEmpty
+                                            ? Colors.redAccent
+                                            : isDark
                                             ? Colors.white38
                                             : Colors.black38,
                                       ),
@@ -537,14 +724,26 @@ class _RideHomeState extends State<RideHome> {
                                 ),
                               ),
 
-                              Text(
-                                "—",
-                                style: TextStyle(
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.w800,
-                                  color: isDark ? Colors.white : Colors.black87,
+                              if (calculatingFare)
+                                const SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.5,
+                                    color: senmiRidePurple,
+                                  ),
+                                )
+                              else
+                                Text(
+                                  _formatFare(estimatedFare),
+                                  style: TextStyle(
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.w800,
+                                    color: isDark
+                                        ? Colors.white
+                                        : Colors.black87,
+                                  ),
                                 ),
-                              ),
                             ],
                           ),
 
@@ -569,20 +768,54 @@ class _RideHomeState extends State<RideHome> {
 
                               const SizedBox(width: 8),
 
-                              Text(
-                                selectedRideType == "premium"
-                                    ? "Premium selected"
-                                    : "Basic selected",
-                                style: TextStyle(
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w700,
-                                  color: isDark
-                                      ? Colors.white70
-                                      : Colors.black87,
+                              Expanded(
+                                child: Text(
+                                  selectedRideType == "premium"
+                                      ? "Premium selected"
+                                      : "Basic selected",
+                                  style: TextStyle(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: isDark
+                                        ? Colors.white70
+                                        : Colors.black87,
+                                  ),
                                 ),
                               ),
                             ],
                           ),
+
+                          if (estimatedDistanceKm != null ||
+                              estimatedDurationMinutes != null) ...[
+                            const SizedBox(height: 12),
+
+                            Row(
+                              children: [
+                                if (estimatedDistanceKm != null)
+                                  Expanded(
+                                    child: _FareInfo(
+                                      icon: Icons.route_rounded,
+                                      label:
+                                          "${estimatedDistanceKm!.toStringAsFixed(2)} km",
+                                      isDark: isDark,
+                                    ),
+                                  ),
+
+                                if (estimatedDistanceKm != null &&
+                                    estimatedDurationMinutes != null)
+                                  const SizedBox(width: 10),
+
+                                if (estimatedDurationMinutes != null)
+                                  Expanded(
+                                    child: _FareInfo(
+                                      icon: Icons.schedule_rounded,
+                                      label: "$estimatedDurationMinutes min",
+                                      isDark: isDark,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -596,7 +829,10 @@ class _RideHomeState extends State<RideHome> {
                       width: double.infinity,
                       height: 56,
                       child: ElevatedButton(
-                        onPressed: locationsSelected
+                        onPressed:
+                            locationsSelected &&
+                                estimatedFare != null &&
+                                !calculatingFare
                             ? () {
                                 _showRideSetupDialog(context);
                               }
@@ -623,7 +859,7 @@ class _RideHomeState extends State<RideHome> {
                             const SizedBox(width: 9),
 
                             Text(
-                              locationsSelected
+                              locationsSelected && estimatedFare != null
                                   ? "Request ${selectedRideType == "premium" ? "Premium" : "Basic"} Ride"
                                   : "Select Locations First",
                               style: const TextStyle(
@@ -638,9 +874,6 @@ class _RideHomeState extends State<RideHome> {
 
                     const SizedBox(height: 14),
 
-                    // ==================================================
-                    // TRUST MESSAGE
-                    // ==================================================
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -715,15 +948,41 @@ class _RideHomeState extends State<RideHome> {
               ),
             ],
           ),
-          content: Text(
-            "Your pickup and destination have "
-            "been selected. Ride fare calculation "
-            "will be connected next.",
-            style: TextStyle(
-              fontSize: 14,
-              height: 1.5,
-              color: isDark ? Colors.white60 : Colors.black54,
-            ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Your pickup and destination "
+                "have been selected.",
+                style: TextStyle(
+                  fontSize: 14,
+                  height: 1.5,
+                  color: isDark ? Colors.white60 : Colors.black54,
+                ),
+              ),
+
+              const SizedBox(height: 14),
+
+              Text(
+                "Estimated fare",
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isDark ? Colors.white54 : Colors.black54,
+                ),
+              ),
+
+              const SizedBox(height: 4),
+
+              Text(
+                _formatFare(estimatedFare),
+                style: TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w800,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+              ),
+            ],
           ),
           actions: [
             TextButton(
@@ -772,17 +1031,11 @@ class RideMapPicker extends StatelessWidget {
 
     return Stack(
       children: [
-        // ==================================================
-        // EXISTING SHARED MAP
-        // ==================================================
         MapPickerScreen(
           initialLocation: initialLocation,
           useCurrentLocation: useCurrentLocation,
         ),
 
-        // ==================================================
-        // RIDE-ONLY LOCATION INSTRUCTION
-        // ==================================================
         Positioned(
           left: 16,
           right: 16,
@@ -975,9 +1228,9 @@ class _LocationField extends StatelessWidget {
             border: Border.all(
               color: hasLocation
                   ? senmiRidePurple
-                  : (isDark
-                        ? Colors.white.withOpacity(0.08)
-                        : Colors.black.withOpacity(0.07)),
+                  : isDark
+                  ? Colors.white.withOpacity(0.08)
+                  : Colors.black.withOpacity(0.07),
               width: hasLocation ? 1.2 : 1,
             ),
             boxShadow: [
@@ -1020,7 +1273,7 @@ class _LocationField extends StatelessWidget {
                     if (loading)
                       Row(
                         children: [
-                          SizedBox(
+                          const SizedBox(
                             width: 14,
                             height: 14,
                             child: CircularProgressIndicator(
@@ -1047,8 +1300,12 @@ class _LocationField extends StatelessWidget {
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: hasLocation
-                              ? (isDark ? Colors.white : Colors.black87)
-                              : (isDark ? Colors.white54 : Colors.black54),
+                              ? isDark
+                                    ? Colors.white
+                                    : Colors.black87
+                              : isDark
+                              ? Colors.white54
+                              : Colors.black54,
                         ),
                       ),
                   ],
@@ -1103,13 +1360,15 @@ class _RideTypeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final background = selected
         ? senmiRidePurple.withOpacity(0.08)
-        : (isDark ? const Color(0xFF1E1E22) : Colors.white);
+        : isDark
+        ? const Color(0xFF1E1E22)
+        : Colors.white;
 
     final border = selected
         ? senmiRidePurple
-        : (isDark
-              ? Colors.white.withOpacity(0.08)
-              : Colors.black.withOpacity(0.07));
+        : isDark
+        ? Colors.white.withOpacity(0.08)
+        : Colors.black.withOpacity(0.07);
 
     return Material(
       color: Colors.transparent,
@@ -1186,6 +1445,51 @@ class _RideTypeCard extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ============================================================
+// FARE INFO
+// ============================================================
+
+class _FareInfo extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool isDark;
+
+  const _FareInfo({
+    required this.icon,
+    required this.label,
+    required this.isDark,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
+      decoration: BoxDecoration(
+        color: isDark
+            ? Colors.white.withOpacity(0.04)
+            : Colors.black.withOpacity(0.025),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: senmiRidePurple),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w700,
+                color: isDark ? Colors.white70 : Colors.black87,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
