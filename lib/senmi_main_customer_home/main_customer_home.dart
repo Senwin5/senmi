@@ -172,7 +172,7 @@ class MainCustomerHome extends StatelessWidget {
                     // ==================================================
                     Expanded(
                       child: _ServiceCard(
-                        icon: Icons.local_shipping_rounded,
+                        icon: Icons.two_wheeler,
                         title: "Package Delivery",
                         description: "Send packages safely across Lagos.",
                         status: "Available now",
