@@ -330,7 +330,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
               target: position,
               zoom: 14,
             ),
-
+            
             // ADDED ONLY
             myLocationEnabled: true,
             myLocationButtonEnabled: false,
