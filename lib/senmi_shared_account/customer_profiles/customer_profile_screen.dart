@@ -1,9 +1,10 @@
 // ignore_for_file: deprecated_member_use, use_build_context_synchronously
 
 import 'package:flutter/material.dart';
-import 'package:senmi/registration/auth/login.dart';
-import 'package:senmi/senmi_package_screens/package_features/customer/customer_profiles/customer_security_screen.dart';
-import 'package:senmi/senmi_package_screens/package_features/customer/customer_profiles/edit_customer_profile_screen.dart';
+import 'package:senmi/senmi_shared_account/customer_profiles/customer_security_screen.dart';
+import 'package:senmi/senmi_shared_account/customer_profiles/edit_customer_profile_screen.dart';
+import 'package:senmi/senmi_shared_account/registration/auth/login.dart';
+
 import 'package:senmi/services/api_service.dart';
 
 class ProfileSettingsScreen extends StatefulWidget {

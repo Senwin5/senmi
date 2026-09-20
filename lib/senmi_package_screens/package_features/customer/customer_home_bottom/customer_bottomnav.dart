@@ -5,7 +5,7 @@ import 'package:senmi/senmi_package_screens/package_features/customer/customer_h
 import 'customer_home.dart';
 import '../customer_create/create_package_screen.dart';
 //import '../customer_history/customer_history_screen.dart';
-import 'package:senmi/senmi_package_screens/package_features/customer/customer_profiles/account_profile_screen.dart';
+import 'package:senmi/senmi_shared_account/customer_profiles/account_profile_screen.dart';
 
 /// Customer Bottom Navigation
 class CustomerBottomNav extends StatefulWidget {

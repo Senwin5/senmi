@@ -2,12 +2,12 @@
 
 import 'package:flutter/material.dart';
 import 'package:senmi/senmi_main_customer_home/main_customer_home.dart';
-import 'package:senmi/senmi_package_screens/package_features/rider/pending_rider_review/rider_complete_profile.dart';
+import 'package:senmi/senmi_shared_account/pending_rider_review/rider_complete_profile.dart';
 import 'package:senmi/service_firebase/firebase_service.dart';
 import 'package:senmi/widgets/custom_buttom.dart';
-import '../../services/api_service.dart';
+import '../../../services/api_service.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../auth/login.dart';
+import 'login.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:senmi/registration/forgotten/forgot_password.dart';
+import 'package:senmi/senmi_shared_account/registration/forgotten/forgot_password.dart';
 
 class SecurityScreen extends StatelessWidget {
   const SecurityScreen({super.key});

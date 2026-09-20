@@ -1,7 +1,7 @@
 // ignore_for_file: use_build_context_synchronously, deprecated_member_use
 
 import 'package:flutter/material.dart';
-import 'package:senmi/senmi_package_screens/package_features/customer/customer_profiles/customer_profile_screen.dart';
+import 'package:senmi/senmi_shared_account/customer_profiles/customer_profile_screen.dart';
 import 'package:senmi/services/api_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:package_info_plus/package_info_plus.dart';

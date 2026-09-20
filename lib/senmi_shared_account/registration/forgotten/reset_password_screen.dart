@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:senmi/registration/auth/login.dart';
-import 'package:senmi/registration/forgotten/otp_input.dart';
+import 'package:senmi/senmi_shared_account/registration/auth/login.dart';
+import 'package:senmi/senmi_shared_account/registration/forgotten/otp_input.dart';
+
 
 class ResetPasswordScreen extends StatefulWidget {
   final String email;

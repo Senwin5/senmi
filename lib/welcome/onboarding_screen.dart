@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:senmi/senmi_shared_account/registration/auth/login.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../registration/auth/login.dart';
+
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});

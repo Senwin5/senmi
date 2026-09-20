@@ -2,9 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:senmi/main.dart';
-import 'package:senmi/registration/auth/login.dart';
 import 'package:senmi/admin_package/admin/screen/admin_notifications/notifications.dart';
 import 'package:senmi/admin_package/admin/screen/admin_prrofile/security_screen.dart';
+import 'package:senmi/senmi_shared_account/registration/auth/login.dart';
 import 'package:senmi/services/api_service.dart';
 
 class AdminProfileScreen extends StatefulWidget {

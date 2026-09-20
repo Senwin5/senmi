@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:senmi/senmi_package_screens/package_features/rider/rider_profile/rider_security_screen.dart';
+import 'package:senmi/senmi_shared_account/registration/auth/login.dart';
 import 'package:senmi/services/api_service.dart';
-import '../../../../registration/auth/login.dart';
 
 class RiderDetailsProfile extends StatelessWidget {
   final Map<String, dynamic>? rider;

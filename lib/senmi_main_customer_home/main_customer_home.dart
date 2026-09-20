@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:senmi/senmi_package_screens/package_features/customer/customer_home_bottom/customer_bottomnav.dart';
+import 'package:senmi/senmi_ride_screen/ride_features/customers/ride_home.dart';
 
 const Color senmiPurple = Color(0xFF581C87);
 const Color senmiLightPurple = Color(0xFF7C3AED);
@@ -37,12 +38,20 @@ class MainCustomerHome extends StatelessWidget {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: isDark
-                        ? const [Color(0xFF2B123F), Color(0xFF170B22)]
-                        : const [Color(0xFF581C87), Color(0xFF7C3AED)],
+                        ? const [
+                            Color(0xFF2B123F),
+                            Color(0xFF170B22),
+                          ]
+                        : const [
+                            Color(0xFF581C87),
+                            Color(0xFF7C3AED),
+                          ],
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: senmiPurple.withOpacity(isDark ? 0.18 : 0.20),
+                      color: senmiPurple.withOpacity(
+                        isDark ? 0.18 : 0.20,
+                      ),
                       blurRadius: 22,
                       offset: const Offset(0, 10),
                     ),
@@ -51,6 +60,9 @@ class MainCustomerHome extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // ==================================================
+                    // BRAND
+                    // ==================================================
                     Row(
                       children: [
                         Container(
@@ -84,6 +96,9 @@ class MainCustomerHome extends StatelessWidget {
 
                     const SizedBox(height: 24),
 
+                    // ==================================================
+                    // HERO TITLE
+                    // ==================================================
                     const Text(
                       "Move what matters.",
                       style: TextStyle(
@@ -97,6 +112,9 @@ class MainCustomerHome extends StatelessWidget {
 
                     const SizedBox(height: 10),
 
+                    // ==================================================
+                    // HERO SUBTITLE
+                    // ==================================================
                     Text(
                       "One place for the things, trips and moments "
                       "that matter to you.",
@@ -155,12 +173,16 @@ class MainCustomerHome extends StatelessWidget {
                         icon: Icons.directions_car_rounded,
                         title: "Ride",
                         description: "Get where you need to go.",
-                        status: "Coming soon",
-                        statusColor: Colors.orange,
+                        status: "Available now",
+                        statusColor: Colors.green,
                         iconColor: senmiPurple,
                         isPrimary: true,
                         onTap: () {
-                          _showRideComingSoon(context);
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const RideHome(),
+                            ),
+                          );
                         },
                       ),
                     ),
@@ -174,7 +196,8 @@ class MainCustomerHome extends StatelessWidget {
                       child: _ServiceCard(
                         icon: Icons.two_wheeler,
                         title: "Package Delivery",
-                        description: "Send packages safely across Lagos.",
+                        description:
+                            "Send packages safely across Lagos.",
                         status: "Available now",
                         statusColor: Colors.green,
                         iconColor: senmiPurple,
@@ -183,7 +206,9 @@ class MainCustomerHome extends StatelessWidget {
                           Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (_) =>
-                                  const CustomerBottomNav(initialIndex: 0),
+                                  const CustomerBottomNav(
+                                initialIndex: 0,
+                              ),
                             ),
                           );
                         },
@@ -215,6 +240,9 @@ class MainCustomerHome extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // ==================================================
+                    // MESSAGE ICON
+                    // ==================================================
                     Container(
                       width: 44,
                       height: 44,
@@ -231,6 +259,9 @@ class MainCustomerHome extends StatelessWidget {
 
                     const SizedBox(width: 14),
 
+                    // ==================================================
+                    // MESSAGE TEXT
+                    // ==================================================
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -240,7 +271,9 @@ class MainCustomerHome extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w800,
-                              color: isDark ? Colors.white : senmiPurple,
+                              color: isDark
+                                  ? Colors.white
+                                  : senmiPurple,
                             ),
                           ),
 
@@ -251,7 +284,9 @@ class MainCustomerHome extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
-                              color: isDark ? Colors.white70 : Colors.black87,
+                              color: isDark
+                                  ? Colors.white70
+                                  : Colors.black87,
                             ),
                           ),
 
@@ -263,7 +298,9 @@ class MainCustomerHome extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 13,
                               height: 1.5,
-                              color: isDark ? Colors.white54 : Colors.black54,
+                              color: isDark
+                                  ? Colors.white54
+                                  : Colors.black54,
                             ),
                           ),
                         ],
@@ -284,7 +321,9 @@ class MainCustomerHome extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
-                    color: isDark ? Colors.white38 : Colors.black38,
+                    color: isDark
+                        ? Colors.white38
+                        : Colors.black38,
                   ),
                 ),
               ),
@@ -292,93 +331,6 @@ class MainCustomerHome extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-
-  // ============================================================
-  // RIDE COMING SOON
-  // ============================================================
-
-  void _showRideComingSoon(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    showDialog(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor: isDark ? const Color(0xFF1E1E22) : Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
-          contentPadding: const EdgeInsets.fromLTRB(24, 8, 24, 10),
-          actionsPadding: const EdgeInsets.fromLTRB(18, 0, 18, 16),
-          title: Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: senmiPurple.withOpacity(0.10),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.directions_car_rounded,
-                  color: senmiPurple,
-                ),
-              ),
-
-              const SizedBox(width: 12),
-
-              Expanded(
-                child: Text(
-                  "Ride Services",
-                  style: TextStyle(
-                    fontSize: 19,
-                    fontWeight: FontWeight.w800,
-                    color: isDark ? Colors.white : Colors.black87,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          content: Text(
-            "Ride services are coming soon to Senmi. "
-            "We are working on a simple and reliable way "
-            "to get you where you need to go.",
-            style: TextStyle(
-              fontSize: 14,
-              height: 1.55,
-              color: isDark ? Colors.white60 : Colors.black54,
-            ),
-          ),
-          actions: [
-            SizedBox(
-              height: 44,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: senmiPurple,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(13),
-                  ),
-                ),
-                onPressed: () {
-                  Navigator.pop(dialogContext);
-                },
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Text(
-                    "Okay",
-                    style: TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
     );
   }
 }
@@ -410,9 +362,12 @@ class _ServiceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isDark =
+        Theme.of(context).brightness == Brightness.dark;
 
-    final cardColor = isDark ? const Color(0xFF1E1E22) : Colors.white;
+    final cardColor = isDark
+        ? const Color(0xFF1E1E22)
+        : Colors.white;
 
     final borderColor = isDark
         ? Colors.white.withOpacity(0.08)
@@ -428,10 +383,14 @@ class _ServiceCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: cardColor,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: borderColor),
+            border: Border.all(
+              color: borderColor,
+            ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(isDark ? 0.18 : 0.07),
+                color: Colors.black.withOpacity(
+                  isDark ? 0.18 : 0.07,
+                ),
                 blurRadius: 18,
                 offset: const Offset(0, 8),
               ),
@@ -458,7 +417,11 @@ class _ServiceCard extends StatelessWidget {
                   ),
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: Icon(icon, size: 29, color: iconColor),
+                child: Icon(
+                  icon,
+                  size: 29,
+                  color: iconColor,
+                ),
               ),
 
               const SizedBox(height: 18),
@@ -474,7 +437,9 @@ class _ServiceCard extends StatelessWidget {
                   fontSize: 17,
                   height: 1.2,
                   fontWeight: FontWeight.w800,
-                  color: isDark ? Colors.white : Colors.black87,
+                  color: isDark
+                      ? Colors.white
+                      : Colors.black87,
                 ),
               ),
 
@@ -490,7 +455,9 @@ class _ServiceCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 12.5,
                   height: 1.45,
-                  color: isDark ? Colors.white54 : Colors.black54,
+                  color: isDark
+                      ? Colors.white54
+                      : Colors.black54,
                 ),
               ),
 
@@ -507,7 +474,9 @@ class _ServiceCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: statusColor.withOpacity(0.10),
                   borderRadius: BorderRadius.circular(30),
-                  border: Border.all(color: statusColor.withOpacity(0.10)),
+                  border: Border.all(
+                    color: statusColor.withOpacity(0.10),
+                  ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -520,7 +489,9 @@ class _ServiceCard extends StatelessWidget {
                         shape: BoxShape.circle,
                       ),
                     ),
+
                     const SizedBox(width: 7),
+
                     Text(
                       status,
                       style: TextStyle(
@@ -541,11 +512,15 @@ class _ServiceCard extends StatelessWidget {
               Row(
                 children: [
                   Text(
-                    isPrimary ? "Explore soon" : "Get started",
+                    isPrimary
+                        ? "Start a ride"
+                        : "Get started",
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
-                      color: isDark ? Colors.white70 : Colors.black87,
+                      color: isDark
+                          ? Colors.white70
+                          : Colors.black87,
                     ),
                   ),
 
