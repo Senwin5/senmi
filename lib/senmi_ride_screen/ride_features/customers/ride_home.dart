@@ -33,7 +33,6 @@ class _RideHomeState extends State<RideHome> {
   bool selectingPickup = false;
   bool selectingDestination = false;
 
-  // Default Lagos location.
   static const LatLng defaultLagosLocation = LatLng(6.5244, 3.3792);
 
   // ============================================================
@@ -84,6 +83,7 @@ class _RideHomeState extends State<RideHome> {
   // ============================================================
   // PICK LOCATION
   // ============================================================
+
   Future<void> _pickLocation({required bool isPickup}) async {
     if (isPickup) {
       setState(() {
@@ -102,9 +102,10 @@ class _RideHomeState extends State<RideHome> {
 
       final selected = await Navigator.of(context).push<LatLng>(
         MaterialPageRoute(
-          builder: (_) => MapPickerScreen(
+          builder: (_) => RideMapPicker(
             initialLocation: startingLocation,
             useCurrentLocation: isPickup,
+            selectionType: isPickup ? "Pickup" : "Destination",
           ),
         ),
       );
@@ -131,6 +132,7 @@ class _RideHomeState extends State<RideHome> {
       // AFTER PICKUP IS CONFIRMED
       // AUTOMATICALLY OPEN DESTINATION MAP
       // =========================================================
+
       if (isPickup && mounted) {
         await _pickLocation(isPickup: false);
       }
@@ -153,8 +155,6 @@ class _RideHomeState extends State<RideHome> {
       pickupLocation = null;
       pickupAddress = "";
 
-      // If pickup is cleared, destination is cleared too
-      // because the destination should belong to the new trip.
       destinationLocation = null;
       destinationAddress = "";
     });
@@ -351,8 +351,8 @@ class _RideHomeState extends State<RideHome> {
                     const SizedBox(height: 6),
 
                     Text(
-                      "Choose where you are and where you "
-                      "want to go.",
+                      "Choose where you are and where "
+                      "you want to go.",
                       style: TextStyle(
                         fontSize: 13,
                         color: isDark ? Colors.white54 : Colors.black54,
@@ -619,7 +619,9 @@ class _RideHomeState extends State<RideHome> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             const Icon(Icons.local_taxi_rounded, size: 21),
+
                             const SizedBox(width: 9),
+
                             Text(
                               locationsSelected
                                   ? "Request ${selectedRideType == "premium" ? "Premium" : "Basic"} Ride"
@@ -647,7 +649,9 @@ class _RideHomeState extends State<RideHome> {
                           size: 15,
                           color: isDark ? Colors.white38 : Colors.black38,
                         ),
+
                         const SizedBox(width: 6),
+
                         Text(
                           "Safe, reliable rides with Senmi",
                           style: TextStyle(
@@ -712,9 +716,9 @@ class _RideHomeState extends State<RideHome> {
             ],
           ),
           content: Text(
-            "Your pickup and destination have been "
-            "selected. Ride fare calculation will be "
-            "connected next.",
+            "Your pickup and destination have "
+            "been selected. Ride fare calculation "
+            "will be connected next.",
             style: TextStyle(
               fontSize: 14,
               height: 1.5,
@@ -737,6 +741,152 @@ class _RideHomeState extends State<RideHome> {
           ],
         );
       },
+    );
+  }
+}
+
+// ============================================================
+// RIDE MAP PICKER
+//
+// IMPORTANT:
+// This is Ride-only.
+// It wraps the existing shared MapPickerScreen.
+// MapPickerScreen itself is NOT changed.
+// ============================================================
+
+class RideMapPicker extends StatelessWidget {
+  final LatLng initialLocation;
+  final bool useCurrentLocation;
+  final String selectionType;
+
+  const RideMapPicker({
+    super.key,
+    required this.initialLocation,
+    required this.useCurrentLocation,
+    required this.selectionType,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isPickup = selectionType == "Pickup";
+
+    return Stack(
+      children: [
+        // ==================================================
+        // EXISTING SHARED MAP
+        // ==================================================
+        MapPickerScreen(
+          initialLocation: initialLocation,
+          useCurrentLocation: useCurrentLocation,
+        ),
+
+        // ==================================================
+        // RIDE-ONLY LOCATION INSTRUCTION
+        // ==================================================
+        Positioned(
+          left: 16,
+          right: 16,
+          bottom: 150,
+          child: IgnorePointer(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardColor.withOpacity(0.96),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: isPickup
+                      ? Colors.green.withOpacity(0.20)
+                      : Colors.redAccent.withOpacity(0.20),
+                ),
+                boxShadow: const [
+                  BoxShadow(
+                    blurRadius: 15,
+                    offset: Offset(0, 5),
+                    color: Colors.black26,
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: isPickup
+                          ? Colors.green.withOpacity(0.10)
+                          : Colors.redAccent.withOpacity(0.10),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      isPickup
+                          ? Icons.my_location_rounded
+                          : Icons.location_on_rounded,
+                      color: isPickup ? Colors.green : Colors.redAccent,
+                      size: 21,
+                    ),
+                  ),
+
+                  const SizedBox(width: 12),
+
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isPickup ? "Choose Pickup" : "Choose Destination",
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                            color: Theme.of(context).textTheme.bodyLarge?.color,
+                          ),
+                        ),
+
+                        const SizedBox(height: 3),
+
+                        Text(
+                          isPickup
+                              ? "Move the pin to where you want to be picked up."
+                              : "Move the pin to where you want to go.",
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            height: 1.35,
+                            color: Theme.of(
+                              context,
+                            ).textTheme.bodyMedium?.color?.withOpacity(0.60),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(width: 8),
+
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 9,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isPickup
+                          ? Colors.green.withOpacity(0.10)
+                          : Colors.redAccent.withOpacity(0.10),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      isPickup ? "1 of 2" : "2 of 2",
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        color: isPickup ? Colors.green : Colors.redAccent,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
