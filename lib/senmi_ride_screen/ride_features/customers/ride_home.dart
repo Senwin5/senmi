@@ -1,15 +1,14 @@
 // ignore_for_file: deprecated_member_use, use_build_context_synchronously
 
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:http/http.dart' as http;
 import 'package:senmi/main.dart';
+import 'package:senmi/senmi_ride_screen/ride_features/customers/ride_tracking_screen.dart';
 import 'package:senmi/services/api_service.dart';
 import 'package:senmi/senmi_shared_account/customer_profiles/account_profile_screen.dart';
 import 'package:senmi/senmi_shared_account/map/map_picker_screen.dart';
+import 'package:senmi/services/ride_driver_service.dart';
 
 const Color senmiRidePurple = Color(0xFF581C87);
 const Color senmiRideLightPurple = Color(0xFF7C3AED);
@@ -51,10 +50,8 @@ class _RideHomeState extends State<RideHome> {
   static const LatLng defaultLagosLocation = LatLng(6.5244, 3.3792);
 
   // ============================================================
-  // RIDE API
+  // GET RIDE FARE QUOTE
   // ============================================================
-
-  static const String rideBaseUrl = "https://www.senmi.com.ng/api";
 
   Future<Map<String, dynamic>> _getRideFareQuote() async {
     if (pickupLocation == null || destinationLocation == null) {
@@ -67,40 +64,13 @@ class _RideHomeState extends State<RideHome> {
       throw Exception("Your session has expired. Please log in again.");
     }
 
-    final response = await http
-        .post(
-          Uri.parse("$rideBaseUrl/ride/rides/quote/"),
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer $token",
-          },
-          body: jsonEncode({
-            "pickup_lat": pickupLocation!.latitude,
-            "pickup_lng": pickupLocation!.longitude,
-            "destination_lat": destinationLocation!.latitude,
-            "destination_lng": destinationLocation!.longitude,
-            "service_type": selectedRideType,
-          }),
-        )
-        .timeout(const Duration(seconds: 30));
-
-    Map<String, dynamic> data = {};
-
-    try {
-      final decoded = jsonDecode(response.body);
-
-      if (decoded is Map) {
-        data = Map<String, dynamic>.from(decoded);
-      }
-    } catch (_) {}
-
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw Exception(
-        data["detail"]?.toString() ?? "Unable to calculate ride fare.",
-      );
-    }
-
-    return data;
+    return RideService.getFareQuote(
+      pickupLat: pickupLocation!.latitude,
+      pickupLng: pickupLocation!.longitude,
+      destinationLat: destinationLocation!.latitude,
+      destinationLng: destinationLocation!.longitude,
+      serviceType: selectedRideType,
+    );
   }
 
   // ============================================================
@@ -153,6 +123,94 @@ class _RideHomeState extends State<RideHome> {
         estimatedDurationMinutes = null;
         fareError = e.toString().replaceFirst("Exception: ", "");
       });
+    } finally {
+      if (mounted) {
+        setState(() {
+          calculatingFare = false;
+        });
+      }
+    }
+  }
+
+  // ============================================================
+  // REQUEST RIDE
+  // ============================================================
+
+  Future<void> _requestRide() async {
+    if (!locationsSelected ||
+        estimatedFare == null ||
+        estimatedDistanceKm == null ||
+        estimatedDurationMinutes == null) {
+      return;
+    }
+
+    final token = ApiService.token;
+
+    if (token == null || token.isEmpty) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Your session has expired. Please log in again."),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+
+      return;
+    }
+
+    setState(() {
+      calculatingFare = true;
+    });
+
+    try {
+      final data = await RideService.createRideRequest(
+        pickupAddress: pickupAddress,
+        destinationAddress: destinationAddress,
+        pickupLat: pickupLocation!.latitude,
+        pickupLng: pickupLocation!.longitude,
+        destinationLat: destinationLocation!.latitude,
+        destinationLng: destinationLocation!.longitude,
+        estimatedDistanceKm: estimatedDistanceKm!,
+        estimatedDurationMinutes: estimatedDurationMinutes!,
+        serviceType: selectedRideType,
+        paymentMethod: "cash",
+      );
+
+      if (!mounted) return;
+
+      final rideId = data["ride_id"]?.toString() ?? "";
+
+      // ========================================================
+      // RIDE CREATED SUCCESSFULLY
+      // OPEN RIDE TRACKING SCREEN
+      // ========================================================
+
+      if (rideId.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Ride was created, but no ride ID was returned."),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+
+        return;
+      }
+
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => RideTrackingScreen(rideId: rideId)),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      final message = e.toString().replaceFirst("Exception: ", "");
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message.isEmpty ? "Unable to request ride." : message),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -250,8 +308,6 @@ class _RideHomeState extends State<RideHome> {
           pickupLocation = selected;
           pickupAddress = address;
 
-          // Existing destination becomes invalid
-          // when pickup changes.
           if (destinationLocation != null) {
             estimatedFare = null;
             estimatedDistanceKm = null;
@@ -833,9 +889,7 @@ class _RideHomeState extends State<RideHome> {
                             locationsSelected &&
                                 estimatedFare != null &&
                                 !calculatingFare
-                            ? () {
-                                _showRideSetupDialog(context);
-                              }
+                            ? _requestRide
                             : null,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: senmiRidePurple,
@@ -901,105 +955,6 @@ class _RideHomeState extends State<RideHome> {
           ],
         ),
       ),
-    );
-  }
-
-  // ============================================================
-  // TEMPORARY REQUEST DIALOG
-  // ============================================================
-
-  void _showRideSetupDialog(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    showDialog(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor: isDark ? const Color(0xFF1E1E22) : Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(22),
-          ),
-          title: Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: senmiRidePurple.withOpacity(0.10),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.local_taxi_rounded,
-                  color: senmiRidePurple,
-                ),
-              ),
-
-              const SizedBox(width: 12),
-
-              Expanded(
-                child: Text(
-                  "Ride ready",
-                  style: TextStyle(
-                    fontSize: 19,
-                    fontWeight: FontWeight.w800,
-                    color: isDark ? Colors.white : Colors.black87,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "Your pickup and destination "
-                "have been selected.",
-                style: TextStyle(
-                  fontSize: 14,
-                  height: 1.5,
-                  color: isDark ? Colors.white60 : Colors.black54,
-                ),
-              ),
-
-              const SizedBox(height: 14),
-
-              Text(
-                "Estimated fare",
-                style: TextStyle(
-                  fontSize: 12,
-                  color: isDark ? Colors.white54 : Colors.black54,
-                ),
-              ),
-
-              const SizedBox(height: 4),
-
-              Text(
-                _formatFare(estimatedFare),
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w800,
-                  color: isDark ? Colors.white : Colors.black87,
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(dialogContext);
-              },
-              child: const Text(
-                "Okay",
-                style: TextStyle(
-                  color: senmiRidePurple,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
     );
   }
 }
@@ -1478,7 +1433,9 @@ class _FareInfo extends StatelessWidget {
       child: Row(
         children: [
           Icon(icon, size: 16, color: senmiRidePurple),
+
           const SizedBox(width: 6),
+
           Expanded(
             child: Text(
               label,
