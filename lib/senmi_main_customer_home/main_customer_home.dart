@@ -1,18 +1,123 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:senmi/services/ride_driver_service.dart';
 import 'package:senmi/senmi_package_screens/package_features/customer/customer_home_bottom/customer_bottomnav.dart';
 import 'package:senmi/senmi_ride_screen/ride_features/customers/ride_customer_bottom_nav.dart';
+import 'package:senmi/senmi_ride_screen/ride_features/customers/ride_tracking_screen.dart';
 
 const Color senmiPurple = Color(0xFF581C87);
 const Color senmiLightPurple = Color(0xFF7C3AED);
 
-class MainCustomerHome extends StatelessWidget {
+class MainCustomerHome extends StatefulWidget {
   const MainCustomerHome({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  State<MainCustomerHome> createState() => _MainCustomerHomeState();
+}
+
+class _MainCustomerHomeState extends State<MainCustomerHome> {
+  bool checkingActiveRide = true;
+  bool _openedActiveRide = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkActiveRide();
+    });
+  }
+
+  // ============================================================
+  // CHECK FOR ACTIVE RIDE
+  // ============================================================
+
+  Future<void> _checkActiveRide() async {
+    try {
+      final activeRides = await RideService.getActiveRides();
+
+      if (!mounted) return;
+
+      // --------------------------------------------------------
+      // NO ACTIVE RIDE
+      // --------------------------------------------------------
+
+      if (activeRides.isEmpty) {
+        setState(() {
+          checkingActiveRide = false;
+        });
+        return;
+      }
+
+      // --------------------------------------------------------
+      // PREVENT DUPLICATE NAVIGATION
+      // --------------------------------------------------------
+
+      if (_openedActiveRide) {
+        return;
+      }
+
+      // --------------------------------------------------------
+      // GET MOST RECENT ACTIVE RIDE
+      // --------------------------------------------------------
+
+      final firstRide = activeRides.first;
+
+      if (firstRide is! Map) {
+        setState(() {
+          checkingActiveRide = false;
+        });
+        return;
+      }
+
+      final ride = Map<String, dynamic>.from(firstRide);
+
+      final rideId = ride["ride_id"]?.toString();
+
+      if (rideId == null || rideId.isEmpty || rideId == "null") {
+        setState(() {
+          checkingActiveRide = false;
+        });
+        return;
+      }
+
+      _openedActiveRide = true;
+
+      // --------------------------------------------------------
+      // OPEN TRACKING DIRECTLY
+      // --------------------------------------------------------
+
+      await Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => RideTrackingScreen(rideId: rideId)),
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        checkingActiveRide = false;
+      });
+    } catch (_) {
+      // --------------------------------------------------------
+      // IF ACTIVE-RIDE CHECK FAILS,
+      // LET CUSTOMER CONTINUE NORMALLY.
+      // --------------------------------------------------------
+
+      if (!mounted) return;
+
+      setState(() {
+        checkingActiveRide = false;
+      });
+    }
+  }
+
+  // ============================================================
+  // NORMAL CUSTOMER HOME
+  // ============================================================
+
+  Widget _buildHome(BuildContext context) {
     final theme = Theme.of(context);
+
     final isDark = theme.brightness == Brightness.dark;
 
     final backgroundColor = theme.scaffoldBackgroundColor;
@@ -207,92 +312,6 @@ class MainCustomerHome extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(height: 26),
-
-              // ==================================================
-              // SENMI MESSAGE
-              // ==================================================
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? const Color(0xFF1B1B1F)
-                      : const Color(0xFFF8F7FA),
-                  borderRadius: BorderRadius.circular(22),
-                  border: Border.all(
-                    color: isDark
-                        ? Colors.white.withOpacity(0.08)
-                        : Colors.black.withOpacity(0.06),
-                  ),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // ==================================================
-                    // MESSAGE ICON
-                    // ==================================================
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: senmiPurple.withOpacity(0.10),
-                        borderRadius: BorderRadius.circular(13),
-                      ),
-                      child: const Icon(
-                        Icons.auto_awesome_rounded,
-                        color: senmiPurple,
-                        size: 21,
-                      ),
-                    ),
-
-                    const SizedBox(width: 14),
-
-                    // ==================================================
-                    // MESSAGE TEXT
-                    // ==================================================
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "More Than Delivery.",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                              color: isDark ? Colors.white : senmiPurple,
-                            ),
-                          ),
-
-                          const SizedBox(height: 4),
-
-                          Text(
-                            "Move With Senmi.",
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: isDark ? Colors.white70 : Colors.black87,
-                            ),
-                          ),
-
-                          const SizedBox(height: 8),
-
-                          Text(
-                            "We are building one simple platform "
-                            "for moving what matters.",
-                            style: TextStyle(
-                              fontSize: 13,
-                              height: 1.5,
-                              color: isDark ? Colors.white54 : Colors.black54,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
               const SizedBox(height: 18),
 
               // ==================================================
@@ -313,6 +332,28 @@ class MainCustomerHome extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  // ============================================================
+  // BUILD
+  // ============================================================
+
+  @override
+  Widget build(BuildContext context) {
+    // ----------------------------------------------------------
+    // WHILE WE CHECK THE SERVER FOR AN ACTIVE RIDE
+    // ----------------------------------------------------------
+
+    if (checkingActiveRide) {
+      return Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        body: const Center(
+          child: CircularProgressIndicator(color: senmiPurple),
+        ),
+      );
+    }
+
+    return _buildHome(context);
   }
 }
 
@@ -453,9 +494,7 @@ class _ServiceCard extends StatelessWidget {
                         shape: BoxShape.circle,
                       ),
                     ),
-
                     const SizedBox(width: 7),
-
                     Text(
                       status,
                       style: TextStyle(

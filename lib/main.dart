@@ -104,7 +104,6 @@ void main() async {
     },
   );
 
-
   runApp(
     const MyApp(),
   );
@@ -119,7 +118,6 @@ class MyApp extends StatefulWidget {
   @override
   State<MyApp> createState() => _MyAppState();
 }
-
 
 class _MyAppState extends State<MyApp> {
 
@@ -143,7 +141,6 @@ class _MyAppState extends State<MyApp> {
           debugShowCheckedModeBanner: false,
 
           title: 'Senmi',
-
 
           /// LIGHT THEME
 
@@ -176,29 +173,22 @@ class _MyAppState extends State<MyApp> {
             ),
           ),
 
-
           /// DARK THEME
 
           darkTheme: ThemeData(
             brightness: Brightness.dark,
-
             useMaterial3: true,
-
             scaffoldBackgroundColor:
                 const Color(0xFF121212),
-
             cardColor:
                 const Color(0xFF1E1E1E),
-
             colorScheme:
                 ColorScheme.fromSeed(
               seedColor:
                   const Color(0xFF581C87),
-
               brightness:
                   Brightness.dark,
             ),
-
             inputDecorationTheme:
                 InputDecorationTheme(
               border:
@@ -217,9 +207,7 @@ class _MyAppState extends State<MyApp> {
                   ? ThemeMode.dark
                   : ThemeMode.light,
 
-
           /// START SCREEN
-
           home:
               const SplashScreen(),
         );
