@@ -1,6 +1,8 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:senmi/senmi_ride_screen/ride_features/drivers/ride_driver_location_service.dart';
 
 const Color senmiRidePurple = Color(0xFF581C87);
 const Color senmiRideLightPurple = Color(0xFF7C3AED);
@@ -14,6 +16,12 @@ class RideDriverHome extends StatefulWidget {
 
 class _RideDriverHomeState extends State<RideDriverHome> {
   bool isOnline = false;
+  bool isUpdatingOnline = false;
+
+  // Location status.
+  bool locationSharing = false;
+  double? currentLatitude;
+  double? currentLongitude;
 
   // These will later come from the backend.
   double todayEarnings = 0.0;
@@ -27,19 +35,116 @@ class _RideDriverHomeState extends State<RideDriverHome> {
   // TOGGLE ONLINE
   // ============================================================
 
-  void _toggleOnline(bool value) {
+  Future<void> _toggleOnline(bool value) async {
+    if (isUpdatingOnline) return;
+
     setState(() {
-      isOnline = value;
+      isUpdatingOnline = true;
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(value ? "You are now online." : "You are now offline."),
-        backgroundColor: value ? senmiRidePurple : Colors.black87,
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    if (value) {
+      try {
+        await RideDriverLocationService.goOnline(
+          onPosition: (Position position) {
+            if (!mounted) return;
+
+            setState(() {
+              locationSharing = true;
+              currentLatitude = position.latitude;
+              currentLongitude = position.longitude;
+            });
+          },
+          onLocationError: (Object error) {
+            if (!mounted) return;
+
+            setState(() {
+              locationSharing = false;
+            });
+          },
+        );
+
+        if (!mounted) return;
+
+        setState(() {
+          isOnline = true;
+          isUpdatingOnline = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("You are now online."),
+            backgroundColor: senmiRidePurple,
+            behavior: SnackBarBehavior.floating,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      } catch (e) {
+        if (!mounted) return;
+
+        setState(() {
+          isOnline = false;
+          locationSharing = false;
+          isUpdatingOnline = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceFirst("Exception: ", "")),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+
+      return;
+    }
+
+    try {
+      await RideDriverLocationService.goOffline();
+
+      if (!mounted) return;
+
+      setState(() {
+        isOnline = false;
+        locationSharing = false;
+        isUpdatingOnline = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("You are now offline."),
+          backgroundColor: Colors.black87,
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        isUpdatingOnline = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceFirst("Exception: ", "")),
+          backgroundColor: Colors.redAccent,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  // ============================================================
+  // DISPOSE
+  // ============================================================
+
+  @override
+  void dispose() {
+    RideDriverLocationService.dispose();
+    super.dispose();
   }
 
   // ============================================================
@@ -379,7 +484,6 @@ class _RideDriverHomeState extends State<RideDriverHome> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
@@ -402,7 +506,6 @@ class _RideDriverHomeState extends State<RideDriverHome> {
         child: RefreshIndicator(
           color: senmiRidePurple,
           onRefresh: () async {
-            // Backend refresh will be connected later.
             await Future<void>.delayed(const Duration(milliseconds: 500));
 
             if (!mounted) return;
@@ -457,7 +560,11 @@ class _RideDriverHomeState extends State<RideDriverHome> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            isOnline ? "You are online" : "You are offline",
+                            isUpdatingOnline
+                                ? "Updating status..."
+                                : isOnline
+                                ? "You are online"
+                                : "You are offline",
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w800,
@@ -479,7 +586,7 @@ class _RideDriverHomeState extends State<RideDriverHome> {
                     ),
                     Switch(
                       value: isOnline,
-                      onChanged: _toggleOnline,
+                      onChanged: isUpdatingOnline ? null : _toggleOnline,
                       activeColor: senmiRidePurple,
                     ),
                   ],
@@ -633,9 +740,14 @@ class _RideDriverHomeState extends State<RideDriverHome> {
                           ),
                           const SizedBox(height: 3),
                           Text(
-                            isOnline
-                                ? "Ready for location tracking."
-                                : "Location sharing starts when you go online.",
+                            !isOnline
+                                ? "Location sharing starts when you go online."
+                                : locationSharing
+                                ? currentLatitude != null &&
+                                          currentLongitude != null
+                                      ? "GPS active • ${currentLatitude!.toStringAsFixed(5)}, ${currentLongitude!.toStringAsFixed(5)}"
+                                      : "GPS sharing is active."
+                                : "Online, waiting for GPS location.",
                             style: TextStyle(
                               fontSize: 12,
                               color: isDark ? Colors.white54 : Colors.black54,
@@ -645,10 +757,16 @@ class _RideDriverHomeState extends State<RideDriverHome> {
                       ),
                     ),
                     Icon(
-                      isOnline
+                      !isOnline
+                          ? Icons.radio_button_unchecked_rounded
+                          : locationSharing
                           ? Icons.check_circle_rounded
-                          : Icons.radio_button_unchecked_rounded,
-                      color: isOnline ? Colors.green : Colors.grey,
+                          : Icons.sync_rounded,
+                      color: !isOnline
+                          ? Colors.grey
+                          : locationSharing
+                          ? Colors.green
+                          : Colors.orange,
                       size: 21,
                     ),
                   ],

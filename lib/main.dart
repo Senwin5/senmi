@@ -66,7 +66,6 @@ void main() async {
     );
   };
 
-
   /// Background handler
   FirebaseMessaging.onBackgroundMessage(
     _firebaseMessagingBackgroundHandler,

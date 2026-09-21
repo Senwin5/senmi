@@ -46,7 +46,37 @@ class _CustomerBottomNavState extends State<CustomerBottomNav> {
     super.dispose();
   }
 
-  /// Modern navigation button
+  // ============================================================
+  // ANDROID BACK BUTTON
+  // ============================================================
+
+  Future<bool> _handleBackButton() async {
+    // ----------------------------------------------------------
+    // If user is on Order, Search, or Account:
+    // go back to Package Home.
+    // ----------------------------------------------------------
+
+    if (_currentIndex != 0) {
+      setState(() {
+        _currentIndex = 0;
+      });
+
+      return false;
+    }
+
+    // ----------------------------------------------------------
+    // Already on Package Home:
+    // allow the parent Navigator to pop.
+    // This returns to MainCustomerHome.
+    // ----------------------------------------------------------
+
+    return true;
+  }
+
+  // ============================================================
+  // MODERN NAVIGATION BUTTON
+  // ============================================================
+
   Widget _navButton({
     required int index,
     required IconData icon,
@@ -115,106 +145,98 @@ class _CustomerBottomNavState extends State<CustomerBottomNav> {
     );
   }
 
+  // ============================================================
+  // BUILD
+  // ============================================================
+
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<bool>(
       valueListenable: darkModeNotifier,
       builder: (context, isDark, _) {
-        return MaterialApp(
-          debugShowCheckedModeBanner: false,
-
-          // =========================
-          // LIGHT THEME
-          // =========================
-          theme: ThemeData(
-            brightness: Brightness.light,
-            scaffoldBackgroundColor: Colors.white,
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: Colors.deepPurple,
-              brightness: Brightness.light,
-            ),
+        final theme = ThemeData(
+          brightness: isDark ? Brightness.dark : Brightness.light,
+          scaffoldBackgroundColor: isDark
+              ? const Color(0xFF121212)
+              : Colors.white,
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: Colors.deepPurple,
+            brightness: isDark ? Brightness.dark : Brightness.light,
           ),
+        );
 
-          // =========================
-          // DARK THEME
-          // =========================
-          darkTheme: ThemeData(
-            brightness: Brightness.dark,
-            scaffoldBackgroundColor: const Color(0xFF121212),
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: Colors.deepPurple,
-              brightness: Brightness.dark,
-            ),
-          ),
+        return Theme(
+          data: theme,
+          child: WillPopScope(
+            onWillPop: _handleBackButton,
+            child: Scaffold(
+              extendBody: false,
 
-          themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
+              // =========================
+              // CURRENT SCREEN
+              // =========================
+              body: _screens[_currentIndex],
 
-          home: Scaffold(
-            extendBody: false,
+              // =========================
+              // MODERN FLOATING NAV BAR
+              // =========================
+              bottomNavigationBar: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
+                  child: Container(
+                    height: 70,
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(isDark ? 0.25 : 0.10),
+                          blurRadius: 20,
+                          spreadRadius: 0,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        // HOME
+                        _navButton(
+                          index: 0,
+                          icon: Icons.home_outlined,
+                          activeIcon: Icons.home,
+                          label: "Home",
+                          isDark: isDark,
+                        ),
 
-            // =========================
-            // CURRENT SCREEN
-            // =========================
-            body: _screens[_currentIndex],
+                        // SEND PACKAGE
+                        _navButton(
+                          index: 1,
+                          icon: Icons.two_wheeler_outlined,
+                          activeIcon: Icons.two_wheeler,
+                          label: "Order",
+                          isDark: isDark,
+                        ),
 
-            // =========================
-            // MODERN FLOATING NAV BAR
-            // =========================
-            bottomNavigationBar: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
-                child: Container(
-                  height: 70,
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(isDark ? 0.25 : 0.10),
-                        blurRadius: 20,
-                        spreadRadius: 0,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      // HOME
-                      _navButton(
-                        index: 0,
-                        icon: Icons.home_outlined,
-                        activeIcon: Icons.home,
-                        label: "Home",
-                        isDark: isDark,
-                      ),
-                      // SEND PACKAGE
-                      _navButton(
-                        index: 1,
-                        icon: Icons.two_wheeler_outlined,
-                        activeIcon: Icons.two_wheeler,
-                        label: "Order",
-                        isDark: isDark,
-                      ),
+                        // SEARCH
+                        _navButton(
+                          index: 2,
+                          icon: Icons.search_outlined,
+                          activeIcon: Icons.search,
+                          label: "Search",
+                          isDark: isDark,
+                        ),
 
-                      // SEARCH
-                      _navButton(
-                        index: 2,
-                        icon: Icons.search_outlined,
-                        activeIcon: Icons.search,
-                        label: "Search",
-                        isDark: isDark,
-                      ),
-
-                      // ACCOUNT
-                      _navButton(
-                        index: 3,
-                        icon: Icons.person_outline,
-                        activeIcon: Icons.person,
-                        label: "Account",
-                        isDark: isDark,
-                      ),
-                    ],
+                        // ACCOUNT
+                        _navButton(
+                          index: 3,
+                          icon: Icons.person_outline,
+                          activeIcon: Icons.person,
+                          label: "Account",
+                          isDark: isDark,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
