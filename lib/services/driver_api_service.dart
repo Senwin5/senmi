@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:senmi/services/api_service.dart';
+import 'package:senmi/services/package_api_service.dart';
 
 class RideService {
   static const String baseUrl =

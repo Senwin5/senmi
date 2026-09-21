@@ -3,7 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:senmi/services/api_service.dart';
+import 'package:senmi/services/package_api_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../services/admin_socket_service.dart';

@@ -7,7 +7,7 @@ import 'package:senmi/senmi_main_customer_home/main_customer_home.dart';
 import 'package:senmi/senmi_package_screens/package_features/rider/rider_home_bottom/rider_bottom_nav.dart';
 import 'package:senmi/senmi_shared_account/registration/auth/login.dart';
 import 'package:senmi/welcome/onboarding_screen.dart';
-import 'package:senmi/services/api_service.dart';
+import 'package:senmi/services/package_api_service.dart';
 import 'package:senmi/service_firebase/firebase_notification_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'rider_model.dart';
-import 'package:senmi/services/api_service.dart';
+import 'package:senmi/services/package_api_service.dart';
 
 class RiderDetailsScreen extends StatefulWidget {
   final RiderModel rider;

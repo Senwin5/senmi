@@ -1,6 +1,6 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
-import 'package:senmi/services/api_service.dart';
+import 'package:senmi/services/package_api_service.dart';
 
 class FirebaseService {
   static bool _initialized = false;

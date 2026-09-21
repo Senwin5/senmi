@@ -1,7 +1,7 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
-import 'package:senmi/services/ride_driver_service.dart';
+import 'package:senmi/services/driver_api_service.dart';
 import 'package:senmi/senmi_package_screens/package_features/customer/customer_home_bottom/customer_bottomnav.dart';
 import 'package:senmi/senmi_ride_screen/ride_features/customers/ride_customer_bottom_nav.dart';
 import 'package:senmi/senmi_ride_screen/ride_features/customers/ride_tracking_screen.dart';

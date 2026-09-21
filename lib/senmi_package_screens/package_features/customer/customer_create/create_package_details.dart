@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:senmi/senmi_package_screens/package_features/customer/customer_create/edit_package_screen.dart';
 import 'package:senmi/senmi_package_screens/package_features/customer/customer_track/customer_track_package.dart';
-import 'package:senmi/services/api_service.dart';
+import 'package:senmi/services/package_api_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class PackageDetailsScreen extends StatefulWidget {

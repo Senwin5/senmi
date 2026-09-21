@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:senmi/senmi_package_screens/package_features/rider/rider_track/rider_track_screen.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:senmi/services/api_service.dart';
+import 'package:senmi/services/package_api_service.dart';
 import 'dart:async';
 
 import 'package:url_launcher/url_launcher.dart';

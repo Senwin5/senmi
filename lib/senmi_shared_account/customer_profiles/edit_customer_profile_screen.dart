@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:senmi/services/api_service.dart';
+import 'package:senmi/services/package_api_service.dart';
 
 class EditCustomerProfileScreen extends StatefulWidget {
   final Map<String, dynamic> user;

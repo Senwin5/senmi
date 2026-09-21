@@ -5,7 +5,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:senmi/admin_package/admin/screen/admin_customer_screen/customer_management_screen.dart';
-import 'package:senmi/services/api_service.dart';
+import 'package:senmi/services/package_api_service.dart';
 import 'package:web_socket_channel/io.dart';
 
 import 'package:senmi/admin_package/admin/screen/admin_package/admin_packages.dart';

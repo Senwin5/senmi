@@ -7,7 +7,7 @@ import 'package:senmi/senmi_shared_account/map/map_picker_screen.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:senmi/senmi_package_screens/package_features/customer/customer_create/create_package_details.dart';
 import 'package:senmi/senmi_package_screens/package_features/customer/customer_history/customer_history_screen.dart';
-import 'package:senmi/services/api_service.dart';
+import 'package:senmi/services/package_api_service.dart';
 
 class CreatePackageScreen extends StatefulWidget {
   final bool fromHome;

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:senmi/senmi_package_screens/package_features/rider/rider_wallet/rider_withdrawal_detail.dart';
 import 'package:senmi/senmi_package_screens/package_features/rider/rider_package/rider_package_detail.dart';
-import 'package:senmi/services/api_service.dart';
+import 'package:senmi/services/package_api_service.dart';
 
 class RiderHistoryScreen extends StatefulWidget {
   const RiderHistoryScreen({super.key});

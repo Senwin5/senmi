@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:senmi/senmi_shared_account/registration/auth/login.dart';
 import 'package:senmi/senmi_shared_account/registration/forgotten/forgot_password.dart';
-import 'package:senmi/services/api_service.dart';
+import 'package:senmi/services/package_api_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class RiderSecurityScreen extends StatefulWidget {

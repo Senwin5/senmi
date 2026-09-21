@@ -6,7 +6,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:senmi/senmi_shared_account/map/map_picker_screen.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:senmi/senmi_package_screens/package_features/customer/customer_history/customer_history_screen.dart';
-import 'package:senmi/services/api_service.dart';
+import 'package:senmi/services/package_api_service.dart';
 
 class EditPackageScreen extends StatefulWidget {
   final Map<String, dynamic> package;

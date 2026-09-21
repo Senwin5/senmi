@@ -5,7 +5,7 @@ import 'package:senmi/senmi_shared_account/customer_profiles/customer_security_s
 import 'package:senmi/senmi_shared_account/customer_profiles/edit_customer_profile_screen.dart';
 import 'package:senmi/senmi_shared_account/registration/auth/login.dart';
 
-import 'package:senmi/services/api_service.dart';
+import 'package:senmi/services/package_api_service.dart';
 
 class ProfileSettingsScreen extends StatefulWidget {
   final Map<String, dynamic> user;

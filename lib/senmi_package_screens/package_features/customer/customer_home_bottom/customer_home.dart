@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:senmi/senmi_package_screens/package_features/customer/customer_history/customer_history_screen.dart';
 import 'package:senmi/senmi_package_screens/package_features/customer/customer_home_bottom/how_it_works_screen.dart';
 import 'package:senmi/senmi_package_screens/package_features/customer/customer_track/customer_track_package.dart';
-import '../../../../services/api_service.dart';
+import '../../../../services/package_api_service.dart';
 import '../customer_create/create_package_screen.dart';
 
 class CustomerHome extends StatefulWidget {

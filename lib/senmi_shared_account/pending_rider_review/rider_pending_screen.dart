@@ -4,7 +4,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:senmi/senmi_package_screens/package_features/rider/rider_home_bottom/rider_bottom_nav.dart';
 import 'package:senmi/senmi_shared_account/registration/auth/login.dart';
-import '../../services/api_service.dart';
+import '../../services/package_api_service.dart';
 import 'rider_complete_profile.dart';
 
 class RiderPendingScreen extends StatefulWidget {

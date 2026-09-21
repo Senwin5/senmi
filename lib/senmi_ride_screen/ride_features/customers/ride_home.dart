@@ -5,16 +5,31 @@ import 'package:geocoding/geocoding.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:senmi/main.dart';
 import 'package:senmi/senmi_ride_screen/ride_features/customers/ride_tracking_screen.dart';
-import 'package:senmi/services/api_service.dart';
+import 'package:senmi/services/package_api_service.dart';
 import 'package:senmi/senmi_shared_account/customer_profiles/account_profile_screen.dart';
 import 'package:senmi/senmi_shared_account/map/map_picker_screen.dart';
-import 'package:senmi/services/ride_driver_service.dart';
+import 'package:senmi/services/driver_api_service.dart';
 
 const Color senmiRidePurple = Color(0xFF581C87);
 const Color senmiRideLightPurple = Color(0xFF7C3AED);
 
 class RideHome extends StatefulWidget {
-  const RideHome({super.key});
+  final LatLng? initialPickupLocation;
+  final LatLng? initialDestinationLocation;
+
+  final String initialPickupAddress;
+  final String initialDestinationAddress;
+
+  final String initialRideType;
+
+  const RideHome({
+    super.key,
+    this.initialPickupLocation,
+    this.initialDestinationLocation,
+    this.initialPickupAddress = "",
+    this.initialDestinationAddress = "",
+    this.initialRideType = "basic",
+  });
 
   @override
   State<RideHome> createState() => _RideHomeState();
@@ -25,13 +40,13 @@ class _RideHomeState extends State<RideHome> {
   // RIDE STATE
   // ============================================================
 
-  String selectedRideType = "basic";
+  late String selectedRideType;
 
   LatLng? pickupLocation;
   LatLng? destinationLocation;
 
-  String pickupAddress = "";
-  String destinationAddress = "";
+  late String pickupAddress;
+  late String destinationAddress;
 
   bool selectingPickup = false;
   bool selectingDestination = false;
@@ -39,6 +54,37 @@ class _RideHomeState extends State<RideHome> {
   // ============================================================
   // FARE STATE
   // ============================================================
+
+  @override
+  void initState() {
+    super.initState();
+
+    selectedRideType = widget.initialRideType == "premium"
+        ? "premium"
+        : "basic";
+
+    pickupLocation = widget.initialPickupLocation;
+
+    destinationLocation = widget.initialDestinationLocation;
+
+    pickupAddress = widget.initialPickupAddress;
+
+    destinationAddress = widget.initialDestinationAddress;
+
+    // ----------------------------------------------------------
+    // REBOOK
+    // If a previous ride was supplied, calculate the new fare
+    // automatically.
+    // ----------------------------------------------------------
+
+    if (pickupLocation != null && destinationLocation != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _calculateFare();
+        }
+      });
+    }
+  }
 
   double? estimatedFare;
   double? estimatedDistanceKm;

@@ -1,7 +1,8 @@
 // ignore_for_file: deprecated_member_use, use_build_context_synchronously
 
 import 'package:flutter/material.dart';
-import 'package:senmi/services/ride_driver_service.dart';
+import 'package:senmi/services/driver_api_service.dart';
+import 'package:senmi/senmi_ride_screen/ride_features/customers/ride_history_details_screen.dart';
 
 const Color senmiRidePurple = Color(0xFF581C87);
 const Color senmiRideLightPurple = Color(0xFF7C3AED);
@@ -54,6 +55,16 @@ class _RideHistoryScreenState extends State<RideHistoryScreen> {
         errorMessage = e.toString().replaceFirst("Exception: ", "");
       });
     }
+  }
+
+  // ============================================================
+  // OPEN RIDE DETAILS
+  // ============================================================
+
+  void _openRideDetails(Map<String, dynamic> ride) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => RideHistoryDetailsScreen(ride: ride)),
+    );
   }
 
   // ============================================================
@@ -274,199 +285,224 @@ class _RideHistoryScreenState extends State<RideHistoryScreen> {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E22) : Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isDark
-              ? Colors.white.withOpacity(0.06)
-              : Colors.black.withOpacity(0.06),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.12 : 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ==================================================
-            // TOP ROW
-            // ==================================================
-            Row(
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: senmiRidePurple.withOpacity(0.09),
-                    borderRadius: BorderRadius.circular(13),
-                  ),
-                  child: Icon(
-                    serviceType == "Premium"
-                        ? Icons.star_rounded
-                        : Icons.local_taxi_rounded,
-                    color: senmiRidePurple,
-                    size: 23,
-                  ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            _openRideDetails(ride);
+          },
+          borderRadius: BorderRadius.circular(20),
+          splashColor: senmiRidePurple.withOpacity(0.06),
+          highlightColor: senmiRidePurple.withOpacity(0.03),
+          child: Ink(
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E1E22) : Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isDark
+                    ? Colors.white.withOpacity(0.06)
+                    : Colors.black.withOpacity(0.06),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(isDark ? 0.12 : 0.04),
+                  blurRadius: 12,
+                  offset: const Offset(0, 5),
                 ),
-
-                const SizedBox(width: 12),
-
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ==================================================
+                  // TOP ROW
+                  // ==================================================
+                  Row(
                     children: [
-                      Text(
-                        "$serviceType Ride",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          color: isDark ? Colors.white : Colors.black87,
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: senmiRidePurple.withOpacity(0.09),
+                          borderRadius: BorderRadius.circular(13),
+                        ),
+                        child: Icon(
+                          serviceType == "Premium"
+                              ? Icons.star_rounded
+                              : Icons.local_taxi_rounded,
+                          color: senmiRidePurple,
+                          size: 23,
                         ),
                       ),
-                      const SizedBox(height: 3),
-                      Text(
-                        rideId,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: isDark ? Colors.white38 : Colors.black45,
+
+                      const SizedBox(width: 12),
+
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "$serviceType Ride",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                                color: isDark ? Colors.white : Colors.black87,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              rideId,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: isDark ? Colors.white38 : Colors.black45,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 7,
+                        ),
+                        decoration: BoxDecoration(
+                          color: statusColor.withOpacity(0.10),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          _statusText(status),
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            color: statusColor,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                ),
 
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 7,
+                  const SizedBox(height: 16),
+
+                  // ==================================================
+                  // PICKUP
+                  // ==================================================
+                  _locationRow(
+                    icon: Icons.my_location_rounded,
+                    color: Colors.green,
+                    title: "Pickup",
+                    value: pickup,
+                    isDark: isDark,
                   ),
-                  decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.10),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    _statusText(status),
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      color: statusColor,
+
+                  Padding(
+                    padding: const EdgeInsets.only(left: 17),
+                    child: Container(
+                      width: 2,
+                      height: 18,
+                      color: isDark ? Colors.white12 : Colors.black12,
                     ),
                   ),
-                ),
-              ],
-            ),
 
-            const SizedBox(height: 16),
+                  // ==================================================
+                  // DESTINATION
+                  // ==================================================
+                  _locationRow(
+                    icon: Icons.location_on_rounded,
+                    color: Colors.redAccent,
+                    title: "Destination",
+                    value: destination,
+                    isDark: isDark,
+                  ),
 
-            // ==================================================
-            // PICKUP
-            // ==================================================
-            _locationRow(
-              icon: Icons.my_location_rounded,
-              color: Colors.green,
-              title: "Pickup",
-              value: pickup,
-              isDark: isDark,
-            ),
+                  const SizedBox(height: 16),
 
-            Padding(
-              padding: const EdgeInsets.only(left: 17),
-              child: Container(
-                width: 2,
-                height: 18,
-                color: isDark ? Colors.white12 : Colors.black12,
+                  Divider(
+                    height: 1,
+                    color: isDark ? Colors.white10 : Colors.black12,
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  // ==================================================
+                  // BOTTOM DETAILS
+                  // ==================================================
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _detailItem(
+                          icon: Icons.route_rounded,
+                          label: distance != null
+                              ? "${distance.toStringAsFixed(2)} km"
+                              : "Distance N/A",
+                          isDark: isDark,
+                        ),
+                      ),
+
+                      Container(
+                        width: 1,
+                        height: 30,
+                        color: isDark ? Colors.white10 : Colors.black12,
+                      ),
+
+                      Expanded(
+                        child: _detailItem(
+                          icon: Icons.schedule_rounded,
+                          label: duration != null
+                              ? "$duration min"
+                              : "Time N/A",
+                          isDark: isDark,
+                        ),
+                      ),
+
+                      Container(
+                        width: 1,
+                        height: 30,
+                        color: isDark ? Colors.white10 : Colors.black12,
+                      ),
+
+                      Expanded(
+                        child: _detailItem(
+                          icon: Icons.payments_outlined,
+                          label: _formatFare(ride["fare"]),
+                          isDark: isDark,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 13),
+
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.access_time_rounded,
+                        size: 14,
+                        color: isDark ? Colors.white38 : Colors.black45,
+                      ),
+                      const SizedBox(width: 5),
+                      Expanded(
+                        child: Text(
+                          _formatDate(createdAt),
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            color: isDark ? Colors.white38 : Colors.black45,
+                          ),
+                        ),
+                      ),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        size: 21,
+                        color: isDark ? Colors.white38 : Colors.black38,
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-
-            // ==================================================
-            // DESTINATION
-            // ==================================================
-            _locationRow(
-              icon: Icons.location_on_rounded,
-              color: Colors.redAccent,
-              title: "Destination",
-              value: destination,
-              isDark: isDark,
-            ),
-
-            const SizedBox(height: 16),
-
-            Divider(height: 1, color: isDark ? Colors.white10 : Colors.black12),
-
-            const SizedBox(height: 14),
-
-            // ==================================================
-            // BOTTOM DETAILS
-            // ==================================================
-            Row(
-              children: [
-                Expanded(
-                  child: _detailItem(
-                    icon: Icons.route_rounded,
-                    label: distance != null
-                        ? "${distance.toStringAsFixed(2)} km"
-                        : "Distance N/A",
-                    isDark: isDark,
-                  ),
-                ),
-
-                Container(
-                  width: 1,
-                  height: 30,
-                  color: isDark ? Colors.white10 : Colors.black12,
-                ),
-
-                Expanded(
-                  child: _detailItem(
-                    icon: Icons.schedule_rounded,
-                    label: duration != null ? "$duration min" : "Time N/A",
-                    isDark: isDark,
-                  ),
-                ),
-
-                Container(
-                  width: 1,
-                  height: 30,
-                  color: isDark ? Colors.white10 : Colors.black12,
-                ),
-
-                Expanded(
-                  child: _detailItem(
-                    icon: Icons.payments_outlined,
-                    label: _formatFare(ride["fare"]),
-                    isDark: isDark,
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 13),
-
-            Row(
-              children: [
-                Icon(
-                  Icons.access_time_rounded,
-                  size: 14,
-                  color: isDark ? Colors.white38 : Colors.black45,
-                ),
-                const SizedBox(width: 5),
-                Text(
-                  _formatDate(createdAt),
-                  style: TextStyle(
-                    fontSize: 11.5,
-                    color: isDark ? Colors.white38 : Colors.black45,
-                  ),
-                ),
-              ],
-            ),
-          ],
+          ),
         ),
       ),
     );

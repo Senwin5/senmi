@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:senmi/senmi_package_screens/package_features/rider/rider_profile/rider_details_profile.dart';
-import 'package:senmi/services/api_service.dart';
+import 'package:senmi/services/package_api_service.dart';
 
 class RiderProfileScreen extends StatefulWidget {
   const RiderProfileScreen({super.key});

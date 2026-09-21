@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:senmi/admin_package/admin/screen/admin_transaction/admin_withdrawal_details_screen.dart';
-import 'package:senmi/services/api_service.dart';
+import 'package:senmi/services/package_api_service.dart';
 
 class AdminWithdrawalScreen extends StatefulWidget {
   const AdminWithdrawalScreen({super.key});

@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:senmi/senmi_shared_account/pending_rider_review/rider_pending_screen.dart';
-import 'package:senmi/services/api_service.dart';
+import 'package:senmi/services/package_api_service.dart';
 
 class RiderCompleteProfile extends StatefulWidget {
   const RiderCompleteProfile({super.key});
