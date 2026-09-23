@@ -206,8 +206,9 @@ class _MyAppState extends State<MyApp> {
                   ? ThemeMode.dark
                   : ThemeMode.light,
 
-          /// START SCREEN
+          /// START SCREEN RiderCompleteProfile
           home:
+              //const SplashScreen(),
               const SplashScreen(),
         );
       },
