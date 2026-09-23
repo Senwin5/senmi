@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:senmi/senmi_main_customer_home/main_customer_home.dart';
+import 'package:senmi/senmi_shared_account/pending_rider_review/ride_driver_complete_profile.dart';
 import 'package:senmi/senmi_shared_account/pending_rider_review/rider_complete_profile.dart';
 import 'package:senmi/service_firebase/firebase_service.dart';
 import 'package:senmi/widgets/custom_buttom.dart';
@@ -133,6 +134,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const RiderCompleteProfile()),
+        );
+      } else if (role == "ride_driver") {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const RideDriverCompleteProfile()),
         );
       } else {
         Navigator.of(context).pushAndRemoveUntil(

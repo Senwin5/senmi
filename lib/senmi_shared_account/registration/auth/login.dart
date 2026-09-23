@@ -1,8 +1,14 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+
 import 'package:senmi/admin_package/admin/screen/admin_home_bottom/admin_bottom_nav.dart';
 import 'package:senmi/senmi_main_customer_home/main_customer_home.dart';
 import 'package:senmi/senmi_package_screens/package_features/customer/customer_home_bottom/customer_bottomnav.dart';
+import 'package:senmi/senmi_ride_screen/ride_features/drivers/ride_driver_home.dart';
+import 'package:senmi/senmi_shared_account/pending_rider_review/ride_driver_complete_profile.dart';
+import 'package:senmi/senmi_shared_account/pending_rider_review/ride_driver_pending_screen.dart';
 import 'package:senmi/senmi_shared_account/pending_rider_review/rider_complete_profile.dart';
 import 'package:senmi/senmi_shared_account/pending_rider_review/rider_pending_screen.dart';
 import 'package:senmi/senmi_package_screens/package_features/rider/rider_home_bottom/rider_bottom_nav.dart';
@@ -27,6 +33,29 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool loading = false;
   bool _obscurePassword = true;
+
+  Future<Map<String, dynamic>> _getRideDriverProfile() async {
+    await ApiService.loadToken();
+
+    final response = await http.get(
+      Uri.parse("https://www.senmi.com.ng/api/ride/driver/profile/"),
+      headers: {"Authorization": "Bearer ${ApiService.token}"},
+    );
+
+    if (response.statusCode == 404) {
+      return {"status": "no_profile"};
+    }
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+
+      if (data is Map<String, dynamic>) {
+        return data;
+      }
+    }
+
+    throw Exception("Unable to check Ride Driver profile.");
+  }
 
   // =========================
   // 🔑 LOGIN FUNCTION
@@ -59,6 +88,72 @@ class _LoginScreenState extends State<LoginScreen> {
             MaterialPageRoute(builder: (_) => const AdminBottomNav()),
           );
           return;
+        }
+
+        // RIDE DRIVER
+        if (ApiService.userRole == "ride_driver") {
+          try {
+            final profile = await _getRideDriverProfile();
+            final driverStatus = profile["status"];
+
+            if (driverStatus == "no_profile") {
+              Navigator.pushReplacement(
+                // ignore: use_build_context_synchronously
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const RideDriverCompleteProfile(),
+                ),
+              );
+              return;
+            }
+
+            if (driverStatus == "pending") {
+              Navigator.pushReplacement(
+                // ignore: use_build_context_synchronously
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const RideDriverPendingScreen(),
+                ),
+              );
+              return;
+            }
+
+            if (driverStatus == "rejected") {
+              Navigator.pushReplacement(
+                // ignore: use_build_context_synchronously
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const RideDriverCompleteProfile(),
+                ),
+              );
+              return;
+            }
+
+            if (driverStatus == "approved") {
+              Navigator.pushAndRemoveUntil(
+                // ignore: use_build_context_synchronously
+                context,
+                MaterialPageRoute(builder: (_) => const RideDriverHome()),
+                (route) => false,
+              );
+              return;
+            }
+
+            throw Exception("Unknown Ride Driver status.");
+          } catch (e) {
+            if (mounted) {
+              setState(() => loading = false);
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    "Unable to verify your driver profile. Please try again.",
+                  ),
+                ),
+              );
+            }
+            return;
+          }
         }
 
         // RIDER
@@ -153,7 +248,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   // =========================
-  // 🚀 AUTO LOGIN CHECK
+  // AUTO LOGIN CHECK
   // =========================
   @override
   void initState() {
@@ -217,6 +312,72 @@ class _LoginScreenState extends State<LoginScreen> {
             (route) => false,
           );
           return;
+        }
+
+        // RIDE DRIVER
+        if (ApiService.userRole == "ride_driver") {
+          try {
+            final profile = await _getRideDriverProfile();
+            final driverStatus = profile["status"];
+
+            if (driverStatus == "no_profile") {
+              Navigator.pushReplacement(
+                // ignore: use_build_context_synchronously
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const RideDriverCompleteProfile(),
+                ),
+              );
+              return;
+            }
+
+            if (driverStatus == "pending") {
+              Navigator.pushReplacement(
+                // ignore: use_build_context_synchronously
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const RideDriverPendingScreen(),
+                ),
+              );
+              return;
+            }
+
+            if (driverStatus == "rejected") {
+              Navigator.pushReplacement(
+                // ignore: use_build_context_synchronously
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const RideDriverCompleteProfile(),
+                ),
+              );
+              return;
+            }
+
+            if (driverStatus == "approved") {
+              Navigator.pushAndRemoveUntil(
+                // ignore: use_build_context_synchronously
+                context,
+                MaterialPageRoute(builder: (_) => const RideDriverHome()),
+                (route) => false,
+              );
+              return;
+            }
+
+            throw Exception("Unknown Ride Driver status.");
+          } catch (e) {
+            if (mounted) {
+              setState(() => loading = false);
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    "Unable to verify your driver profile. Please try again.",
+                  ),
+                ),
+              );
+            }
+            return;
+          }
         }
 
         // RIDER
