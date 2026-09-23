@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:senmi/senmi_main_customer_home/main_customer_home.dart';
 import 'package:senmi/senmi_shared_account/pending_rider_review/ride_driver_complete_profile.dart';
 import 'package:senmi/senmi_shared_account/pending_rider_review/rider_complete_profile.dart';
+import 'package:senmi/senmi_shared_account/registration/auth/choose_courier_type.dart';
 import 'package:senmi/service_firebase/firebase_service.dart';
 import 'package:senmi/widgets/custom_buttom.dart';
 import '../../../services/package_api_service.dart';
@@ -400,7 +401,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                         const SizedBox(height: 5),
 
                                         Text(
-                                          "Send packages\nand track deliveries",
+                                          "Create and track deliveries",
                                           textAlign: TextAlign.center,
                                           style: TextStyle(
                                             fontSize: 12,
@@ -418,20 +419,35 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               // RIDER
                               Expanded(
                                 child: GestureDetector(
-                                  onTap: () {
-                                    setState(() {
-                                      role = "rider";
-                                    });
+                                  onTap: () async {
+                                    final selectedRole =
+                                        await Navigator.push<String>(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) =>
+                                                const ChooseCourierType(),
+                                          ),
+                                        );
+
+                                    if (selectedRole != null && mounted) {
+                                      setState(() {
+                                        role = selectedRole;
+                                      });
+                                    }
                                   },
                                   child: Container(
                                     padding: const EdgeInsets.all(16),
                                     decoration: BoxDecoration(
-                                      color: role == "rider"
+                                      color:
+                                          role == "rider" ||
+                                              role == "ride_driver"
                                           ? Colors.green.withOpacity(0.15)
                                           : Colors.transparent,
                                       borderRadius: BorderRadius.circular(16),
                                       border: Border.all(
-                                        color: role == "rider"
+                                        color:
+                                            role == "rider" ||
+                                                role == "ride_driver"
                                             ? Colors.green
                                             : borderColor,
                                         width: 2,
@@ -442,7 +458,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                         Icon(
                                           Icons.delivery_dining,
                                           size: 40,
-                                          color: role == "rider"
+                                          color:
+                                              role == "rider" ||
+                                                  role == "ride_driver"
                                               ? Colors.green
                                               : secondaryTextColor,
                                         ),
@@ -461,7 +479,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                         const SizedBox(height: 5),
 
                                         Text(
-                                          "Deliver packages\nand earn money",
+                                          "Deliver\nand earn money",
                                           textAlign: TextAlign.center,
                                           style: TextStyle(
                                             fontSize: 12,
