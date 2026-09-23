@@ -468,7 +468,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                         const SizedBox(height: 8),
 
                                         Text(
-                                          "Courier",
+                                          "Driver",
                                           style: TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 16,

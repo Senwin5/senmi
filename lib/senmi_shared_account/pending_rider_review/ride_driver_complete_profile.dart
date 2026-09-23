@@ -31,6 +31,10 @@ class _RideDriverCompleteProfileState extends State<RideDriverCompleteProfile> {
 
   final fullNameController = TextEditingController();
   final phoneController = TextEditingController();
+  final addressController = TextEditingController();
+  final cityController = TextEditingController();
+  final stateController = TextEditingController();
+  final countryController = TextEditingController(text: "Nigeria");
 
   final vehicleBrandController = TextEditingController();
   final vehicleModelController = TextEditingController();
@@ -61,6 +65,10 @@ class _RideDriverCompleteProfileState extends State<RideDriverCompleteProfile> {
 
   static const String _fullNameKey = "ride_driver_profile_full_name";
   static const String _phoneKey = "ride_driver_profile_phone";
+  static const String _addressKey = "ride_driver_profile_address";
+  static const String _cityKey = "ride_driver_profile_city";
+  static const String _stateKey = "ride_driver_profile_state";
+  static const String _countryKey = "ride_driver_profile_country";
 
   static const String _vehicleBrandKey = "ride_driver_profile_vehicle_brand";
   static const String _vehicleModelKey = "ride_driver_profile_vehicle_model";
@@ -92,6 +100,11 @@ class _RideDriverCompleteProfileState extends State<RideDriverCompleteProfile> {
     fullNameController.dispose();
     phoneController.dispose();
 
+    addressController.dispose();
+    cityController.dispose();
+    stateController.dispose();
+    countryController.dispose();
+
     vehicleBrandController.dispose();
     vehicleModelController.dispose();
     vehicleColorController.dispose();
@@ -117,6 +130,13 @@ class _RideDriverCompleteProfileState extends State<RideDriverCompleteProfile> {
       fullNameController.text = prefs.getString(_fullNameKey) ?? "";
 
       phoneController.text = prefs.getString(_phoneKey) ?? "";
+      addressController.text = prefs.getString(_addressKey) ?? "";
+
+      cityController.text = prefs.getString(_cityKey) ?? "";
+
+      stateController.text = prefs.getString(_stateKey) ?? "";
+
+      countryController.text = prefs.getString(_countryKey) ?? "Nigeria";
 
       vehicleBrandController.text = prefs.getString(_vehicleBrandKey) ?? "";
 
@@ -161,6 +181,10 @@ class _RideDriverCompleteProfileState extends State<RideDriverCompleteProfile> {
       final hasAnyData =
           fullNameController.text.isNotEmpty ||
           phoneController.text.isNotEmpty ||
+          addressController.text.isNotEmpty ||
+          cityController.text.isNotEmpty ||
+          stateController.text.isNotEmpty ||
+          countryController.text.isNotEmpty ||
           vehicleBrandController.text.isNotEmpty ||
           vehicleModelController.text.isNotEmpty ||
           vehicleColorController.text.isNotEmpty ||
@@ -225,11 +249,12 @@ class _RideDriverCompleteProfileState extends State<RideDriverCompleteProfile> {
       await prefs.setString(_fullNameKey, fullNameController.text);
 
       await prefs.setString(_phoneKey, phoneController.text);
-
+      await prefs.setString(_addressKey, addressController.text);
+      await prefs.setString(_cityKey, cityController.text);
+      await prefs.setString(_stateKey, stateController.text);
+      await prefs.setString(_countryKey, countryController.text);
       await prefs.setString(_vehicleBrandKey, vehicleBrandController.text);
-
       await prefs.setString(_vehicleModelKey, vehicleModelController.text);
-
       await prefs.setString(_vehicleColorKey, vehicleColorController.text);
 
       await prefs.setString(_vehicleYearKey, vehicleYearController.text);
@@ -263,6 +288,7 @@ class _RideDriverCompleteProfileState extends State<RideDriverCompleteProfile> {
       final prefs = await SharedPreferences.getInstance();
 
       await prefs.setInt(_stepKey, currentStep);
+      await prefs.setBool("ride_driver_profile_in_progress", true);
 
       await _saveTextProgress();
     } catch (e) {
@@ -548,8 +574,7 @@ class _RideDriverCompleteProfileState extends State<RideDriverCompleteProfile> {
 
         return;
       }
-
-      bool isRejected = false;
+      bool profileExists = false;
 
       final profileCheck = await http.get(
         Uri.parse("$_baseUrl/ride/driver/profile/"),
@@ -557,17 +582,15 @@ class _RideDriverCompleteProfileState extends State<RideDriverCompleteProfile> {
       );
 
       if (profileCheck.statusCode == 200) {
-        final profileData = jsonDecode(profileCheck.body);
-
-        if (profileData is Map<String, dynamic>) {
-          isRejected = profileData["status"] == "rejected";
-        }
-      } else if (profileCheck.statusCode != 404) {
+        profileExists = true;
+      } else if (profileCheck.statusCode == 404) {
+        profileExists = false;
+      } else {
         throw Exception("Unable to check driver profile.");
       }
 
       final request = http.MultipartRequest(
-        isRejected ? "PUT" : "POST",
+        profileExists ? "PUT" : "POST",
         Uri.parse("$_baseUrl/ride/driver/profile/"),
       );
 
@@ -576,6 +599,14 @@ class _RideDriverCompleteProfileState extends State<RideDriverCompleteProfile> {
       request.fields["full_name"] = fullNameController.text.trim();
 
       request.fields["phone_number"] = phoneController.text.trim();
+
+      request.fields["address"] = addressController.text.trim();
+
+      request.fields["city"] = cityController.text.trim();
+
+      request.fields["state"] = stateController.text.trim();
+
+      request.fields["country"] = countryController.text.trim();
 
       request.fields["vehicle_brand"] = vehicleBrandController.text.trim();
 
@@ -695,11 +726,16 @@ class _RideDriverCompleteProfileState extends State<RideDriverCompleteProfile> {
   Future<void> _clearSavedProgress() async {
     try {
       final prefs = await SharedPreferences.getInstance();
+      await prefs.remove("ride_driver_profile_in_progress");
 
       await prefs.remove(_stepKey);
 
       await prefs.remove(_fullNameKey);
       await prefs.remove(_phoneKey);
+      await prefs.remove(_addressKey);
+      await prefs.remove(_cityKey);
+      await prefs.remove(_stateKey);
+      await prefs.remove(_countryKey);
 
       await prefs.remove(_vehicleBrandKey);
       await prefs.remove(_vehicleModelKey);
@@ -1038,6 +1074,87 @@ class _RideDriverCompleteProfileState extends State<RideDriverCompleteProfile> {
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
                 return "Phone number is required";
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 16),
+
+          TextFormField(
+            controller: addressController,
+            maxLines: 3,
+            textInputAction: TextInputAction.next,
+            onChanged: (_) {
+              _saveTextProgress();
+            },
+            decoration: _inputDecoration(
+              label: "House / Street Address",
+              icon: Icons.home_outlined,
+              hint: "e.g. 24 Admiralty Way, Lekki Phase 1",
+            ),
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return "House / street address is required";
+              }
+              return null;
+            },
+          ),
+
+          const SizedBox(height: 16),
+
+          TextFormField(
+            controller: cityController,
+            textInputAction: TextInputAction.next,
+            onChanged: (_) {
+              _saveTextProgress();
+            },
+            decoration: _inputDecoration(
+              label: "City",
+              icon: Icons.location_city_outlined,
+              hint: "e.g. Lekki",
+            ),
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return "City is required";
+              }
+              return null;
+            },
+          ),
+
+          const SizedBox(height: 16),
+
+          TextFormField(
+            controller: stateController,
+            textInputAction: TextInputAction.next,
+            onChanged: (_) {
+              _saveTextProgress();
+            },
+            decoration: _inputDecoration(
+              label: "State",
+              icon: Icons.map_outlined,
+              hint: "e.g. Lagos",
+            ),
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return "State is required";
+              }
+              return null;
+            },
+          ),
+
+          const SizedBox(height: 16),
+
+          TextFormField(
+            controller: countryController,
+            readOnly: true,
+            decoration: _inputDecoration(
+              label: "Country",
+              icon: Icons.public_outlined,
+              hint: "Nigeria",
+            ),
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return "Country is required";
               }
               return null;
             },

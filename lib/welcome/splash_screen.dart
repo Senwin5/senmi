@@ -5,6 +5,7 @@ import 'package:senmi/main.dart';
 import 'package:senmi/admin_package/admin/screen/admin_home_bottom/admin_bottom_nav.dart';
 import 'package:senmi/senmi_main_customer_home/main_customer_home.dart';
 import 'package:senmi/senmi_package_screens/package_features/rider/rider_home_bottom/rider_bottom_nav.dart';
+import 'package:senmi/senmi_shared_account/pending_rider_review/ride_driver_complete_profile.dart';
 import 'package:senmi/senmi_shared_account/registration/auth/login.dart';
 import 'package:senmi/welcome/onboarding_screen.dart';
 import 'package:senmi/services/package_api_service.dart';
@@ -106,7 +107,13 @@ class _SplashScreenState extends State<SplashScreen>
       await ApiService.loadToken();
 
       if (ApiService.token != null) {
-        if (ApiService.userRole == "admin" ||
+        // Check if the user has an unfinished Ride Driver profile
+        final rideDriverProfileInProgress =
+            prefs.getBool("ride_driver_profile_in_progress") ?? false;
+
+        if (rideDriverProfileInProgress) {
+          nextPage = const RideDriverCompleteProfile();
+        } else if (ApiService.userRole == "admin" ||
             ApiService.userRole == "support") {
           nextPage = const AdminBottomNav();
         } else if (ApiService.userRole == "rider") {
