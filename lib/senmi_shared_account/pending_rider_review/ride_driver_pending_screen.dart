@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:senmi/senmi_shared_account/pending_rider_review/ride_driver_complete_profile.dart';
 import 'package:senmi/services/package_api_service.dart';
-import 'package:senmi/senmi_ride_screen/ride_features/drivers/ride_driver_home.dart';
+import 'package:senmi/senmi_ride_screen/ride_features/drivers/drivers_home/ride_driver_home.dart';
 import 'package:senmi/senmi_shared_account/registration/auth/login.dart';
 
 class RideDriverPendingScreen extends StatefulWidget {

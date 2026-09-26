@@ -4,8 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:senmi/services/package_api_service.dart';
 
 class RideService {
-  static const String baseUrl =
-      "https://www.senmi.com.ng/api";
+  static const String baseUrl = "https://www.senmi.com.ng/api";
 
   // ============================================================
   // HEADERS
@@ -22,9 +21,7 @@ class RideService {
   // RESPONSE DECODER
   // ============================================================
 
-  static Map<String, dynamic> decodeResponse(
-    http.Response response,
-  ) {
+  static Map<String, dynamic> decodeResponse(http.Response response) {
     try {
       final decoded = jsonDecode(response.body);
 
@@ -49,9 +46,7 @@ class RideService {
   }) async {
     final response = await http
         .post(
-          Uri.parse(
-            "$baseUrl/ride/rides/quote/",
-          ),
+          Uri.parse("$baseUrl/ride/rides/quote/"),
           headers: await headers(),
           body: jsonEncode({
             "pickup_lat": pickupLat,
@@ -61,17 +56,13 @@ class RideService {
             "service_type": serviceType,
           }),
         )
-        .timeout(
-          const Duration(seconds: 30),
-        );
+        .timeout(const Duration(seconds: 30));
 
     final data = decodeResponse(response);
 
-    if (response.statusCode < 200 ||
-        response.statusCode >= 300) {
+    if (response.statusCode < 200 || response.statusCode >= 300) {
       throw Exception(
-        data["detail"]?.toString() ??
-            "Unable to calculate ride fare.",
+        data["detail"]?.toString() ?? "Unable to calculate ride fare.",
       );
     }
 
@@ -96,9 +87,7 @@ class RideService {
   }) async {
     final response = await http
         .post(
-          Uri.parse(
-            "$baseUrl/ride/rides/create/",
-          ),
+          Uri.parse("$baseUrl/ride/rides/create/"),
           headers: await headers(),
           body: jsonEncode({
             "pickup_address": pickupAddress,
@@ -107,26 +96,18 @@ class RideService {
             "pickup_lng": pickupLng,
             "destination_lat": destinationLat,
             "destination_lng": destinationLng,
-            "estimated_distance_km":
-                estimatedDistanceKm,
-            "estimated_duration_minutes":
-                estimatedDurationMinutes,
+            "estimated_distance_km": estimatedDistanceKm,
+            "estimated_duration_minutes": estimatedDurationMinutes,
             "service_type": serviceType,
             "payment_method": paymentMethod,
           }),
         )
-        .timeout(
-          const Duration(seconds: 30),
-        );
+        .timeout(const Duration(seconds: 30));
 
     final data = decodeResponse(response);
 
-    if (response.statusCode < 200 ||
-        response.statusCode >= 300) {
-      throw Exception(
-        data["detail"]?.toString() ??
-            "Unable to request ride.",
-      );
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(data["detail"]?.toString() ?? "Unable to request ride.");
     }
 
     return data;
@@ -139,22 +120,16 @@ class RideService {
   static Future<List<dynamic>> getActiveRides() async {
     final response = await http
         .get(
-          Uri.parse(
-            "$baseUrl/ride/rides/passenger/active/",
-          ),
+          Uri.parse("$baseUrl/ride/rides/passenger/active/"),
           headers: await headers(),
         )
-        .timeout(
-          const Duration(seconds: 30),
-        );
+        .timeout(const Duration(seconds: 30));
 
-    if (response.statusCode < 200 ||
-        response.statusCode >= 300) {
+    if (response.statusCode < 200 || response.statusCode >= 300) {
       final data = decodeResponse(response);
 
       throw Exception(
-        data["detail"]?.toString() ??
-            "Unable to load active rides.",
+        data["detail"]?.toString() ?? "Unable to load active rides.",
       );
     }
 
@@ -176,22 +151,16 @@ class RideService {
   static Future<List<dynamic>> getRideHistory() async {
     final response = await http
         .get(
-          Uri.parse(
-            "$baseUrl/ride/rides/passenger/history/",
-          ),
+          Uri.parse("$baseUrl/ride/rides/passenger/history/"),
           headers: await headers(),
         )
-        .timeout(
-          const Duration(seconds: 30),
-        );
+        .timeout(const Duration(seconds: 30));
 
-    if (response.statusCode < 200 ||
-        response.statusCode >= 300) {
+    if (response.statusCode < 200 || response.statusCode >= 300) {
       final data = decodeResponse(response);
 
       throw Exception(
-        data["detail"]?.toString() ??
-            "Unable to load ride history.",
+        data["detail"]?.toString() ?? "Unable to load ride history.",
       );
     }
 
@@ -210,27 +179,19 @@ class RideService {
   // RIDE DETAILS
   // ============================================================
 
-  static Future<Map<String, dynamic>> getRideDetails(
-    String rideId,
-  ) async {
+  static Future<Map<String, dynamic>> getRideDetails(String rideId) async {
     final response = await http
         .get(
-          Uri.parse(
-            "$baseUrl/ride/rides/$rideId/",
-          ),
+          Uri.parse("$baseUrl/ride/rides/$rideId/"),
           headers: await headers(),
         )
-        .timeout(
-          const Duration(seconds: 30),
-        );
+        .timeout(const Duration(seconds: 30));
 
     final data = decodeResponse(response);
 
-    if (response.statusCode < 200 ||
-        response.statusCode >= 300) {
+    if (response.statusCode < 200 || response.statusCode >= 300) {
       throw Exception(
-        data["detail"]?.toString() ??
-            "Unable to load ride details.",
+        data["detail"]?.toString() ?? "Unable to load ride details.",
       );
     }
 
@@ -238,30 +199,196 @@ class RideService {
   }
 
   // ============================================================
+  // PASSENGER CANCEL RIDE
+  // ============================================================
+
+  static Future<Map<String, dynamic>> cancelRide(String rideId) async {
+    final response = await http
+        .post(
+          Uri.parse("$baseUrl/ride/rides/$rideId/cancel/"),
+          headers: await headers(),
+        )
+        .timeout(const Duration(seconds: 30));
+
+    final data = decodeResponse(response);
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(data["detail"]?.toString() ?? "Unable to cancel ride.");
+    }
+
+    return data;
+  }
+
+  // ============================================================
+  // DRIVER
+  // GET AVAILABLE RIDES
+  // ============================================================
+
+  static Future<List<dynamic>> getAvailableRides() async {
+    final response = await http
+        .get(
+          Uri.parse("$baseUrl/ride/rides/available/"),
+          headers: await headers(),
+        )
+        .timeout(const Duration(seconds: 30));
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      final data = decodeResponse(response);
+
+      throw Exception(
+        data["detail"]?.toString() ?? "Unable to load available rides.",
+      );
+    }
+
+    try {
+      final decoded = jsonDecode(response.body);
+
+      if (decoded is List) {
+        return decoded;
+      }
+
+      if (decoded is Map && decoded["rides"] is List) {
+        return List<dynamic>.from(decoded["rides"]);
+      }
+    } catch (_) {}
+
+    return [];
+  }
+
+  // ============================================================
+  // DRIVER
+  // ACCEPT RIDE
+  // ============================================================
+
+  static Future<Map<String, dynamic>> acceptRide(String rideId) async {
+    final response = await http
+        .post(
+          Uri.parse("$baseUrl/ride/rides/$rideId/accept/"),
+          headers: await headers(),
+        )
+        .timeout(const Duration(seconds: 30));
+
+    final data = decodeResponse(response);
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(data["detail"]?.toString() ?? "Unable to accept ride.");
+    }
+
+    return data;
+  }
+
+  // ============================================================
+  // DRIVER
+  // ACTIVE RIDES
+  // ============================================================
+
+  static Future<List<dynamic>> getDriverActiveRides() async {
+    final response = await http
+        .get(
+          Uri.parse("$baseUrl/ride/rides/driver/active/"),
+          headers: await headers(),
+        )
+        .timeout(const Duration(seconds: 30));
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      final data = decodeResponse(response);
+
+      throw Exception(
+        data["detail"]?.toString() ?? "Unable to load active rides.",
+      );
+    }
+
+    try {
+      final decoded = jsonDecode(response.body);
+
+      if (decoded is List) {
+        return decoded;
+      }
+
+      if (decoded is Map && decoded["rides"] is List) {
+        return List<dynamic>.from(decoded["rides"]);
+      }
+    } catch (_) {}
+
+    return [];
+  }
+
+  // ============================================================
+  // DRIVER
+  // UPDATE RIDE STATUS
+  //
+  // accepted -> arrived
+  // arrived  -> started
+  // started  -> completed
+  // ============================================================
+
+  static Future<Map<String, dynamic>> updateRideStatus({
+    required String rideId,
+    required String status,
+  }) async {
+    final response = await http
+        .post(
+          Uri.parse("$baseUrl/ride/rides/$rideId/status/"),
+          headers: await headers(),
+          body: jsonEncode({"status": status}),
+        )
+        .timeout(const Duration(seconds: 30));
+
+    final data = decodeResponse(response);
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(
+        data["detail"]?.toString() ?? "Unable to update ride status.",
+      );
+    }
+
+    return data;
+  }
+
+  // ============================================================
+  // DRIVER
   // CANCEL RIDE
   // ============================================================
 
-  static Future<Map<String, dynamic>> cancelRide(
-    String rideId,
-  ) async {
+  static Future<Map<String, dynamic>> driverCancelRide(String rideId) async {
     final response = await http
         .post(
-          Uri.parse(
-            "$baseUrl/ride/rides/$rideId/cancel/",
-          ),
+          Uri.parse("$baseUrl/ride/rides/$rideId/driver-cancel/"),
           headers: await headers(),
         )
-        .timeout(
-          const Duration(seconds: 30),
-        );
+        .timeout(const Duration(seconds: 30));
 
     final data = decodeResponse(response);
 
-    if (response.statusCode < 200 ||
-        response.statusCode >= 300) {
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(data["detail"]?.toString() ?? "Unable to cancel ride.");
+    }
+
+    return data;
+  }
+
+  // ============================================================
+  // DRIVER
+  // UPDATE LOCATION
+  // ============================================================
+
+  static Future<Map<String, dynamic>> updateDriverLocation({
+    required double latitude,
+    required double longitude,
+  }) async {
+    final response = await http
+        .post(
+          Uri.parse("$baseUrl/ride/driver/location/"),
+          headers: await headers(),
+          body: jsonEncode({"latitude": latitude, "longitude": longitude}),
+        )
+        .timeout(const Duration(seconds: 30));
+
+    final data = decodeResponse(response);
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
       throw Exception(
-        data["detail"]?.toString() ??
-            "Unable to cancel ride.",
+        data["detail"]?.toString() ?? "Unable to update driver location.",
       );
     }
 
@@ -269,15 +396,272 @@ class RideService {
   }
 
   // ============================================================
-  // FUTURE RIDE / DRIVER APIs
+  // DRIVER WALLET
   // ============================================================
 
-  // getAvailableDrivers()
-  // acceptRide()
-  // startRide()
-  // completeRide()
-  // updateDriverLocation()
-  // rateDriver()
-  // getDriverWallet()
-  // withdrawCommission()
+  static Future<Map<String, dynamic>> getDriverWallet() async {
+    final response = await http
+        .get(
+          Uri.parse("$baseUrl/ride/driver/wallet/"),
+          headers: await headers(),
+        )
+        .timeout(const Duration(seconds: 30));
+
+    final data = decodeResponse(response);
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(
+        data["detail"]?.toString() ?? "Unable to load driver wallet.",
+      );
+    }
+
+    return data;
+  }
+
+  // ============================================================
+  // DRIVER
+  // INITIALIZE COMMISSION PAYMENT
+  // ============================================================
+
+  static Future<Map<String, dynamic>> createCommissionPayment({
+    String paymentMethod = "card",
+    String? rideId,
+  }) async {
+    final body = <String, dynamic>{"payment_method": paymentMethod};
+
+    if (rideId != null && rideId.isNotEmpty) {
+      body["ride_id"] = rideId;
+    }
+
+    final response = await http
+        .post(
+          Uri.parse("$baseUrl/ride/commission/pay/"),
+          headers: await headers(),
+          body: jsonEncode(body),
+        )
+        .timeout(const Duration(seconds: 30));
+
+    final data = decodeResponse(response);
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(
+        data["detail"]?.toString() ??
+            "Unable to initialize commission payment.",
+      );
+    }
+
+    return data;
+  }
+
+  // ============================================================
+  // DRIVER
+  // VERIFY COMMISSION PAYMENT
+  // ============================================================
+
+  static Future<Map<String, dynamic>> verifyCommissionPayment(
+    String reference,
+  ) async {
+    final response = await http
+        .post(
+          Uri.parse("$baseUrl/ride/commission/verify/$reference/"),
+          headers: await headers(),
+        )
+        .timeout(const Duration(seconds: 30));
+
+    final data = decodeResponse(response);
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(
+        data["detail"]?.toString() ?? "Unable to verify commission payment.",
+      );
+    }
+
+    return data;
+  }
+
+  // ============================================================
+  // RIDE TRACKING
+  // DRIVER POSTS LOCATION
+  // ============================================================
+
+  static Future<Map<String, dynamic>> updateRideTracking({
+    required String rideId,
+    required double latitude,
+    required double longitude,
+  }) async {
+    final response = await http
+        .post(
+          Uri.parse("$baseUrl/ride/rides/$rideId/tracking/"),
+          headers: await headers(),
+          body: jsonEncode({"latitude": latitude, "longitude": longitude}),
+        )
+        .timeout(const Duration(seconds: 30));
+
+    final data = decodeResponse(response);
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(
+        data["detail"]?.toString() ?? "Unable to update ride tracking.",
+      );
+    }
+
+    return data;
+  }
+
+  // ============================================================
+  // RIDE TRACKING
+  // PASSENGER / DRIVER GETS TRACKING
+  // ============================================================
+
+  static Future<List<dynamic>> getRideTracking(String rideId) async {
+    final response = await http
+        .get(
+          Uri.parse("$baseUrl/ride/rides/$rideId/tracking/"),
+          headers: await headers(),
+        )
+        .timeout(const Duration(seconds: 30));
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      final data = decodeResponse(response);
+
+      throw Exception(
+        data["detail"]?.toString() ?? "Unable to load ride tracking.",
+      );
+    }
+
+    try {
+      final decoded = jsonDecode(response.body);
+
+      if (decoded is List) {
+        return decoded;
+      }
+
+      if (decoded is Map && decoded["tracking"] is List) {
+        return List<dynamic>.from(decoded["tracking"]);
+      }
+    } catch (_) {}
+
+    return [];
+  }
+
+  // ============================================================
+  // PASSENGER
+  // RATE DRIVER
+  // ============================================================
+
+  static Future<Map<String, dynamic>> rateDriver({
+    required String rideId,
+    required int rating,
+    String comment = "",
+  }) async {
+    final response = await http
+        .post(
+          Uri.parse("$baseUrl/ride/rides/$rideId/rating/"),
+          headers: await headers(),
+          body: jsonEncode({"rating": rating, "comment": comment}),
+        )
+        .timeout(const Duration(seconds: 30));
+
+    final data = decodeResponse(response);
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(data["detail"]?.toString() ?? "Unable to submit rating.");
+    }
+
+    return data;
+  }
+
+  // ============================================================
+  // DRIVER
+  // RIDE HISTORY
+  // ============================================================
+
+  static Future<List<dynamic>> getDriverRideHistory() async {
+    final response = await http
+        .get(
+          Uri.parse("$baseUrl/ride/rides/driver/history/"),
+          headers: await headers(),
+        )
+        .timeout(const Duration(seconds: 30));
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      final data = decodeResponse(response);
+
+      throw Exception(
+        data["detail"]?.toString() ?? "Unable to load driver ride history.",
+      );
+    }
+
+    try {
+      final decoded = jsonDecode(response.body);
+
+      if (decoded is List) {
+        return decoded;
+      }
+
+      if (decoded is Map && decoded["rides"] is List) {
+        return List<dynamic>.from(decoded["rides"]);
+      }
+    } catch (_) {}
+
+    return [];
+  }
+
+  // ============================================================
+  // DRIVER
+  // STATS
+  // ============================================================
+
+  static Future<Map<String, dynamic>> getDriverStats() async {
+    final response = await http
+        .get(Uri.parse("$baseUrl/ride/driver/stats/"), headers: await headers())
+        .timeout(const Duration(seconds: 30));
+
+    final data = decodeResponse(response);
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(
+        data["detail"]?.toString() ?? "Unable to load driver statistics.",
+      );
+    }
+
+    return data;
+  }
+
+  // ============================================================
+  // DRIVER
+  // COMMISSION PAYMENT HISTORY
+  // ============================================================
+
+  static Future<List<dynamic>> getCommissionHistory() async {
+    final response = await http
+        .get(
+          Uri.parse("$baseUrl/ride/commission/history/"),
+          headers: await headers(),
+        )
+        .timeout(const Duration(seconds: 30));
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      final data = decodeResponse(response);
+
+      throw Exception(
+        data["detail"]?.toString() ??
+            "Unable to load commission payment history.",
+      );
+    }
+
+    try {
+      final decoded = jsonDecode(response.body);
+
+      if (decoded is List) {
+        return decoded;
+      }
+
+      if (decoded is Map && decoded["payments"] is List) {
+        return List<dynamic>.from(decoded["payments"]);
+      }
+    } catch (_) {}
+
+    return [];
+  }
 }

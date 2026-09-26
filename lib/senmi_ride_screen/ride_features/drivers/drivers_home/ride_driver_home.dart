@@ -2,7 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:senmi/senmi_ride_screen/ride_features/drivers/ride_driver_location_service.dart';
+import 'package:senmi/senmi_ride_screen/ride_features/drivers/location_track/ride_driver_location_service.dart';
+import 'package:senmi/senmi_ride_screen/ride_features/drivers/ride_driver_history_screen/ride_driver_history_screen.dart';
 
 const Color senmiRidePurple = Color(0xFF581C87);
 const Color senmiRideLightPurple = Color(0xFF7C3AED);
@@ -673,7 +674,14 @@ class _RideDriverHomeState extends State<RideDriverHome> {
                   _quickAction(
                     icon: Icons.history_rounded,
                     title: "Ride History",
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const RideDriverHistoryScreen(),
+                        ),
+                      );
+                    },
                     isDark: isDark,
                   ),
                   const SizedBox(width: 10),

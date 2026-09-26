@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:senmi/admin_package/admin/screen/admin_home_bottom/admin_bottom_nav.dart';
 import 'package:senmi/senmi_main_customer_home/main_customer_home.dart';
 import 'package:senmi/senmi_package_screens/package_features/customer/customer_home_bottom/customer_bottomnav.dart';
-import 'package:senmi/senmi_ride_screen/ride_features/drivers/ride_driver_home.dart';
+import 'package:senmi/senmi_ride_screen/ride_features/drivers/drivers_home/ride_driver_home.dart';
 import 'package:senmi/senmi_shared_account/pending_rider_review/ride_driver_complete_profile.dart';
 import 'package:senmi/senmi_shared_account/pending_rider_review/ride_driver_pending_screen.dart';
 import 'package:senmi/senmi_shared_account/pending_rider_review/rider_complete_profile.dart';

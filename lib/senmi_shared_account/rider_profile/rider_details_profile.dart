@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:senmi/senmi_package_screens/package_features/rider/rider_profile/rider_security_screen.dart';
+import 'package:senmi/senmi_shared_account/rider_profile/rider_security_screen.dart';
 import 'package:senmi/senmi_shared_account/registration/auth/login.dart';
 import 'package:senmi/services/package_api_service.dart';
 
