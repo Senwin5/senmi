@@ -10,24 +10,19 @@ class DriverMainBottomNav extends StatefulWidget {
   const DriverMainBottomNav({super.key});
 
   @override
-  State<DriverMainBottomNav> createState() =>
-      _DriverMainBottomNavState();
+  State<DriverMainBottomNav> createState() => _DriverMainBottomNavState();
 }
 
-class _DriverMainBottomNavState
-    extends State<DriverMainBottomNav> {
+class _DriverMainBottomNavState extends State<DriverMainBottomNav> {
   int _currentIndex = 0;
 
-  final ValueNotifier<bool> darkModeNotifier =
-      ValueNotifier<bool>(false);
+  final ValueNotifier<bool> darkModeNotifier = ValueNotifier<bool>(false);
 
   late final List<Widget> _screens = [
     const RideDriverHome(),
     const RideDriverRidesScreen(),
     const RideDriverCommissionScreen(),
-    RideDriverSettingsScreen(
-      darkModeNotifier: darkModeNotifier,
-    ),
+    RideDriverSettingsScreen(darkModeNotifier: darkModeNotifier),
   ];
 
   @override
@@ -42,12 +37,17 @@ class _DriverMainBottomNavState
       valueListenable: darkModeNotifier,
       builder: (context, isDark, child) {
         return Scaffold(
-          body: IndexedStack(
-            index: _currentIndex,
-            children: _screens,
-          ),
+          backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
+
+          body: IndexedStack(index: _currentIndex, children: _screens),
 
           bottomNavigationBar: NavigationBar(
+            backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+
+            surfaceTintColor: Colors.transparent,
+
+            elevation: 3,
+
             selectedIndex: _currentIndex,
 
             onDestinationSelected: (index) {
@@ -56,49 +56,49 @@ class _DriverMainBottomNavState
               });
             },
 
-            // ignore: deprecated_member_use
-            indicatorColor:
+            indicatorColor: isDark
+                ? Colors.deepPurple.shade900
                 // ignore: deprecated_member_use
-                senmiRidePurple.withOpacity(0.12),
+                : senmiRidePurple.withOpacity(0.12),
+
+            labelTextStyle: WidgetStateProperty.resolveWith<TextStyle?>((
+              states,
+            ) {
+              if (states.contains(WidgetState.selected)) {
+                return TextStyle(
+                  color: isDark ? Colors.deepPurple.shade200 : senmiRidePurple,
+                  fontWeight: FontWeight.w600,
+                );
+              }
+
+              return TextStyle(
+                color: isDark ? Colors.white70 : Colors.black54,
+                fontWeight: FontWeight.w500,
+              );
+            }),
 
             destinations: const [
               NavigationDestination(
-                icon: Icon(
-                  Icons.home_outlined,
-                ),
-                selectedIcon: Icon(
-                  Icons.home_rounded,
-                ),
+                icon: Icon(Icons.home_outlined),
+                selectedIcon: Icon(Icons.home_rounded),
                 label: "Home",
               ),
 
               NavigationDestination(
-                icon: Icon(
-                  Icons.directions_car_outlined,
-                ),
-                selectedIcon: Icon(
-                  Icons.directions_car_rounded,
-                ),
+                icon: Icon(Icons.directions_car_outlined),
+                selectedIcon: Icon(Icons.directions_car_rounded),
                 label: "Rides",
               ),
 
               NavigationDestination(
-                icon: Icon(
-                  Icons.account_balance_wallet_outlined,
-                ),
-                selectedIcon: Icon(
-                  Icons.account_balance_wallet_rounded,
-                ),
+                icon: Icon(Icons.account_balance_wallet_outlined),
+                selectedIcon: Icon(Icons.account_balance_wallet_rounded),
                 label: "Commission",
               ),
 
               NavigationDestination(
-                icon: Icon(
-                  Icons.person_outline_rounded,
-                ),
-                selectedIcon: Icon(
-                  Icons.person_rounded,
-                ),
+                icon: Icon(Icons.person_outline_rounded),
+                selectedIcon: Icon(Icons.person_rounded),
                 label: "Profile",
               ),
             ],
