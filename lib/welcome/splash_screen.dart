@@ -1,11 +1,10 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:senmi/main.dart';
 import 'package:senmi/admin_package/admin/screen/admin_home_bottom/admin_bottom_nav.dart';
 import 'package:senmi/senmi_main_customer_home/main_customer_home.dart';
 import 'package:senmi/senmi_package_screens/package_features/rider/rider_home_bottom/rider_bottom_nav.dart';
-import 'package:senmi/senmi_ride_screen/ride_features/drivers/drivers_home/ride_driver_home.dart';
+import 'package:senmi/senmi_ride_screen/ride_features/drivers/drivers_bottom_nav/driver_main_bottom_nav.dart';
 import 'package:senmi/senmi_shared_account/registration/auth/login.dart';
 import 'package:senmi/welcome/onboarding_screen.dart';
 import 'package:senmi/services/package_api_service.dart';
@@ -114,7 +113,7 @@ class _SplashScreenState extends State<SplashScreen>
         } else if (ApiService.userRole == "rider") {
           nextPage = const RiderBottomNav();
         } else if (ApiService.userRole == "ride_driver") {
-          nextPage = const RideDriverHome();
+          nextPage = const DriverMainBottomNav();
         } else {
           nextPage = const MainCustomerHome();
         }

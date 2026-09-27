@@ -21,7 +21,7 @@ ValueNotifier<bool> isDarkMode = ValueNotifier(false);
 
 Future<void> _firebaseMessagingBackgroundHandler(
   RemoteMessage message,
-) async {
+) async { 
   await Firebase.initializeApp();
 
   FirebaseNotificationService.showNotification(

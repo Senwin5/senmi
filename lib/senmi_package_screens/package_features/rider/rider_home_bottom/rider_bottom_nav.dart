@@ -3,7 +3,7 @@ import 'package:senmi/senmi_package_screens/package_features/rider/rider_package
 import 'package:senmi/senmi_package_screens/package_features/rider/rider_history/rider_history_screen.dart';
 import 'package:senmi/senmi_package_screens/package_features/rider/rider_home_bottom/rider_home.dart';
 import 'package:senmi/senmi_package_screens/package_features/rider/rider_wallet/wallet_screen.dart';
-import 'package:senmi/senmi_shared_account/rider_settings/rider_settings_screen.dart';
+import 'package:senmi/senmi_shared_account/rider_profile/rider_settings_screen.dart';
 
 class RiderBottomNav extends StatefulWidget {
   final int initialIndex;

@@ -421,23 +421,19 @@ class RideService {
   // ============================================================
   // DRIVER
   // INITIALIZE COMMISSION PAYMENT
+  //
+  // Pays the driver's FULL outstanding commission balance.
+  // This is driver -> Senmi, separate from customer ride payment.
   // ============================================================
 
   static Future<Map<String, dynamic>> createCommissionPayment({
     String paymentMethod = "card",
-    String? rideId,
   }) async {
-    final body = <String, dynamic>{"payment_method": paymentMethod};
-
-    if (rideId != null && rideId.isNotEmpty) {
-      body["ride_id"] = rideId;
-    }
-
     final response = await http
         .post(
           Uri.parse("$baseUrl/ride/commission/pay/"),
           headers: await headers(),
-          body: jsonEncode(body),
+          body: jsonEncode({"payment_method": paymentMethod}),
         )
         .timeout(const Duration(seconds: 30));
 
@@ -663,5 +659,33 @@ class RideService {
     } catch (_) {}
 
     return [];
+  }
+
+  // DRIVER PROFILE
+  static Future<Map<String, dynamic>> getDriverProfile() async {
+    final response = await http
+        .get(
+          Uri.parse("$baseUrl/ride/driver/profile/"),
+          headers: await headers(),
+        )
+        .timeout(const Duration(seconds: 30));
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      final data = decodeResponse(response);
+
+      throw Exception(
+        data["detail"]?.toString() ??
+            data["error"]?.toString() ??
+            "Unable to load driver profile.",
+      );
+    }
+
+    final decoded = jsonDecode(response.body);
+
+    if (decoded is Map<String, dynamic>) {
+      return decoded;
+    }
+
+    return Map<String, dynamic>.from(decoded as Map);
   }
 }
