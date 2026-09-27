@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:senmi/services/driver_api_service.dart';
 import 'package:senmi/senmi_ride_screen/ride_features/drivers/driver_order/ride_driver_rides_screen.dart';
 import 'package:senmi/senmi_ride_screen/ride_features/drivers/drivers_home/ride_driver_home.dart';
+import 'package:senmi/senmi_ride_screen/ride_features/drivers/driver_order/ride_driver_tracking_screen.dart';
 import 'package:senmi/senmi_ride_screen/ride_features/drivers/wallect_dues/ride_driver_commission_screen.dart';
 import 'package:senmi/senmi_shared_account/driver_profile/ride_driver_settings_screen.dart';
 
@@ -21,6 +23,7 @@ class _DriverMainBottomNavState extends State<DriverMainBottomNav> {
   late final List<Widget> _screens = [
     const RideDriverHome(),
     const RideDriverRidesScreen(),
+    const DriverTrackingTab(),
     const RideDriverCommissionScreen(),
     RideDriverSettingsScreen(darkModeNotifier: darkModeNotifier),
   ];
@@ -91,9 +94,15 @@ class _DriverMainBottomNavState extends State<DriverMainBottomNav> {
               ),
 
               NavigationDestination(
+                icon: Icon(Icons.map_outlined),
+                selectedIcon: Icon(Icons.map_rounded),
+                label: "Tracking",
+              ),
+
+              NavigationDestination(
                 icon: Icon(Icons.account_balance_wallet_outlined),
                 selectedIcon: Icon(Icons.account_balance_wallet_rounded),
-                label: "Commission",
+                label: "Dues",
               ),
 
               NavigationDestination(
@@ -106,5 +115,127 @@ class _DriverMainBottomNavState extends State<DriverMainBottomNav> {
         );
       },
     );
+  }
+}
+
+// ============================================================
+// DRIVER TRACKING TAB
+// ============================================================
+
+class DriverTrackingTab extends StatefulWidget {
+  const DriverTrackingTab({super.key});
+
+  @override
+  State<DriverTrackingTab> createState() => _DriverTrackingTabState();
+}
+
+class _DriverTrackingTabState extends State<DriverTrackingTab> {
+  bool loading = true;
+
+  Map<String, dynamic>? activeRide;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadActiveRide();
+  }
+
+  Future<void> _loadActiveRide() async {
+    try {
+      final rides = await RideService.getDriverActiveRides();
+
+      if (!mounted) return;
+
+      setState(() {
+        if (rides.isNotEmpty && rides.first is Map) {
+          activeRide = Map<String, dynamic>.from(rides.first);
+        } else {
+          activeRide = null;
+        }
+
+        loading = false;
+      });
+    } catch (e) {
+      debugPrint("DRIVER TRACKING ACTIVE RIDE ERROR: $e");
+
+      if (!mounted) return;
+
+      setState(() {
+        activeRide = null;
+        loading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (loading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator(color: senmiRidePurple)),
+      );
+    }
+
+    // ========================================================
+    // NO ACTIVE RIDE
+    // ========================================================
+
+    if (activeRide == null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text("Tracking"),
+          backgroundColor: senmiRidePurple,
+          foregroundColor: Colors.white,
+          elevation: 0,
+        ),
+        body: RefreshIndicator(
+          onRefresh: _loadActiveRide,
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            children: const [
+              SizedBox(height: 180),
+
+              Icon(Icons.location_off_outlined, size: 70, color: Colors.grey),
+
+              SizedBox(height: 20),
+
+              Center(
+                child: Text(
+                  "No Active Ride",
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+              ),
+
+              SizedBox(height: 8),
+
+              Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 30),
+                  child: Text(
+                    "Accept a ride to start tracking.",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.grey, fontSize: 15),
+                  ),
+                ),
+              ),
+
+              SizedBox(height: 20),
+
+              Center(
+                child: Text(
+                  "Pull down to refresh.",
+                  style: TextStyle(color: Colors.grey, fontSize: 13),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // ========================================================
+    // ACTIVE RIDE
+    // ========================================================
+
+    return RideDriverTrackingScreen(ride: activeRide!);
   }
 }

@@ -3,6 +3,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:senmi/senmi_ride_screen/ride_features/drivers/driver_order/ride_driver_ride_details_screen.dart';
+import 'package:senmi/senmi_ride_screen/ride_features/drivers/driver_order/ride_driver_tracking_screen.dart';
 import 'package:senmi/services/driver_api_service.dart';
 
 const Color senmiRidePurple = Color(0xFF581C87);
@@ -66,6 +68,12 @@ class _RideDriverRidesScreenState extends State<RideDriverRidesScreen>
       });
     }
 
+    if (silent && mounted) {
+      setState(() {
+        refreshing = true;
+      });
+    }
+
     try {
       final results = await Future.wait([
         RideService.getAvailableRides(),
@@ -102,106 +110,6 @@ class _RideDriverRidesScreenState extends State<RideDriverRidesScreen>
     });
 
     await _loadRides(silent: true);
-  }
-
-  // ============================================================
-  // ACCEPT RIDE
-  // ============================================================
-
-  Future<void> _acceptRide(Map<String, dynamic> ride) async {
-    if (actionLoading) return;
-
-    final rideId = ride["ride_id"]?.toString();
-
-    if (rideId == null || rideId.isEmpty) {
-      _showMessage("Ride ID is missing.", error: true);
-      return;
-    }
-
-    setState(() {
-      actionLoading = true;
-    });
-
-    try {
-      await RideService.acceptRide(rideId);
-
-      if (!mounted) return;
-
-      _showMessage("Ride accepted successfully.");
-
-      await _loadRides(silent: true);
-    } catch (e) {
-      if (!mounted) return;
-
-      _showMessage(e.toString().replaceFirst("Exception: ", ""), error: true);
-    } finally {
-      if (mounted) {
-        setState(() {
-          actionLoading = false;
-        });
-      }
-    }
-  }
-
-  // ============================================================
-  // UPDATE STATUS
-  // ============================================================
-
-  Future<void> _updateStatus(
-    Map<String, dynamic> ride,
-    String newStatus,
-  ) async {
-    if (actionLoading) return;
-
-    final rideId = ride["ride_id"]?.toString();
-
-    if (rideId == null || rideId.isEmpty) {
-      _showMessage("Ride ID is missing.", error: true);
-      return;
-    }
-
-    setState(() {
-      actionLoading = true;
-    });
-
-    try {
-      await RideService.updateRideStatus(rideId: rideId, status: newStatus);
-
-      if (!mounted) return;
-
-      String message;
-
-      switch (newStatus) {
-        case "arrived":
-          message = "Passenger notified that you have arrived.";
-          break;
-
-        case "started":
-          message = "Ride started.";
-          break;
-
-        case "completed":
-          message = "Ride completed successfully.";
-          break;
-
-        default:
-          message = "Ride status updated.";
-      }
-
-      _showMessage(message);
-
-      await _loadRides(silent: true);
-    } catch (e) {
-      if (!mounted) return;
-
-      _showMessage(e.toString().replaceFirst("Exception: ", ""), error: true);
-    } finally {
-      if (mounted) {
-        setState(() {
-          actionLoading = false;
-        });
-      }
-    }
   }
 
   // ============================================================
@@ -281,6 +189,42 @@ class _RideDriverRidesScreenState extends State<RideDriverRidesScreen>
           actionLoading = false;
         });
       }
+    }
+  }
+
+  // ============================================================
+  // OPEN TRACKING SCREEN
+  // ============================================================
+
+  Future<void> _openTracking(Map<String, dynamic> ride) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => RideDriverTrackingScreen(ride: ride)),
+    );
+
+    // Tracking screen returns true after the ride is completed.
+    // Reload active rides so the completed ride disappears.
+    if (result == true && mounted) {
+      await _loadRides(silent: true);
+    }
+  }
+
+  // ============================================================
+  // OPEN RIDE DETAILS
+  // ============================================================
+
+  Future<void> _openRideDetails(Map<String, dynamic> ride) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => RideDriverRideDetailsScreen(ride: ride),
+      ),
+    );
+
+    // Ride details returns true after the driver accepts the ride.
+    // Reload the list so the accepted ride moves into Active Ride.
+    if (result == true && mounted) {
+      await _loadRides(silent: true);
     }
   }
 
@@ -598,9 +542,9 @@ class _RideDriverRidesScreenState extends State<RideDriverRidesScreen>
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: actionLoading ? null : () => _acceptRide(ride),
-              icon: const Icon(Icons.check_circle_outline),
-              label: const Text("Accept Ride"),
+              onPressed: () => _openRideDetails(ride),
+              icon: const Icon(Icons.visibility_outlined),
+              label: const Text("View Ride"),
               style: ElevatedButton.styleFrom(
                 backgroundColor: senmiRidePurple,
                 foregroundColor: Colors.white,
@@ -623,32 +567,6 @@ class _RideDriverRidesScreenState extends State<RideDriverRidesScreen>
   Widget _activeRideCard(Map<String, dynamic> ride, bool isDark) {
     final rideStatus = ride["status"]?.toString() ?? "";
 
-    final canArrive = rideStatus == "accepted";
-    final canStart = rideStatus == "arrived";
-    final canComplete = rideStatus == "started";
-
-    String buttonText;
-    IconData buttonIcon;
-    String nextStatus;
-
-    if (canArrive) {
-      buttonText = "I've Arrived";
-      buttonIcon = Icons.location_on_rounded;
-      nextStatus = "arrived";
-    } else if (canStart) {
-      buttonText = "Start Ride";
-      buttonIcon = Icons.play_arrow_rounded;
-      nextStatus = "started";
-    } else if (canComplete) {
-      buttonText = "Complete Ride";
-      buttonIcon = Icons.check_rounded;
-      nextStatus = "completed";
-    } else {
-      buttonText = "Ride Active";
-      buttonIcon = Icons.directions_car_rounded;
-      nextStatus = "";
-    }
-
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(17),
@@ -667,6 +585,9 @@ class _RideDriverRidesScreenState extends State<RideDriverRidesScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ========================================================
+          // HEADER
+          // ========================================================
           Row(
             children: [
               Container(
@@ -712,6 +633,9 @@ class _RideDriverRidesScreenState extends State<RideDriverRidesScreen>
 
           const SizedBox(height: 16),
 
+          // ========================================================
+          // PICKUP
+          // ========================================================
           _locationRow(
             icon: Icons.my_location_rounded,
             color: Colors.green,
@@ -729,6 +653,9 @@ class _RideDriverRidesScreenState extends State<RideDriverRidesScreen>
             ),
           ),
 
+          // ========================================================
+          // DESTINATION
+          // ========================================================
           _locationRow(
             icon: Icons.location_on_rounded,
             color: Colors.redAccent,
@@ -739,6 +666,9 @@ class _RideDriverRidesScreenState extends State<RideDriverRidesScreen>
 
           const SizedBox(height: 15),
 
+          // ========================================================
+          // FARE + EARNING
+          // ========================================================
           Row(
             children: [
               Expanded(
@@ -760,28 +690,40 @@ class _RideDriverRidesScreenState extends State<RideDriverRidesScreen>
             ],
           ),
 
-          const SizedBox(height: 15),
+          const SizedBox(height: 16),
 
-          if (nextStatus.isNotEmpty)
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: actionLoading
-                    ? null
-                    : () => _updateStatus(ride, nextStatus),
-                icon: Icon(buttonIcon),
-                label: Text(buttonText),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: senmiRidePurple,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
+          // ========================================================
+          // TRACK RIDE
+          // ========================================================
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: actionLoading ? null : () => _openTracking(ride),
+              icon: actionLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.map_outlined),
+              label: Text(actionLoading ? "Loading..." : "Track Ride"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: senmiRidePurple,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
                 ),
               ),
             ),
+          ),
 
+          // ========================================================
+          // CANCEL RIDE
+          // ========================================================
           if (rideStatus == "accepted" || rideStatus == "arrived")
             Padding(
               padding: const EdgeInsets.only(top: 8),

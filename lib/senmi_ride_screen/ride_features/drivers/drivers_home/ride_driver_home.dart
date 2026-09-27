@@ -2,8 +2,11 @@
 
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:senmi/services/driver_api_service.dart';
 import 'package:senmi/senmi_ride_screen/ride_features/drivers/location_track/ride_driver_location_service.dart';
 import 'package:senmi/senmi_ride_screen/ride_features/drivers/ride_driver_history_screen/ride_driver_history_screen.dart';
+import 'package:senmi/senmi_ride_screen/ride_features/drivers/driver_order/ride_driver_rides_screen.dart';
+import 'package:senmi/senmi_ride_screen/ride_features/drivers/driver_order/ride_driver_tracking_screen.dart';
 
 const Color senmiRidePurple = Color(0xFF581C87);
 const Color senmiRideLightPurple = Color(0xFF7C3AED);
@@ -29,8 +32,56 @@ class _RideDriverHomeState extends State<RideDriverHome> {
   int completedRides = 0;
   int totalRidesToday = 0;
 
-  // Current ride will later come from the ride API.
+  // Current ride.
   Map<String, dynamic>? currentRide;
+  bool loadingCurrentRide = true;
+
+  // ============================================================
+  // INIT
+  // ============================================================
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCurrentRide();
+  }
+
+  // ============================================================
+  // LOAD CURRENT RIDE
+  // ============================================================
+
+  Future<void> _loadCurrentRide() async {
+    try {
+      final rides = await RideService.getDriverActiveRides();
+
+      if (!mounted) return;
+
+      setState(() {
+        if (rides.isNotEmpty && rides.first is Map) {
+          currentRide = Map<String, dynamic>.from(rides.first);
+        } else {
+          currentRide = null;
+        }
+
+        loadingCurrentRide = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        currentRide = null;
+        loadingCurrentRide = false;
+      });
+    }
+  }
+
+  // ============================================================
+  // REFRESH DASHBOARD
+  // ============================================================
+
+  Future<void> _refreshDashboard() async {
+    await _loadCurrentRide();
+  }
 
   // ============================================================
   // TOGGLE ONLINE
@@ -226,6 +277,28 @@ class _RideDriverHomeState extends State<RideDriverHome> {
   // ============================================================
 
   Widget _currentRideCard(bool isDark) {
+    if (loadingCurrentRide) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E1E22) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isDark
+                ? Colors.white.withOpacity(0.06)
+                : Colors.black.withOpacity(0.06),
+          ),
+        ),
+        child: const Center(
+          child: Padding(
+            padding: EdgeInsets.all(8),
+            child: CircularProgressIndicator(color: senmiRidePurple),
+          ),
+        ),
+      );
+    }
+
     if (currentRide == null) {
       return Container(
         width: double.infinity,
@@ -256,7 +329,7 @@ class _RideDriverHomeState extends State<RideDriverHome> {
             ),
             const SizedBox(height: 12),
             Text(
-              isOnline ? "Waiting for a ride" : "You are offline",
+              isOnline ? "No active ride" : "You are offline",
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
@@ -266,7 +339,7 @@ class _RideDriverHomeState extends State<RideDriverHome> {
             const SizedBox(height: 6),
             Text(
               isOnline
-                  ? "Nearby ride requests will appear here."
+                  ? "Available ride requests will appear in Available Rides."
                   : "Go online to start receiving ride requests.",
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -275,103 +348,195 @@ class _RideDriverHomeState extends State<RideDriverHome> {
                 color: isDark ? Colors.white54 : Colors.black54,
               ),
             ),
+            if (isOnline) ...[
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const RideDriverRidesScreen(),
+                      ),
+                    );
+
+                    _loadCurrentRide();
+                  },
+                  icon: const Icon(Icons.search_rounded),
+                  label: const Text("Find Available Rides"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: senmiRidePurple,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       );
     }
 
-    final pickup = currentRide?["pickup"]?.toString() ?? "Pickup unavailable";
+    final pickup =
+        currentRide?["pickup"]?.toString() ??
+        currentRide?["pickup_address"]?.toString() ??
+        "Pickup unavailable";
 
     final destination =
-        currentRide?["destination"]?.toString() ?? "Destination unavailable";
+        currentRide?["destination"]?.toString() ??
+        currentRide?["destination_address"]?.toString() ??
+        "Destination unavailable";
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E22) : Colors.white,
+    final status = currentRide?["status"]?.toString() ?? "accepted";
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: senmiRidePurple.withOpacity(0.20)),
-        boxShadow: [
-          BoxShadow(
-            color: senmiRidePurple.withOpacity(0.08),
-            blurRadius: 14,
-            offset: const Offset(0, 5),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => RideDriverTrackingScreen(ride: currentRide!),
+            ),
+          );
+        },
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E1E22) : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: senmiRidePurple.withOpacity(0.20)),
+            boxShadow: [
+              BoxShadow(
+                color: senmiRidePurple.withOpacity(0.08),
+                blurRadius: 14,
+                offset: const Offset(0, 5),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: senmiRidePurple.withOpacity(0.09),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.local_taxi_rounded,
-                  color: senmiRidePurple,
+              Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: senmiRidePurple.withOpacity(0.09),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.local_taxi_rounded,
+                      color: senmiRidePurple,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      "Current Ride",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withOpacity(0.10),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      status.toUpperCase(),
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.orange,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 18),
+
+              _locationRow(
+                icon: Icons.my_location_rounded,
+                color: Colors.green,
+                title: "Pickup",
+                value: pickup,
+                isDark: isDark,
+              ),
+
+              Padding(
+                padding: const EdgeInsets.only(left: 17),
+                child: Container(
+                  width: 2,
+                  height: 18,
+                  color: isDark ? Colors.white12 : Colors.black12,
                 ),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  "Current Ride",
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: isDark ? Colors.white : Colors.black87,
+
+              _locationRow(
+                icon: Icons.location_on_rounded,
+                color: Colors.redAccent,
+                title: "Destination",
+                value: destination,
+                isDark: isDark,
+              ),
+
+              const SizedBox(height: 16),
+
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            RideDriverTrackingScreen(ride: currentRide!),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.map_outlined),
+                  label: const Text("Track Ride"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: senmiRidePurple,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.10),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Text(
-                  "Active",
+
+              const SizedBox(height: 8),
+
+              Center(
+                child: Text(
+                  "Tap anywhere on the ride card to track",
                   style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.orange,
+                    fontSize: 10.5,
+                    color: isDark ? Colors.white38 : Colors.black38,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 18),
-          _locationRow(
-            icon: Icons.my_location_rounded,
-            color: Colors.green,
-            title: "Pickup",
-            value: pickup,
-            isDark: isDark,
-          ),
-          Padding(
-            padding: const EdgeInsets.only(left: 17),
-            child: Container(
-              width: 2,
-              height: 18,
-              color: isDark ? Colors.white12 : Colors.black12,
-            ),
-          ),
-          _locationRow(
-            icon: Icons.location_on_rounded,
-            color: Colors.redAccent,
-            title: "Destination",
-            value: destination,
-            isDark: isDark,
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -503,16 +668,11 @@ class _RideDriverHomeState extends State<RideDriverHome> {
           const SizedBox(width: 4),
         ],
       ),
+
       body: SafeArea(
         child: RefreshIndicator(
           color: senmiRidePurple,
-          onRefresh: () async {
-            await Future<void>.delayed(const Duration(milliseconds: 500));
-
-            if (!mounted) return;
-
-            setState(() {});
-          },
+          onRefresh: _refreshDashboard,
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 30),
@@ -555,7 +715,9 @@ class _RideDriverHomeState extends State<RideDriverHome> {
                         size: 25,
                       ),
                     ),
+
                     const SizedBox(width: 12),
+
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -585,6 +747,7 @@ class _RideDriverHomeState extends State<RideDriverHome> {
                         ],
                       ),
                     ),
+
                     Switch(
                       value: isOnline,
                       onChanged: isUpdatingOnline ? null : _toggleOnline,
@@ -618,14 +781,18 @@ class _RideDriverHomeState extends State<RideDriverHome> {
                     value: _formatMoney(todayEarnings),
                     isDark: isDark,
                   ),
+
                   const SizedBox(width: 10),
+
                   _statCard(
                     icon: Icons.route_rounded,
                     title: "Completed",
                     value: completedRides.toString(),
                     isDark: isDark,
                   ),
+
                   const SizedBox(width: 10),
+
                   _statCard(
                     icon: Icons.local_taxi_outlined,
                     title: "Total Rides",
@@ -684,21 +851,72 @@ class _RideDriverHomeState extends State<RideDriverHome> {
                     },
                     isDark: isDark,
                   ),
+
                   const SizedBox(width: 10),
+
                   _quickAction(
                     icon: Icons.payments_outlined,
                     title: "Earnings",
-                    onTap: () {},
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            "Earnings screen will be connected here.",
+                          ),
+                        ),
+                      );
+                    },
                     isDark: isDark,
                   ),
+
                   const SizedBox(width: 10),
+
                   _quickAction(
                     icon: Icons.person_outline_rounded,
                     title: "Profile",
-                    onTap: () {},
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            "Driver profile will be connected here.",
+                          ),
+                        ),
+                      );
+                    },
                     isDark: isDark,
                   ),
                 ],
+              ),
+
+              const SizedBox(height: 20),
+
+              // ==================================================
+              // AVAILABLE RIDES BUTTON
+              // ==================================================
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const RideDriverRidesScreen(),
+                      ),
+                    );
+
+                    _loadCurrentRide();
+                  },
+                  icon: const Icon(Icons.local_taxi_outlined),
+                  label: const Text("View Available Rides"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: senmiRideLightPurple,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 15),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                  ),
+                ),
               ),
 
               const SizedBox(height: 20),
@@ -733,7 +951,9 @@ class _RideDriverHomeState extends State<RideDriverHome> {
                         size: 21,
                       ),
                     ),
+
                     const SizedBox(width: 12),
+
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -746,7 +966,9 @@ class _RideDriverHomeState extends State<RideDriverHome> {
                               color: isDark ? Colors.white : Colors.black87,
                             ),
                           ),
+
                           const SizedBox(height: 3),
+
                           Text(
                             !isOnline
                                 ? "Location sharing starts when you go online."
@@ -764,6 +986,7 @@ class _RideDriverHomeState extends State<RideDriverHome> {
                         ],
                       ),
                     ),
+
                     Icon(
                       !isOnline
                           ? Icons.radio_button_unchecked_rounded
