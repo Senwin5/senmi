@@ -66,24 +66,18 @@ class _RideDriverProfileScreenState
   String? get profilePhotoUrl {
     final photo = driver?["profile_photo"];
 
-    if (photo == null) return null;
+    if (photo == null) {
+      return null;
+    }
 
     final photoString = photo.toString().trim();
 
-    if (photoString.isEmpty) return null;
-
-    // Already a complete URL
-    if (photoString.startsWith("http://") ||
-        photoString.startsWith("https://")) {
-      return photoString;
+    if (photoString.isEmpty) {
+      return null;
     }
 
-    // Relative URL returned by Django
-    if (photoString.startsWith("/")) {
-      return "https://www.senmi.com.ng$photoString";
-    }
-
-    return "https://www.senmi.com.ng/$photoString";
+    // Cloudinary URL returned directly by the API
+    return photoString;
   }
 
   @override
@@ -95,14 +89,12 @@ class _RideDriverProfileScreenState
       backgroundColor: isDark
           ? const Color(0xFF121212)
           : const Color(0xFFF8F9FD),
-
       appBar: AppBar(
         title: const Text("Driver Profile"),
         centerTitle: true,
         foregroundColor: Colors.white,
         backgroundColor: senmiRidePurple,
       ),
-
       body: RefreshIndicator(
         onRefresh: fetchDriverProfile,
         child: loading
@@ -115,47 +107,35 @@ class _RideDriverProfileScreenState
                 ? ListView(
                     children: [
                       const SizedBox(height: 180),
-
                       Center(
                         child: Text(
                           "Failed to load profile",
                           style: TextStyle(
-                            color: theme
-                                .textTheme
-                                .bodyLarge
-                                ?.color,
+                            color: theme.textTheme.bodyLarge?.color,
                           ),
                         ),
                       ),
-
                       const SizedBox(height: 15),
-
                       Center(
                         child: ElevatedButton(
                           onPressed: fetchDriverProfile,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                senmiRidePurple,
-                            foregroundColor:
-                                Colors.white,
+                            backgroundColor: senmiRidePurple,
+                            foregroundColor: Colors.white,
                           ),
-                          child:
-                              const Text("Retry"),
+                          child: const Text("Retry"),
                         ),
                       ),
                     ],
                   )
                 : ListView(
-                    padding:
-                        const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(16),
                     children: [
                       _profileHeader(),
 
                       const SizedBox(height: 20),
 
-                      _sectionTitle(
-                        "Personal Information",
-                      ),
+                      _sectionTitle("Personal Information"),
 
                       _profileCard(
                         Icons.person_outline,
@@ -195,9 +175,7 @@ class _RideDriverProfileScreenState
 
                       const SizedBox(height: 10),
 
-                      _sectionTitle(
-                        "Vehicle Information",
-                      ),
+                      _sectionTitle("Vehicle Information"),
 
                       _profileCard(
                         Icons.directions_car_outlined,
@@ -231,9 +209,7 @@ class _RideDriverProfileScreenState
 
                       const SizedBox(height: 10),
 
-                      _sectionTitle(
-                        "Driver Status",
-                      ),
+                      _sectionTitle("Driver Status"),
 
                       _profileCard(
                         Icons.verified_user_outlined,
@@ -258,30 +234,22 @@ class _RideDriverProfileScreenState
                             ? const Color(0xFF1E1E1E)
                             : Colors.white,
                         elevation: 2,
-                        shape:
-                            RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(
-                            14,
-                          ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
                         ),
                         child: ListTile(
-                          contentPadding:
-                              const EdgeInsets
-                                  .symmetric(
+                          contentPadding: const EdgeInsets.symmetric(
                             horizontal: 18,
                             vertical: 8,
                           ),
                           leading: const Icon(
                             Icons.security,
-                            color:
-                                senmiRidePurple,
+                            color: senmiRidePurple,
                           ),
                           title: Text(
                             "Account & Security",
                             style: TextStyle(
-                              fontWeight:
-                                  FontWeight.w600,
+                              fontWeight: FontWeight.w600,
                               color: isDark
                                   ? Colors.white
                                   : Colors.black87,
@@ -296,8 +264,7 @@ class _RideDriverProfileScreenState
                             ),
                           ),
                           trailing: Icon(
-                            Icons
-                                .arrow_forward_ios,
+                            Icons.arrow_forward_ios,
                             size: 18,
                             color: isDark
                                 ? Colors.white70
@@ -328,11 +295,12 @@ class _RideDriverProfileScreenState
 
   Widget _profileHeader() {
     final theme = Theme.of(context);
-    final isDark =
-        theme.brightness == Brightness.dark;
+    final isDark = theme.brightness == Brightness.dark;
 
-    final name =
-        value("full_name", "Ride Driver");
+    final name = value(
+      "full_name",
+      "Ride Driver",
+    );
 
     final photoUrl = profilePhotoUrl;
 
@@ -348,17 +316,18 @@ class _RideDriverProfileScreenState
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
+            // ------------------------------------------------
             // PROFILE PHOTO
+            // ------------------------------------------------
+
             Container(
               width: 96,
               height: 96,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: senmiRidePurple
-                    .withOpacity(0.12),
+                color: senmiRidePurple.withOpacity(0.12),
                 border: Border.all(
-                  color: senmiRidePurple
-                      .withOpacity(0.25),
+                  color: senmiRidePurple.withOpacity(0.25),
                   width: 2,
                 ),
               ),
@@ -369,10 +338,7 @@ class _RideDriverProfileScreenState
                         width: 96,
                         height: 96,
                         fit: BoxFit.cover,
-
-                        // If image fails, show icon
-                        errorBuilder:
-                            (
+                        errorBuilder: (
                           context,
                           error,
                           stackTrace,
@@ -380,28 +346,21 @@ class _RideDriverProfileScreenState
                           return const Icon(
                             Icons.person,
                             size: 52,
-                            color:
-                                senmiRidePurple,
+                            color: senmiRidePurple,
                           );
                         },
-
-                        // While image is loading
-                        loadingBuilder:
-                            (
+                        loadingBuilder: (
                           context,
                           child,
                           loadingProgress,
                         ) {
-                          if (loadingProgress ==
-                              null) {
+                          if (loadingProgress == null) {
                             return child;
                           }
 
                           return const Center(
-                            child:
-                                CircularProgressIndicator(
-                              color:
-                                  senmiRidePurple,
+                            child: CircularProgressIndicator(
+                              color: senmiRidePurple,
                               strokeWidth: 2,
                             ),
                           );
@@ -451,8 +410,7 @@ class _RideDriverProfileScreenState
 
   Widget _sectionTitle(String title) {
     final isDark =
-        Theme.of(context).brightness ==
-            Brightness.dark;
+        Theme.of(context).brightness == Brightness.dark;
 
     return Padding(
       padding: const EdgeInsets.only(
@@ -490,8 +448,7 @@ class _RideDriverProfileScreenState
       color: isDark
           ? const Color(0xFF1E1E1E)
           : Colors.white,
-      margin:
-          const EdgeInsets.symmetric(vertical: 6),
+      margin: const EdgeInsets.symmetric(vertical: 6),
       elevation: 1,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
@@ -517,8 +474,7 @@ class _RideDriverProfileScreenState
           ),
         ),
         subtitle: Padding(
-          padding:
-              const EdgeInsets.only(top: 3),
+          padding: const EdgeInsets.only(top: 3),
           child: Text(
             value,
             style: TextStyle(
@@ -526,7 +482,7 @@ class _RideDriverProfileScreenState
               fontWeight: FontWeight.w600,
               color: isDark
                   ? Colors.white
-                  : const Color.fromARGB(221, 197, 158, 158),
+                  : Colors.black87,
             ),
           ),
         ),
