@@ -1,8 +1,8 @@
-
 // ignore_for_file: use_build_context_synchronously, deprecated_member_use
 
 import 'package:flutter/material.dart';
 import 'package:senmi/services/driver_api_service.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 const Color senmiRidePurple = Color(0xFF581C87);
 const Color senmiRideLightPurple = Color(0xFF7C3AED);
@@ -10,10 +10,7 @@ const Color senmiRideLightPurple = Color(0xFF7C3AED);
 class RideDriverRideDetailsScreen extends StatefulWidget {
   final Map<String, dynamic> ride;
 
-  const RideDriverRideDetailsScreen({
-    super.key,
-    required this.ride,
-  });
+  const RideDriverRideDetailsScreen({super.key, required this.ride});
 
   @override
   State<RideDriverRideDetailsScreen> createState() =>
@@ -77,6 +74,41 @@ class _RideDriverRideDetailsScreenState
     }
   }
 
+  // ============================================================
+  // CALL PASSENGER
+  // ============================================================
+
+  Future<void> _callPassenger() async {
+    final phone =
+        widget.ride["passenger_phone"] ??
+        widget.ride["rider_phone"] ??
+        widget.ride["customer_phone"] ??
+        widget.ride["phone_number"];
+
+    if (phone == null || phone.toString().trim().isEmpty) {
+      _showMessage("Passenger phone number is not available.", error: true);
+      return;
+    }
+
+    final phoneNumber = phone.toString().trim();
+
+    final uri = Uri(scheme: "tel", path: phoneNumber);
+
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri);
+      } else {
+        _showMessage("Unable to open phone dialer.", error: true);
+      }
+    } catch (e) {
+      _showMessage("Unable to call passenger.", error: true);
+    }
+  }
+
+  // ============================================================
+  // ACCEPT RIDE
+  // ============================================================
+
   Future<void> _acceptRide() async {
     if (accepting) return;
 
@@ -104,10 +136,7 @@ class _RideDriverRideDetailsScreenState
     } catch (e) {
       if (!mounted) return;
 
-      _showMessage(
-        e.toString().replaceFirst("Exception: ", ""),
-        error: true,
-      );
+      _showMessage(e.toString().replaceFirst("Exception: ", ""), error: true);
     } finally {
       if (mounted) {
         setState(() {
@@ -117,22 +146,26 @@ class _RideDriverRideDetailsScreenState
     }
   }
 
-  void _showMessage(
-    String message, {
-    bool error = false,
-  }) {
+  // ============================================================
+  // MESSAGE
+  // ============================================================
+
+  void _showMessage(String message, {bool error = false}) {
     if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor:
-            error ? Colors.redAccent : senmiRidePurple,
+        backgroundColor: error ? Colors.redAccent : senmiRidePurple,
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 2),
       ),
     );
   }
+
+  // ============================================================
+  // LOCATION CARD
+  // ============================================================
 
   Widget _locationCard({
     required IconData icon,
@@ -145,9 +178,7 @@ class _RideDriverRideDetailsScreenState
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark
-            ? const Color(0xFF25252A)
-            : const Color(0xFFF8F8FA),
+        color: isDark ? const Color(0xFF25252A) : const Color(0xFFF8F8FA),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -160,11 +191,7 @@ class _RideDriverRideDetailsScreenState
               color: iconColor.withOpacity(0.10),
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              icon,
-              color: iconColor,
-              size: 21,
-            ),
+            child: Icon(icon, color: iconColor, size: 21),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -176,9 +203,7 @@ class _RideDriverRideDetailsScreenState
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
-                    color: isDark
-                        ? Colors.white54
-                        : Colors.black54,
+                    color: isDark ? Colors.white54 : Colors.black54,
                   ),
                 ),
                 const SizedBox(height: 5),
@@ -188,9 +213,7 @@ class _RideDriverRideDetailsScreenState
                     fontSize: 14,
                     height: 1.4,
                     fontWeight: FontWeight.w600,
-                    color: isDark
-                        ? Colors.white
-                        : Colors.black87,
+                    color: isDark ? Colors.white : Colors.black87,
                   ),
                 ),
               ],
@@ -200,6 +223,10 @@ class _RideDriverRideDetailsScreenState
       ),
     );
   }
+
+  // ============================================================
+  // DETAIL ITEM
+  // ============================================================
 
   Widget _detailItem({
     required IconData icon,
@@ -211,28 +238,20 @@ class _RideDriverRideDetailsScreenState
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: isDark
-              ? const Color(0xFF25252A)
-              : const Color(0xFFF8F8FA),
+          color: isDark ? const Color(0xFF25252A) : const Color(0xFFF8F8FA),
           borderRadius: BorderRadius.circular(15),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(
-              icon,
-              color: senmiRidePurple,
-              size: 20,
-            ),
+            Icon(icon, color: senmiRidePurple, size: 20),
             const SizedBox(height: 8),
             Text(
               title,
               style: TextStyle(
                 fontSize: 10.5,
                 fontWeight: FontWeight.w600,
-                color: isDark
-                    ? Colors.white54
-                    : Colors.black54,
+                color: isDark ? Colors.white54 : Colors.black54,
               ),
             ),
             const SizedBox(height: 3),
@@ -243,9 +262,7 @@ class _RideDriverRideDetailsScreenState
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w800,
-                color: isDark
-                    ? Colors.white
-                    : Colors.black87,
+                color: isDark ? Colors.white : Colors.black87,
               ),
             ),
           ],
@@ -253,6 +270,10 @@ class _RideDriverRideDetailsScreenState
       ),
     );
   }
+
+  // ============================================================
+  // EARNING ROW
+  // ============================================================
 
   Widget _earningRow({
     required String title,
@@ -262,21 +283,16 @@ class _RideDriverRideDetailsScreenState
     bool highlight = false,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 15,
-        vertical: 14,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 14),
       decoration: BoxDecoration(
         color: highlight
             ? senmiRidePurple.withOpacity(0.08)
             : isDark
-                ? const Color(0xFF25252A)
-                : const Color(0xFFF8F8FA),
+            ? const Color(0xFF25252A)
+            : const Color(0xFFF8F8FA),
         borderRadius: BorderRadius.circular(15),
         border: highlight
-            ? Border.all(
-                color: senmiRidePurple.withOpacity(0.18),
-              )
+            ? Border.all(color: senmiRidePurple.withOpacity(0.18))
             : null,
       ),
       child: Row(
@@ -288,11 +304,7 @@ class _RideDriverRideDetailsScreenState
               color: senmiRidePurple.withOpacity(0.10),
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              icon,
-              color: senmiRidePurple,
-              size: 19,
-            ),
+            child: Icon(icon, color: senmiRidePurple, size: 19),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -301,9 +313,7 @@ class _RideDriverRideDetailsScreenState
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
-                color: isDark
-                    ? Colors.white70
-                    : Colors.black54,
+                color: isDark ? Colors.white70 : Colors.black54,
               ),
             ),
           ),
@@ -315,8 +325,8 @@ class _RideDriverRideDetailsScreenState
               color: highlight
                   ? senmiRidePurple
                   : isDark
-                      ? Colors.white
-                      : Colors.black87,
+                  ? Colors.white
+                  : Colors.black87,
             ),
           ),
         ],
@@ -324,19 +334,20 @@ class _RideDriverRideDetailsScreenState
     );
   }
 
+  // ============================================================
+  // BUILD
+  // ============================================================
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    final status =
-        widget.ride["status"]?.toString() ?? "pending";
+    final status = widget.ride["status"]?.toString() ?? "pending";
 
-    final serviceType =
-        widget.ride["service_type"]?.toString() ?? "basic";
+    final serviceType = widget.ride["service_type"]?.toString() ?? "basic";
 
-    final distance =
-        widget.ride["estimated_distance_km"]?.toString() ?? "0";
+    final distance = widget.ride["estimated_distance_km"]?.toString() ?? "0";
 
     final duration =
         widget.ride["estimated_duration_minutes"]?.toString() ?? "0";
@@ -345,20 +356,13 @@ class _RideDriverRideDetailsScreenState
       appBar: AppBar(
         title: const Text(
           "Ride Details",
-          style: TextStyle(
-            fontWeight: FontWeight.w800,
-          ),
+          style: TextStyle(fontWeight: FontWeight.w800),
         ),
         centerTitle: true,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(
-            16,
-            12,
-            16,
-            30,
-          ),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 30),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -369,18 +373,12 @@ class _RideDriverRideDetailsScreenState
                 width: double.infinity,
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
-                  color: isDark
-                      ? const Color(0xFF1E1E22)
-                      : Colors.white,
+                  color: isDark ? const Color(0xFF1E1E22) : Colors.white,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: senmiRidePurple.withOpacity(0.15),
-                  ),
+                  border: Border.all(color: senmiRidePurple.withOpacity(0.15)),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(
-                        isDark ? 0.10 : 0.04,
-                      ),
+                      color: Colors.black.withOpacity(isDark ? 0.10 : 0.04),
                       blurRadius: 12,
                       offset: const Offset(0, 5),
                     ),
@@ -392,8 +390,7 @@ class _RideDriverRideDetailsScreenState
                       width: 50,
                       height: 50,
                       decoration: BoxDecoration(
-                        color:
-                            senmiRidePurple.withOpacity(0.09),
+                        color: senmiRidePurple.withOpacity(0.09),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
@@ -405,8 +402,7 @@ class _RideDriverRideDetailsScreenState
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             widget.ride["ride_id"]?.toString() ??
@@ -414,9 +410,7 @@ class _RideDriverRideDetailsScreenState
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w900,
-                              color: isDark
-                                  ? Colors.white
-                                  : Colors.black87,
+                              color: isDark ? Colors.white : Colors.black87,
                             ),
                           ),
                           const SizedBox(height: 5),
@@ -425,9 +419,7 @@ class _RideDriverRideDetailsScreenState
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w800,
-                              color: isDark
-                                  ? Colors.white54
-                                  : Colors.black45,
+                              color: isDark ? Colors.white54 : Colors.black45,
                             ),
                           ),
                         ],
@@ -439,10 +431,8 @@ class _RideDriverRideDetailsScreenState
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: _statusColor(status)
-                            .withOpacity(0.10),
-                        borderRadius:
-                            BorderRadius.circular(20),
+                        color: _statusColor(status).withOpacity(0.10),
+                        borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
                         _statusText(status),
@@ -467,9 +457,7 @@ class _RideDriverRideDetailsScreenState
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w900,
-                  color: isDark
-                      ? Colors.white
-                      : Colors.black87,
+                  color: isDark ? Colors.white : Colors.black87,
                 ),
               ),
 
@@ -488,9 +476,7 @@ class _RideDriverRideDetailsScreenState
                 child: Container(
                   width: 2,
                   height: 18,
-                  color: isDark
-                      ? Colors.white12
-                      : Colors.black12,
+                  color: isDark ? Colors.white12 : Colors.black12,
                 ),
               ),
 
@@ -512,9 +498,7 @@ class _RideDriverRideDetailsScreenState
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w900,
-                  color: isDark
-                      ? Colors.white
-                      : Colors.black87,
+                  color: isDark ? Colors.white : Colors.black87,
                 ),
               ),
 
@@ -554,9 +538,7 @@ class _RideDriverRideDetailsScreenState
                   _detailItem(
                     icon: Icons.confirmation_number_outlined,
                     title: "Ride ID",
-                    value: widget.ride["ride_id"]
-                            ?.toString() ??
-                        "N/A",
+                    value: widget.ride["ride_id"]?.toString() ?? "N/A",
                     isDark: isDark,
                   ),
                 ],
@@ -572,9 +554,7 @@ class _RideDriverRideDetailsScreenState
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w900,
-                  color: isDark
-                      ? Colors.white
-                      : Colors.black87,
+                  color: isDark ? Colors.white : Colors.black87,
                 ),
               ),
 
@@ -600,15 +580,35 @@ class _RideDriverRideDetailsScreenState
 
               _earningRow(
                 title: "Your Earning",
-                value: _money(
-                  widget.ride["driver_earning"],
-                ),
+                value: _money(widget.ride["driver_earning"]),
                 icon: Icons.account_balance_wallet_outlined,
                 isDark: isDark,
                 highlight: true,
               ),
 
               const SizedBox(height: 25),
+
+              // ==================================================
+              // CALL PASSENGER
+              // ==================================================
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: accepting ? null : _callPassenger,
+                  icon: const Icon(Icons.phone_outlined),
+                  label: const Text("Call Passenger"),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: senmiRidePurple,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    side: BorderSide(color: senmiRidePurple.withOpacity(0.30)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 10),
 
               // ==================================================
               // ACCEPT RIDE
@@ -621,58 +621,19 @@ class _RideDriverRideDetailsScreenState
                       ? const SizedBox(
                           width: 20,
                           height: 20,
-                          child:
-                              CircularProgressIndicator(
+                          child: CircularProgressIndicator(
                             strokeWidth: 2,
                             color: Colors.white,
                           ),
                         )
-                      : const Icon(
-                          Icons.check_circle_outline,
-                        ),
-                  label: Text(
-                    accepting
-                        ? "Accepting Ride..."
-                        : "Accept Ride",
-                  ),
+                      : const Icon(Icons.check_circle_outline),
+                  label: Text(accepting ? "Accepting Ride..." : "Accept Ride"),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: senmiRidePurple,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 16,
-                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(15),
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 10),
-
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: accepting
-                      ? null
-                      : () => Navigator.pop(context),
-                  icon: const Icon(
-                    Icons.arrow_back_rounded,
-                  ),
-                  label: const Text("Back to Available Rides"),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: senmiRidePurple,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 14,
-                    ),
-                    side: BorderSide(
-                      color:
-                          senmiRidePurple.withOpacity(0.25),
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(15),
+                      borderRadius: BorderRadius.circular(15),
                     ),
                   ),
                 ),
@@ -684,4 +645,3 @@ class _RideDriverRideDetailsScreenState
     );
   }
 }
-

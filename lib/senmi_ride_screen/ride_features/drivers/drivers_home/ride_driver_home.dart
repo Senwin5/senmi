@@ -2,6 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:senmi/senmi_ride_screen/ride_features/drivers/wallect_dues/ride_driver_commission_screen.dart';
+import 'package:senmi/senmi_shared_account/driver_profile/ride_driver_settings_screen.dart';
 import 'package:senmi/services/driver_api_service.dart';
 import 'package:senmi/senmi_ride_screen/ride_features/drivers/location_track/ride_driver_location_service.dart';
 import 'package:senmi/senmi_ride_screen/ride_features/drivers/ride_driver_history_screen/ride_driver_history_screen.dart';
@@ -856,13 +858,12 @@ class _RideDriverHomeState extends State<RideDriverHome> {
 
                   _quickAction(
                     icon: Icons.payments_outlined,
-                    title: "Earnings",
+                    title: "Services",
                     onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            "Earnings screen will be connected here.",
-                          ),
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => RideDriverCommissionScreen(),
                         ),
                       );
                     },
@@ -875,10 +876,11 @@ class _RideDriverHomeState extends State<RideDriverHome> {
                     icon: Icons.person_outline_rounded,
                     title: "Profile",
                     onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            "Driver profile will be connected here.",
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => RideDriverSettingsScreen(
+                            darkModeNotifier: ValueNotifier<bool>(isDark),
                           ),
                         ),
                       );
