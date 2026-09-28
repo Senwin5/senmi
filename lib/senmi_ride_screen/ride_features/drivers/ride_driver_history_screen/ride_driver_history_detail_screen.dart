@@ -1,13 +1,25 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:senmi/services/driver_api_service.dart';
 
 const Color senmiRidePurple = Color(0xFF581C87);
 
-class RideDriverHistoryDetailScreen extends StatelessWidget {
+class RideDriverHistoryDetailScreen extends StatefulWidget {
   final Map<String, dynamic> ride;
 
   const RideDriverHistoryDetailScreen({super.key, required this.ride});
+
+  @override
+  State<RideDriverHistoryDetailScreen> createState() =>
+      _RideDriverHistoryDetailScreenState();
+}
+
+class _RideDriverHistoryDetailScreenState
+    extends State<RideDriverHistoryDetailScreen> {
+  bool deleting = false;
+
+  Map<String, dynamic> get ride => widget.ride;
 
   String _value(dynamic value, {String fallback = "—"}) {
     if (value == null) return fallback;
@@ -68,6 +80,120 @@ class RideDriverHistoryDetailScreen extends StatelessWidget {
 
       default:
         return Colors.grey;
+    }
+  }
+
+  // ============================================================
+  // DELETE RIDE HISTORY
+  // ============================================================
+
+  Future<void> _deleteRide() async {
+    final rideId = ride["ride_id"];
+
+    if (rideId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Ride ID is missing."),
+          backgroundColor: Colors.red,
+        ),
+      );
+
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        final theme = Theme.of(dialogContext);
+        final isDark = theme.brightness == Brightness.dark;
+
+        return AlertDialog(
+          backgroundColor: isDark ? const Color(0xFF1E1E22) : Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+          title: Text(
+            "Delete Ride History?",
+            style: TextStyle(
+              fontWeight: FontWeight.w800,
+              color: isDark ? Colors.white : Colors.black87,
+            ),
+          ),
+          content: Text(
+            "Are you sure you want to delete this ride from your history? "
+            "This action cannot be undone.",
+            style: TextStyle(color: isDark ? Colors.white70 : Colors.black54),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext, false);
+              },
+              child: Text(
+                "Cancel",
+                style: TextStyle(
+                  color: isDark ? Colors.white70 : Colors.black54,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(dialogContext, true);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: const Text(
+                "Delete",
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) {
+      return;
+    }
+
+    setState(() {
+      deleting = true;
+    });
+
+    try {
+      await RideService.deleteDriverRideHistory(rideId);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Ride history deleted successfully."),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      // Return to the previous history/activity screen.
+      Navigator.pop(context, true);
+    } catch (e) {
+      debugPrint("Delete Ride Error: $e");
+
+      if (!mounted) return;
+
+      setState(() {
+        deleting = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceFirst("Exception: ", "")),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -249,6 +375,28 @@ class RideDriverHistoryDetailScreen extends StatelessWidget {
         backgroundColor: theme.appBarTheme.backgroundColor,
         foregroundColor: theme.textTheme.bodyLarge?.color,
         elevation: 1,
+
+        // ========================================================
+        // DELETE BUTTON
+        // ========================================================
+        actions: [
+          IconButton(
+            tooltip: "Delete ride history",
+            onPressed: deleting ? null : _deleteRide,
+            icon: deleting
+                ? const SizedBox(
+                    width: 21,
+                    height: 21,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.2,
+                      color: Colors.red,
+                    ),
+                  )
+                : const Icon(Icons.delete_outline, color: Colors.red),
+          ),
+
+          const SizedBox(width: 4),
+        ],
       ),
 
       body: ListView(

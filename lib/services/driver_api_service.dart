@@ -603,9 +603,35 @@ class RideService {
     return [];
   }
 
+  static Future<void> deleteDriverRideHistory(dynamic rideId) async {
+    final response = await http
+        .delete(
+          Uri.parse("$baseUrl/ride/rides/$rideId/driver-delete/"),
+          headers: await headers(),
+        )
+        .timeout(const Duration(seconds: 30));
+
+    final data = decodeResponse(response);
+
+    // ----------------------------------------------------------
+    // SUCCESS
+    // ----------------------------------------------------------
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return;
+    }
+
+    // ----------------------------------------------------------
+    // COMMISSION DUE / OTHER SERVER ERROR
+    // ----------------------------------------------------------
+
+    throw Exception(
+      data["detail"]?.toString() ?? "Unable to delete ride history.",
+    );
+  }
+
   // ============================================================
-  // DRIVER
-  // STATS
+  // DRIVER STATS
   // ============================================================
 
   static Future<Map<String, dynamic>> getDriverStats() async {

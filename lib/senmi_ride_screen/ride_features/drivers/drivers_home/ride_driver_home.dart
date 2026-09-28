@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:senmi/senmi_ride_screen/ride_features/drivers/driver_activity/ride_driver_activity_screen.dart';
 import 'package:senmi/senmi_ride_screen/ride_features/drivers/wallect_dues/ride_driver_commission_screen.dart';
 import 'package:senmi/senmi_shared_account/driver_profile/ride_driver_settings_screen.dart';
 import 'package:senmi/services/driver_api_service.dart';
@@ -838,54 +839,78 @@ class _RideDriverHomeState extends State<RideDriverHome> {
 
               const SizedBox(height: 10),
 
-              Row(
+              Column(
                 children: [
-                  _quickAction(
-                    icon: Icons.history_rounded,
-                    title: "Ride History",
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const RideDriverHistoryScreen(),
-                        ),
-                      );
-                    },
-                    isDark: isDark,
+                  Row(
+                    children: [
+                      _quickAction(
+                        icon: Icons.analytics_outlined,
+                        title: "Activity",
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const RideDriverActivityScreen(),
+                            ),
+                          );
+                        },
+                        isDark: isDark,
+                      ),
+
+                      const SizedBox(width: 10),
+
+                      _quickAction(
+                        icon: Icons.history_rounded,
+                        title: "Ride History",
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const RideDriverHistoryScreen(),
+                            ),
+                          );
+                        },
+                        isDark: isDark,
+                      ),
+                    ],
                   ),
 
-                  const SizedBox(width: 10),
+                  const SizedBox(height: 10),
 
-                  _quickAction(
-                    icon: Icons.payments_outlined,
-                    title: "Services",
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => RideDriverCommissionScreen(),
-                        ),
-                      );
-                    },
-                    isDark: isDark,
-                  ),
+                  Row(
+                    children: [
+                      _quickAction(
+                        icon: Icons.payments_outlined,
+                        title: "Services",
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => RideDriverCommissionScreen(),
+                            ),
+                          );
+                        },
+                        isDark: isDark,
+                      ),
 
-                  const SizedBox(width: 10),
+                      const SizedBox(width: 10),
 
-                  _quickAction(
-                    icon: Icons.person_outline_rounded,
-                    title: "Profile",
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => RideDriverSettingsScreen(
-                            darkModeNotifier: ValueNotifier<bool>(isDark),
-                          ),
-                        ),
-                      );
-                    },
-                    isDark: isDark,
+                      _quickAction(
+                        icon: Icons.person_outline_rounded,
+                        title: "Profile",
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => RideDriverSettingsScreen(
+                                darkModeNotifier: ValueNotifier<bool>(isDark),
+                              ),
+                            ),
+                          );
+                        },
+                        isDark: isDark,
+                      ),
+                    ],
                   ),
                 ],
               ),
