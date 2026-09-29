@@ -729,16 +729,23 @@ class _RideDriverHomeState extends State<RideDriverHome> {
 
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
         title: const Text(
           "Driver Dashboard",
-          style: TextStyle(fontWeight: FontWeight.w800),
+          style: TextStyle(fontWeight: FontWeight.w800, color: Colors.black87),
         ),
         centerTitle: true,
         actions: [
           IconButton(
             tooltip: "Notifications",
             onPressed: () {},
-            icon: const Icon(Icons.notifications_none_rounded),
+            icon: const Icon(
+              Icons.notifications_none_rounded,
+              color: senmiRidePurple,
+            ),
           ),
           const SizedBox(width: 4),
         ],

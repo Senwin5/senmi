@@ -368,16 +368,31 @@ class _RideDriverHistoryScreenState extends State<RideDriverHistoryScreen> {
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text("Ride History"),
-        backgroundColor: theme.appBarTheme.backgroundColor,
-        foregroundColor: theme.textTheme.bodyLarge?.color,
-        elevation: 1,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        title: const Text(
+          "Ride History",
+          style: TextStyle(fontWeight: FontWeight.w800, color: Colors.black87),
+        ),
+        centerTitle: true,
         actions: [
           IconButton(
             onPressed: loading ? null : loadHistory,
-            icon: const Icon(Icons.refresh),
             tooltip: "Refresh",
+            icon: loading
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: senmiRidePurple,
+                    ),
+                  )
+                : const Icon(Icons.refresh_rounded, color: senmiRidePurple),
           ),
+          const SizedBox(width: 4),
         ],
       ),
       body: loading

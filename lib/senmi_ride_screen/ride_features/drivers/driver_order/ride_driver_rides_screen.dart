@@ -865,9 +865,13 @@ class _RideDriverRidesScreenState extends State<RideDriverRidesScreen>
 
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
         title: const Text(
           "Driver Rides",
-          style: TextStyle(fontWeight: FontWeight.w800),
+          style: TextStyle(fontWeight: FontWeight.w800, color: Colors.black87),
         ),
         centerTitle: true,
         actions: [
@@ -878,9 +882,12 @@ class _RideDriverRidesScreenState extends State<RideDriverRidesScreen>
                 ? const SizedBox(
                     width: 20,
                     height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: senmiRidePurple,
+                    ),
                   )
-                : const Icon(Icons.refresh_rounded),
+                : const Icon(Icons.refresh_rounded, color: senmiRidePurple),
           ),
         ],
       ),

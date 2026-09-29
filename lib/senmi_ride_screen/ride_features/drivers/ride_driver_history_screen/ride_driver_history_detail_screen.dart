@@ -368,17 +368,15 @@ class _RideDriverHistoryDetailScreenState
       backgroundColor: theme.scaffoldBackgroundColor,
 
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
         title: const Text(
           "Ride Details",
-          style: TextStyle(fontWeight: FontWeight.w800),
+          style: TextStyle(fontWeight: FontWeight.w800, color: Colors.black87),
         ),
-        backgroundColor: theme.appBarTheme.backgroundColor,
-        foregroundColor: theme.textTheme.bodyLarge?.color,
-        elevation: 1,
-
-        // ======================================
-        // DELETE BUTTON
-        // ======================================
+        centerTitle: true,
         actions: [
           IconButton(
             tooltip: "Delete ride history",
@@ -394,11 +392,9 @@ class _RideDriverHistoryDetailScreenState
                   )
                 : const Icon(Icons.delete_outline, color: Colors.red),
           ),
-
           const SizedBox(width: 4),
         ],
       ),
-
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 30),
         children: [
