@@ -475,10 +475,9 @@ class RideService {
     return data;
   }
 
-  // ============================================================
-  // RIDE TRACKING
-  // DRIVER POSTS LOCATION
-  // ============================================================
+  // =============================
+  // RIDE TRACKING DRIVER POST
+  // =============================
 
   static Future<Map<String, dynamic>> updateRideTracking({
     required String rideId,
@@ -540,18 +539,17 @@ class RideService {
     return [];
   }
 
-  // ============================================================
-  // PASSENGER
-  // RATE DRIVER
-  // ============================================================
+  // ====================================
+  // PASSENGER RATE DRIVER
+  // ====================================
 
   static Future<Map<String, dynamic>> rateDriver({
     required String rideId,
     required int rating,
     String comment = "",
   }) async {
-    final response = await http
-        .post(
+    final response = await http 
+        .post( 
           Uri.parse("$baseUrl/ride/rides/$rideId/rating/"),
           headers: await headers(),
           body: jsonEncode({"rating": rating, "comment": comment}),
@@ -567,10 +565,9 @@ class RideService {
     return data;
   }
 
-  // ============================================================
-  // DRIVER
-  // RIDE HISTORY
-  // ============================================================
+  // ============================
+  // DRIVER RIDE HISTORY
+  // ============================
 
   static Future<List<dynamic>> getDriverRideHistory() async {
     final response = await http
@@ -613,26 +610,26 @@ class RideService {
 
     final data = decodeResponse(response);
 
-    // ----------------------------------------------------------
+    // -----------------------------
     // SUCCESS
-    // ----------------------------------------------------------
+    // -----------------------------
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return;
     }
 
-    // ----------------------------------------------------------
-    // COMMISSION DUE / OTHER SERVER ERROR
-    // ----------------------------------------------------------
+    // ---------------------------------
+    // COMMISSION DUE 
+    // ---------------------------------
 
     throw Exception(
       data["detail"]?.toString() ?? "Unable to delete ride history.",
     );
   }
 
-  // ============================================================
-  // DRIVER STATS
-  // ============================================================
+  // ==========================
+  // DRIVER STATS.
+  // ==========================
 
   static Future<Map<String, dynamic>> getDriverStats() async {
     final response = await http
@@ -650,10 +647,10 @@ class RideService {
     return data;
   }
 
-  // ============================================================
+  // =============================
   // DRIVER
   // COMMISSION PAYMENT HISTORY
-  // ============================================================
+  // =============================
 
   static Future<List<dynamic>> getCommissionHistory() async {
     final response = await http
