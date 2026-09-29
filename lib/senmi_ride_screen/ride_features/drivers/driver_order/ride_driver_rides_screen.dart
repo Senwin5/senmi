@@ -4,7 +4,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:senmi/senmi_ride_screen/ride_features/drivers/driver_order/ride_driver_ride_details_screen.dart';
-import 'package:senmi/senmi_ride_screen/ride_features/drivers/driver_order/ride_driver_tracking_screen.dart';
+import 'package:senmi/senmi_ride_screen/ride_features/drivers/location_track/ride_driver_tracking_screen.dart';
 import 'package:senmi/services/driver_api_service.dart';
 
 const Color senmiRidePurple = Color(0xFF581C87);

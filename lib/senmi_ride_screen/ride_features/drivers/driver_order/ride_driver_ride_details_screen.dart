@@ -352,6 +352,11 @@ class _RideDriverRideDetailsScreenState
     final duration =
         widget.ride["estimated_duration_minutes"]?.toString() ?? "0";
 
+    final passengerName =
+        widget.ride["passenger_name"]?.toString().trim().isNotEmpty == true
+        ? widget.ride["passenger_name"].toString()
+        : "Passenger";
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -547,8 +552,55 @@ class _RideDriverRideDetailsScreenState
               const SizedBox(height: 20),
 
               // ==================================================
-              // PAYMENT INFORMATION
+              // PASSENGER
               // ==================================================
+              Text(
+                "Passenger",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+              ),
+
+              const SizedBox(height: 10),
+
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? const Color(0xFF25252A)
+                      : const Color(0xFFF8F8FA),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  children: [
+                    const CircleAvatar(
+                      radius: 24,
+                      backgroundColor: Color(0x1A581C87),
+                      child: Icon(Icons.person_rounded, color: senmiRidePurple),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        passengerName,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // ==================================
+              // PAYMENT INFORMATION
+              // ==================================
               Text(
                 "Payment & Earnings",
                 style: TextStyle(

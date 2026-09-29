@@ -9,7 +9,7 @@ import 'package:senmi/services/driver_api_service.dart';
 import 'package:senmi/senmi_ride_screen/ride_features/drivers/location_track/ride_driver_location_service.dart';
 import 'package:senmi/senmi_ride_screen/ride_features/drivers/ride_driver_history_screen/ride_driver_history_screen.dart';
 import 'package:senmi/senmi_ride_screen/ride_features/drivers/driver_order/ride_driver_rides_screen.dart';
-import 'package:senmi/senmi_ride_screen/ride_features/drivers/driver_order/ride_driver_tracking_screen.dart';
+import 'package:senmi/senmi_ride_screen/ride_features/drivers/location_track/ride_driver_tracking_screen.dart';
 
 const Color senmiRidePurple = Color(0xFF581C87);
 const Color senmiRideLightPurple = Color(0xFF7C3AED);
@@ -30,7 +30,7 @@ class _RideDriverHomeState extends State<RideDriverHome> {
   double? currentLatitude;
   double? currentLongitude;
 
-  // These will later come from the backend.
+  // Dashboard statistics.
   double todayEarnings = 0.0;
   int completedRides = 0;
   int totalRidesToday = 0;
@@ -46,7 +46,9 @@ class _RideDriverHomeState extends State<RideDriverHome> {
   @override
   void initState() {
     super.initState();
+
     _loadCurrentRide();
+    _loadDriverStats();
   }
 
   // ============================================================
@@ -79,11 +81,80 @@ class _RideDriverHomeState extends State<RideDriverHome> {
   }
 
   // ============================================================
+  // LOAD DRIVER STATS
+  // ============================================================
+
+  Future<void> _loadDriverStats() async {
+    try {
+      // Use the same ride history data that the working
+      // RideDriverActivityScreen uses.
+      final rides = await RideService.getDriverRideHistory();
+
+      double earnings = 0.0;
+      int completed = 0;
+      int total = 0;
+
+      final now = DateTime.now();
+
+      final todayStart = DateTime(now.year, now.month, now.day);
+
+      for (final item in rides) {
+        if (item is! Map) continue;
+
+        final ride = Map<String, dynamic>.from(item);
+
+        // Same date logic used by the Activity screen.
+        final dateValue =
+            ride["completed_at"] ?? ride["cancelled_at"] ?? ride["created_at"];
+
+        if (dateValue == null) continue;
+
+        final date = DateTime.tryParse(dateValue.toString())?.toLocal();
+
+        if (date == null) continue;
+
+        // Only today's rides.
+        if (date.isBefore(todayStart)) continue;
+
+        total++;
+
+        final status = ride["status"]?.toString().toLowerCase().trim() ?? "";
+
+        if (status == "completed") {
+          completed++;
+
+          final earning = ride["driver_earning"];
+
+          if (earning is num) {
+            earnings += earning.toDouble();
+          } else {
+            earnings +=
+                double.tryParse(
+                  earning?.toString().replaceAll(",", "").trim() ?? "0",
+                ) ??
+                0.0;
+          }
+        }
+      }
+
+      if (!mounted) return;
+
+      setState(() {
+        todayEarnings = earnings;
+        completedRides = completed;
+        totalRidesToday = total;
+      });
+    } catch (e) {
+      debugPrint("LOAD DRIVER STATS ERROR: $e");
+    }
+  }
+
+  // ============================================================
   // REFRESH DASHBOARD
   // ============================================================
 
   Future<void> _refreshDashboard() async {
-    await _loadCurrentRide();
+    await Future.wait([_loadCurrentRide(), _loadDriverStats()]);
   }
 
   // ============================================================
@@ -365,6 +436,7 @@ class _RideDriverHomeState extends State<RideDriverHome> {
                     );
 
                     _loadCurrentRide();
+                    _loadDriverStats();
                   },
                   icon: const Icon(Icons.search_rounded),
                   label: const Text("Find Available Rides"),
@@ -932,6 +1004,7 @@ class _RideDriverHomeState extends State<RideDriverHome> {
                     );
 
                     _loadCurrentRide();
+                    _loadDriverStats();
                   },
                   icon: const Icon(Icons.local_taxi_outlined),
                   label: const Text("View Available Rides"),

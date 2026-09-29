@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:senmi/services/driver_api_service.dart';
 import 'package:senmi/senmi_ride_screen/ride_features/drivers/driver_order/ride_driver_rides_screen.dart';
 import 'package:senmi/senmi_ride_screen/ride_features/drivers/drivers_home/ride_driver_home.dart';
-import 'package:senmi/senmi_ride_screen/ride_features/drivers/driver_order/ride_driver_tracking_screen.dart';
+import 'package:senmi/senmi_ride_screen/ride_features/drivers/location_track/ride_driver_tracking_screen.dart';
 import 'package:senmi/senmi_ride_screen/ride_features/drivers/wallect_dues/ride_driver_commission_screen.dart';
 import 'package:senmi/senmi_shared_account/driver_profile/ride_driver_settings_screen.dart';
 

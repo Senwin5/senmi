@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:senmi/senmi_ride_screen/ride_features/drivers/ride_driver_history_screen/ride_driver_history_screen.dart';
 import 'package:senmi/services/driver_api_service.dart';
 
 const Color senmiRidePurple = Color(0xFF581C87);
@@ -1045,20 +1046,55 @@ class _RideDriverActivityScreenState extends State<RideDriverActivityScreen> {
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text(
-              activityTitle,
-              style: TextStyle(
-                fontSize: 19,
-                fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black87,
+            Expanded(
+              child: Text(
+                activityTitle,
+                style: TextStyle(
+                  fontSize: 19,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
               ),
             ),
 
-            Text(
-              '${rides.length} ride${rides.length == 1 ? '' : 's'}',
-              style: TextStyle(
-                color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+            const SizedBox(width: 10),
+
+            GestureDetector(
+              onTap: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const RideDriverHistoryScreen(),
+                  ),
+                );
+
+                // Refresh Activity when returning from History.
+                if (result == true && mounted) {
+                  await _loadActivity(refresh: true);
+                }
+              },
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'View History',
+                    style: TextStyle(
+                      color: senmiRidePurple,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+
+                  const SizedBox(width: 3),
+
+                  const Icon(
+                    Icons.arrow_forward_ios,
+                    size: 13,
+                    color: senmiRidePurple,
+                  ),
+                ],
               ),
             ),
           ],

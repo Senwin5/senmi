@@ -477,6 +477,20 @@ class _RideDriverTrackingScreenState extends State<RideDriverTrackingScreen> {
   }
 
   // ============================================================
+  // PASSENGER NAME
+  // ============================================================
+
+  String _passengerName() {
+    final name = activeRide?["passenger_name"]?.toString().trim();
+
+    if (name != null && name.isNotEmpty) {
+      return name;
+    }
+
+    return "Passenger";
+  }
+
+  // ============================================================
   // GOOGLE MAP NAVIGATION
   // ============================================================
 
@@ -661,6 +675,7 @@ class _RideDriverTrackingScreenState extends State<RideDriverTrackingScreen> {
   // ============================================================
   // MAIN ACTION BUTTON
   // ============================================================
+
   Widget _rideActionButton() {
     final currentStatus = _status();
 
@@ -1160,6 +1175,76 @@ class _RideDriverTrackingScreenState extends State<RideDriverTrackingScreen> {
               const SizedBox(height: 16),
 
               // ==================================================
+              // PASSENGER
+              // ==================================================
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        color: senmiRidePurple.withOpacity(0.10),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.person_rounded,
+                        color: senmiRidePurple,
+                        size: 28,
+                      ),
+                    ),
+
+                    const SizedBox(width: 14),
+
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            "Passenger",
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _passengerName(),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w800,
+                              color: isDark ? Colors.white : Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    if (activeRide?["passenger_phone"] != null)
+                      IconButton(
+                        onPressed: _callPassenger,
+                        tooltip: "Call passenger",
+                        icon: const Icon(
+                          Icons.phone_rounded,
+                          color: Colors.green,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // ==================================================
               // RIDE SUMMARY
               // ==================================================
               Row(
@@ -1198,29 +1283,8 @@ class _RideDriverTrackingScreenState extends State<RideDriverTrackingScreen> {
                       label: Text(
                         _status() == "accepted"
                             ? "Navigate to Pickup"
-                            : "Navigate",
+                            : "Navigate to Dropoff",
                         style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: senmiRidePurple,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: _callPassenger,
-                      icon: const Icon(Icons.call, color: Colors.white),
-                      label: const Text(
-                        "Call Passenger",
-                        style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w600,
                         ),
@@ -1317,30 +1381,6 @@ class _RideDriverTrackingScreenState extends State<RideDriverTrackingScreen> {
                       ),
                     ],
                   ],
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              // ==================================================
-              // BACK
-              // ==================================================
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  icon: const Icon(Icons.arrow_back),
-                  label: const Text("Back to Active Ride"),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: senmiRidePurple,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    side: const BorderSide(color: senmiRidePurple),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
                 ),
               ),
 

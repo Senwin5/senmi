@@ -376,9 +376,9 @@ class _RideDriverHistoryDetailScreenState
         foregroundColor: theme.textTheme.bodyLarge?.color,
         elevation: 1,
 
-        // ========================================================
+        // ======================================
         // DELETE BUTTON
-        // ========================================================
+        // ======================================
         actions: [
           IconButton(
             tooltip: "Delete ride history",
@@ -402,9 +402,9 @@ class _RideDriverHistoryDetailScreenState
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 30),
         children: [
-          // ====================================================
+          // ======================================
           // RIDE HEADER
-          // ====================================================
+          // ======================================
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(20),
@@ -476,9 +476,9 @@ class _RideDriverHistoryDetailScreenState
 
           const SizedBox(height: 20),
 
-          // ====================================================
+          // ==============================
           // EARNINGS
-          // ====================================================
+          // ==============================
           _sectionTitle("Earnings", isDark),
 
           Row(
@@ -530,9 +530,9 @@ class _RideDriverHistoryDetailScreenState
 
           const SizedBox(height: 22),
 
-          // ====================================================
+          // ================================
           // ROUTE
-          // ====================================================
+          // ================================
           _sectionTitle("Trip Information", isDark),
 
           _infoCard(
@@ -576,9 +576,9 @@ class _RideDriverHistoryDetailScreenState
 
           const SizedBox(height: 22),
 
-          // ====================================================
+          // ========================
           // PAYMENT
-          // ====================================================
+          // ========================
           _sectionTitle("Payment", isDark),
 
           _infoCard(
@@ -619,9 +619,9 @@ class _RideDriverHistoryDetailScreenState
 
           const SizedBox(height: 22),
 
-          // ====================================================
+          // ===========================
           // RIDE TIMELINE
-          // ====================================================
+          // ===========================
           _sectionTitle("Ride Timeline", isDark),
 
           _infoCard(

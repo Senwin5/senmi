@@ -503,10 +503,9 @@ class RideService {
     return data;
   }
 
-  // ============================================================
-  // RIDE TRACKING
-  // PASSENGER / DRIVER GETS TRACKING
-  // ============================================================
+  // ======================================
+  // RIDE TRACKING PASSENGER
+  // ======================================
 
   static Future<List<dynamic>> getRideTracking(String rideId) async {
     final response = await http

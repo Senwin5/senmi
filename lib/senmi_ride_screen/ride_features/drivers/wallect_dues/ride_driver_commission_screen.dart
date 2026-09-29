@@ -3,6 +3,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:senmi/senmi_ride_screen/ride_features/drivers/wallect_dues/ride_driver_commission_detail_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:senmi/services/driver_api_service.dart';
@@ -777,94 +778,130 @@ class _RideDriverCommissionScreenState extends State<RideDriverCommissionScreen>
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
+      child: Material(
         color: Colors.white,
         borderRadius: BorderRadius.circular(17),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 43,
-            height: 43,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(17),
+
+          // ======================================================
+          // OPEN PAYMENT RECEIPT DETAILS
+          // ======================================================
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) =>
+                    RideDriverCommissionDetailScreen(payment: payment),
+              ),
+            );
+          },
+
+          child: Container(
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.10),
-              borderRadius: BorderRadius.circular(12),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(17),
+              border: Border.all(color: Colors.grey.shade200),
             ),
-            child: Icon(
-              status == "Paid"
-                  ? Icons.check_rounded
-                  : status == "Pending"
-                  ? Icons.hourglass_top_rounded
-                  : Icons.payment_rounded,
-              color: statusColor,
-            ),
-          ),
-
-          const SizedBox(width: 13),
-
-          Expanded(
-            child: Column(
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    const Expanded(
-                      child: Text(
-                        "Commission Payment",
-                        style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14.5,
+                Container(
+                  width: 43,
+                  height: 43,
+                  decoration: BoxDecoration(
+                    color: statusColor.withOpacity(0.10),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    status == "Paid"
+                        ? Icons.check_rounded
+                        : status == "Pending"
+                        ? Icons.hourglass_top_rounded
+                        : Icons.payment_rounded,
+                    color: statusColor,
+                  ),
+                ),
+
+                const SizedBox(width: 13),
+
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Expanded(
+                            child: Text(
+                              "Commission Payment",
+                              style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 14.5,
+                              ),
+                            ),
+                          ),
+
+                          Text(
+                            _formatMoney(amount),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 14.5,
+                            ),
+                          ),
+
+                          const SizedBox(width: 4),
+
+                          Icon(
+                            Icons.chevron_right_rounded,
+                            size: 20,
+                            color: Colors.grey.shade400,
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 7),
+
+                      Wrap(
+                        spacing: 7,
+                        runSpacing: 5,
+                        children: [
+                          _statusBadge(status, statusColor),
+                          if (paymentMethod.isNotEmpty)
+                            _smallBadge(paymentMethod),
+                        ],
+                      ),
+
+                      if (date.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          date,
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 12,
+                          ),
                         ),
-                      ),
-                    ),
-                    Text(
-                      _formatMoney(amount),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 14.5,
-                      ),
-                    ),
-                  ],
-                ),
+                      ],
 
-                const SizedBox(height: 7),
-
-                Wrap(
-                  spacing: 7,
-                  runSpacing: 5,
-                  children: [
-                    _statusBadge(status, statusColor),
-                    if (paymentMethod.isNotEmpty) _smallBadge(paymentMethod),
-                  ],
-                ),
-
-                if (date.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    date,
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                      if (reference.isNotEmpty) ...[
+                        const SizedBox(height: 5),
+                        Text(
+                          "Ref: $reference",
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Colors.grey.shade500,
+                            fontSize: 10.5,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
-                ],
-
-                if (reference.isNotEmpty) ...[
-                  const SizedBox(height: 5),
-                  Text(
-                    "Ref: $reference",
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: Colors.grey.shade500,
-                      fontSize: 10.5,
-                    ),
-                  ),
-                ],
+                ),
               ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
