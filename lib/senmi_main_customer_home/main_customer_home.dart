@@ -117,7 +117,6 @@ class _MainCustomerHomeState extends State<MainCustomerHome> {
 
   Widget _buildHome(BuildContext context) {
     final theme = Theme.of(context);
-
     final isDark = theme.brightness == Brightness.dark;
 
     final backgroundColor = theme.scaffoldBackgroundColor;
@@ -136,24 +135,40 @@ class _MainCustomerHomeState extends State<MainCustomerHome> {
               // ==================================================
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.fromLTRB(22, 22, 22, 24),
+                padding: const EdgeInsets.fromLTRB(22, 22, 22, 25),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(28),
+
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: isDark
-                        ? const [Color(0xFF2B123F), Color(0xFF170B22)]
-                        : const [Color(0xFF581C87), Color(0xFF7C3AED)],
+                        ? const [
+                            Color(0xFF321348),
+                            Color(0xFF21102D),
+                            Color(0xFF160C1E),
+                          ]
+                        : const [
+                            Color(0xFF581C87),
+                            Color(0xFF6D28D9),
+                            Color(0xFF7C3AED),
+                          ],
                   ),
+
+                  border: Border.all(
+                    color: Colors.white.withOpacity(isDark ? 0.08 : 0.10),
+                  ),
+
                   boxShadow: [
                     BoxShadow(
-                      color: senmiPurple.withOpacity(isDark ? 0.18 : 0.20),
-                      blurRadius: 22,
-                      offset: const Offset(0, 10),
+                      color: senmiPurple.withOpacity(isDark ? 0.22 : 0.18),
+                      blurRadius: 28,
+                      spreadRadius: -4,
+                      offset: const Offset(0, 14),
                     ),
                   ],
                 ),
+
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -163,13 +178,13 @@ class _MainCustomerHomeState extends State<MainCustomerHome> {
                     Row(
                       children: [
                         Container(
-                          width: 44,
-                          height: 44,
+                          width: 46,
+                          height: 46,
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.14),
-                            borderRadius: BorderRadius.circular(14),
+                            color: Colors.white.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(15),
                             border: Border.all(
-                              color: Colors.white.withOpacity(0.16),
+                              color: Colors.white.withOpacity(0.15),
                             ),
                           ),
                           child: const Icon(
@@ -178,7 +193,9 @@ class _MainCustomerHomeState extends State<MainCustomerHome> {
                             size: 23,
                           ),
                         ),
+
                         const SizedBox(width: 12),
+
                         const Text(
                           "Senmi",
                           style: TextStyle(
@@ -191,7 +208,7 @@ class _MainCustomerHomeState extends State<MainCustomerHome> {
                       ],
                     ),
 
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 25),
 
                     // ==================================================
                     // HERO TITLE
@@ -200,10 +217,10 @@ class _MainCustomerHomeState extends State<MainCustomerHome> {
                       "Move what matters.",
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 28,
-                        height: 1.1,
+                        fontSize: 29,
+                        height: 1.08,
                         fontWeight: FontWeight.w800,
-                        letterSpacing: -0.5,
+                        letterSpacing: -0.7,
                       ),
                     ),
 
@@ -216,7 +233,7 @@ class _MainCustomerHomeState extends State<MainCustomerHome> {
                       "One place for the things, trips and moments "
                       "that matter to you.",
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.78),
+                        color: Colors.white.withOpacity(0.76),
                         fontSize: 14,
                         height: 1.55,
                         fontWeight: FontWeight.w400,
@@ -226,7 +243,7 @@ class _MainCustomerHomeState extends State<MainCustomerHome> {
                 ),
               ),
 
-              const SizedBox(height: 28),
+              const SizedBox(height: 29),
 
               // ==================================================
               // SECTION TITLE
@@ -236,8 +253,8 @@ class _MainCustomerHomeState extends State<MainCustomerHome> {
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w800,
-                  letterSpacing: -0.2,
-                  color: isDark ? Colors.white : Colors.black87,
+                  letterSpacing: -0.35,
+                  color: isDark ? Colors.white : const Color(0xFF18181B),
                 ),
               ),
 
@@ -247,7 +264,10 @@ class _MainCustomerHomeState extends State<MainCustomerHome> {
                 "Choose a Senmi service to get started.",
                 style: TextStyle(
                   fontSize: 14,
-                  color: isDark ? Colors.white60 : Colors.black54,
+                  height: 1.4,
+                  color: isDark
+                      ? Colors.white.withOpacity(0.50)
+                      : Colors.black.withOpacity(0.52),
                 ),
               ),
 
@@ -312,7 +332,7 @@ class _MainCustomerHomeState extends State<MainCustomerHome> {
                 ),
               ),
 
-              const SizedBox(height: 18),
+              const SizedBox(height: 20),
 
               // ==================================================
               // FOOTER
@@ -321,9 +341,12 @@ class _MainCustomerHomeState extends State<MainCustomerHome> {
                 child: Text(
                   "Senmi • Move what matters.",
                   style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: isDark ? Colors.white38 : Colors.black38,
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.15,
+                    color: isDark
+                        ? Colors.white.withOpacity(0.30)
+                        : Colors.black.withOpacity(0.34),
                   ),
                 ),
               ),
@@ -345,10 +368,45 @@ class _MainCustomerHomeState extends State<MainCustomerHome> {
     // ----------------------------------------------------------
 
     if (checkingActiveRide) {
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+
       return Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        body: const Center(
-          child: CircularProgressIndicator(color: senmiPurple),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 58,
+                height: 58,
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? Colors.white.withOpacity(0.045)
+                      : senmiPurple.withOpacity(0.055),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: senmiPurple.withOpacity(0.12)),
+                ),
+                padding: const EdgeInsets.all(17),
+                child: const CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  color: senmiPurple,
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              Text(
+                "Getting things ready...",
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: isDark
+                      ? Colors.white.withOpacity(0.48)
+                      : Colors.black.withOpacity(0.50),
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -398,27 +456,39 @@ class _ServiceCard extends StatelessWidget {
 
     final titleColor = isDark ? Colors.white : const Color(0xFF18181B);
 
+    final arrowBackground = isDark
+        ? Colors.white.withOpacity(0.055)
+        : Colors.black.withOpacity(0.035);
+
+    final arrowColor = isDark
+        ? Colors.white.withOpacity(0.62)
+        : Colors.black.withOpacity(0.52);
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(23),
-        splashColor: senmiPurple.withOpacity(0.08),
+        splashColor: senmiPurple.withOpacity(0.09),
         highlightColor: senmiPurple.withOpacity(0.035),
         child: Ink(
           padding: const EdgeInsets.fromLTRB(15, 15, 14, 14),
           decoration: BoxDecoration(
             color: cardColor,
             borderRadius: BorderRadius.circular(23),
-            border: Border.all(color: borderColor),
+
+            border: Border.all(color: borderColor, width: 1),
+
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(isDark ? 0.22 : 0.055),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
+                color: Colors.black.withOpacity(isDark ? 0.24 : 0.055),
+                blurRadius: 24,
+                spreadRadius: -5,
+                offset: const Offset(0, 10),
               ),
             ],
           ),
+
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -435,34 +505,52 @@ class _ServiceCard extends StatelessWidget {
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          iconColor.withOpacity(0.17),
-                          iconColor.withOpacity(0.055),
+                          iconColor.withOpacity(isDark ? 0.20 : 0.15),
+                          iconColor.withOpacity(isDark ? 0.055 : 0.045),
                         ],
                       ),
+
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: iconColor.withOpacity(0.06)),
+
+                      border: Border.all(color: iconColor.withOpacity(0.075)),
+
+                      boxShadow: [
+                        BoxShadow(
+                          color: iconColor.withOpacity(isDark ? 0.10 : 0.06),
+                          blurRadius: 12,
+                          spreadRadius: -4,
+                        ),
+                      ],
                     ),
-                    child: Icon(icon, size: 26, color: iconColor),
+
+                    child: Icon(
+                      icon,
+                      size: 25,
+                      color: isDark ? senmiLightPurple : iconColor,
+                    ),
                   ),
 
                   const Spacer(),
 
-                  // Small arrow
+                  // ==================================================
+                  // ARROW
+                  // ==================================================
                   Container(
-                    width: 28,
-                    height: 28,
+                    width: 29,
+                    height: 29,
                     decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.white.withOpacity(0.055)
-                          : Colors.black.withOpacity(0.035),
+                      color: arrowBackground,
                       shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isDark
+                            ? Colors.white.withOpacity(0.045)
+                            : Colors.black.withOpacity(0.025),
+                      ),
                     ),
                     child: Icon(
                       Icons.arrow_forward_rounded,
                       size: 14,
-                      color: isDark
-                          ? Colors.white.withOpacity(0.62)
-                          : Colors.black.withOpacity(0.52),
+                      color: arrowColor,
                     ),
                   ),
                 ],
@@ -481,7 +569,7 @@ class _ServiceCard extends StatelessWidget {
                   fontSize: 16,
                   height: 1.18,
                   fontWeight: FontWeight.w900,
-                  letterSpacing: -0.25,
+                  letterSpacing: -0.3,
                   color: titleColor,
                 ),
               ),
@@ -518,7 +606,6 @@ class _ServiceCard extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Live indicator
                     Container(
                       width: 6,
                       height: 6,
@@ -527,8 +614,9 @@ class _ServiceCard extends StatelessWidget {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: statusColor.withOpacity(0.35),
-                            blurRadius: 5,
+                            color: statusColor.withOpacity(0.40),
+                            blurRadius: 6,
+                            spreadRadius: 0,
                           ),
                         ],
                       ),
@@ -568,6 +656,7 @@ class _ServiceCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 11.5,
                         fontWeight: FontWeight.w800,
+                        letterSpacing: -0.05,
                         color: isPrimary
                             ? senmiLightPurple
                             : (isDark
@@ -577,7 +666,7 @@ class _ServiceCard extends StatelessWidget {
                     ),
                   ),
 
-                  const SizedBox(width: 6),
+                  const SizedBox(width: 5),
 
                   Icon(
                     Icons.chevron_right_rounded,
