@@ -277,8 +277,6 @@ class _MainCustomerHomeState extends State<MainCustomerHome> {
                         image: "assets/mainhome/senmi_ride.png",
                         title: "Book a Ride",
                         description: "Get where you need to go.",
-                        status: "Available now",
-                        statusColor: Colors.green,
                         iconColor: senmiPurple,
                         isPrimary: true,
                         onTap: () {
@@ -301,8 +299,6 @@ class _MainCustomerHomeState extends State<MainCustomerHome> {
                         image: "assets/mainhome/senmi_package.png",
                         title: "Deliver a Package",
                         description: "Send packages safely across Lagos.",
-                        status: "Available now",
-                        statusColor: Colors.green,
                         iconColor: senmiPurple,
                         isPrimary: false,
                         onTap: () {
@@ -408,8 +404,6 @@ class _ServiceCard extends StatelessWidget {
   final String image;
   final String title;
   final String description;
-  final String status;
-  final Color statusColor;
   final Color iconColor;
   final bool isPrimary;
   final VoidCallback onTap;
@@ -418,8 +412,6 @@ class _ServiceCard extends StatelessWidget {
     required this.image,
     required this.title,
     required this.description,
-    required this.status,
-    required this.statusColor,
     required this.iconColor,
     required this.isPrimary,
     required this.onTap,
@@ -440,7 +432,6 @@ class _ServiceCard extends StatelessWidget {
         : Colors.black.withOpacity(0.50);
 
     final titleColor = isDark ? Colors.white : const Color(0xFF18181B);
-    Colors.black.withOpacity(0.52);
 
     return Material(
       color: Colors.transparent,
@@ -476,7 +467,7 @@ class _ServiceCard extends StatelessWidget {
               Row(
                 children: [
                   Container(
-                    width: 138,
+                    width: 140,
                     height: 108,
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
@@ -559,56 +550,6 @@ class _ServiceCard extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(height: 16),
-
-              // ==================================================
-              // STATUS
-              // ==================================================
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
-                decoration: BoxDecoration(
-                  color: statusColor.withOpacity(isDark ? 0.085 : 0.075),
-                  borderRadius: BorderRadius.circular(30),
-                  border: Border.all(color: statusColor.withOpacity(0.10)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: BoxDecoration(
-                        color: statusColor,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: statusColor.withOpacity(0.40),
-                            blurRadius: 6,
-                            spreadRadius: 0,
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(width: 6),
-
-                    Flexible(
-                      child: Text(
-                        status,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.05,
-                          color: statusColor,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
               const SizedBox(height: 14),
 
               // ==================================================
@@ -625,11 +566,7 @@ class _ServiceCard extends StatelessWidget {
                         fontSize: 11.5,
                         fontWeight: FontWeight.w800,
                         letterSpacing: -0.05,
-                        color: isPrimary
-                            ? senmiLightPurple
-                            : (isDark
-                                  ? Colors.white.withOpacity(0.68)
-                                  : Colors.black.withOpacity(0.68)),
+                        color: isPrimary ? senmiLightPurple : Colors.green,
                       ),
                     ),
                   ),

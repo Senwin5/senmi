@@ -80,7 +80,6 @@ void main() async {
 
   /// Deep link
   final appLinks = AppLinks();
-
   appLinks.uriLinkStream.listen(
     (uri) async {
       if (uri.toString().contains("payment-success")) {
