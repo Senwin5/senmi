@@ -54,6 +54,8 @@ flutter:
     - assets/images/
     - assets/bike_marker/bike_marker.png
     - assets/bike_marker/pickup_marker.png
+    - assets/mainhome/senmi_ride.png
+    - assets/mainhome/senmi_package.png
     - assets/onboarding/
     - assets/splash/
   

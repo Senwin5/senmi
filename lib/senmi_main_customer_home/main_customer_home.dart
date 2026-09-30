@@ -274,7 +274,7 @@ class _MainCustomerHomeState extends State<MainCustomerHome> {
                     // ==================================================
                     Expanded(
                       child: _ServiceCard(
-                        icon: Icons.directions_car_rounded,
+                        image: "assets/mainhome/senmi_ride.png",
                         title: "Book a Ride",
                         description: "Get where you need to go.",
                         status: "Available now",
@@ -298,7 +298,7 @@ class _MainCustomerHomeState extends State<MainCustomerHome> {
                     // ==================================================
                     Expanded(
                       child: _ServiceCard(
-                        icon: Icons.two_wheeler,
+                        image: "assets/mainhome/senmi_package.png",
                         title: "Deliver a Package",
                         description: "Send packages safely across Lagos.",
                         status: "Available now",
@@ -364,8 +364,6 @@ class _MainCustomerHomeState extends State<MainCustomerHome> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 58,
-                height: 58,
                 decoration: BoxDecoration(
                   color: isDark
                       ? Colors.white.withOpacity(0.045)
@@ -407,7 +405,7 @@ class _MainCustomerHomeState extends State<MainCustomerHome> {
 // ============================================================
 
 class _ServiceCard extends StatelessWidget {
-  final IconData icon;
+  final String image;
   final String title;
   final String description;
   final String status;
@@ -417,7 +415,7 @@ class _ServiceCard extends StatelessWidget {
   final VoidCallback onTap;
 
   const _ServiceCard({
-    required this.icon,
+    required this.image,
     required this.title,
     required this.description,
     required this.status,
@@ -442,14 +440,7 @@ class _ServiceCard extends StatelessWidget {
         : Colors.black.withOpacity(0.50);
 
     final titleColor = isDark ? Colors.white : const Color(0xFF18181B);
-
-    final arrowBackground = isDark
-        ? Colors.white.withOpacity(0.055)
-        : Colors.black.withOpacity(0.035);
-
-    final arrowColor = isDark
-        ? Colors.white.withOpacity(0.62)
-        : Colors.black.withOpacity(0.52);
+    Colors.black.withOpacity(0.52);
 
     return Material(
       color: Colors.transparent,
@@ -480,13 +471,13 @@ class _ServiceCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ==================================================
-              // ICON ROW
+              // IMAGE ROW
               // ==================================================
               Row(
                 children: [
                   Container(
-                    width: 52,
-                    height: 52,
+                    width: 138,
+                    height: 108,
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
@@ -510,34 +501,24 @@ class _ServiceCard extends StatelessWidget {
                       ],
                     ),
 
-                    child: Icon(
-                      icon,
-                      size: 25,
-                      color: isDark ? senmiLightPurple : iconColor,
-                    ),
-                  ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: Image.asset(
+                        image,
+                        width: 108,
+                        height: 108,
+                        fit: BoxFit.contain,
 
-                  const Spacer(),
-
-                  // ==================================================
-                  // ARROW
-                  // ==================================================
-                  Container(
-                    width: 29,
-                    height: 29,
-                    decoration: BoxDecoration(
-                      color: arrowBackground,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: isDark
-                            ? Colors.white.withOpacity(0.045)
-                            : Colors.black.withOpacity(0.025),
+                        // If the image path is wrong,
+                        // show a fallback icon instead.
+                        errorBuilder: (context, error, stackTrace) {
+                          return Icon(
+                            Icons.image_not_supported_outlined,
+                            size: 25,
+                            color: isDark ? senmiLightPurple : iconColor,
+                          );
+                        },
                       ),
-                    ),
-                    child: Icon(
-                      Icons.arrow_forward_rounded,
-                      size: 14,
-                      color: arrowColor,
                     ),
                   ),
                 ],
@@ -651,18 +632,6 @@ class _ServiceCard extends StatelessWidget {
                                   : Colors.black.withOpacity(0.68)),
                       ),
                     ),
-                  ),
-
-                  const SizedBox(width: 5),
-
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    size: 18,
-                    color: isPrimary
-                        ? senmiLightPurple
-                        : (isDark
-                              ? Colors.white.withOpacity(0.42)
-                              : Colors.black.withOpacity(0.42)),
                   ),
                 ],
               ),
