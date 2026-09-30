@@ -230,8 +230,7 @@ class _MainCustomerHomeState extends State<MainCustomerHome> {
                     // HERO SUBTITLE
                     // ==================================================
                     Text(
-                      "One place for the things, trips and moments "
-                      "that matter to you.",
+                      "Choose a Senmi service to get started.",
                       style: TextStyle(
                         color: Colors.white.withOpacity(0.76),
                         fontSize: 14,
@@ -249,19 +248,7 @@ class _MainCustomerHomeState extends State<MainCustomerHome> {
               // SECTION TITLE
               // ==================================================
               Text(
-                "What would you like to do?",
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.35,
-                  color: isDark ? Colors.white : const Color(0xFF18181B),
-                ),
-              ),
-
-              const SizedBox(height: 7),
-
-              Text(
-                "Choose a Senmi service to get started.",
+                "What would you like to do.",
                 style: TextStyle(
                   fontSize: 14,
                   height: 1.4,
