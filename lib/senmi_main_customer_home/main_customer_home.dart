@@ -3,8 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:senmi/services/driver_api_service.dart';
 import 'package:senmi/senmi_package_screens/package_features/customer/customer_home_bottom/customer_bottomnav.dart';
-import 'package:senmi/senmi_ride_screen/ride_features/customers/ride_customer_bottom_nav.dart';
-import 'package:senmi/senmi_ride_screen/ride_features/customers/ride_tracking_screen.dart';
+import 'package:senmi/senmi_ride_screen/ride_features/customers/customer_home/ride_customer_bottom_nav.dart';
+import 'package:senmi/senmi_ride_screen/ride_features/customers/customer_map_tracking/ride_tracking_screen.dart';
 
 const Color senmiPurple = Color(0xFF581C87);
 const Color senmiLightPurple = Color(0xFF7C3AED);
@@ -268,7 +268,7 @@ class _MainCustomerHomeState extends State<MainCustomerHome> {
                     Expanded(
                       child: _ServiceCard(
                         icon: Icons.directions_car_rounded,
-                        title: "Ride",
+                        title: "Book a Ride",
                         description: "Get where you need to go.",
                         status: "Available now",
                         statusColor: Colors.green,
@@ -292,7 +292,7 @@ class _MainCustomerHomeState extends State<MainCustomerHome> {
                     Expanded(
                       child: _ServiceCard(
                         icon: Icons.two_wheeler,
-                        title: "Package Delivery",
+                        title: "Deliver a Package",
                         description: "Send packages safely across Lagos.",
                         status: "Available now",
                         statusColor: Colors.green,
@@ -386,56 +386,89 @@ class _ServiceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final cardColor = isDark ? const Color(0xFF1E1E22) : Colors.white;
+    final cardColor = isDark ? const Color(0xFF18161D) : Colors.white;
 
     final borderColor = isDark
-        ? Colors.white.withOpacity(0.08)
-        : Colors.black.withOpacity(0.07);
+        ? Colors.white.withOpacity(0.075)
+        : Colors.black.withOpacity(0.055);
+
+    final secondaryText = isDark
+        ? Colors.white.withOpacity(0.46)
+        : Colors.black.withOpacity(0.50);
+
+    final titleColor = isDark ? Colors.white : const Color(0xFF18181B);
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(23),
+        splashColor: senmiPurple.withOpacity(0.08),
+        highlightColor: senmiPurple.withOpacity(0.035),
         child: Ink(
-          padding: const EdgeInsets.all(17),
+          padding: const EdgeInsets.fromLTRB(15, 15, 14, 14),
           decoration: BoxDecoration(
             color: cardColor,
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(23),
             border: Border.all(color: borderColor),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(isDark ? 0.18 : 0.07),
-                blurRadius: 18,
+                color: Colors.black.withOpacity(isDark ? 0.22 : 0.055),
+                blurRadius: 20,
                 offset: const Offset(0, 8),
               ),
             ],
           ),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ==================================================
-              // ICON
+              // ICON ROW
               // ==================================================
-              Container(
-                width: 54,
-                height: 54,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      iconColor.withOpacity(0.16),
-                      iconColor.withOpacity(0.07),
-                    ],
+              Row(
+                children: [
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          iconColor.withOpacity(0.17),
+                          iconColor.withOpacity(0.055),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: iconColor.withOpacity(0.06)),
+                    ),
+                    child: Icon(icon, size: 26, color: iconColor),
                   ),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Icon(icon, size: 29, color: iconColor),
+
+                  const Spacer(),
+
+                  // Small arrow
+                  Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? Colors.white.withOpacity(0.055)
+                          : Colors.black.withOpacity(0.035),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.arrow_forward_rounded,
+                      size: 14,
+                      color: isDark
+                          ? Colors.white.withOpacity(0.62)
+                          : Colors.black.withOpacity(0.52),
+                    ),
+                  ),
+                ],
               ),
 
-              const SizedBox(height: 18),
+              const SizedBox(height: 17),
 
               // ==================================================
               // TITLE
@@ -445,98 +478,115 @@ class _ServiceCard extends StatelessWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontSize: 17,
-                  height: 1.2,
-                  fontWeight: FontWeight.w800,
-                  color: isDark ? Colors.white : Colors.black87,
+                  fontSize: 16,
+                  height: 1.18,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.25,
+                  color: titleColor,
                 ),
               ),
 
-              const SizedBox(height: 8),
+              const SizedBox(height: 7),
 
               // ==================================================
               // DESCRIPTION
               // ==================================================
               Text(
                 description,
-                maxLines: 3,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontSize: 12.5,
-                  height: 1.45,
-                  color: isDark ? Colors.white54 : Colors.black54,
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              // ==================================================
-              // STATUS
-              // ==================================================
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 7,
-                ),
-                decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.10),
-                  borderRadius: BorderRadius.circular(30),
-                  border: Border.all(color: statusColor.withOpacity(0.10)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: BoxDecoration(
-                        color: statusColor,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 7),
-                    Text(
-                      status,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: statusColor,
-                      ),
-                    ),
-                  ],
+                  fontSize: 11.5,
+                  height: 1.42,
+                  fontWeight: FontWeight.w400,
+                  color: secondaryText,
                 ),
               ),
 
               const SizedBox(height: 16),
 
               // ==================================================
-              // ACTION INDICATOR
+              // STATUS
+              // ==================================================
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+                decoration: BoxDecoration(
+                  color: statusColor.withOpacity(isDark ? 0.085 : 0.075),
+                  borderRadius: BorderRadius.circular(30),
+                  border: Border.all(color: statusColor.withOpacity(0.10)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Live indicator
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: statusColor,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: statusColor.withOpacity(0.35),
+                            blurRadius: 5,
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(width: 6),
+
+                    Flexible(
+                      child: Text(
+                        status,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.05,
+                          color: statusColor,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 14),
+
+              // ==================================================
+              // ACTION
               // ==================================================
               Row(
                 children: [
-                  Text(
-                    isPrimary ? "Start a ride" : "Get started",
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: isDark ? Colors.white70 : Colors.black87,
+                  Expanded(
+                    child: Text(
+                      isPrimary ? "Start a ride" : "Get started",
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w800,
+                        color: isPrimary
+                            ? senmiLightPurple
+                            : (isDark
+                                  ? Colors.white.withOpacity(0.68)
+                                  : Colors.black.withOpacity(0.68)),
+                      ),
                     ),
                   ),
 
-                  const Spacer(),
+                  const SizedBox(width: 6),
 
-                  Container(
-                    width: 30,
-                    height: 30,
-                    decoration: BoxDecoration(
-                      color: senmiPurple.withOpacity(0.08),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.arrow_forward_rounded,
-                      size: 16,
-                      color: iconColor,
-                    ),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    size: 18,
+                    color: isPrimary
+                        ? senmiLightPurple
+                        : (isDark
+                              ? Colors.white.withOpacity(0.42)
+                              : Colors.black.withOpacity(0.42)),
                   ),
                 ],
               ),

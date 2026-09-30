@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:senmi/senmi_ride_screen/ride_features/customers/ride_history_screen.dart';
-import 'package:senmi/senmi_ride_screen/ride_features/customers/ride_home.dart';
+import 'package:senmi/senmi_ride_screen/ride_features/customers/customer_history/ride_history_screen.dart';
+import 'package:senmi/senmi_ride_screen/ride_features/customers/customer_home/ride_home.dart';
 
 const Color senmiRidePurple = Color(0xFF581C87);
 
@@ -73,6 +73,12 @@ class _RideCustomerBottomNavState extends State<RideCustomerBottomNav> {
                 color: senmiRidePurple,
               ),
               label: "Ride",
+            ),
+
+            NavigationDestination(
+              icon: Icon(Icons.history_outlined),
+              selectedIcon: Icon(Icons.history_rounded, color: senmiRidePurple),
+              label: "Map & Track",
             ),
 
             NavigationDestination(

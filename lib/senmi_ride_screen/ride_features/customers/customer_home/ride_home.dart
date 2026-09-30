@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:senmi/main.dart';
-import 'package:senmi/senmi_ride_screen/ride_features/customers/ride_tracking_screen.dart';
+import 'package:senmi/senmi_ride_screen/ride_features/customers/customer_map_tracking/ride_tracking_screen.dart';
 import 'package:senmi/services/package_api_service.dart';
 import 'package:senmi/senmi_shared_account/customer_profiles/account_profile_screen.dart';
 import 'package:senmi/senmi_shared_account/map/map_picker_screen.dart';

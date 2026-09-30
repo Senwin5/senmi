@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:senmi/services/driver_api_service.dart';
-import 'package:senmi/senmi_ride_screen/ride_features/customers/ride_history_details_screen.dart';
+import 'package:senmi/senmi_ride_screen/ride_features/customers/customer_history/ride_history_details_screen.dart';
 
 const Color senmiRidePurple = Color(0xFF581C87);
 const Color senmiRideLightPurple = Color(0xFF7C3AED);
