@@ -212,6 +212,47 @@ class _RideHomeState extends State<RideHome> {
     });
 
     try {
+      // ==========================================================
+      // CHECK FOR EXISTING ACTIVE RIDE
+      // ==========================================================
+
+      final activeRides = await RideService.getActiveRides();
+
+      if (activeRides.isNotEmpty) {
+        final activeRide = activeRides.first;
+
+        final activeRideId =
+            activeRide["ride_id"]?.toString() ??
+            activeRide["id"]?.toString() ??
+            "";
+
+        if (activeRideId.isNotEmpty) {
+          if (!mounted) return;
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("You already have an active ride. Opening it now."),
+              backgroundColor: Colors.deepPurple,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => RideTrackingScreen(rideId: activeRideId),
+            ),
+          );
+
+          return;
+        }
+
+        throw Exception("You already have an active ride.");
+      }
+
+      // ==========================================================
+      // NO ACTIVE RIDE → CREATE NEW RIDE
+      // ==========================================================
+
       final data = await RideService.createRideRequest(
         pickupAddress: pickupAddress,
         destinationAddress: destinationAddress,
@@ -262,7 +303,6 @@ class _RideHomeState extends State<RideHome> {
       }
     }
   }
-
   // ============================================================
   // GET ADDRESS
   // ============================================================
