@@ -627,9 +627,13 @@ class _RideHistoryDetailsScreenState extends State<RideHistoryDetailsScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 0,
         title: const Text(
           "Ride Details",
-          style: TextStyle(fontWeight: FontWeight.w800),
+          style: TextStyle(fontWeight: FontWeight.w800, color: Colors.black),
         ),
         centerTitle: true,
       ),

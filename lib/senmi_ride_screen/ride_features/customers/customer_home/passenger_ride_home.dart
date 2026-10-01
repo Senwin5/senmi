@@ -480,7 +480,7 @@ class _RideHomeState extends State<RideHome> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "Ride",
+                          "Book a Ride",
                           style: TextStyle(
                             fontSize: 21,
                             fontWeight: FontWeight.w800,

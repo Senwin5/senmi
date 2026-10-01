@@ -265,9 +265,13 @@ class _MapTrackPageState extends State<_MapTrackPage> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
 
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 0,
         title: const Text(
           "Map & Track",
-          style: TextStyle(fontWeight: FontWeight.w800),
+          style: TextStyle(fontWeight: FontWeight.w800, color: Colors.black),
         ),
         centerTitle: true,
       ),

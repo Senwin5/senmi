@@ -135,11 +135,17 @@ class CustomerSecurityScreen extends StatelessWidget {
           backgroundColor: isDark ? const Color(0xFF111111) : Colors.white,
 
           appBar: AppBar(
+            backgroundColor: Colors.white,
+            surfaceTintColor: Colors.white,
+            foregroundColor: Colors.black,
             elevation: 0,
             centerTitle: true,
             title: const Text(
               "Security",
-              style: TextStyle(fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
             ),
           ),
 

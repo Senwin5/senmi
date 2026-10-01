@@ -10,6 +10,7 @@ import 'package:google_places_flutter/model/prediction.dart';
 import 'package:google_places_flutter/google_places_flutter.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart' as maps;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
 class MapPickerScreen extends StatefulWidget {
   final maps.LatLng initialLocation;
@@ -170,6 +171,104 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
     }
   }
 
+  // ---------------- ADDRESS HELPERS ----------------
+
+  bool _isPlusCode(String value) {
+    final text = value.trim();
+
+    return RegExp(
+      r'^[23456789CFGHJMPQRVWX]{4,8}\+[23456789CFGHJMPQRVWX]{2,}',
+      caseSensitive: false,
+    ).hasMatch(text);
+  }
+
+  String _getComponent(List<dynamic> components, List<String> types) {
+    for (final component in components) {
+      final componentTypes = List<String>.from(component["types"] ?? []);
+
+      for (final type in types) {
+        if (componentTypes.contains(type)) {
+          return component["long_name"]?.toString().trim() ?? "";
+        }
+      }
+    }
+
+    return "";
+  }
+
+  String _buildFullAddress(Map<String, dynamic> result) {
+    final components = result["address_components"] as List<dynamic>? ?? [];
+
+    final streetNumber = _getComponent(components, ["street_number"]);
+
+    final route = _getComponent(components, ["route"]);
+
+    final premise = _getComponent(components, ["premise"]);
+
+    final subPremise = _getComponent(components, ["subpremise"]);
+
+    final neighborhood = _getComponent(components, [
+      "neighborhood",
+      "sublocality_level_1",
+      "sublocality",
+    ]);
+
+    final locality = _getComponent(components, ["locality", "postal_town"]);
+
+    final state = _getComponent(components, ["administrative_area_level_1"]);
+
+    final country = _getComponent(components, ["country"]);
+
+    final parts = <String>[];
+
+    // Street number + street name.
+    if (streetNumber.isNotEmpty && route.isNotEmpty) {
+      parts.add("$streetNumber $route");
+    } else if (route.isNotEmpty) {
+      parts.add(route);
+    }
+
+    // Building/premise.
+    if (premise.isNotEmpty &&
+        !parts.any((item) => item.toLowerCase() == premise.toLowerCase())) {
+      parts.add(premise);
+    }
+
+    // Apartment/sub-premise.
+    if (subPremise.isNotEmpty &&
+        !parts.any((item) => item.toLowerCase() == subPremise.toLowerCase())) {
+      parts.add(subPremise);
+    }
+
+    // Neighborhood / area.
+    if (neighborhood.isNotEmpty &&
+        !parts.any(
+          (item) => item.toLowerCase() == neighborhood.toLowerCase(),
+        )) {
+      parts.add(neighborhood);
+    }
+
+    // City.
+    if (locality.isNotEmpty &&
+        !parts.any((item) => item.toLowerCase() == locality.toLowerCase())) {
+      parts.add(locality);
+    }
+
+    // State.
+    if (state.isNotEmpty &&
+        !parts.any((item) => item.toLowerCase() == state.toLowerCase())) {
+      parts.add(state);
+    }
+
+    // Country.
+    if (country.isNotEmpty &&
+        !parts.any((item) => item.toLowerCase() == country.toLowerCase())) {
+      parts.add(country);
+    }
+
+    return parts.join(", ");
+  }
+
   // ---------------- ADDRESS ----------------
 
   Future<void> getAddress() async {
@@ -178,38 +277,107 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
     try {
       setState(() => loadingAddress = true);
 
-      final placemarks = await placemarkFromCoordinates(
-        position.latitude,
-        position.longitude,
+      final url = Uri.parse(
+        "https://maps.googleapis.com/maps/api/geocode/json"
+        "?latlng=${position.latitude},${position.longitude}"
+        "&key=$apiKey"
+        "&language=en"
+        "&region=ng",
       );
 
-      if (placemarks.isEmpty) {
-        if (mounted) {
-          setState(() => loadingAddress = false);
+      final response = await http.get(url);
+
+      if (response.statusCode != 200) {
+        throw Exception("Google Geocoding request failed");
+      }
+
+      final data = jsonDecode(response.body);
+
+      if (data["status"] != "OK") {
+        throw Exception(
+          data["error_message"]?.toString() ??
+              "Google could not find this address",
+        );
+      }
+
+      final results = data["results"] as List<dynamic>? ?? [];
+
+      if (results.isEmpty) {
+        throw Exception("No address found");
+      }
+
+      String? fullAddress;
+
+      // First look for a detailed street-level result.
+      for (final result in results) {
+        final resultMap = Map<String, dynamic>.from(result);
+
+        final types = List<String>.from(resultMap["types"] ?? []);
+
+        final formattedAddress =
+            resultMap["formatted_address"]?.toString().trim() ?? "";
+
+        if (formattedAddress.isEmpty) {
+          continue;
         }
-        return;
+
+        if (_isPlusCode(formattedAddress)) {
+          continue;
+        }
+
+        if (types.contains("street_address") ||
+            types.contains("premise") ||
+            types.contains("subpremise") ||
+            types.contains("route")) {
+          final builtAddress = _buildFullAddress(resultMap);
+
+          if (builtAddress.isNotEmpty && !_isPlusCode(builtAddress)) {
+            fullAddress = builtAddress;
+            break;
+          }
+
+          fullAddress = formattedAddress;
+          break;
+        }
       }
 
-      final place = placemarks.first;
+      // If a street-level address wasn't found, inspect all results.
+      if (fullAddress == null) {
+        for (final result in results) {
+          final resultMap = Map<String, dynamic>.from(result);
 
-      final parts = <String>[];
+          final formattedAddress =
+              resultMap["formatted_address"]?.toString().trim() ?? "";
 
-      if (place.street?.isNotEmpty == true) {
-        parts.add(place.street!);
+          if (formattedAddress.isEmpty) {
+            continue;
+          }
+
+          if (_isPlusCode(formattedAddress)) {
+            continue;
+          }
+
+          final builtAddress = _buildFullAddress(resultMap);
+
+          if (builtAddress.isNotEmpty && !_isPlusCode(builtAddress)) {
+            fullAddress = builtAddress;
+            break;
+          }
+
+          fullAddress = formattedAddress;
+          break;
+        }
       }
 
-      if (place.locality?.isNotEmpty == true) {
-        parts.add(place.locality!);
-      }
-
-      if (place.country?.isNotEmpty == true) {
-        parts.add(place.country!);
+      // Final fallback.
+      if (fullAddress == null || fullAddress.trim().isEmpty) {
+        fullAddress = "Address unavailable";
       }
 
       if (!mounted) return;
 
       setState(() {
-        address = parts.join(", ");
+        address = fullAddress!;
         loadingAddress = false;
       });
     } catch (e) {
