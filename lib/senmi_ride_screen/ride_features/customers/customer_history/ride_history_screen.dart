@@ -1,5 +1,7 @@
 // ignore_for_file: deprecated_member_use, use_build_context_synchronously
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:senmi/services/driver_api_service.dart';
 import 'package:senmi/senmi_ride_screen/ride_features/customers/customer_history/ride_history_details_screen.dart';
@@ -46,16 +48,60 @@ class _RideHistoryScreenState extends State<RideHistoryScreen> {
       setState(() {
         rides = result;
         loading = false;
+        errorMessage = "";
       });
     } catch (e) {
       if (!mounted) return;
 
       setState(() {
         loading = false;
-        errorMessage = e.toString().replaceFirst("Exception: ", "");
+        errorMessage = _cleanError(e);
       });
     }
   }
+
+  // ============================================================
+  // CLEAN ERROR
+  // ============================================================
+
+  String _cleanError(Object error) {
+    final message = error.toString().toLowerCase();
+
+    // NO INTERNET / WIFI / MOBILE DATA
+    if (error is SocketException ||
+        message.contains("socketexception") ||
+        message.contains("failed host lookup") ||
+        message.contains("network is unreachable") ||
+        message.contains("network unreachable") ||
+        message.contains("no internet") ||
+        message.contains("internet connection") ||
+        message.contains("connection refused") ||
+        message.contains("connection reset") ||
+        message.contains("connection closed") ||
+        message.contains("connection timed out") ||
+        message.contains("timed out") ||
+        message.contains("clientexception") ||
+        message.contains("network error")) {
+      return "NO_INTERNET";
+    }
+
+    // SERVER ERROR
+    if (message.contains("500") ||
+        message.contains("502") ||
+        message.contains("503") ||
+        message.contains("504")) {
+      return "SERVER_ERROR";
+    }
+
+    // GENERIC ERROR
+    return "Something went wrong. "
+        "We couldn't load your ride history right now. "
+        "Please try again in a moment.";
+  }
+
+  bool get _isOffline => errorMessage == "NO_INTERNET";
+
+  bool get _isServerError => errorMessage == "SERVER_ERROR";
 
   // ============================================================
   // OPEN RIDE DETAILS
@@ -316,9 +362,6 @@ class _RideHistoryScreenState extends State<RideHistoryScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ==================================================
-                  // TOP ROW
-                  // ==================================================
                   Row(
                     children: [
                       Container(
@@ -386,9 +429,6 @@ class _RideHistoryScreenState extends State<RideHistoryScreen> {
 
                   const SizedBox(height: 16),
 
-                  // ==================================================
-                  // PICKUP
-                  // ==================================================
                   _locationRow(
                     icon: Icons.my_location_rounded,
                     color: Colors.green,
@@ -406,9 +446,6 @@ class _RideHistoryScreenState extends State<RideHistoryScreen> {
                     ),
                   ),
 
-                  // ==================================================
-                  // DESTINATION
-                  // ==================================================
                   _locationRow(
                     icon: Icons.location_on_rounded,
                     color: Colors.redAccent,
@@ -426,9 +463,6 @@ class _RideHistoryScreenState extends State<RideHistoryScreen> {
 
                   const SizedBox(height: 14),
 
-                  // ==================================================
-                  // BOTTOM DETAILS
-                  // ==================================================
                   Row(
                     children: [
                       Expanded(
@@ -666,67 +700,153 @@ class _RideHistoryScreenState extends State<RideHistoryScreen> {
   // ============================================================
 
   Widget _errorState(bool isDark) {
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 30),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: Colors.redAccent.withOpacity(0.08),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.error_outline_rounded,
-                color: Colors.redAccent,
-                size: 40,
-              ),
-            ),
+    final bool offline = _isOffline;
+    final bool serverError = _isServerError;
 
-            const SizedBox(height: 18),
+    final Color iconColor = offline
+        ? Colors.orange
+        : serverError
+        ? senmiRidePurple
+        : Colors.redAccent;
 
-            Text(
-              "Unable to load ride history",
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 19,
-                fontWeight: FontWeight.w800,
-                color: isDark ? Colors.white : Colors.black87,
-              ),
-            ),
+    final IconData icon = offline
+        ? Icons.wifi_off_rounded
+        : serverError
+        ? Icons.cloud_off_rounded
+        : Icons.error_outline_rounded;
 
-            const SizedBox(height: 8),
+    final String title = offline
+        ? "You're offline"
+        : serverError
+        ? "Senmi is unavailable"
+        : "Something went wrong";
 
-            Text(
-              errorMessage.isEmpty ? "Please try again." : errorMessage,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 13,
-                height: 1.5,
-                color: isDark ? Colors.white54 : Colors.black54,
-              ),
-            ),
+    final String description = offline
+        ? "We couldn't connect to Senmi. Please check your Wi-Fi or mobile data and try again."
+        : serverError
+        ? "We couldn't load your ride history right now. Please try again in a moment."
+        : "We couldn't load your ride history. Please try again.";
 
-            const SizedBox(height: 22),
+    return RefreshIndicator(
+      color: senmiRidePurple,
+      onRefresh: _loadHistory,
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: [
+          SizedBox(
+            height: MediaQuery.of(context).size.height * 0.58,
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 28),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // ==================================================
+                    // ICON
+                    // ==================================================
+                    Container(
+                      width: 96,
+                      height: 96,
+                      decoration: BoxDecoration(
+                        color: iconColor.withOpacity(0.08),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Container(
+                          width: 70,
+                          height: 70,
+                          decoration: BoxDecoration(
+                            color: iconColor.withOpacity(0.12),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(icon, size: 34, color: iconColor),
+                        ),
+                      ),
+                    ),
 
-            ElevatedButton.icon(
-              onPressed: _loadHistory,
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text("Try Again"),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: senmiRidePurple,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+                    const SizedBox(height: 24),
+
+                    // ==================================================
+                    // TITLE
+                    // ==================================================
+                    Text(
+                      title,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 23,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.3,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    // ==================================================
+                    // MESSAGE
+                    // ==================================================
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 340),
+                      child: Text(
+                        description,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 14,
+                          height: 1.55,
+                          color: isDark
+                              ? Colors.white.withOpacity(0.58)
+                              : Colors.black.withOpacity(0.55),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 28),
+
+                    // ==================================================
+                    // TRY AGAIN
+                    // ==================================================
+                    SizedBox(
+                      height: 50,
+                      child: ElevatedButton.icon(
+                        onPressed: loading ? null : _loadHistory,
+                        icon: const Icon(Icons.refresh_rounded, size: 20),
+                        label: const Text(
+                          "Try Again",
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: senmiRidePurple,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(horizontal: 26),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    Text(
+                      "You can also pull down to refresh",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDark
+                            ? Colors.white.withOpacity(0.35)
+                            : Colors.black.withOpacity(0.38),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -793,7 +913,9 @@ class _RideHistoryScreenState extends State<RideHistoryScreen> {
                             color: senmiRidePurple,
                           ),
                         ),
+
                         const SizedBox(width: 12),
+
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -806,7 +928,9 @@ class _RideHistoryScreenState extends State<RideHistoryScreen> {
                                   color: isDark ? Colors.white : Colors.black87,
                                 ),
                               ),
+
                               const SizedBox(height: 3),
+
                               Text(
                                 "${rides.length} ride${rides.length == 1 ? "" : "s"}",
                                 style: TextStyle(

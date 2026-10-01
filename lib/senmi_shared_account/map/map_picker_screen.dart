@@ -322,7 +322,21 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
         recentLocations.isNotEmpty;
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Waypoint")),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 0,
+        surfaceTintColor: Colors.white,
+        centerTitle: false,
+        title: const Text(
+          "Waypoint",
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
       body: Stack(
         children: [
           maps.GoogleMap(
@@ -330,7 +344,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
               target: position,
               zoom: 14,
             ),
-            
+
             // ADDED ONLY
             myLocationEnabled: true,
             myLocationButtonEnabled: false,
@@ -496,10 +510,17 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
             left: 16,
             right: 16,
             child: Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
               decoration: BoxDecoration(
-                color: Theme.of(context).cardColor,
-                borderRadius: BorderRadius.circular(16),
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 20,
+                    offset: Offset(0, -4),
+                  ),
+                ],
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -518,17 +539,33 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
 
                   const SizedBox(height: 10),
 
-                  ElevatedButton(
-                    onPressed: () async {
-                      // Save this confirmed location.
-                      await _saveRecentLocation();
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        await _saveRecentLocation();
 
-                      // Keep your existing behavior.
-                      if (!mounted) return;
+                        if (!mounted) return;
 
-                      Navigator.pop(context, position);
-                    },
-                    child: const Text("Confirm Location"),
+                        Navigator.pop(context, position);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF581C87),
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: const Text(
+                        "Confirm Location",
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),

@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:senmi/services/driver_api_service.dart';
 import 'package:senmi/senmi_package_screens/package_features/customer/customer_home_bottom/customer_bottomnav.dart';
-import 'package:senmi/senmi_ride_screen/ride_features/customers/customer_home/ride_customer_bottom_nav.dart';
+import 'package:senmi/senmi_ride_screen/ride_features/customers/customer_home/passenger_bottom_nav.dart';
 import 'package:senmi/senmi_ride_screen/ride_features/customers/customer_map_tracking/ride_tracking_screen.dart';
 
 const Color senmiPurple = Color(0xFF581C87);

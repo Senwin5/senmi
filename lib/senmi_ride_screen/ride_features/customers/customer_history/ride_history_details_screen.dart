@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:senmi/services/driver_api_service.dart';
-import 'package:senmi/senmi_ride_screen/ride_features/customers/customer_home/ride_home.dart';
+import 'package:senmi/senmi_ride_screen/ride_features/customers/customer_home/passenger_ride_home.dart';
 
 const Color senmiRidePurple = Color(0xFF581C87);
 const Color senmiRideLightPurple = Color(0xFF7C3AED);
