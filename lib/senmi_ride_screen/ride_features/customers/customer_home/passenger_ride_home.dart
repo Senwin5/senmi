@@ -1,8 +1,10 @@
 // ignore_for_file: deprecated_member_use, use_build_context_synchronously
 
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
-import 'package:geocoding/geocoding.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:http/http.dart' as http;
 import 'package:senmi/main.dart';
 import 'package:senmi/senmi_ride_screen/ride_features/customers/customer_map_tracking/ride_tracking_screen.dart';
 import 'package:senmi/services/package_api_service.dart';
@@ -266,42 +268,172 @@ class _RideHomeState extends State<RideHome> {
   // ============================================================
 
   Future<String> _getAddressFromLatLng(LatLng position) async {
+    const googleMapsApiKey = "AIzaSyANfJatY_6y8gzmUrvV2_n2aR9ms7Xe_ZY";
+
     try {
-      final placemarks = await placemarkFromCoordinates(
-        position.latitude,
-        position.longitude,
+      final url = Uri.parse(
+        "https://maps.googleapis.com/maps/api/geocode/json"
+        "?latlng=${position.latitude},${position.longitude}"
+        "&key=$googleMapsApiKey"
+        "&language=en",
       );
 
-      if (placemarks.isEmpty) {
+      final response = await http.get(url);
+
+      if (response.statusCode != 200) {
+        debugPrint("Google Geocoding HTTP error: ${response.statusCode}");
         return "Unknown location";
       }
 
-      final place = placemarks.first;
+      final data = jsonDecode(response.body);
+
+      if (data["status"] != "OK") {
+        debugPrint("Google Geocoding status: ${data["status"]}");
+        return "Unknown location";
+      }
+
+      final results = data["results"] as List;
+
+      if (results.isEmpty) {
+        return "Unknown location";
+      }
+
+      // ----------------------------------------------------------
+      // GET ADDRESS COMPONENTS
+      // ----------------------------------------------------------
+
+      String? streetNumber;
+      String? street;
+      String? neighborhood;
+      String? subLocality;
+      String? locality;
+      String? state;
+      String? country;
+
+      final components = results.first["address_components"] as List? ?? [];
+
+      for (final component in components) {
+        final types = List<String>.from(component["types"] ?? []);
+
+        final name = component["long_name"]?.toString();
+
+        if (name == null || name.isEmpty) {
+          continue;
+        }
+
+        // House/building number
+        if (types.contains("street_number")) {
+          streetNumber = name;
+        }
+        // Street name
+        else if (types.contains("route")) {
+          street = name;
+        }
+        // Neighborhood
+        else if (types.contains("neighborhood")) {
+          neighborhood = name;
+        }
+        // Area / district
+        else if (types.contains("sublocality") ||
+            types.contains("sublocality_level_1")) {
+          subLocality = name;
+        }
+        // City
+        else if (types.contains("locality")) {
+          locality = name;
+        }
+        // State
+        else if (types.contains("administrative_area_level_1")) {
+          state = name;
+        }
+        // Country
+        else if (types.contains("country")) {
+          country = name;
+        }
+      }
+
+      // ----------------------------------------------------------
+      // BUILD A CLEAN ADDRESS
+      //
+      // IMPORTANT:
+      // We intentionally DO NOT use:
+      //
+      // results.first["formatted_address"]
+      //
+      // because Google may put the Plus Code there.
+      // ----------------------------------------------------------
 
       final parts = <String>[];
 
-      if (place.street?.isNotEmpty == true) {
-        parts.add(place.street!);
+      // Example:
+      // 15 Admiralty Way
+      if (streetNumber != null && street != null) {
+        parts.add("$streetNumber $street");
+      } else if (street != null) {
+        parts.add(street);
       }
 
-      if (place.locality?.isNotEmpty == true) {
-        parts.add(place.locality!);
+      // Example:
+      // Lekki Phase 1
+      if (subLocality != null && !parts.contains(subLocality)) {
+        parts.add(subLocality);
+      } else if (neighborhood != null && !parts.contains(neighborhood)) {
+        parts.add(neighborhood);
       }
 
-      if (place.administrativeArea?.isNotEmpty == true) {
-        parts.add(place.administrativeArea!);
+      // Example:
+      // Lagos
+      if (locality != null && !parts.contains(locality)) {
+        parts.add(locality);
       }
 
-      if (place.country?.isNotEmpty == true) {
-        parts.add(place.country!);
+      // Example:
+      // Lagos State
+      if (state != null && !parts.contains(state) && state != locality) {
+        parts.add(state);
       }
 
-      if (parts.isEmpty) {
-        return "Unknown location";
+      // ----------------------------------------------------------
+      // COUNTRY
+      // ----------------------------------------------------------
+
+      if (country != null && country != "Nigeria" && !parts.contains(country)) {
+        parts.add(country);
       }
 
-      return parts.toSet().join(", ");
-    } catch (_) {
+      // ----------------------------------------------------------
+      // RETURN CLEAN ADDRESS
+      // ----------------------------------------------------------
+
+      if (parts.isNotEmpty) {
+        return parts.join(", ");
+      }
+
+      // ----------------------------------------------------------
+      // LAST RESORT
+      //
+      // If Google cannot give us individual components,
+      // try another result that has a street address.
+      // ----------------------------------------------------------
+
+      for (final result in results) {
+        final types = List<String>.from(result["types"] ?? []);
+
+        if (types.contains("street_address") ||
+            types.contains("premise") ||
+            types.contains("route")) {
+          final address = result["formatted_address"]?.toString();
+
+          if (address != null && address.isNotEmpty && !address.contains("+")) {
+            return address;
+          }
+        }
+      }
+
+      return "Unknown location";
+    } catch (e) {
+      debugPrint("Reverse geocoding error: $e");
+
       return "Unknown location";
     }
   }

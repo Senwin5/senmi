@@ -5,6 +5,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:senmi/services/driver_api_service.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -42,6 +43,13 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
   LatLng? destinationLocation;
   LatLng? driverLocation;
 
+  // ============================================================
+  // ADDRESSES
+  // ============================================================
+
+  String? pickupAddress;
+  String? destinationAddress;
+
   GoogleMapController? mapController;
 
   Set<Marker> markers = {};
@@ -57,6 +65,8 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
   bool loading = true;
   bool connectingSocket = false;
   bool loadingRoute = false;
+  bool loadingAddresses = false;
+
   String errorMessage = "";
 
   bool _mapMovedToDriver = false;
@@ -73,6 +83,10 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
     });
   }
 
+  // ============================================================
+  // LOAD RIDE
+  // ============================================================
+
   Future<void> _loadRide() async {
     try {
       setState(() {
@@ -85,6 +99,11 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
       if (!mounted) return;
 
       _applyRideData(data);
+
+      // Load readable pickup and destination addresses.
+      await _loadAddresses(data);
+
+      if (!mounted) return;
 
       setState(() {
         loading = false;
@@ -105,6 +124,10 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
     }
   }
 
+  // ============================================================
+  // REFRESH RIDE
+  // ============================================================
+
   Future<void> _refreshRide() async {
     try {
       final data = await RideService.getRideDetails(widget.rideId);
@@ -116,14 +139,27 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
 
       _applyRideData(data);
 
-      if (oldPickup != pickupLocation ||
-          oldDestination != destinationLocation) {
+      final pickupChanged = !_sameLocation(oldPickup, pickupLocation);
+
+      final destinationChanged = !_sameLocation(
+        oldDestination,
+        destinationLocation,
+      );
+
+      if (pickupChanged || destinationChanged) {
         await _getRoute();
+        await _loadAddresses(data);
       }
 
-      setState(() {});
+      if (mounted) {
+        setState(() {});
+      }
     } catch (_) {}
   }
+
+  // ============================================================
+  // APPLY RIDE DATA
+  // ============================================================
 
   void _applyRideData(Map<String, dynamic> data) {
     final serverStatus = data["status"]?.toString();
@@ -133,23 +169,40 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
     }
 
     fare = _toDouble(data["fare"]);
+
     estimatedDistanceKm = _toDouble(data["estimated_distance_km"]);
+
     estimatedDurationMinutes = _toInt(data["estimated_duration_minutes"]);
+
     etaMinutes = _toInt(data["eta_minutes"]);
 
+    // ============================================================
+    // PICKUP LOCATION
+    // ============================================================
+
     final pickupLat = _toDouble(data["pickup_lat"]);
+
     final pickupLng = _toDouble(data["pickup_lng"]);
 
     if (pickupLat != null && pickupLng != null) {
       pickupLocation = LatLng(pickupLat, pickupLng);
     }
 
+    // ============================================================
+    // DESTINATION LOCATION
+    // ============================================================
+
     final destinationLat = _toDouble(data["destination_lat"]);
+
     final destinationLng = _toDouble(data["destination_lng"]);
 
     if (destinationLat != null && destinationLng != null) {
       destinationLocation = LatLng(destinationLat, destinationLng);
     }
+
+    // ============================================================
+    // DRIVER
+    // ============================================================
 
     final driver = data["driver"];
 
@@ -201,11 +254,44 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
       data["plate_number"],
     ]);
 
+    // ============================================================
+    // DRIVER LOCATION
+    // ============================================================
+
     final driverLat = _toDouble(data["driver_lat"]);
+
     final driverLng = _toDouble(data["driver_lng"]);
 
     if (driverLat != null && driverLng != null) {
       driverLocation = LatLng(driverLat, driverLng);
+    }
+
+    // ============================================================
+    // BACKEND ADDRESSES
+    //
+    // If your API already returns addresses, use them first.
+    // ============================================================
+
+    final backendPickupAddress = _firstString([
+      data["pickup_address"],
+      data["pickup_location"],
+      data["pickup_name"],
+      data["pickup"],
+    ]);
+
+    final backendDestinationAddress = _firstString([
+      data["destination_address"],
+      data["destination_location"],
+      data["destination_name"],
+      data["destination"],
+    ]);
+
+    if (backendPickupAddress != null) {
+      pickupAddress = backendPickupAddress;
+    }
+
+    if (backendDestinationAddress != null) {
+      destinationAddress = backendDestinationAddress;
     }
 
     _updateMarkers();
@@ -215,6 +301,118 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
       _mapMovedToDriver = true;
     }
   }
+
+  // ============================================================
+  // LOAD ADDRESSES
+  // ============================================================
+
+  Future<void> _loadAddresses(Map<String, dynamic> data) async {
+    if (pickupLocation == null && destinationLocation == null) {
+      return;
+    }
+
+    // If backend already gave us both addresses,
+    // there is no need to reverse geocode.
+    final backendPickupAddress = _firstString([
+      data["pickup_address"],
+      data["pickup_location"],
+      data["pickup_name"],
+    ]);
+
+    final backendDestinationAddress = _firstString([
+      data["destination_address"],
+      data["destination_location"],
+      data["destination_name"],
+    ]);
+
+    if (backendPickupAddress != null && backendDestinationAddress != null) {
+      return;
+    }
+
+    if (mounted) {
+      setState(() {
+        loadingAddresses = true;
+      });
+    }
+
+    try {
+      // ========================================================
+      // PICKUP ADDRESS
+      // ========================================================
+
+      if (pickupAddress == null && pickupLocation != null) {
+        try {
+          final pickupPlacemarks = await placemarkFromCoordinates(
+            pickupLocation!.latitude,
+            pickupLocation!.longitude,
+          );
+
+          if (pickupPlacemarks.isNotEmpty) {
+            pickupAddress = _formatAddress(pickupPlacemarks.first);
+          }
+        } catch (e) {
+          debugPrint("Pickup address lookup failed: $e");
+        }
+      }
+
+      // ========================================================
+      // DESTINATION ADDRESS
+      // ========================================================
+
+      if (destinationAddress == null && destinationLocation != null) {
+        try {
+          final destinationPlacemarks = await placemarkFromCoordinates(
+            destinationLocation!.latitude,
+            destinationLocation!.longitude,
+          );
+
+          if (destinationPlacemarks.isNotEmpty) {
+            destinationAddress = _formatAddress(destinationPlacemarks.first);
+          }
+        } catch (e) {
+          debugPrint("Destination address lookup failed: $e");
+        }
+      }
+    } catch (e) {
+      debugPrint("Address lookup failed: $e");
+    } finally {
+      if (mounted) {
+        setState(() {
+          loadingAddresses = false;
+        });
+      }
+    }
+  }
+
+  // ============================================================
+  // FORMAT ADDRESS
+  // ============================================================
+
+  String _formatAddress(Placemark place) {
+    final parts = <String>[
+      place.name ?? "",
+      place.street ?? "",
+      place.subLocality ?? "",
+      place.locality ?? "",
+      place.administrativeArea ?? "",
+    ];
+
+    final uniqueParts = <String>[];
+
+    for (final part in parts) {
+      final value = part.trim();
+
+      if (value.isNotEmpty && !uniqueParts.contains(value)) {
+        uniqueParts.add(value);
+      }
+    }
+
+    return uniqueParts.join(", ");
+  }
+
+  // ============================================================
+  // ROUTE
+  // ============================================================
 
   Future<void> _getRoute() async {
     if (pickupLocation == null || destinationLocation == null) {
@@ -277,6 +475,10 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
     }
   }
 
+  // ============================================================
+  // WEBSOCKET
+  // ============================================================
+
   void _connectWebSocket() {
     if (connectingSocket) return;
 
@@ -314,6 +516,10 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
     }
   }
 
+  // ============================================================
+  // WEBSOCKET EVENTS
+  // ============================================================
+
   void _handleWebSocketEvent(Map<String, dynamic> data) {
     final eventType = data["type"]?.toString();
 
@@ -324,7 +530,9 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
         status = newStatus;
       }
 
-      if (mounted) setState(() {});
+      if (mounted) {
+        setState(() {});
+      }
 
       _updateMarkers();
 
@@ -333,6 +541,7 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
 
     if (eventType == "driver_location") {
       final lat = _toDouble(data["lat"]);
+
       final lng = _toDouble(data["lng"]);
 
       if (lat != null && lng != null) {
@@ -349,7 +558,9 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
 
       _updateMarkers();
 
-      if (mounted) setState(() {});
+      if (mounted) {
+        setState(() {});
+      }
 
       if (driverLocation != null) {
         _moveCameraToDriver();
@@ -369,6 +580,10 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
     }
   }
 
+  // ============================================================
+  // MARKERS
+  // ============================================================
+
   void _updateMarkers() {
     final newMarkers = <Marker>{};
 
@@ -380,7 +595,7 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
           icon: BitmapDescriptor.defaultMarkerWithHue(
             BitmapDescriptor.hueGreen,
           ),
-          infoWindow: const InfoWindow(title: "Pickup"),
+          infoWindow: InfoWindow(title: "Pickup", snippet: pickupAddress ?? ""),
         ),
       );
     }
@@ -391,7 +606,10 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
           markerId: const MarkerId("destination"),
           position: destinationLocation!,
           icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-          infoWindow: const InfoWindow(title: "Destination"),
+          infoWindow: InfoWindow(
+            title: "Destination",
+            snippet: destinationAddress ?? "",
+          ),
         ),
       );
     }
@@ -416,6 +634,10 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
     }
   }
 
+  // ============================================================
+  // MOVE CAMERA
+  // ============================================================
+
   Future<void> _moveCameraToDriver() async {
     if (mapController == null || driverLocation == null) {
       return;
@@ -430,8 +652,14 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
     } catch (_) {}
   }
 
+  // ============================================================
+  // CANCEL RIDE
+  // ============================================================
+
   Future<void> _cancelRide() async {
-    if (!canCancelRide || cancellingRide) return;
+    if (!canCancelRide || cancellingRide) {
+      return;
+    }
 
     final shouldCancel = await showDialog<bool>(
       context: context,
@@ -510,6 +738,10 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
     }
   }
 
+  // ============================================================
+  // CALL DRIVER
+  // ============================================================
+
   Future<void> _callDriver() async {
     if (driverPhone == null || driverPhone!.isEmpty) {
       return;
@@ -527,6 +759,10 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
       ).showSnackBar(const SnackBar(content: Text("Cannot make call")));
     }
   }
+
+  // ============================================================
+  // DISPLAY STATUS
+  // ============================================================
 
   String get displayStatus {
     switch (status) {
@@ -557,6 +793,10 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
     }
   }
 
+  // ============================================================
+  // TIME
+  // ============================================================
+
   String get timeText {
     if (etaMinutes != null) {
       return "$etaMinutes min away";
@@ -569,6 +809,10 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
     return "Time unavailable";
   }
 
+  // ============================================================
+  // CAN CANCEL
+  // ============================================================
+
   bool get canCancelRide {
     return status == "pending" ||
         status == "created" ||
@@ -576,6 +820,10 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
         status == "accepted" ||
         status == "arrived";
   }
+
+  // ============================================================
+  // RIDE STEP
+  // ============================================================
 
   Widget _step(String title, bool active, bool completed) {
     final color = completed || active ? senmiRidePurple : Colors.grey.shade300;
@@ -611,6 +859,10 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
     );
   }
 
+  // ============================================================
+  // CARD
+  // ============================================================
+
   Widget _card({required Widget child, Color? color}) {
     return Container(
       padding: const EdgeInsets.all(15),
@@ -628,6 +880,10 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
       child: child,
     );
   }
+
+  // ============================================================
+  // DRIVER CARD
+  // ============================================================
 
   Widget _driverCard(bool isDark) {
     if (status != "accepted" && status != "arrived" && status != "started") {
@@ -761,6 +1017,10 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
     );
   }
 
+  // ============================================================
+  // CONVERTERS
+  // ============================================================
+
   double? _toDouble(dynamic value) {
     if (value == null) return null;
 
@@ -795,6 +1055,27 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
     return null;
   }
 
+  // ============================================================
+  // LOCATION COMPARISON
+  // ============================================================
+
+  bool _sameLocation(LatLng? first, LatLng? second) {
+    if (first == null && second == null) {
+      return true;
+    }
+
+    if (first == null || second == null) {
+      return false;
+    }
+
+    return first.latitude == second.latitude &&
+        first.longitude == second.longitude;
+  }
+
+  // ============================================================
+  // DISPOSE
+  // ============================================================
+
   @override
   void dispose() {
     refreshTimer?.cancel();
@@ -804,9 +1085,14 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
     super.dispose();
   }
 
+  // ============================================================
+  // BUILD
+  // ============================================================
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
     final isDark = theme.brightness == Brightness.dark;
 
     final initialMapPosition =
@@ -868,7 +1154,7 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
           ),
 
           // ======================================================
-          // SEARCHING FOR DRIVER ON MAP
+          // SEARCHING FOR DRIVER
           // ======================================================
           if (isSearching)
             Positioned.fill(
@@ -888,6 +1174,42 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
                           padding: const EdgeInsets.symmetric(
                             horizontal: 20,
                             vertical: 14,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? const Color(0xFF1E1E22)
+                                : Colors.white,
+                            borderRadius: BorderRadius.circular(18),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.16),
+                                blurRadius: 18,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
+                          ),
+                          child: const Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                "Searching for a driver",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              SizedBox(height: 5),
+                              Text(
+                                "Looking for the nearest available driver...",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  height: 1.35,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -1046,6 +1368,7 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
                 child: Column(
                   children: [
                     const SizedBox(height: 10),
+
                     Container(
                       width: 50,
                       height: 5,
@@ -1054,12 +1377,17 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
                         borderRadius: BorderRadius.circular(20),
                       ),
                     ),
+
                     const SizedBox(height: 10),
+
                     Expanded(
                       child: ListView(
                         controller: scrollController,
                         padding: const EdgeInsets.fromLTRB(16, 10, 16, 35),
                         children: [
+                          // ==================================================
+                          // HEADER
+                          // ==================================================
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -1084,6 +1412,9 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
 
                           const SizedBox(height: 12),
 
+                          // ==================================================
+                          // DISTANCE + TIME
+                          // ==================================================
                           _card(
                             child: Row(
                               children: [
@@ -1116,6 +1447,9 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
 
                           const SizedBox(height: 12),
 
+                          // ==================================================
+                          // RIDE ID
+                          // ==================================================
                           _card(
                             child: Row(
                               children: [
@@ -1154,6 +1488,9 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
 
                           const SizedBox(height: 12),
 
+                          // ==================================================
+                          // STATUS
+                          // ==================================================
                           _card(
                             child: Row(
                               children: [
@@ -1185,6 +1522,9 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
 
                           const SizedBox(height: 12),
 
+                          // ==================================================
+                          // RIDE PROGRESS
+                          // ==================================================
                           _card(
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1224,6 +1564,9 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
                             ),
                           ),
 
+                          // ==================================================
+                          // CANCEL
+                          // ==================================================
                           if (canCancelRide) ...[
                             const SizedBox(height: 12),
                             SizedBox(
@@ -1258,10 +1601,16 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
 
                           const SizedBox(height: 12),
 
+                          // ==================================================
+                          // DRIVER
+                          // ==================================================
                           _driverCard(isDark),
 
                           const SizedBox(height: 12),
 
+                          // ==================================================
+                          // TRIP ROUTE + ADDRESSES
+                          // ==================================================
                           _card(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1282,7 +1631,8 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
                                         ),
                                       ),
                                     ),
-                                    if (loadingRoute)
+
+                                    if (loadingRoute || loadingAddresses)
                                       const SizedBox(
                                         width: 18,
                                         height: 18,
@@ -1293,28 +1643,61 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
                                       ),
                                   ],
                                 ),
-                                const SizedBox(height: 12),
+
+                                const SizedBox(height: 14),
+
                                 if (pickupLocation != null &&
                                     destinationLocation != null)
                                   Column(
                                     children: [
+                                      // PICKUP
                                       _locationRow(
                                         Icons.my_location_rounded,
                                         Colors.green,
                                         "Pickup",
+                                        pickupAddress,
                                       ),
-                                      const SizedBox(height: 10),
+
+                                      const SizedBox(height: 14),
+
+                                      // CONNECTING LINE
+                                      Row(
+                                        children: [
+                                          const SizedBox(width: 17),
+                                          Container(
+                                            width: 2,
+                                            height: 18,
+                                            color: Colors.grey.shade300,
+                                          ),
+                                        ],
+                                      ),
+
+                                      const SizedBox(height: 14),
+
+                                      // DESTINATION
                                       _locationRow(
                                         Icons.location_on_rounded,
                                         Colors.redAccent,
                                         "Destination",
+                                        destinationAddress,
                                       ),
                                     ],
+                                  )
+                                else
+                                  const Text(
+                                    "Location information unavailable.",
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.grey,
+                                    ),
                                   ),
                               ],
                             ),
                           ),
 
+                          // ==================================================
+                          // ERROR
+                          // ==================================================
                           if (errorMessage.isNotEmpty) ...[
                             const SizedBox(height: 12),
                             _card(
@@ -1340,6 +1723,9 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
                             ),
                           ],
 
+                          // ==================================================
+                          // LOADING
+                          // ==================================================
                           if (loading)
                             const Padding(
                               padding: EdgeInsets.only(top: 18),
@@ -1362,6 +1748,10 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
     );
   }
 
+  // ============================================================
+  // TRIP INFO
+  // ============================================================
+
   Widget _tripInfo(IconData icon, String text) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -1379,22 +1769,70 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
     );
   }
 
-  Widget _locationRow(IconData icon, Color color, String title) {
+  // ============================================================
+  // LOCATION ROW
+  // ============================================================
+
+  Widget _locationRow(
+    IconData icon,
+    Color color,
+    String title,
+    String? address,
+  ) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          width: 34,
-          height: 34,
+          width: 36,
+          height: 36,
           decoration: BoxDecoration(
             color: color.withOpacity(0.10),
             shape: BoxShape.circle,
           ),
           child: Icon(icon, color: color, size: 18),
         ),
-        const SizedBox(width: 10),
-        Text(
-          title,
-          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+
+        const SizedBox(width: 11),
+
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+
+              const SizedBox(height: 3),
+
+              if (address == null || address.isEmpty)
+                const Text(
+                  "Loading address...",
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey,
+                  ),
+                )
+              else
+                Text(
+                  address,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    height: 1.35,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+            ],
+          ),
         ),
       ],
     );
