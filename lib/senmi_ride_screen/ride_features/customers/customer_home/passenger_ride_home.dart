@@ -483,6 +483,9 @@ class _RideHomeState extends State<RideHome> {
   // ============================================================
 
   Future<void> _pickLocation({required bool isPickup}) async {
+    // Remember whether a destination already existed before editing.
+    final hadDestination = destinationLocation != null;
+
     if (isPickup) {
       setState(() {
         selectingPickup = true;
@@ -508,10 +511,12 @@ class _RideHomeState extends State<RideHome> {
         ),
       );
 
+      // User cancelled map selection.
       if (selected == null) {
         return;
       }
 
+      // Convert selected coordinates into a readable address.
       final address = await _getAddressFromLatLng(selected);
 
       if (!mounted) return;
@@ -520,36 +525,39 @@ class _RideHomeState extends State<RideHome> {
         if (isPickup) {
           pickupLocation = selected;
           pickupAddress = address;
-
-          if (destinationLocation != null) {
-            estimatedFare = null;
-            estimatedDistanceKm = null;
-            estimatedDurationMinutes = null;
-            fareError = "";
-          }
         } else {
           destinationLocation = selected;
           destinationAddress = address;
         }
+
+        // Clear old fare immediately.
+        // This prevents showing the old price while the new
+        // pickup/destination is being calculated.
+        estimatedFare = null;
+        estimatedDistanceKm = null;
+        estimatedDurationMinutes = null;
+        fareError = "";
       });
 
-      // =========================================================
-      // AFTER PICKUP
-      // AUTOMATICALLY OPEN DESTINATION
-      // =========================================================
+      // ----------------------------------------------------------
+      // FIRST-TIME BOOKING
+      //
+      // If pickup was just selected and there was no destination
+      // before, automatically open destination selection.
+      // ----------------------------------------------------------
 
-      if (isPickup && mounted) {
+      if (isPickup && !hadDestination && mounted) {
         await _pickLocation(isPickup: false);
+        return;
       }
 
-      // =========================================================
-      // CALCULATE FARE
-      // =========================================================
+      // ----------------------------------------------------------
+      // EDITING EXISTING PICKUP OR DESTINATION
+      //
+      // Both locations now exist, so calculate the NEW fare.
+      // ----------------------------------------------------------
 
-      if (!isPickup &&
-          pickupLocation != null &&
-          destinationLocation != null &&
-          mounted) {
+      if (pickupLocation != null && destinationLocation != null && mounted) {
         await _calculateFare();
       }
     } finally {
@@ -1361,28 +1369,60 @@ class _LocationField extends StatelessWidget {
                           fontSize: 13.5,
                           fontWeight: FontWeight.w600,
                           color: hasLocation
-                              ? isDark
-                                    ? Colors.white
-                                    : Colors.black87
-                              : isDark
-                              ? Colors.white54
-                              : Colors.black54,
+                              ? (isDark ? Colors.white : Colors.black87)
+                              : (isDark ? Colors.white54 : Colors.black54),
                         ),
                       ),
                   ],
                 ),
               ),
 
-              if (hasLocation && onClear != null)
-                IconButton(
-                  visualDensity: VisualDensity.compact,
-                  padding: EdgeInsets.zero,
-                  icon: Icon(
-                    Icons.close_rounded,
-                    size: 18,
-                    color: isDark ? Colors.white38 : Colors.black38,
-                  ),
-                  onPressed: onClear,
+              const SizedBox(width: 8),
+
+              if (loading)
+                const SizedBox.shrink()
+              else if (hasLocation)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // EDIT BUTTON
+                    TextButton(
+                      onPressed: onTap,
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 6,
+                        ),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: const Text(
+                        "Edit",
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: senmiRidePurple,
+                        ),
+                      ),
+                    ),
+
+                    // CLEAR BUTTON
+                    if (onClear != null)
+                      IconButton(
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 30,
+                          minHeight: 30,
+                        ),
+                        icon: Icon(
+                          Icons.close_rounded,
+                          size: 18,
+                          color: isDark ? Colors.white38 : Colors.black38,
+                        ),
+                        onPressed: onClear,
+                      ),
+                  ],
                 )
               else
                 Icon(

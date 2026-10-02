@@ -297,7 +297,7 @@ class _MainCustomerHomeState extends State<MainCustomerHome> {
                     Expanded(
                       child: _ServiceCard(
                         image: "assets/mainhome/senmi_package.png",
-                        title: "Deliver a Package",
+                        title: "Send a Package",
                         description: "Send packages safely across Lagos.",
                         iconColor: senmiPurple,
                         isPrimary: false,
