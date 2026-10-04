@@ -418,6 +418,8 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
     } catch (e) {
       isAutoSearching = false;
 
+      // ignore: duplicate_ignore
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Row(
@@ -567,6 +569,11 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                     countries: const ["ng"],
                     isLatLngRequired: false,
 
+                    boxDecoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+
                     getPlaceDetailWithLatLng: (prediction) {},
 
                     itemClick: (Prediction prediction) async {
@@ -587,26 +594,36 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                         ) {
                           return Container(
                             padding: const EdgeInsets.all(10),
+                            color: Colors.white,
                             child: Row(
                               children: [
-                                const Icon(Icons.location_on),
+                                const Icon(
+                                  Icons.location_on,
+                                  color: Colors.black87,
+                                ),
                                 const SizedBox(width: 10),
                                 Expanded(
-                                  child: Text(prediction.description ?? ""),
+                                  child: Text(
+                                    prediction.description ?? "",
+                                    style: const TextStyle(color: Colors.black),
+                                  ),
                                 ),
                               ],
                             ),
                           );
                         },
 
-                    seperatedBuilder: const Divider(),
+                    seperatedBuilder: const Divider(
+                      color: Color(0xFFE5E7EB),
+                      height: 1,
+                    ),
 
                     isCrossBtnShown: true,
 
                     inputDecoration: const InputDecoration(
                       hintText: "Search location...",
                       border: InputBorder.none,
-                      prefixIcon: Icon(Icons.search),
+                      prefixIcon: Icon(Icons.search, color: Colors.black87),
                     ),
 
                     focusNode: searchFocusNode,

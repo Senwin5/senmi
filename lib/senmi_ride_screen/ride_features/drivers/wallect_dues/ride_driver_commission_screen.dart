@@ -1,5 +1,5 @@
 // ignore_for_file: deprecated_member_use
-
+import 'dart:io';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -417,10 +417,29 @@ class _RideDriverCommissionScreenState extends State<RideDriverCommissionScreen>
   }
 
   String _cleanError(Object error) {
+    // No internet / network connection
+    if (error is SocketException) {
+      return "No internet connection. Please check your Wi-Fi or mobile data and try again.";
+    }
+
     final message = error.toString().replaceFirst("Exception: ", "").trim();
 
+    final lowerMessage = message.toLowerCase();
+
+    // Catch network errors that may be wrapped inside another exception.
+    if (lowerMessage.contains("failed host lookup") ||
+        lowerMessage.contains("network is unreachable") ||
+        lowerMessage.contains("connection refused") ||
+        lowerMessage.contains("connection reset") ||
+        lowerMessage.contains("connection timed out") ||
+        lowerMessage.contains("timed out") ||
+        lowerMessage.contains("socketexception") ||
+        lowerMessage.contains("no internet")) {
+      return "No internet connection. Please check your Wi-Fi or mobile data and try again.";
+    }
+
     if (message.isEmpty) {
-      return "Unable to load commission information.";
+      return "Unable to load commission information. Please try again.";
     }
 
     return message;
@@ -982,25 +1001,53 @@ class _RideDriverCommissionScreenState extends State<RideDriverCommissionScreen>
   // ============================================================
 
   Widget _buildErrorState() {
+    final isOffline =
+        errorMessage?.toLowerCase().contains("no internet connection") ?? false;
+
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(24),
       children: [
         const SizedBox(height: 100),
-        Icon(Icons.error_outline_rounded, size: 58, color: Colors.red.shade300),
-        const SizedBox(height: 18),
-        const Text(
-          "Unable to load commission",
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700),
+
+        Container(
+          width: 86,
+          height: 86,
+          decoration: BoxDecoration(
+            color: senmiRidePurple.withOpacity(0.10),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            isOffline ? Icons.wifi_off_rounded : Icons.cloud_off_rounded,
+            size: 44,
+            color: senmiRidePurple,
+          ),
         ),
-        const SizedBox(height: 8),
+
+        const SizedBox(height: 22),
+
         Text(
-          errorMessage ?? "Something went wrong.",
+          isOffline ? "You're offline" : "Unable to load commission",
           textAlign: TextAlign.center,
-          style: TextStyle(color: Colors.grey.shade600),
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
         ),
-        const SizedBox(height: 20),
+
+        const SizedBox(height: 10),
+
+        Text(
+          isOffline
+              ? "Please check your Wi-Fi or mobile data and try again."
+              : errorMessage ?? "Something went wrong. Please try again.",
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Colors.grey.shade600,
+            fontSize: 14,
+            height: 1.5,
+          ),
+        ),
+
+        const SizedBox(height: 24),
+
         Center(
           child: ElevatedButton.icon(
             onPressed: () {
@@ -1011,6 +1058,10 @@ class _RideDriverCommissionScreenState extends State<RideDriverCommissionScreen>
             style: ElevatedButton.styleFrom(
               backgroundColor: senmiRidePurple,
               foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 13),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
           ),
         ),

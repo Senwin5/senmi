@@ -547,8 +547,8 @@ class RideService {
     required int rating,
     String comment = "",
   }) async {
-    final response = await http 
-        .post( 
+    final response = await http
+        .post(
           Uri.parse("$baseUrl/ride/rides/$rideId/rating/"),
           headers: await headers(),
           body: jsonEncode({"rating": rating, "comment": comment}),
@@ -618,7 +618,7 @@ class RideService {
     }
 
     // ---------------------------------
-    // COMMISSION DUE 
+    // COMMISSION DUE
     // ---------------------------------
 
     throw Exception(
@@ -640,6 +640,41 @@ class RideService {
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw Exception(
         data["detail"]?.toString() ?? "Unable to load driver statistics.",
+      );
+    }
+
+    return data;
+  }
+
+  static Future<Map<String, dynamic>> updateRideRoute({
+    required String rideId,
+    required String pickupAddress,
+    required String destinationAddress,
+    required double pickupLat,
+    required double pickupLng,
+    required double destinationLat,
+    required double destinationLng,
+  }) async {
+    final response = await http
+        .patch(
+          Uri.parse("$baseUrl/ride/rides/$rideId/"),
+          headers: await headers(),
+          body: jsonEncode({
+            "pickup_address": pickupAddress,
+            "destination_address": destinationAddress,
+            "pickup_lat": pickupLat,
+            "pickup_lng": pickupLng,
+            "destination_lat": destinationLat,
+            "destination_lng": destinationLng,
+          }),
+        )
+        .timeout(const Duration(seconds: 30));
+
+    final data = decodeResponse(response);
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(
+        data["detail"]?.toString() ?? "Unable to update trip route.",
       );
     }
 
