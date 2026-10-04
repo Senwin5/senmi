@@ -36,6 +36,8 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
   String? driverPhone;
   String? driverImage;
   String? vehicleNumber;
+  double? driverRating;
+  int? driverRatingCount;
 
   double? fare;
   double? estimatedDistanceKm;
@@ -278,32 +280,19 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
       destinationLocation = LatLng(destinationLat, destinationLng);
     }
 
-    final driver = data["driver"];
+    final driver = data["driver_profile"];
 
     if (driver is Map) {
-      driverName = _firstString([
-        driver["name"],
-        driver["full_name"],
-        driver["username"],
-      ]);
+      driverName = _firstString([driver["full_name"]]);
 
-      driverPhone = _firstString([
-        driver["phone"],
-        driver["phone_number"],
-        driver["mobile"],
-      ]);
+      driverPhone = _firstString([driver["phone_number"]]);
 
-      driverImage = _firstString([
-        driver["profile_picture"],
-        driver["profile_image"],
-        driver["photo"],
-      ]);
+      driverImage = _firstString([driver["profile_photo"]]);
 
-      vehicleNumber = _firstString([
-        driver["vehicle_number"],
-        driver["vehicle_plate"],
-        driver["plate_number"],
-      ]);
+      vehicleNumber = _firstString([driver["plate_number"]]);
+
+      driverRating = _toDouble(driver["rating"]);
+      driverRatingCount = _toInt(driver["rating_count"]);
     }
 
     driverName ??= _firstString([
@@ -1296,6 +1285,37 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
                       "Senmi Driver",
                       style: TextStyle(color: Colors.white70, fontSize: 12.5),
                     ),
+                    if (driverRating != null) ...[
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.star_rounded,
+                            color: Colors.amber,
+                            size: 17,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            driverRating!.toStringAsFixed(1),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          if (driverRatingCount != null) ...[
+                            const SizedBox(width: 4),
+                            Text(
+                              "($driverRatingCount)",
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 11.5,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
                     const SizedBox(height: 8),
                     const Row(
                       children: [
