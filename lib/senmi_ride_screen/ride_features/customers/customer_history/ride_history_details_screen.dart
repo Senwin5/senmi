@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:senmi/senmi_shared_account/driver_rate/rate_driver_screen.dart';
 import 'package:senmi/services/driver_api_service.dart';
 import 'package:senmi/senmi_ride_screen/ride_features/customers/customer_home/passenger_ride_home.dart';
 
@@ -281,6 +282,32 @@ class _RideHistoryDetailsScreenState extends State<RideHistoryDetailsScreen> {
     );
   }
 
+  Future<void> _openRatingScreen() async {
+    final driver = ride["driver_profile"];
+
+    if (driver is! Map) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Driver information is not available.")),
+      );
+      return;
+    }
+
+    final rated = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => RateDriverScreen(
+          rideId: _stringValue(ride["ride_id"]),
+          driver: Map<String, dynamic>.from(driver),
+        ),
+      ),
+    );
+
+    if (rated == true && mounted) {
+      setState(() {
+        ride["has_rating"] = true;
+      });
+    }
+  }
   // ============================================================
   // CANCEL RIDE
   // ============================================================
@@ -966,7 +993,57 @@ class _RideHistoryDetailsScreenState extends State<RideHistoryDetailsScreen> {
             // ==================================================
             // DRIVER
             // ==================================================
-            if (ride["driver_profile"] is Map) _driverCard(isDark: isDark),
+            if (ride["driver_profile"] is Map) ...[
+              _driverCard(isDark: isDark),
+
+              // ==================================================
+              // RATE DRIVER
+              // ==================================================
+              if (status == "completed") ...[
+                const SizedBox(height: 14),
+
+                SizedBox(
+                  width: double.infinity,
+                  height: 54,
+                  child: ride["has_rating"] == true
+                      ? OutlinedButton.icon(
+                          onPressed: null,
+                          icon: const Icon(Icons.check_circle_rounded),
+                          label: const Text(
+                            "Driver Rated",
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                        )
+                      : ElevatedButton.icon(
+                          onPressed: _openRatingScreen,
+                          icon: const Icon(Icons.star_rounded),
+                          label: const Text(
+                            "Rate Your Driver",
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: senmiRidePurple,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                        ),
+                ),
+              ],
+            ],
 
             // ==================================================
             // CANCEL BUTTON

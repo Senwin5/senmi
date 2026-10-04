@@ -8,6 +8,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:geocoding/geocoding.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:senmi/senmi_shared_account/driver_rate/rate_driver_screen.dart';
 import 'package:senmi/services/driver_api_service.dart';
 import 'package:senmi/senmi_shared_account/map/map_picker_screen.dart';
 import 'package:share_plus/share_plus.dart';
@@ -38,6 +39,8 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
   String? vehicleNumber;
   double? driverRating;
   int? driverRatingCount;
+  bool hasRating = false;
+  bool _openingRating = false;
 
   double? fare;
   double? estimatedDistanceKm;
@@ -219,6 +222,8 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
     }
 
     try {
+      final oldStatus = status;
+
       final data = await RideService.getRideDetails(widget.rideId);
 
       if (!mounted) return;
@@ -243,6 +248,23 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
       if (mounted) {
         setState(() {});
       }
+
+      final becameCompleted =
+          (status == "completed" || status == "completed_ride") &&
+          oldStatus != "completed" &&
+          oldStatus != "completed_ride";
+
+      if (becameCompleted &&
+          !hasRating &&
+          !_openingRating &&
+          driverName != null &&
+          driverName!.isNotEmpty) {
+        await Future.delayed(const Duration(milliseconds: 400));
+
+        if (!mounted) return;
+
+        await _openRatingScreen();
+      }
     } catch (_) {}
   }
 
@@ -264,6 +286,7 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
     estimatedDurationMinutes = _toInt(data["estimated_duration_minutes"]);
 
     etaMinutes = _toInt(data["eta_minutes"]);
+    hasRating = data["has_rating"] == true;
 
     final pickupLat = _toDouble(data["pickup_lat"]);
     final pickupLng = _toDouble(data["pickup_lng"]);
@@ -852,7 +875,9 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
 
       if (newStatus == "accepted" ||
           newStatus == "arrived" ||
-          newStatus == "started") {
+          newStatus == "started" ||
+          newStatus == "completed" ||
+          newStatus == "completed_ride") {
         await _refreshRide();
       }
 
@@ -874,7 +899,7 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
         status = newStatus;
       }
 
-      etaMinutes = _toInt(data["eta_minutes"]);
+      hasRating = data["has_rating"] == true;
 
       _updateMarkers();
 
@@ -898,6 +923,50 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
         });
       }
     }
+  }
+
+  Future<void> _openRatingScreen() async {
+    if (!mounted ||
+        _openingRating ||
+        hasRating ||
+        (status != "completed" && status != "completed_ride")) {
+      return;
+    }
+
+    if (driverName == null || driverName!.isEmpty) {
+      return;
+    }
+
+    setState(() {
+      _openingRating = true;
+    });
+
+    final driver = <String, dynamic>{
+      "full_name": driverName,
+      "phone_number": driverPhone,
+      "profile_photo": driverImage,
+      "plate_number": vehicleNumber,
+      "rating": driverRating,
+      "rating_count": driverRatingCount,
+    };
+
+    await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => RateDriverScreen(rideId: widget.rideId, driver: driver),
+      ),
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _openingRating = false;
+    });
+
+    // Always refresh after returning from the rating screen.
+    await _refreshRide();
   }
 
   // ============================================================
@@ -1375,6 +1444,134 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _ratingCard(bool isDark) {
+    if (hasRating) {
+      return _card(
+        child: Row(
+          children: [
+            Container(
+              width: 46,
+              height: 46,
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.10),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.check_circle_rounded,
+                color: Colors.green,
+                size: 27,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Driver Rated",
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    "Thank you for rating your Senmi driver.",
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      color: isDark ? Colors.white60 : Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.star_rounded, color: Colors.amber, size: 25),
+          ],
+        ),
+      );
+    }
+
+    return _card(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  color: senmiRidePurple.withOpacity(0.10),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.star_rounded,
+                  color: senmiRidePurple,
+                  size: 27,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "How was your ride?",
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      "Rate your experience with ${driverName ?? "your driver"}",
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        color: isDark ? Colors.white60 : Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 14),
+
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: ElevatedButton.icon(
+              onPressed: _openingRating ? null : _openRatingScreen,
+              icon: _openingRating
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.star_rounded),
+              label: Text(
+                _openingRating ? "Opening..." : "Rate Your Driver",
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: senmiRidePurple,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+            ),
           ),
         ],
       ),
@@ -1938,6 +2135,14 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
                           const SizedBox(height: 12),
 
                           _driverCard(isDark),
+
+                          if (isCompleted &&
+                              driverName != null &&
+                              driverName!.isNotEmpty) ...[
+                            const SizedBox(height: 12),
+
+                            _ratingCard(isDark),
+                          ],
 
                           const SizedBox(height: 12),
 
