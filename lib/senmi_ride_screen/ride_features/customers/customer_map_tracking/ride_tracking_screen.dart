@@ -829,11 +829,12 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
     }
   }
 
-  // ============================================================
+  // ================================
   // WEBSOCKET EVENT
-  // ============================================================
+  // ===============================
 
-  void _handleWebSocketEvent(Map<String, dynamic> data) {
+  //void _handleWebSocketEvent(Map<String, dynamic> data) {
+  Future<void> _handleWebSocketEvent(Map<String, dynamic> data) async {
     final eventType = data["type"]?.toString();
 
     if (eventType == "ride_status") {
@@ -848,6 +849,12 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
       }
 
       _updateMarkers();
+
+      if (newStatus == "accepted" ||
+          newStatus == "arrived" ||
+          newStatus == "started") {
+        await _refreshRide();
+      }
 
       return;
     }
