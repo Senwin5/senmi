@@ -597,6 +597,237 @@ class _RideHistoryDetailsScreenState extends State<RideHistoryDetailsScreen> {
   }
 
   // ============================================================
+  // DRIVER CARD
+  // ============================================================
+
+  Widget _driverCard({required bool isDark}) {
+    final driver = ride["driver_profile"];
+
+    if (driver is! Map) {
+      return const SizedBox.shrink();
+    }
+
+    final driverName = _stringValue(
+      driver["full_name"],
+      fallback: "Your Driver",
+    );
+
+    final driverPhone = _stringValue(driver["phone_number"]);
+
+    final driverImage = _stringValue(driver["profile_photo"]);
+
+    final plateNumber = _stringValue(
+      driver["plate_number"],
+      fallback: "Vehicle not assigned",
+    );
+
+    final vehicleBrand = _stringValue(driver["vehicle_brand"]);
+
+    final vehicleModel = _stringValue(driver["vehicle_model"]);
+
+    final vehicleColor = _stringValue(driver["vehicle_color"]);
+
+    final rating = _toDouble(driver["rating"]);
+
+    final ratingCount = driver["rating_count"];
+
+    final vehicleName = [
+      vehicleBrand,
+      vehicleModel,
+    ].where((value) => value.isNotEmpty).join(" ");
+
+    final vehicleDetails = [
+      vehicleName,
+      vehicleColor,
+    ].where((value) => value.isNotEmpty).join(" • ");
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E22) : Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withOpacity(0.06)
+              : Colors.black.withOpacity(0.06),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.12 : 0.04),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Driver",
+            style: TextStyle(
+              fontSize: 19,
+              fontWeight: FontWeight.w800,
+              color: isDark ? Colors.white : Colors.black87,
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          Row(
+            children: [
+              // DRIVER PHOTO
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: senmiRidePurple.withOpacity(0.10),
+                ),
+                child: ClipOval(
+                  child: driverImage.isNotEmpty
+                      ? Image.network(
+                          driverImage,
+                          width: 64,
+                          height: 64,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) {
+                            return const Icon(
+                              Icons.person,
+                              size: 34,
+                              color: senmiRidePurple,
+                            );
+                          },
+                        )
+                      : const Icon(
+                          Icons.person,
+                          size: 34,
+                          color: senmiRidePurple,
+                        ),
+                ),
+              ),
+
+              const SizedBox(width: 14),
+
+              // DRIVER NAME + RATING
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      driverName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                    ),
+
+                    const SizedBox(height: 5),
+
+                    if (rating != null)
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.star_rounded,
+                            color: Colors.amber,
+                            size: 17,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            rating.toStringAsFixed(1),
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: isDark ? Colors.white70 : Colors.black54,
+                            ),
+                          ),
+                          if (ratingCount != null) ...[
+                            const SizedBox(width: 4),
+                            Text(
+                              "($ratingCount)",
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isDark ? Colors.white38 : Colors.black38,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+
+                    if (driverPhone.isNotEmpty) ...[
+                      const SizedBox(height: 5),
+                      Text(
+                        driverPhone,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isDark ? Colors.white54 : Colors.black54,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
+          // VEHICLE
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(13),
+            decoration: BoxDecoration(
+              color: senmiRidePurple.withOpacity(0.06),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.directions_car_rounded,
+                  color: senmiRidePurple,
+                  size: 23,
+                ),
+                const SizedBox(width: 10),
+
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (vehicleDetails.isNotEmpty)
+                        Text(
+                          vehicleDetails,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
+                        ),
+
+                      const SizedBox(height: 3),
+
+                      Text(
+                        plateNumber,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w900,
+                          color: senmiRidePurple,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ============================================================
   // BUILD
   // ============================================================
 
@@ -729,6 +960,13 @@ class _RideHistoryDetailsScreenState extends State<RideHistoryDetailsScreen> {
             const SizedBox(height: 10),
 
             _locationCard(isDark: isDark),
+
+            const SizedBox(height: 16),
+
+            // ==================================================
+            // DRIVER
+            // ==================================================
+            if (ride["driver_profile"] is Map) _driverCard(isDark: isDark),
 
             // ==================================================
             // CANCEL BUTTON
