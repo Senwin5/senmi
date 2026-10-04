@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:senmi/senmi_shared_account/driver_profile/ride_driver_security_screen.dart';
 import 'package:senmi/services/driver_api_service.dart';
 
+
 const Color senmiRidePurple = Color(0xFF581C87);
 
 class RideDriverProfileScreen extends StatefulWidget {
