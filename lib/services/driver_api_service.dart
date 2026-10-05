@@ -745,4 +745,35 @@ class RideService {
 
     return Map<String, dynamic>.from(decoded as Map);
   }
+
+  // ============================================================
+  // PUBLIC LIVE RIDE TRACKING
+  // ============================================================
+
+  static Future<Map<String, dynamic>> getPublicRideTracking(
+    String token,
+  ) async {
+    final cleanToken = token.trim();
+
+    if (cleanToken.isEmpty) {
+      throw Exception("Invalid ride tracking token.");
+    }
+
+    final response = await http
+        .get(
+          Uri.parse("$baseUrl/ride/rides/shared/$cleanToken/"),
+          headers: const {"Accept": "application/json"},
+        )
+        .timeout(const Duration(seconds: 30));
+
+    final data = decodeResponse(response);
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(
+        data["detail"]?.toString() ?? "Unable to load shared ride.",
+      );
+    }
+
+    return data;
+  }
 }
