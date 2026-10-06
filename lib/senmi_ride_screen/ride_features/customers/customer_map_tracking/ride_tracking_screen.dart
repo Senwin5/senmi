@@ -379,6 +379,40 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
     }
   }
 
+  Future<void> _fitRouteOnMap() async {
+    if (mapController == null || routePoints.isEmpty) {
+      return;
+    }
+
+    try {
+      double minLat = routePoints.first.latitude;
+      double maxLat = routePoints.first.latitude;
+      double minLng = routePoints.first.longitude;
+      double maxLng = routePoints.first.longitude;
+
+      for (final point in routePoints) {
+        if (point.latitude < minLat) minLat = point.latitude;
+        if (point.latitude > maxLat) maxLat = point.latitude;
+        if (point.longitude < minLng) minLng = point.longitude;
+        if (point.longitude > maxLng) maxLng = point.longitude;
+      }
+
+      // Add a little padding around the route.
+      const padding = 0.002;
+
+      await mapController!.animateCamera(
+        CameraUpdate.newLatLngBounds(
+          LatLngBounds(
+            southwest: LatLng(minLat - padding, minLng - padding),
+            northeast: LatLng(maxLat + padding, maxLng + padding),
+          ),
+          70,
+        ),
+      );
+    } catch (e) {
+      debugPrint("FIT ROUTE CAMERA ERROR: $e");
+    }
+  }
   // ============================================================
   // LOAD ADDRESSES
   // ============================================================
@@ -656,6 +690,18 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
             jointType: JointType.round,
           ),
         };
+
+        if (mounted) {
+          setState(() {});
+        }
+
+        // Wait for Google Maps to render the new polyline,
+        // then fit the entire route on screen.
+        await Future.delayed(const Duration(milliseconds: 300));
+
+        if (mounted) {
+          await _fitRouteOnMap();
+        }
       }
     } catch (_) {
       // Keep ride usable if route calculation fails.

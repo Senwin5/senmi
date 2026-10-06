@@ -49,6 +49,74 @@ class _RideDriverHomeState extends State<RideDriverHome> {
 
     _loadCurrentRide();
     _loadDriverStats();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _goOnlineAutomatically();
+    });
+  }
+  // ============================================================
+  // AUTOMATICALLY GO ONLINE
+  // ============================================================
+
+  Future<void> _goOnlineAutomatically() async {
+    if (isOnline || isUpdatingOnline) return;
+
+    if (!mounted) return;
+
+    setState(() {
+      isUpdatingOnline = true;
+    });
+
+    try {
+      await RideDriverLocationService.goOnline(
+        onPosition: (Position position) {
+          if (!mounted) return;
+
+          setState(() {
+            locationSharing = true;
+            currentLatitude = position.latitude;
+            currentLongitude = position.longitude;
+          });
+        },
+        onLocationError: (Object error) {
+          if (!mounted) return;
+
+          setState(() {
+            locationSharing = false;
+          });
+
+          debugPrint("DRIVER LOCATION ERROR: $error");
+        },
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        isOnline = true;
+        isUpdatingOnline = false;
+      });
+
+      debugPrint("DRIVER AUTOMATICALLY ONLINE");
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        isOnline = false;
+        locationSharing = false;
+        isUpdatingOnline = false;
+      });
+
+      debugPrint("AUTO ONLINE ERROR: $e");
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceFirst("Exception: ", "")),
+          backgroundColor: Colors.redAccent,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
   }
 
   // ============================================================
@@ -269,7 +337,6 @@ class _RideDriverHomeState extends State<RideDriverHome> {
 
   @override
   void dispose() {
-    RideDriverLocationService.dispose();
     super.dispose();
   }
 
