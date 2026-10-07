@@ -903,13 +903,16 @@ class _RideDriverTrackingScreenState extends State<RideDriverTrackingScreen> {
   // ============================================================
 
   Widget _infoItem(String title, String value, IconData icon) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Colors.grey.shade50,
+          color: colorScheme.surface,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.grey.shade200),
+          border: Border.all(color: colorScheme.outlineVariant),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -918,12 +921,19 @@ class _RideDriverTrackingScreenState extends State<RideDriverTrackingScreen> {
             const SizedBox(height: 8),
             Text(
               title,
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
+              style: TextStyle(
+                fontSize: 12,
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 3),
             Text(
               value,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 15,
+                color: colorScheme.onSurface,
+              ),
             ),
           ],
         ),
@@ -1133,7 +1143,8 @@ class _RideDriverTrackingScreenState extends State<RideDriverTrackingScreen> {
                       child: Container(
                         height: 35,
                         width: 2,
-                        color: Colors.grey.shade300,
+
+                        color: Theme.of(context).colorScheme.outlineVariant,
                       ),
                     ),
                     Row(
