@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:senmi/main.dart';
 import 'package:senmi/senmi_ride_screen/ride_features/drivers/driver_activity/ride_driver_activity_screen.dart';
 import 'package:senmi/senmi_ride_screen/ride_features/drivers/wallect_dues/ride_driver_commission_screen.dart';
 import 'package:senmi/senmi_shared_account/driver_profile/ride_driver_settings_screen.dart';
@@ -795,29 +796,38 @@ class _RideDriverHomeState extends State<RideDriverHome> {
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
+      backgroundColor: isDark
+          ? const Color(0xFF121212)
+          : const Color(0xFFF7F7F8),
+
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
+        backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
+        foregroundColor: isDark ? Colors.white : Colors.black87,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
-        title: const Text(
+
+        title: Text(
           "Driver Dashboard",
-          style: TextStyle(fontWeight: FontWeight.w800, color: Colors.black87),
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            color: isDark ? Colors.white : Colors.black87,
+          ),
         ),
+
         centerTitle: true,
+
         actions: [
           IconButton(
             tooltip: "Notifications",
             onPressed: () {},
-            icon: const Icon(
+            icon: Icon(
               Icons.notifications_none_rounded,
-              color: senmiRidePurple,
+              color: isDark ? Colors.white : senmiRidePurple,
             ),
           ),
           const SizedBox(width: 4),
         ],
       ),
-
       body: SafeArea(
         child: RefreshIndicator(
           color: senmiRidePurple,
@@ -1049,7 +1059,7 @@ class _RideDriverHomeState extends State<RideDriverHome> {
                             context,
                             MaterialPageRoute(
                               builder: (_) => RideDriverSettingsScreen(
-                                darkModeNotifier: ValueNotifier<bool>(isDark),
+                                darkModeNotifier: isDarkMode,
                               ),
                             ),
                           );

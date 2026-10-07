@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:senmi/main.dart';
 import 'package:senmi/services/driver_api_service.dart';
 import 'package:senmi/senmi_ride_screen/ride_features/drivers/driver_order/ride_driver_rides_screen.dart';
 import 'package:senmi/senmi_ride_screen/ride_features/drivers/drivers_home/ride_driver_home.dart';
@@ -18,102 +19,89 @@ class DriverMainBottomNav extends StatefulWidget {
 class _DriverMainBottomNavState extends State<DriverMainBottomNav> {
   int _currentIndex = 0;
 
-  final ValueNotifier<bool> darkModeNotifier = ValueNotifier<bool>(false);
-
   late final List<Widget> _screens = [
     const RideDriverHome(),
     const RideDriverRidesScreen(),
     const DriverTrackingTab(),
     const RideDriverCommissionScreen(),
-    RideDriverSettingsScreen(darkModeNotifier: darkModeNotifier),
+    RideDriverSettingsScreen(darkModeNotifier: isDarkMode),
   ];
 
   @override
-  void dispose() {
-    darkModeNotifier.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<bool>(
-      valueListenable: darkModeNotifier,
-      builder: (context, isDark, child) {
-        return Scaffold(
-          backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
-          body: IndexedStack(index: _currentIndex, children: _screens),
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
 
-          bottomNavigationBar: NavigationBar(
-            backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+      body: IndexedStack(index: _currentIndex, children: _screens),
 
-            surfaceTintColor: Colors.transparent,
+      bottomNavigationBar: NavigationBar(
+        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        surfaceTintColor: Colors.transparent,
+        elevation: 3,
 
-            elevation: 3,
+        selectedIndex: _currentIndex,
 
-            selectedIndex: _currentIndex,
+        onDestinationSelected: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
 
-            onDestinationSelected: (index) {
-              setState(() {
-                _currentIndex = index;
-              });
-            },
+        indicatorColor: isDark
+            ? colorScheme.primaryContainer
+            // ignore: deprecated_member_use
+            : senmiRidePurple.withOpacity(0.12),
 
-            indicatorColor: isDark
-                ? Colors.deepPurple.shade900
-                // ignore: deprecated_member_use
-                : senmiRidePurple.withOpacity(0.12),
+        labelTextStyle: WidgetStateProperty.resolveWith<TextStyle?>((states) {
+          if (states.contains(WidgetState.selected)) {
+            return TextStyle(
+              color: isDark ? colorScheme.onSurface : senmiRidePurple,
+              fontWeight: FontWeight.w600,
+            );
+          }
 
-            labelTextStyle: WidgetStateProperty.resolveWith<TextStyle?>((
-              states,
-            ) {
-              if (states.contains(WidgetState.selected)) {
-                return TextStyle(
-                  color: isDark ? Colors.deepPurple.shade200 : senmiRidePurple,
-                  fontWeight: FontWeight.w600,
-                );
-              }
+          return TextStyle(
+            color: colorScheme.onSurfaceVariant,
+            fontWeight: FontWeight.w500,
+          );
+        }),
 
-              return TextStyle(
-                color: isDark ? Colors.white70 : Colors.black54,
-                fontWeight: FontWeight.w500,
-              );
-            }),
-
-            destinations: const [
-              NavigationDestination(
-                icon: Icon(Icons.home_outlined),
-                selectedIcon: Icon(Icons.home_rounded),
-                label: "Home",
-              ),
-
-              NavigationDestination(
-                icon: Icon(Icons.directions_car_outlined),
-                selectedIcon: Icon(Icons.directions_car_rounded),
-                label: "Rides",
-              ),
-
-              NavigationDestination(
-                icon: Icon(Icons.map_outlined),
-                selectedIcon: Icon(Icons.map_rounded),
-                label: "Tracking",
-              ),
-
-              NavigationDestination(
-                icon: Icon(Icons.account_balance_wallet_outlined),
-                selectedIcon: Icon(Icons.account_balance_wallet_rounded),
-                label: "Dues",
-              ),
-
-              NavigationDestination(
-                icon: Icon(Icons.person_outline_rounded),
-                selectedIcon: Icon(Icons.person_rounded),
-                label: "Profile",
-              ),
-            ],
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home_rounded),
+            label: "Home",
           ),
-        );
-      },
+
+          NavigationDestination(
+            icon: Icon(Icons.directions_car_outlined),
+            selectedIcon: Icon(Icons.directions_car_rounded),
+            label: "Rides",
+          ),
+
+          NavigationDestination(
+            icon: Icon(Icons.map_outlined),
+            selectedIcon: Icon(Icons.map_rounded),
+            label: "Tracking",
+          ),
+
+          NavigationDestination(
+            icon: Icon(Icons.account_balance_wallet_outlined),
+            selectedIcon: Icon(Icons.account_balance_wallet_rounded),
+            label: "Dues",
+          ),
+
+          NavigationDestination(
+            icon: Icon(Icons.person_outline_rounded),
+            selectedIcon: Icon(Icons.person_rounded),
+            label: "Profile",
+          ),
+        ],
+      ),
     );
   }
 }
@@ -169,9 +157,15 @@ class _DriverTrackingTabState extends State<DriverTrackingTab> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     if (loading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator(color: senmiRidePurple)),
+      return Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        body: Center(
+          child: CircularProgressIndicator(color: colorScheme.primary),
+        ),
       );
     }
 
@@ -181,49 +175,68 @@ class _DriverTrackingTabState extends State<DriverTrackingTab> {
 
     if (activeRide == null) {
       return Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+
         appBar: AppBar(
           title: const Text("Tracking"),
-          backgroundColor: senmiRidePurple,
-          foregroundColor: Colors.white,
+          backgroundColor: colorScheme.primary,
+          foregroundColor: colorScheme.onPrimary,
           elevation: 0,
         ),
+
         body: RefreshIndicator(
           onRefresh: _loadActiveRide,
+
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
-            children: const [
-              SizedBox(height: 180),
 
-              Icon(Icons.location_off_outlined, size: 70, color: Colors.grey),
+            children: [
+              const SizedBox(height: 180),
 
-              SizedBox(height: 20),
+              Icon(
+                Icons.location_off_outlined,
+                size: 70,
+                color: colorScheme.onSurfaceVariant,
+              ),
+
+              const SizedBox(height: 20),
 
               Center(
                 child: Text(
                   "No Active Ride",
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-              ),
-
-              SizedBox(height: 8),
-
-              Center(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 30),
-                  child: Text(
-                    "Accept a ride to start tracking.",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey, fontSize: 15),
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
                   ),
                 ),
               ),
 
-              SizedBox(height: 20),
+              const SizedBox(height: 8),
+
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 30),
+                  child: Text(
+                    "Accept a ride to start tracking.",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: colorScheme.onSurfaceVariant,
+                      fontSize: 15,
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
 
               Center(
                 child: Text(
                   "Pull down to refresh.",
-                  style: TextStyle(color: Colors.grey, fontSize: 13),
+                  style: TextStyle(
+                    color: colorScheme.onSurfaceVariant,
+                    fontSize: 13,
+                  ),
                 ),
               ),
             ],
