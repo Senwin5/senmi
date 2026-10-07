@@ -865,13 +865,16 @@ class _RideDriverRidesScreenState extends State<RideDriverRidesScreen>
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
+        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        foregroundColor: isDark ? Colors.white : Colors.black87,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
-        title: const Text(
+        title: Text(
           "Driver Rides",
-          style: TextStyle(fontWeight: FontWeight.w800, color: Colors.black87),
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            color: isDark ? Colors.white : Colors.black87,
+          ),
         ),
         centerTitle: true,
         actions: [
@@ -887,7 +890,7 @@ class _RideDriverRidesScreenState extends State<RideDriverRidesScreen>
                       color: senmiRidePurple,
                     ),
                   )
-                : const Icon(Icons.refresh_rounded, color: senmiRidePurple),
+                : const Icon(Icons.refresh_rounded, color: Colors.white),
           ),
         ],
       ),

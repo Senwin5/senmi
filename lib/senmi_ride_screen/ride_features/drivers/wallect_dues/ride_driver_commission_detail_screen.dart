@@ -118,6 +118,10 @@ class RideDriverCommissionDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = theme.colorScheme;
+
     final status = _paymentStatus(payment["status"]);
     final statusColor = _statusColor(status);
 
@@ -133,8 +137,36 @@ class RideDriverCommissionDetailScreen extends StatelessWidget {
     final createdAt = payment["created_at"];
     final paidAt = payment["paid_at"];
 
+    // Dark-mode-only UI colors.
+    // Light-mode values remain the same as before.
+    final scaffoldColor = isDark
+        ? const Color(0xFF121212)
+        : const Color(0xFFF5F5F7);
+
+    final surfaceColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+
+    final primaryTextColor = isDark ? Colors.white : Colors.black87;
+
+    final secondaryTextColor = isDark
+        ? colorScheme.onSurfaceVariant
+        : Colors.grey.shade600;
+
+    final mutedTextColor = isDark
+        ? colorScheme.onSurfaceVariant
+        : Colors.grey.shade700;
+
+    final lightMutedTextColor = isDark
+        ? colorScheme.onSurfaceVariant
+        : Colors.grey.shade500;
+
+    final dividerColor = isDark
+        ? colorScheme.outlineVariant
+        : Colors.grey.shade300;
+
+    final receiptCutoutColor = isDark ? scaffoldColor : const Color(0xFFF5F5F7);
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F7),
+      backgroundColor: scaffoldColor,
 
       appBar: AppBar(
         title: const Text(
@@ -142,8 +174,8 @@ class RideDriverCommissionDetailScreen extends StatelessWidget {
           style: TextStyle(fontWeight: FontWeight.w700),
         ),
         centerTitle: false,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
+        backgroundColor: surfaceColor,
+        foregroundColor: primaryTextColor,
         elevation: 0,
       ),
 
@@ -158,11 +190,11 @@ class RideDriverCommissionDetailScreen extends StatelessWidget {
               Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: surfaceColor,
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.06),
+                      color: Colors.black.withOpacity(isDark ? 0.25 : 0.06),
                       blurRadius: 20,
                       offset: const Offset(0, 8),
                     ),
@@ -203,10 +235,7 @@ class RideDriverCommissionDetailScreen extends StatelessWidget {
 
                     Text(
                       "Commission Payment Receipt",
-                      style: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontSize: 13,
-                      ),
+                      style: TextStyle(color: secondaryTextColor, fontSize: 13),
                     ),
 
                     const SizedBox(height: 25),
@@ -214,10 +243,10 @@ class RideDriverCommissionDetailScreen extends StatelessWidget {
                     // AMOUNT
                     Text(
                       _formatMoney(amount),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.w900,
-                        color: Colors.black87,
+                        color: primaryTextColor,
                       ),
                     ),
 
@@ -260,15 +289,18 @@ class RideDriverCommissionDetailScreen extends StatelessWidget {
 
                     const SizedBox(height: 27),
 
-                    _receiptDivider(),
+                    _receiptDivider(
+                      cutoutColor: receiptCutoutColor,
+                      dividerColor: dividerColor,
+                    ),
 
                     const SizedBox(height: 21),
 
                     // ==================================================
                     // PAYMENT INFORMATION
                     // ==================================================
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
@@ -276,6 +308,7 @@ class RideDriverCommissionDetailScreen extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w800,
+                            color: primaryTextColor,
                           ),
                         ),
                       ),
@@ -291,26 +324,58 @@ class RideDriverCommissionDetailScreen extends StatelessWidget {
                             "Amount",
                             _formatMoney(amount),
                             boldValue: true,
+                            textColor: primaryTextColor,
+                            secondaryColor: secondaryTextColor,
                           ),
 
-                          _detailRow("Payment Method", paymentMethod),
+                          _detailRow(
+                            "Payment Method",
+                            paymentMethod,
+                            textColor: primaryTextColor,
+                            secondaryColor: secondaryTextColor,
+                          ),
 
-                          _detailRow("Status", status, valueColor: statusColor),
+                          _detailRow(
+                            "Status",
+                            status,
+                            valueColor: statusColor,
+                            textColor: primaryTextColor,
+                            secondaryColor: secondaryTextColor,
+                          ),
 
                           if (reference.isNotEmpty)
-                            _detailRow("Reference", reference, allowWrap: true),
+                            _detailRow(
+                              "Reference",
+                              reference,
+                              allowWrap: true,
+                              textColor: primaryTextColor,
+                              secondaryColor: secondaryTextColor,
+                            ),
 
-                          _detailRow("Created", _formatDate(createdAt)),
+                          _detailRow(
+                            "Created",
+                            _formatDate(createdAt),
+                            textColor: primaryTextColor,
+                            secondaryColor: secondaryTextColor,
+                          ),
 
                           if (paidAt != null)
-                            _detailRow("Paid At", _formatDate(paidAt)),
+                            _detailRow(
+                              "Paid At",
+                              _formatDate(paidAt),
+                              textColor: primaryTextColor,
+                              secondaryColor: secondaryTextColor,
+                            ),
                         ],
                       ),
                     ),
 
                     const SizedBox(height: 7),
 
-                    _receiptDivider(),
+                    _receiptDivider(
+                      cutoutColor: receiptCutoutColor,
+                      dividerColor: dividerColor,
+                    ),
 
                     const SizedBox(height: 22),
 
@@ -339,7 +404,7 @@ class RideDriverCommissionDetailScreen extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              color: Colors.grey.shade700,
+                              color: mutedTextColor,
                             ),
                           ),
 
@@ -350,7 +415,7 @@ class RideDriverCommissionDetailScreen extends StatelessWidget {
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.grey.shade500,
+                              color: lightMutedTextColor,
                             ),
                           ),
                         ],
@@ -374,7 +439,7 @@ class RideDriverCommissionDetailScreen extends StatelessWidget {
                     Navigator.pop(context);
                   },
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: senmiRidePurple,
+                    foregroundColor: lightMutedTextColor,
                     side: const BorderSide(color: senmiRidePurple),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
@@ -404,6 +469,8 @@ class RideDriverCommissionDetailScreen extends StatelessWidget {
     bool boldValue = false,
     Color? valueColor,
     bool allowWrap = false,
+    Color? textColor,
+    Color? secondaryColor,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 15),
@@ -414,7 +481,10 @@ class RideDriverCommissionDetailScreen extends StatelessWidget {
             flex: 4,
             child: Text(
               title,
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 12.5),
+              style: TextStyle(
+                color: secondaryColor ?? Colors.grey.shade600,
+                fontSize: 12.5,
+              ),
             ),
           ),
 
@@ -428,7 +498,7 @@ class RideDriverCommissionDetailScreen extends StatelessWidget {
               maxLines: allowWrap ? 3 : 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                color: valueColor ?? Colors.black87,
+                color: valueColor ?? textColor ?? Colors.black87,
                 fontSize: 13,
                 fontWeight: boldValue ? FontWeight.w800 : FontWeight.w600,
               ),
@@ -443,7 +513,10 @@ class RideDriverCommissionDetailScreen extends StatelessWidget {
   // RECEIPT DIVIDER
   // ============================================================
 
-  Widget _receiptDivider() {
+  Widget _receiptDivider({
+    required Color cutoutColor,
+    required Color dividerColor,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 18),
       child: Row(
@@ -451,8 +524,8 @@ class RideDriverCommissionDetailScreen extends StatelessWidget {
           Container(
             width: 9,
             height: 9,
-            decoration: const BoxDecoration(
-              color: Color(0xFFF5F5F7),
+            decoration: BoxDecoration(
+              color: cutoutColor,
               shape: BoxShape.circle,
             ),
           ),
@@ -469,7 +542,7 @@ class RideDriverCommissionDetailScreen extends StatelessWidget {
                         child: Container(
                           margin: const EdgeInsets.symmetric(horizontal: 2),
                           height: 1,
-                          color: Colors.grey.shade300,
+                          color: dividerColor,
                         ),
                       ),
                     ),
@@ -482,8 +555,8 @@ class RideDriverCommissionDetailScreen extends StatelessWidget {
           Container(
             width: 9,
             height: 9,
-            decoration: const BoxDecoration(
-              color: Color(0xFFF5F5F7),
+            decoration: BoxDecoration(
+              color: cutoutColor,
               shape: BoxShape.circle,
             ),
           ),

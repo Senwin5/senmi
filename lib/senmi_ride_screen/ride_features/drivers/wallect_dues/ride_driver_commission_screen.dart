@@ -41,8 +41,6 @@ class _RideDriverCommissionScreenState extends State<RideDriverCommissionScreen>
 
     _loadCommissionData();
 
-    // Refresh periodically so the screen reflects payments
-    // completed in another Paystack flow.
     _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
       if (!paymentLoading) {
         _loadCommissionData(showLoader: false);
@@ -168,10 +166,6 @@ class _RideDriverCommissionScreenState extends State<RideDriverCommissionScreen>
         return;
       }
 
-      // Give the driver a chance to return from Paystack.
-      //
-      // The webhook is the authoritative payment confirmation.
-      // We also verify the reference from Flutter after returning.
       if (reference != null && reference.isNotEmpty) {
         await _waitAndVerify(reference);
       } else {
@@ -207,8 +201,6 @@ class _RideDriverCommissionScreenState extends State<RideDriverCommissionScreen>
   // ============================================================
 
   Future<void> _waitAndVerify(String reference) async {
-    // When the external payment page closes/returns to the app,
-    // give Paystack webhook processing a moment.
     await Future.delayed(const Duration(seconds: 2));
 
     if (!mounted) return;
@@ -227,11 +219,6 @@ class _RideDriverCommissionScreenState extends State<RideDriverCommissionScreen>
 
       await _loadCommissionData(showLoader: false);
     } catch (_) {
-      // Verification can temporarily fail if the Paystack
-      // transaction/webhook is still being processed.
-      //
-      // Refresh wallet/history instead of showing a false
-      // payment failure.
       await _loadCommissionData(showLoader: false);
 
       if (!mounted) return;
@@ -263,12 +250,17 @@ class _RideDriverCommissionScreenState extends State<RideDriverCommissionScreen>
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (context) {
+        final theme = Theme.of(context);
+        final isDark = theme.brightness == Brightness.dark;
+
         return SafeArea(
           child: Container(
             padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(24),
+              ),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -277,17 +269,22 @@ class _RideDriverCommissionScreenState extends State<RideDriverCommissionScreen>
                   width: 42,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
+                    color: isDark ? Colors.white24 : Colors.grey.shade300,
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
+
                 const SizedBox(height: 20),
 
-                const Align(
+                Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
                     "Pay Commission",
-                    style: TextStyle(fontSize: 21, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 21,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
                   ),
                 ),
 
@@ -297,7 +294,9 @@ class _RideDriverCommissionScreenState extends State<RideDriverCommissionScreen>
                   alignment: Alignment.centerLeft,
                   child: Text(
                     "Choose how you want to pay Senmi.",
-                    style: TextStyle(color: Colors.grey.shade600),
+                    style: TextStyle(
+                      color: isDark ? Colors.white60 : Colors.grey.shade600,
+                    ),
                   ),
                 ),
 
@@ -349,6 +348,9 @@ class _RideDriverCommissionScreenState extends State<RideDriverCommissionScreen>
     required String subtitle,
     required String value,
   }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return InkWell(
       borderRadius: BorderRadius.circular(16),
       onTap: () {
@@ -358,7 +360,12 @@ class _RideDriverCommissionScreenState extends State<RideDriverCommissionScreen>
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.shade200),
+          color: isDark ? const Color(0xFF252525) : Colors.transparent,
+          border: Border.all(
+            color: isDark
+                ? Colors.white.withOpacity(0.08)
+                : Colors.grey.shade200,
+          ),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
@@ -370,32 +377,44 @@ class _RideDriverCommissionScreenState extends State<RideDriverCommissionScreen>
                 color: senmiRidePurple.withOpacity(0.10),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, color: senmiRidePurple),
+              child: const Icon(
+                Icons.credit_card_rounded,
+                color: senmiRidePurple,
+              ),
             ),
+
             const SizedBox(width: 13),
+
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: 15,
+                      color: isDark ? Colors.white : Colors.black87,
                     ),
                   ),
+
                   const SizedBox(height: 3),
+
                   Text(
                     subtitle,
                     style: TextStyle(
-                      color: Colors.grey.shade600,
+                      color: isDark ? Colors.white60 : Colors.grey.shade600,
                       fontSize: 12.5,
                     ),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, color: Colors.grey),
+
+            Icon(
+              Icons.chevron_right_rounded,
+              color: isDark ? Colors.white54 : Colors.grey,
+            ),
           ],
         ),
       ),
@@ -417,7 +436,6 @@ class _RideDriverCommissionScreenState extends State<RideDriverCommissionScreen>
   }
 
   String _cleanError(Object error) {
-    // No internet / network connection
     if (error is SocketException) {
       return "No internet connection. Please check your Wi-Fi or mobile data and try again.";
     }
@@ -426,7 +444,6 @@ class _RideDriverCommissionScreenState extends State<RideDriverCommissionScreen>
 
     final lowerMessage = message.toLowerCase();
 
-    // Catch network errors that may be wrapped inside another exception.
     if (lowerMessage.contains("failed host lookup") ||
         lowerMessage.contains("network is unreachable") ||
         lowerMessage.contains("connection refused") ||
@@ -529,16 +546,25 @@ class _RideDriverCommissionScreenState extends State<RideDriverCommissionScreen>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
+
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           "Commission",
-          style: TextStyle(fontWeight: FontWeight.w700),
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            color: isDark ? Colors.white : Colors.black87,
+          ),
         ),
         centerTitle: false,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
+        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        foregroundColor: isDark ? Colors.white : Colors.black87,
         elevation: 0,
+        surfaceTintColor: Colors.transparent,
         actions: [
           IconButton(
             tooltip: "Refresh",
@@ -551,6 +577,7 @@ class _RideDriverCommissionScreenState extends State<RideDriverCommissionScreen>
           ),
         ],
       ),
+
       body: loading
           ? const Center(
               child: CircularProgressIndicator(color: senmiRidePurple),
@@ -570,6 +597,9 @@ class _RideDriverCommissionScreenState extends State<RideDriverCommissionScreen>
   // ============================================================
 
   Widget _buildContent() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 30),
@@ -582,9 +612,13 @@ class _RideDriverCommissionScreenState extends State<RideDriverCommissionScreen>
 
         const SizedBox(height: 28),
 
-        const Text(
+        Text(
           "Payment History",
-          style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700),
+          style: TextStyle(
+            fontSize: 19,
+            fontWeight: FontWeight.w700,
+            color: isDark ? Colors.white : Colors.black87,
+          ),
         ),
 
         const SizedBox(height: 12),
@@ -641,7 +675,9 @@ class _RideDriverCommissionScreenState extends State<RideDriverCommissionScreen>
                   color: Colors.white,
                 ),
               ),
+
               const SizedBox(width: 12),
+
               const Expanded(
                 child: Text(
                   "Outstanding Commission",
@@ -730,7 +766,9 @@ class _RideDriverCommissionScreenState extends State<RideDriverCommissionScreen>
             value: _formatMoney(commissionBalance),
           ),
         ),
+
         const SizedBox(width: 12),
+
         Expanded(
           child: _summaryCard(
             icon: Icons.check_circle_outline_rounded,
@@ -747,26 +785,42 @@ class _RideDriverCommissionScreenState extends State<RideDriverCommissionScreen>
     required String title,
     required String value,
   }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(
+          color: isDark ? Colors.white.withOpacity(0.07) : Colors.grey.shade200,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, color: senmiRidePurple, size: 25),
+
           const SizedBox(height: 12),
+
           Text(
             title,
-            style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+            style: TextStyle(
+              color: isDark ? Colors.white60 : Colors.grey.shade600,
+              fontSize: 12,
+            ),
           ),
+
           const SizedBox(height: 4),
+
           Text(
             value,
-            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+            style: TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              color: isDark ? Colors.white : Colors.black87,
+            ),
           ),
         ],
       ),
@@ -778,6 +832,9 @@ class _RideDriverCommissionScreenState extends State<RideDriverCommissionScreen>
   // ============================================================
 
   Widget _buildHistoryItem(Map<String, dynamic> payment) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     final status = _paymentStatus(payment["status"]);
 
     final statusColor = _statusColor(status);
@@ -798,14 +855,11 @@ class _RideDriverCommissionScreenState extends State<RideDriverCommissionScreen>
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       child: Material(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         borderRadius: BorderRadius.circular(17),
         child: InkWell(
           borderRadius: BorderRadius.circular(17),
 
-          // ======================================================
-          // OPEN PAYMENT RECEIPT DETAILS
-          // ======================================================
           onTap: () {
             Navigator.push(
               context,
@@ -819,9 +873,13 @@ class _RideDriverCommissionScreenState extends State<RideDriverCommissionScreen>
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
               borderRadius: BorderRadius.circular(17),
-              border: Border.all(color: Colors.grey.shade200),
+              border: Border.all(
+                color: isDark
+                    ? Colors.white.withOpacity(0.07)
+                    : Colors.grey.shade200,
+              ),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -851,21 +909,23 @@ class _RideDriverCommissionScreenState extends State<RideDriverCommissionScreen>
                     children: [
                       Row(
                         children: [
-                          const Expanded(
+                          Expanded(
                             child: Text(
                               "Commission Payment",
                               style: TextStyle(
                                 fontWeight: FontWeight.w700,
                                 fontSize: 14.5,
+                                color: isDark ? Colors.white : Colors.black87,
                               ),
                             ),
                           ),
 
                           Text(
                             _formatMoney(amount),
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.w800,
                               fontSize: 14.5,
+                              color: isDark ? Colors.white : Colors.black87,
                             ),
                           ),
 
@@ -874,7 +934,9 @@ class _RideDriverCommissionScreenState extends State<RideDriverCommissionScreen>
                           Icon(
                             Icons.chevron_right_rounded,
                             size: 20,
-                            color: Colors.grey.shade400,
+                            color: isDark
+                                ? Colors.white38
+                                : Colors.grey.shade400,
                           ),
                         ],
                       ),
@@ -886,6 +948,7 @@ class _RideDriverCommissionScreenState extends State<RideDriverCommissionScreen>
                         runSpacing: 5,
                         children: [
                           _statusBadge(status, statusColor),
+
                           if (paymentMethod.isNotEmpty)
                             _smallBadge(paymentMethod),
                         ],
@@ -896,7 +959,9 @@ class _RideDriverCommissionScreenState extends State<RideDriverCommissionScreen>
                         Text(
                           date,
                           style: TextStyle(
-                            color: Colors.grey.shade600,
+                            color: isDark
+                                ? Colors.white60
+                                : Colors.grey.shade600,
                             fontSize: 12,
                           ),
                         ),
@@ -909,7 +974,9 @@ class _RideDriverCommissionScreenState extends State<RideDriverCommissionScreen>
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            color: Colors.grey.shade500,
+                            color: isDark
+                                ? Colors.white38
+                                : Colors.grey.shade500,
                             fontSize: 10.5,
                           ),
                         ),
@@ -944,16 +1011,19 @@ class _RideDriverCommissionScreenState extends State<RideDriverCommissionScreen>
   }
 
   Widget _smallBadge(String text) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.grey.shade100,
+        color: isDark ? Colors.white.withOpacity(0.08) : Colors.grey.shade100,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
         text,
         style: TextStyle(
-          color: Colors.grey.shade700,
+          color: isDark ? Colors.white70 : Colors.grey.shade700,
           fontSize: 10.5,
           fontWeight: FontWeight.w600,
         ),
@@ -966,30 +1036,45 @@ class _RideDriverCommissionScreenState extends State<RideDriverCommissionScreen>
   // ============================================================
 
   Widget _buildEmptyHistory() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 35, horizontal: 20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(
+          color: isDark ? Colors.white.withOpacity(0.07) : Colors.grey.shade200,
+        ),
       ),
       child: Column(
         children: [
           Icon(
             Icons.receipt_long_outlined,
             size: 46,
-            color: Colors.grey.shade400,
+            color: isDark ? Colors.white38 : Colors.grey.shade400,
           ),
+
           const SizedBox(height: 12),
-          const Text(
+
+          Text(
             "No commission payments yet",
-            style: TextStyle(fontWeight: FontWeight.w700),
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              color: isDark ? Colors.white : Colors.black87,
+            ),
           ),
+
           const SizedBox(height: 5),
+
           Text(
             "Your commission payment history will appear here.",
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+            style: TextStyle(
+              color: isDark ? Colors.white60 : Colors.grey.shade600,
+              fontSize: 13,
+            ),
           ),
         ],
       ),
@@ -1001,6 +1086,9 @@ class _RideDriverCommissionScreenState extends State<RideDriverCommissionScreen>
   // ============================================================
 
   Widget _buildErrorState() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     final isOffline =
         errorMessage?.toLowerCase().contains("no internet connection") ?? false;
 
@@ -1029,7 +1117,11 @@ class _RideDriverCommissionScreenState extends State<RideDriverCommissionScreen>
         Text(
           isOffline ? "You're offline" : "Unable to load commission",
           textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: isDark ? Colors.white : Colors.black87,
+          ),
         ),
 
         const SizedBox(height: 10),
@@ -1040,7 +1132,7 @@ class _RideDriverCommissionScreenState extends State<RideDriverCommissionScreen>
               : errorMessage ?? "Something went wrong. Please try again.",
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: Colors.grey.shade600,
+            color: isDark ? Colors.white60 : Colors.grey.shade600,
             fontSize: 14,
             height: 1.5,
           ),
