@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:senmi/main.dart';
 import 'package:senmi/senmi_ride_screen/ride_features/drivers/driver_activity/ride_driver_activity_screen.dart';
+import 'package:senmi/senmi_ride_screen/ride_features/drivers/drivers_home/driver_notifications_screen.dart';
 import 'package:senmi/senmi_ride_screen/ride_features/drivers/wallect_dues/ride_driver_commission_screen.dart';
 import 'package:senmi/senmi_shared_account/driver_profile/ride_driver_settings_screen.dart';
 import 'package:senmi/service_firebase/firebase_notification_service.dart';
@@ -823,7 +824,14 @@ class _RideDriverHomeState extends State<RideDriverHome> {
             builder: (context, count, child) {
               return IconButton(
                 tooltip: "Notifications",
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const DriverNotificationsScreen(),
+                    ),
+                  );
+                },
                 icon: Stack(
                   clipBehavior: Clip.none,
                   children: [

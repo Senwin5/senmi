@@ -17,6 +17,8 @@ class FirebaseNotificationService {
 
   static GlobalKey<NavigatorState>? _navigatorKey;
   static final ValueNotifier<int> unreadCount = ValueNotifier<int>(0);
+  static final ValueNotifier<List<Map<String, dynamic>>> notifications =
+      ValueNotifier<List<Map<String, dynamic>>>([]);
 
   static void setNavigatorKey(GlobalKey<NavigatorState> key) {
     _navigatorKey = key;
@@ -106,7 +108,6 @@ class FirebaseNotificationService {
     // =======================================================
 
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
-      unreadCount.value++;
       final String title =
           message.notification?.title ??
           message.data['title'] ??
@@ -117,13 +118,22 @@ class FirebaseNotificationService {
 
       final String? packageId = message.data['package_id']?.toString();
 
+      // Save notification for the Notifications screen.
+      final notification = {
+        'title': title,
+        'body': body,
+        'time': DateTime.now(),
+      };
+
+      notifications.value = [notification, ...notifications.value];
+
+      // Increase unread notification badge.
+      unreadCount.value++;
+
       if (kDebugMode) {
         print("📩 FOREGROUND NOTIFICATION");
-
         print("📌 TYPE: ${message.data['type']}");
-
         print("📦 PACKAGE ID: $packageId");
-
         print("📦 ALL DATA: ${message.data}");
       }
 
