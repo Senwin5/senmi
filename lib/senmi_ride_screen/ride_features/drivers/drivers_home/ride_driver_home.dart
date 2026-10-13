@@ -6,6 +6,7 @@ import 'package:senmi/main.dart';
 import 'package:senmi/senmi_ride_screen/ride_features/drivers/driver_activity/ride_driver_activity_screen.dart';
 import 'package:senmi/senmi_ride_screen/ride_features/drivers/wallect_dues/ride_driver_commission_screen.dart';
 import 'package:senmi/senmi_shared_account/driver_profile/ride_driver_settings_screen.dart';
+import 'package:senmi/service_firebase/firebase_notification_service.dart';
 import 'package:senmi/services/driver_api_service.dart';
 import 'package:senmi/senmi_ride_screen/ride_features/drivers/location_track/ride_driver_location_service.dart';
 import 'package:senmi/senmi_ride_screen/ride_features/drivers/ride_driver_history_screen/ride_driver_history_screen.dart';
@@ -817,13 +818,48 @@ class _RideDriverHomeState extends State<RideDriverHome> {
         centerTitle: true,
 
         actions: [
-          IconButton(
-            tooltip: "Notifications",
-            onPressed: () {},
-            icon: Icon(
-              Icons.notifications_none_rounded,
-              color: isDark ? Colors.white : senmiRidePurple,
-            ),
+          ValueListenableBuilder<int>(
+            valueListenable: FirebaseNotificationService.unreadCount,
+            builder: (context, count, child) {
+              return IconButton(
+                tooltip: "Notifications",
+                onPressed: () {},
+                icon: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Icon(
+                      Icons.notifications_none_rounded,
+                      color: isDark ? Colors.white : senmiRidePurple,
+                    ),
+                    if (count > 0)
+                      Positioned(
+                        right: -5,
+                        top: -5,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 18,
+                            minHeight: 18,
+                          ),
+                          child: Text(
+                            count > 99 ? "99+" : "$count",
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            },
           ),
           const SizedBox(width: 4),
         ],

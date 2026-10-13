@@ -16,6 +16,7 @@ class FirebaseNotificationService {
   // =========================================================
 
   static GlobalKey<NavigatorState>? _navigatorKey;
+  static final ValueNotifier<int> unreadCount = ValueNotifier<int>(0);
 
   static void setNavigatorKey(GlobalKey<NavigatorState> key) {
     _navigatorKey = key;
@@ -105,6 +106,7 @@ class FirebaseNotificationService {
     // =======================================================
 
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+      unreadCount.value++;
       final String title =
           message.notification?.title ??
           message.data['title'] ??
