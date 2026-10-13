@@ -1,9 +1,12 @@
+import 'dart:convert';
+
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:senmi/senmi_package_screens/package_features/customer/customer_create/create_package_details.dart';
 import 'package:senmi/service_firebase/native_notification.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class FirebaseNotificationService {
   static final FirebaseMessaging _messaging = FirebaseMessaging.instance;
@@ -19,6 +22,7 @@ class FirebaseNotificationService {
   static final ValueNotifier<int> unreadCount = ValueNotifier<int>(0);
   static final ValueNotifier<List<Map<String, dynamic>>> notifications =
       ValueNotifier<List<Map<String, dynamic>>>([]);
+  static const String _notificationsKey = 'senmi_driver_notifications';
 
   static void setNavigatorKey(GlobalKey<NavigatorState> key) {
     _navigatorKey = key;
@@ -42,6 +46,7 @@ class FirebaseNotificationService {
   // =========================================================
 
   static Future<void> initialize() async {
+    await loadSavedNotifications();
     final NotificationSettings settings = await _messaging.requestPermission(
       alert: true,
       badge: true,
@@ -118,17 +123,7 @@ class FirebaseNotificationService {
 
       final String? packageId = message.data['package_id']?.toString();
 
-      // Save notification for the Notifications screen.
-      final notification = {
-        'title': title,
-        'body': body,
-        'time': DateTime.now(),
-      };
-
-      notifications.value = [notification, ...notifications.value];
-
-      // Increase unread notification badge.
-      unreadCount.value++;
+      await addNotification(title, body);
 
       if (kDebugMode) {
         print("📩 FOREGROUND NOTIFICATION");
@@ -383,5 +378,74 @@ class FirebaseNotificationService {
       body: body,
       notificationDetails: details,
     );
+  }
+
+  static Future<void> loadSavedNotifications() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getString(_notificationsKey);
+
+    if (saved != null) {
+      final List<dynamic> decoded = jsonDecode(saved);
+
+      notifications.value = decoded
+          .map((item) => Map<String, dynamic>.from(item))
+          .toList();
+    }
+
+    _updateUnreadCount();
+  }
+
+  static Future<void> _saveNotifications() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    await prefs.setString(_notificationsKey, jsonEncode(notifications.value));
+  }
+
+  static void _updateUnreadCount() {
+    unreadCount.value = notifications.value
+        .where((item) => item['isRead'] != true)
+        .length;
+  }
+
+  static Future<void> addNotification(String title, String body) async {
+    final notification = <String, dynamic>{
+      'id': DateTime.now().microsecondsSinceEpoch.toString(),
+      'title': title,
+      'body': body,
+      'time': DateTime.now().toIso8601String(),
+      'isRead': false,
+    };
+
+    notifications.value = [notification, ...notifications.value];
+
+    _updateUnreadCount();
+    await _saveNotifications();
+  }
+
+  static Future<void> markNotificationRead(String id) async {
+    notifications.value = notifications.value.map((item) {
+      if (item['id']?.toString() == id) {
+        return {...item, 'isRead': true};
+      }
+      return item;
+    }).toList();
+
+    _updateUnreadCount();
+    await _saveNotifications();
+  }
+
+  static Future<void> deleteNotification(String id) async {
+    notifications.value = notifications.value
+        .where((item) => item['id']?.toString() != id)
+        .toList();
+
+    _updateUnreadCount();
+    await _saveNotifications();
+  }
+
+  static Future<void> clearAllNotifications() async {
+    notifications.value = [];
+    _updateUnreadCount();
+    await _saveNotifications();
   }
 }
