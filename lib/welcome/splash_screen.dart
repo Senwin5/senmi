@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:senmi/main.dart';
-import 'package:senmi/admin_package/admin/screen/admin_home_bottom/admin_bottom_nav.dart';
+import 'package:senmi/main_admin/admin_package_app/screen/admin_home_bottom/admin_bottom_nav.dart';
 import 'package:senmi/senmi_main_customer_home/main_customer_home.dart';
 import 'package:senmi/senmi_package_screens/package_features/rider/rider_home_bottom/rider_bottom_nav.dart';
 import 'package:senmi/senmi_ride_screen/ride_features/drivers/drivers_bottom_nav/driver_main_bottom_nav.dart';

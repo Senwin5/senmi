@@ -4,16 +4,16 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:senmi/admin_package/admin/screen/admin_customer_screen/customer_management_screen.dart';
+import 'package:senmi/main_admin/admin_package_app/screen/admin_customer_screen/customer_management_screen.dart';
 import 'package:senmi/services/package_api_service.dart';
 import 'package:web_socket_channel/io.dart';
 
-import 'package:senmi/admin_package/admin/screen/admin_package/admin_packages.dart';
-import 'package:senmi/admin_package/admin/screen/admin_analytics/analytics_screen.dart';
-import 'package:senmi/admin_package/admin/screen/admin_notifications/notifications.dart';
-import 'package:senmi/admin_package/admin/screen/admin_riders_screen/admin_riders_screen.dart';
-import 'package:senmi/admin_package/admin/screen/admin_transaction/admin_wallet_screen.dart';
-import 'package:senmi/admin_package/admin/screen/admin_transaction/admin_withdrawal_screen.dart';
+import 'package:senmi/main_admin/admin_package_app/screen/admin_package/admin_packages.dart';
+import 'package:senmi/main_admin/admin_package_app/screen/admin_analytics/analytics_screen.dart';
+import 'package:senmi/main_admin/admin_package_app/screen/admin_notifications/notifications.dart';
+import 'package:senmi/main_admin/admin_package_app/screen/admin_riders_screen/admin_riders_screen.dart';
+import 'package:senmi/main_admin/admin_package_app/screen/admin_transaction/admin_wallet_screen.dart';
+import 'package:senmi/main_admin/admin_package_app/screen/admin_transaction/admin_withdrawal_screen.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});

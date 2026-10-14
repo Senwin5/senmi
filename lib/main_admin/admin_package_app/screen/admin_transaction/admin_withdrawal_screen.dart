@@ -1,7 +1,7 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
-import 'package:senmi/admin_package/admin/screen/admin_transaction/admin_withdrawal_details_screen.dart';
+import 'package:senmi/main_admin/admin_package_app/screen/admin_transaction/admin_withdrawal_details_screen.dart';
 import 'package:senmi/services/package_api_service.dart';
 
 class AdminWithdrawalScreen extends StatefulWidget {
