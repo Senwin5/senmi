@@ -2,8 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-
-import 'package:senmi/main_admin/admin_package_app/screen/admin_home_bottom/admin_bottom_nav.dart';
+//import 'package:senmi/main_admin/admin_package_app/screen/admin_home_bottom/admin_bottom_nav.dart';
+import 'package:senmi/main_admin/admin_selection_screen.dart';
 import 'package:senmi/senmi_main_customer_home/main_customer_home.dart';
 import 'package:senmi/senmi_ride_screen/ride_features/drivers/drivers_bottom_nav/driver_main_bottom_nav.dart';
 import 'package:senmi/senmi_ride_screen/ride_features/drivers/drivers_home/ride_driver_home.dart';
@@ -85,7 +85,7 @@ class _LoginScreenState extends State<LoginScreen> {
           Navigator.pushReplacement(
             // ignore: use_build_context_synchronously
             context,
-            MaterialPageRoute(builder: (_) => const AdminBottomNav()),
+            MaterialPageRoute(builder: (_) => const AdminSelectionScreen()),
           );
           return;
         }
@@ -308,7 +308,7 @@ class _LoginScreenState extends State<LoginScreen> {
           Navigator.pushAndRemoveUntil(
             // ignore: use_build_context_synchronously
             context,
-            MaterialPageRoute(builder: (_) => const AdminBottomNav()),
+            MaterialPageRoute(builder: (_) => const AdminSelectionScreen()),
             (route) => false,
           );
           return;
