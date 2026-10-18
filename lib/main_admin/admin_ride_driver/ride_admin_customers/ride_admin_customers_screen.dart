@@ -209,7 +209,7 @@ class _RideAdminCustomersScreenState extends State<RideAdminCustomersScreen> {
     required bool isDark,
   }) {
     return Container(
-      padding: const EdgeInsets.all(15),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF211C2B) : Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -230,13 +230,13 @@ class _RideAdminCustomersScreenState extends State<RideAdminCustomersScreen> {
             ),
             child: Icon(icon, color: color, size: 21),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 8),
           FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
             child: Text(
               value,
-              style: const TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 21, fontWeight: FontWeight.bold),
             ),
           ),
           const SizedBox(height: 4),
@@ -562,7 +562,7 @@ class _RideAdminCustomersScreenState extends State<RideAdminCustomersScreen> {
                       physics: const NeverScrollableScrollPhysics(),
                       crossAxisSpacing: 12,
                       mainAxisSpacing: 12,
-                      childAspectRatio: 1.35,
+                      childAspectRatio: 1.15,
                       children: [
                         _buildStatCard(
                           title: 'Total customers',

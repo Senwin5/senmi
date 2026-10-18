@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:senmi/services/driver_api_service.dart';
@@ -6,10 +5,7 @@ import 'package:senmi/services/driver_api_service.dart';
 class RideAdminCustomerDetailsScreen extends StatefulWidget {
   final Map<String, dynamic> customer;
 
-  const RideAdminCustomerDetailsScreen({
-    super.key,
-    required this.customer,
-  });
+  const RideAdminCustomerDetailsScreen({super.key, required this.customer});
 
   @override
   State<RideAdminCustomerDetailsScreen> createState() =>
@@ -171,8 +167,7 @@ class _RideAdminCustomerDetailsScreenState
       final result = await RideService.getAdminCustomers();
 
       final refreshedCustomer = result.cast<Map>().firstWhere(
-        (item) =>
-            item['id']?.toString() == customer['id']?.toString(),
+        (item) => item['id']?.toString() == customer['id']?.toString(),
         orElse: () => <String, dynamic>{},
       );
 
@@ -184,10 +179,7 @@ class _RideAdminCustomerDetailsScreenState
 
       if (mounted) {
         setState(() {
-          customer = {
-            ...customer,
-            ...updated,
-          };
+          customer = {...customer, ...updated};
           isRefreshing = false;
         });
       }
@@ -196,8 +188,7 @@ class _RideAdminCustomerDetailsScreenState
 
       setState(() {
         isRefreshing = false;
-        refreshError =
-            e.toString().replaceFirst('Exception: ', '');
+        refreshError = e.toString().replaceFirst('Exception: ', '');
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -217,10 +208,7 @@ class _RideAdminCustomerDetailsScreenState
           Expanded(
             child: Text(
               title,
-              style: const TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
             ),
           ),
           ?trailing,
@@ -233,8 +221,7 @@ class _RideAdminCustomerDetailsScreenState
     required Widget child,
     EdgeInsetsGeometry padding = const EdgeInsets.all(16),
   }) {
-    final isDark =
-        Theme.of(context).brightness == Brightness.dark;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       width: double.infinity,
@@ -263,11 +250,7 @@ class _RideAdminCustomerDetailsScreenState
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            icon,
-            size: 20,
-            color: iconColor ?? primaryPurple,
-          ),
+          Icon(icon, size: 20, color: iconColor ?? primaryPurple),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -275,10 +258,7 @@ class _RideAdminCustomerDetailsScreenState
               children: [
                 Text(
                   label,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                 ),
                 const SizedBox(height: 4),
                 SelectableText(
@@ -300,10 +280,7 @@ class _RideAdminCustomerDetailsScreenState
     final color = statusColor(status);
 
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 11,
-        vertical: 6,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(20),
@@ -344,19 +321,13 @@ class _RideAdminCustomerDetailsScreenState
             alignment: Alignment.centerLeft,
             child: Text(
               value,
-              style: const TextStyle(
-                fontSize: 23,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
             ),
           ),
           const SizedBox(height: 4),
           Text(
             title,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey.shade600,
-            ),
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
           ),
         ],
       ),
@@ -366,8 +337,7 @@ class _RideAdminCustomerDetailsScreenState
   Widget _profileCard() {
     final name = _string(customer['name'], 'Unknown customer');
     final status = _string(customer['status'], 'Unknown');
-    final initial =
-        name.trim().isEmpty ? '?' : name.trim()[0].toUpperCase();
+    final initial = name.trim().isEmpty ? '?' : name.trim()[0].toUpperCase();
 
     return _surface(
       child: Column(
@@ -388,27 +358,18 @@ class _RideAdminCustomerDetailsScreenState
           Text(
             name,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 21,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 21, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 6),
           Text(
             'Customer ID: ${_string(customer['id'], 'N/A')}',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey.shade600,
-            ),
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
           ),
           const SizedBox(height: 12),
           _statusBadge(status),
           const SizedBox(height: 16),
-          Divider(
-            height: 1,
-            color: Colors.grey.withValues(alpha: 0.18),
-          ),
+          Divider(height: 1, color: Colors.grey.withValues(alpha: 0.18)),
           const SizedBox(height: 14),
           Row(
             children: [
@@ -488,19 +449,13 @@ class _RideAdminCustomerDetailsScreenState
             label: 'Email address',
             value: _string(customer['email']),
           ),
-          Divider(
-            height: 1,
-            color: Colors.grey.withValues(alpha: 0.15),
-          ),
+          Divider(height: 1, color: Colors.grey.withValues(alpha: 0.15)),
           _infoRow(
             icon: Icons.phone_outlined,
             label: 'Phone number',
             value: _string(customer['phone']),
           ),
-          Divider(
-            height: 1,
-            color: Colors.grey.withValues(alpha: 0.15),
-          ),
+          Divider(height: 1, color: Colors.grey.withValues(alpha: 0.15)),
           _infoRow(
             icon: Icons.location_on_outlined,
             label: 'Location',
@@ -534,18 +489,12 @@ class _RideAdminCustomerDetailsScreenState
               const Expanded(
                 child: Text(
                   'Ride status breakdown',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                 ),
               ),
               Text(
                 '$total total',
-                style: TextStyle(
-                  color: Colors.grey.shade600,
-                  fontSize: 12,
-                ),
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
               ),
             ],
           ),
@@ -555,8 +504,7 @@ class _RideAdminCustomerDetailsScreenState
             final count = item.$2;
             final color = item.$3;
             final icon = item.$4;
-            final fraction =
-                total > 0 ? (count / total).clamp(0.0, 1.0) : 0.0;
+            final fraction = total > 0 ? (count / total).clamp(0.0, 1.0) : 0.0;
 
             return Padding(
               padding: const EdgeInsets.only(bottom: 15),
@@ -587,10 +535,8 @@ class _RideAdminCustomerDetailsScreenState
                     child: LinearProgressIndicator(
                       value: fraction.toDouble(),
                       minHeight: 6,
-                      backgroundColor:
-                          color.withValues(alpha: 0.12),
-                      valueColor:
-                          AlwaysStoppedAnimation<Color>(color),
+                      backgroundColor: color.withValues(alpha: 0.12),
+                      valueColor: AlwaysStoppedAnimation<Color>(color),
                     ),
                   ),
                 ],
@@ -676,16 +622,9 @@ class _RideAdminCustomerDetailsScreenState
     return double.tryParse(value.toString());
   }
 
-  LatLng? _rideLocation(
-    Map<String, dynamic> ride, {
-    required bool pickup,
-  }) {
-    final lat = _coordinate(
-      ride[pickup ? 'pickup_lat' : 'destination_lat'],
-    );
-    final lng = _coordinate(
-      ride[pickup ? 'pickup_lng' : 'destination_lng'],
-    );
+  LatLng? _rideLocation(Map<String, dynamic> ride, {required bool pickup}) {
+    final lat = _coordinate(ride[pickup ? 'pickup_lat' : 'destination_lat']);
+    final lng = _coordinate(ride[pickup ? 'pickup_lng' : 'destination_lng']);
 
     if (lat == null || lng == null) return null;
     if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
@@ -713,10 +652,7 @@ class _RideAdminCustomerDetailsScreenState
             position: pickup,
             infoWindow: InfoWindow(
               title: 'Pickup location',
-              snippet: _string(
-                ride['pickup_address'],
-                'Ride $rideId',
-              ),
+              snippet: _string(ride['pickup_address'], 'Ride $rideId'),
             ),
             icon: BitmapDescriptor.defaultMarkerWithHue(
               BitmapDescriptor.hueGreen,
@@ -732,10 +668,7 @@ class _RideAdminCustomerDetailsScreenState
             position: destination,
             infoWindow: InfoWindow(
               title: 'Destination',
-              snippet: _string(
-                ride['destination_address'],
-                'Ride $rideId',
-              ),
+              snippet: _string(ride['destination_address'], 'Ride $rideId'),
             ),
             icon: BitmapDescriptor.defaultMarkerWithHue(
               BitmapDescriptor.hueRed,
@@ -793,8 +726,7 @@ class _RideAdminCustomerDetailsScreenState
   Widget _mapCard() {
     final markers = rideMarkers;
     final bounds = _mapBounds;
-    final isDark =
-        Theme.of(context).brightness == Brightness.dark;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return _surface(
       padding: EdgeInsets.zero,
@@ -805,26 +737,17 @@ class _RideAdminCustomerDetailsScreenState
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Row(
               children: [
-                const Icon(
-                  Icons.map_outlined,
-                  color: primaryPurple,
-                ),
+                const Icon(Icons.map_outlined, color: primaryPurple),
                 const SizedBox(width: 9),
                 const Expanded(
                   child: Text(
                     'Ride locations',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ),
                 Text(
                   '${markers.length} points',
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontSize: 12,
-                  ),
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
                 ),
               ],
             ),
@@ -853,9 +776,7 @@ class _RideAdminCustomerDetailsScreenState
                           const SizedBox(height: 12),
                           const Text(
                             'No ride coordinates available',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                            ),
+                            style: TextStyle(fontWeight: FontWeight.w600),
                           ),
                           const SizedBox(height: 6),
                           Text(
@@ -881,15 +802,11 @@ class _RideAdminCustomerDetailsScreenState
                       myLocationButtonEnabled: false,
                       onMapCreated: (controller) {
                         if (bounds != null) {
-                          WidgetsBinding.instance
-                              .addPostFrameCallback((_) {
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
                             if (!mounted) return;
 
                             controller.animateCamera(
-                              CameraUpdate.newLatLngBounds(
-                                bounds,
-                                45,
-                              ),
+                              CameraUpdate.newLatLngBounds(bounds, 45),
                             );
                           });
                         }
@@ -904,10 +821,7 @@ class _RideAdminCustomerDetailsScreenState
 
   Widget _rideCard(Map<String, dynamic> ride) {
     final status = _string(ride['status'], 'Unknown');
-    final serviceType = _string(
-      ride['service_type'],
-      'Ride service',
-    );
+    final serviceType = _string(ride['service_type'], 'Ride service');
     final rideId = _string(ride['id'], 'N/A');
     final fare = formatMoney(ride['fare']);
     final color = statusColor(status);
@@ -963,19 +877,12 @@ class _RideAdminCustomerDetailsScreenState
               ],
             ),
             const SizedBox(height: 14),
-            Divider(
-              height: 1,
-              color: Colors.grey.withValues(alpha: 0.15),
-            ),
+            Divider(height: 1, color: Colors.grey.withValues(alpha: 0.15)),
             const SizedBox(height: 12),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(
-                  Icons.circle,
-                  size: 10,
-                  color: Colors.green,
-                ),
+                const Icon(Icons.circle, size: 10, color: Colors.green),
                 const SizedBox(width: 9),
                 Expanded(
                   child: Text(
@@ -1025,10 +932,7 @@ class _RideAdminCustomerDetailsScreenState
                 Expanded(
                   child: Text(
                     formatDateTime(ride['created_at']),
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Colors.grey.shade600,
-                    ),
+                    style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
                   ),
                 ),
                 Text(
@@ -1053,15 +957,10 @@ class _RideAdminCustomerDetailsScreenState
                 Expanded(
                   child: Text(
                     'Payment: ${_string(ride['payment_method'], 'N/A')}',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Colors.grey.shade600,
-                    ),
+                    style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
                   ),
                 ),
-                _statusBadge(
-                  _string(ride['payment_status'], 'Unknown'),
-                ),
+                _statusBadge(_string(ride['payment_status'], 'Unknown')),
               ],
             ),
           ],
@@ -1080,10 +979,7 @@ class _RideAdminCustomerDetailsScreenState
           'Recent rides',
           trailing: Text(
             '${rides.length} shown',
-            style: TextStyle(
-              color: Colors.grey.shade600,
-              fontSize: 12,
-            ),
+            style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
           ),
         ),
         if (rides.isEmpty)
@@ -1100,18 +996,13 @@ class _RideAdminCustomerDetailsScreenState
                   const SizedBox(height: 10),
                   const Text(
                     'No recent rides',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 5),
                   Text(
                     'Ride history will appear here when available.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade600,
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                   ),
                 ],
               ),
@@ -1125,10 +1016,10 @@ class _RideAdminCustomerDetailsScreenState
 
   @override
   Widget build(BuildContext context) {
-    final isDark =
-        Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor =
-        isDark ? const Color(0xFF121018) : const Color(0xFFF8F7FC);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final backgroundColor = isDark
+        ? const Color(0xFF121018)
+        : const Color(0xFFF8F7FC);
 
     return Scaffold(
       backgroundColor: backgroundColor,
@@ -1167,10 +1058,7 @@ class _RideAdminCustomerDetailsScreenState
           children: [
             Text(
               'Customer profile and ride activity',
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.grey.shade600,
-              ),
+              style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
             ),
             const SizedBox(height: 18),
 
@@ -1192,7 +1080,7 @@ class _RideAdminCustomerDetailsScreenState
               physics: const NeverScrollableScrollPhysics(),
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
-              childAspectRatio: 1.35,
+              childAspectRatio: 1.15,
               children: [
                 _statCard(
                   title: 'Total rides',
@@ -1243,10 +1131,7 @@ class _RideAdminCustomerDetailsScreenState
               const SizedBox(height: 12),
               Text(
                 'Last refresh failed: $refreshError',
-                style: const TextStyle(
-                  color: Colors.redAccent,
-                  fontSize: 12,
-                ),
+                style: const TextStyle(color: Colors.redAccent, fontSize: 12),
               ),
             ],
           ],
