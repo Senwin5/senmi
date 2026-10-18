@@ -803,4 +803,119 @@ class RideService {
 
     return [];
   }
+
+  // ============================
+  // ADMIN: GET ALL DRIVERS
+  // ============================
+
+  static Future<List<dynamic>> getAdminDrivers() async {
+    final response = await http
+        .get(
+          Uri.parse("$baseUrl/ride/admin/drivers/"),
+          headers: await headers(),
+        )
+        .timeout(const Duration(seconds: 30));
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      final data = decodeResponse(response);
+      throw Exception(data["detail"]?.toString() ?? "Unable to load drivers.");
+    }
+
+    final decoded = jsonDecode(response.body);
+
+    if (decoded is List) {
+      return decoded;
+    }
+
+    if (decoded is Map && decoded["drivers"] is List) {
+      return List<dynamic>.from(decoded["drivers"]);
+    }
+
+    return [];
+  }
+
+  // ============================
+  // ADMIN: GET DRIVER DETAILS
+  // ============================
+
+  static Future<Map<String, dynamic>> getAdminDriverDetails(
+    String driverId,
+  ) async {
+    final response = await http
+        .get(
+          Uri.parse(
+            "$baseUrl/ride/admin/drivers/"
+            "${Uri.encodeComponent(driverId)}/",
+          ),
+          headers: await headers(),
+        )
+        .timeout(const Duration(seconds: 30));
+
+    final data = decodeResponse(response);
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(
+        data["detail"]?.toString() ?? "Unable to load driver details.",
+      );
+    }
+
+    return data;
+  }
+
+  static Future<void> updateAdminDriverStatus(
+    String driverId,
+    String status, {
+    String rejectionReason = '',
+  }) async {
+    final response = await http
+        .patch(
+          Uri.parse(
+            '$baseUrl/ride/admin/drivers/${Uri.encodeComponent(driverId)}/status/',
+          ),
+          headers: await headers(),
+          body: jsonEncode({
+            'status': status,
+            'rejection_reason': rejectionReason,
+          }),
+        )
+        .timeout(const Duration(seconds: 30));
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      final data = decodeResponse(response);
+      throw Exception(
+        data['detail']?.toString() ?? 'Failed to update driver status.',
+      );
+    }
+  }
+
+  // ============================
+  // ADMIN: GET ALL CUSTOMERS
+  // ============================
+
+  static Future<List<dynamic>> getAdminCustomers() async {
+    final response = await http
+        .get(
+          Uri.parse("$baseUrl/ride/admin/customers/"),
+          headers: await headers(),
+        )
+        .timeout(const Duration(seconds: 30));
+
+    final data = decodeResponse(response);
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(
+        data["detail"]?.toString() ?? "Unable to load customers.",
+      );
+    }
+
+    final decoded = jsonDecode(response.body);
+
+    if (decoded is List) return decoded;
+
+    if (decoded is Map && decoded["customers"] is List) {
+      return List<dynamic>.from(decoded["customers"]);
+    }
+
+    return [];
+  }
 }
