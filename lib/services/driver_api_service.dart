@@ -776,4 +776,31 @@ class RideService {
 
     return data;
   }
+  // ============================
+  // ADMIN: GET ALL RIDES
+  // ============================
+
+  static Future<List<dynamic>> getAdminRides() async {
+    final response = await http
+        .get(Uri.parse("$baseUrl/ride/admin/rides/"), headers: await headers())
+        .timeout(const Duration(seconds: 30));
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      final data = decodeResponse(response);
+
+      throw Exception(
+        data["detail"]?.toString() ?? "Unable to load all rides.",
+      );
+    }
+
+    final decoded = jsonDecode(response.body);
+
+    if (decoded is List) return decoded;
+
+    if (decoded is Map && decoded["rides"] is List) {
+      return List<dynamic>.from(decoded["rides"]);
+    }
+
+    return [];
+  }
 }

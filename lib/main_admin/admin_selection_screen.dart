@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:senmi/main_admin/admin_package_app/screen/admin_home_bottom/admin_bottom_nav.dart';
-import 'package:senmi/main_admin/admin_ride_driver/ride_admin_bottom_nav.dart';
+import 'package:senmi/main_admin/admin_ride_driver/admin_home_bottom/ride_admin_bottom_nav.dart';
 
 class AdminSelectionScreen extends StatelessWidget {
   const AdminSelectionScreen({super.key});
@@ -56,24 +56,6 @@ class AdminSelectionScreen extends StatelessWidget {
             const SizedBox(height: 32),
 
             _AdminOptionCard(
-              title: 'Package Management',
-              subtitle:
-                  'Manage packages, delivery riders, customers '
-                  'and package operations.',
-              icon: Icons.inventory_2_rounded,
-              color: const Color(0xff9333EA),
-              isDark: isDark,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const AdminBottomNav()),
-                );
-              },
-            ),
-
-            const SizedBox(height: 18),
-
-            _AdminOptionCard(
               title: 'Ride Management',
               subtitle:
                   'Manage ride bookings, ride drivers, payments '
@@ -85,6 +67,24 @@ class AdminSelectionScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const RideAdminBottomNav()),
+                );
+              },
+            ),
+
+            const SizedBox(height: 20),
+
+            _AdminOptionCard(
+              title: 'Package Management',
+              subtitle:
+                  'Manage packages, delivery riders, customers '
+                  'and package operations.',
+              icon: Icons.inventory_2_rounded,
+              color: const Color(0xff9333EA),
+              isDark: isDark,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AdminBottomNav()),
                 );
               },
             ),

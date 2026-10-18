@@ -1,10 +1,115 @@
 import 'package:flutter/material.dart';
+import 'package:senmi/main_admin/admin_ride_driver/ride_admin_analytics/ride_admin_analytics_screen.dart';
+
+import 'package:senmi/main_admin/admin_ride_driver/ride_admin_available_rides/ride_admin_available_rides_screen.dart';
+import 'package:senmi/main_admin/admin_ride_driver/ride_admin_customers/ride_admin_customers_screen.dart';
+import 'package:senmi/main_admin/admin_ride_driver/ride_admin_drivers/ride_admin_drivers_screen.dart';
+import 'package:senmi/main_admin/admin_ride_driver/ride_admin_history/ride_admin_history_screen.dart';
+import 'package:senmi/main_admin/admin_ride_driver/ride_admin_notifications/ride_admin_notifications_screen.dart';
+import 'package:senmi/main_admin/admin_ride_driver/ride_admin_payments/ride_admin_payments_screen.dart';
+import 'package:senmi/main_admin/admin_ride_driver/ride_admin_ride/ride_admin_rides_screen.dart';
+import 'package:senmi/main_admin/admin_ride_driver/admin_tracking/ride_admin_tracking_screen.dart';
 
 class RideAdminDashboard extends StatelessWidget {
   const RideAdminDashboard({super.key});
 
   static const Color purple = Color(0xFF7C3AED);
   static const Color background = Color(0xFFF8F7FC);
+
+  void _openSection(BuildContext context, String title) {
+    switch (title) {
+      case 'All Rides':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const RideAdminRidesScreen()),
+        );
+        return;
+
+      case 'Drivers':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const RideAdminDriversScreen()),
+        );
+        return;
+
+      case 'Payments':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const RideAdminPaymentsScreen(
+              title: 'Ride Payments',
+              description: 'Payments and commissions',
+              icon: Icons.account_balance_wallet_rounded,
+            ),
+          ),
+        );
+        return;
+
+      case 'Customers':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const RideAdminCustomersScreen(
+              title: 'Ride Customers',
+              icon: Icons.people_rounded,
+            ),
+          ),
+        );
+        return;
+
+      case 'Ride History':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const RideAdminHistoryScreen()),
+        );
+        return;
+
+      case 'Live Ride Tracking':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const RideAdminTrackingScreen()),
+        );
+        return;
+
+      case 'Ride Analytics':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const RideAdminAnalyticsScreen(
+              title: 'Ride Analytics',
+              description: 'Review ride performance and statistics',
+              icon: Icons.analytics_rounded,
+            ),
+          ),
+        );
+        return;
+
+      case 'Available Ride':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const RideAdminAvailableRidesScreen(),
+          ),
+        );
+        return;
+
+      case 'Notifications & Alerts':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const RideAdminNotificationsScreen(),
+          ),
+        );
+        return;
+
+      default:
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('$title will be connected to its screen next.'),
+          ),
+        );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,6 +157,27 @@ class RideAdminDashboard extends StatelessWidget {
         'icon': Icons.analytics_rounded,
         'color': const Color(0xFF0891B2),
         'light': const Color(0xFFCFFAFE),
+      },
+      {
+        'title': 'Live Ride Tracking',
+        'description': 'Monitor active rides and drivers',
+        'icon': Icons.location_searching_rounded,
+        'color': const Color(0xFF7C3AED),
+        'light': const Color(0xFFEDE9FE),
+      },
+      {
+        'title': 'Available Ride',
+        'description': 'Available rides and drivers',
+        'icon': Icons.directions_car_rounded,
+        'color': const Color(0xFF0D9488),
+        'light': const Color(0xFFCCFBF1),
+      },
+      {
+        'title': 'Notifications & Alerts',
+        'description': 'Ride, driver and payment alerts',
+        'icon': Icons.notifications_active_rounded,
+        'color': const Color(0xFF9333EA),
+        'light': const Color(0xFFF3E8FF),
       },
     ];
 
@@ -106,9 +232,7 @@ class RideAdminDashboard extends StatelessWidget {
                 ],
               ),
             ),
-
             const SizedBox(height: 26),
-
             Text(
               'Management',
               style: TextStyle(
@@ -118,7 +242,6 @@ class RideAdminDashboard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 14),
-
             GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -133,22 +256,14 @@ class RideAdminDashboard extends StatelessWidget {
                 final section = sections[index];
                 final color = section['color'] as Color;
                 final light = section['light'] as Color;
+                final title = section['title'] as String;
 
                 return Material(
                   color: isDark ? const Color(0xFF211C2B) : Colors.white,
                   borderRadius: BorderRadius.circular(20),
+                  clipBehavior: Clip.antiAlias,
                   child: InkWell(
-                    borderRadius: BorderRadius.circular(20),
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            '${section['title']} will be connected '
-                            'to the admin API next.',
-                          ),
-                        ),
-                      );
-                    },
+                    onTap: () => _openSection(context, title),
                     child: Container(
                       padding: const EdgeInsets.all(15),
                       decoration: BoxDecoration(
@@ -179,7 +294,7 @@ class RideAdminDashboard extends StatelessWidget {
                           ),
                           const Spacer(),
                           Text(
-                            section['title'] as String,
+                            title,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
