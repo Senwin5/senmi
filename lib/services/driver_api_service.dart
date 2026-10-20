@@ -918,4 +918,34 @@ class RideService {
 
     return [];
   }
+
+  // ============================
+// ADMIN: DRIVER ACTIVITY
+// ============================
+
+static Future<Map<String, dynamic>> getAdminDriverActivity(
+  String driverId,
+) async {
+  final response = await http
+      .get(
+        Uri.parse(
+          "$baseUrl/ride/admin/drivers/"
+          "${Uri.encodeComponent(driverId)}/activity/",
+        ),
+        headers: await headers(),
+      )
+      .timeout(const Duration(seconds: 30));
+
+  final data = decodeResponse(response);
+
+  if (response.statusCode < 200 || response.statusCode >= 300) {
+    throw Exception(
+      data["detail"]?.toString() ??
+          "Unable to load driver activity.",
+    );
+  }
+
+  return data;
+}
+
 }

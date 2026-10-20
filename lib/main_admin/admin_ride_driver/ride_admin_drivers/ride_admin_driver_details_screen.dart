@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:senmi/main_admin/admin_ride_driver/ride_admin_drivers/ride_admin_driver_activity_screen.dart';
 import 'package:senmi/services/driver_api_service.dart';
 
 class RideAdminDriverDetailsScreen extends StatefulWidget {
@@ -619,6 +620,40 @@ class _RideAdminDriverDetailsScreenState
                     ], cardColor),
 
                     manageDriverSection(d, cardColor),
+
+                    section('Driver Activity', [
+                      const Text(
+                        'View the driver’s complete ride history, earnings, '
+                        'service charges and other activity.',
+                        style: TextStyle(fontSize: 13, color: Colors.grey),
+                      ),
+                      const SizedBox(height: 14),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => RideAdminDriverActivityScreen(
+                                  driverId: widget.driverId,
+                                ),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.history),
+                          label: const Text('View All Driver Activity'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: purple,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ], cardColor),
 
                     section('Emergency Contact', [
                       detailRow('Contact name', d['emergency_contact_name']),
