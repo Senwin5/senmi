@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:senmi/main_admin/admin_ride_driver/ride_admin_ride/ride_admin_details_screen.dart';
 import 'package:senmi/services/driver_api_service.dart';
 
 class RideAdminCustomerDetailsScreen extends StatefulWidget {
@@ -44,12 +45,17 @@ class _RideAdminCustomerDetailsScreenState
   List<Map<String, dynamic>> get recentRides {
     final value = customer['recent_rides'];
 
-    if (value is! List) return [];
+    if (value is! List) {
+      debugPrint('recent_rides is not a List: ${value.runtimeType}');
+      return [];
+    }
 
-    return value
+    final rides = value
         .whereType<Map>()
         .map((ride) => Map<String, dynamic>.from(ride))
         .toList();
+
+    return rides;
   }
 
   String formatMoney(dynamic amount) {
@@ -455,12 +461,6 @@ class _RideAdminCustomerDetailsScreenState
             label: 'Phone number',
             value: _string(customer['phone']),
           ),
-          Divider(height: 1, color: Colors.grey.withValues(alpha: 0.15)),
-          _infoRow(
-            icon: Icons.location_on_outlined,
-            label: 'Location',
-            value: _string(customer['location']),
-          ),
         ],
       ),
     );
@@ -681,289 +681,193 @@ class _RideAdminCustomerDetailsScreenState
     return markers;
   }
 
-  LatLngBounds? get _mapBounds {
-    final points = <LatLng>[];
-
-    for (final ride in recentRides) {
-      final pickup = _rideLocation(ride, pickup: true);
-      final destination = _rideLocation(ride, pickup: false);
-
-      if (pickup != null) points.add(pickup);
-      if (destination != null) points.add(destination);
-    }
-
-    if (points.isEmpty) return null;
-
-    double minLat = points.first.latitude;
-    double maxLat = points.first.latitude;
-    double minLng = points.first.longitude;
-    double maxLng = points.first.longitude;
-
-    for (final point in points) {
-      if (point.latitude < minLat) minLat = point.latitude;
-      if (point.latitude > maxLat) maxLat = point.latitude;
-      if (point.longitude < minLng) minLng = point.longitude;
-      if (point.longitude > maxLng) maxLng = point.longitude;
-    }
-
-    // Avoid identical southwest and northeast points.
-    if (minLat == maxLat) {
-      minLat -= 0.005;
-      maxLat += 0.005;
-    }
-
-    if (minLng == maxLng) {
-      minLng -= 0.005;
-      maxLng += 0.005;
-    }
-
-    return LatLngBounds(
-      southwest: LatLng(minLat, minLng),
-      northeast: LatLng(maxLat, maxLng),
-    );
-  }
-
-  Widget _mapCard() {
-    final markers = rideMarkers;
-    final bounds = _mapBounds;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return _surface(
-      padding: EdgeInsets.zero,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Row(
-              children: [
-                const Icon(Icons.map_outlined, color: primaryPurple),
-                const SizedBox(width: 9),
-                const Expanded(
-                  child: Text(
-                    'Ride locations',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                Text(
-                  '${markers.length} points',
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-                ),
-              ],
-            ),
-          ),
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(
-              bottom: Radius.circular(16),
-            ),
-            child: SizedBox(
-              height: 260,
-              child: markers.isEmpty
-                  ? Container(
-                      width: double.infinity,
-                      color: isDark
-                          ? const Color(0xFF191522)
-                          : const Color(0xFFF0EDF5),
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.location_off_outlined,
-                            size: 42,
-                            color: Colors.grey.shade500,
-                          ),
-                          const SizedBox(height: 12),
-                          const Text(
-                            'No ride coordinates available',
-                            style: TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            'Pickup and destination coordinates must '
-                            'be included in the API response.',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Colors.grey.shade600,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : GoogleMap(
-                      initialCameraPosition: CameraPosition(
-                        target: markers.first.position,
-                        zoom: 12,
-                      ),
-                      markers: markers,
-                      mapToolbarEnabled: true,
-                      zoomControlsEnabled: true,
-                      myLocationButtonEnabled: false,
-                      onMapCreated: (controller) {
-                        if (bounds != null) {
-                          WidgetsBinding.instance.addPostFrameCallback((_) {
-                            if (!mounted) return;
-
-                            controller.animateCamera(
-                              CameraUpdate.newLatLngBounds(bounds, 45),
-                            );
-                          });
-                        }
-                      },
-                    ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _rideCard(Map<String, dynamic> ride) {
     final status = _string(ride['status'], 'Unknown');
     final serviceType = _string(ride['service_type'], 'Ride service');
     final rideId = _string(ride['id'], 'N/A');
-    final fare = formatMoney(ride['fare']);
-    final color = statusColor(status);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: _surface(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: primaryPurple.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.directions_car_outlined,
-                    color: primaryPurple,
-                    size: 22,
-                  ),
-                ),
-                const SizedBox(width: 11),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        serviceType.replaceAll('_', ' '),
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Ride ID: $rideId',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                _statusBadge(status),
-              ],
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => RideAdminDetailsScreen(ride: ride),
             ),
-            const SizedBox(height: 14),
-            Divider(height: 1, color: Colors.grey.withValues(alpha: 0.15)),
-            const SizedBox(height: 12),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Icon(Icons.circle, size: 10, color: Colors.green),
-                const SizedBox(width: 9),
-                Expanded(
-                  child: Text(
-                    _string(ride['pickup_address'], 'Pickup unavailable'),
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                ),
-              ],
-            ),
-            Padding(
-              padding: const EdgeInsets.only(left: 3, top: 5, bottom: 5),
-              child: Container(
-                height: 15,
-                width: 1,
-                color: Colors.grey.withValues(alpha: 0.5),
-              ),
-            ),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Icon(
-                  Icons.location_on,
-                  size: 15,
-                  color: Colors.redAccent,
-                ),
-                const SizedBox(width: 7),
-                Expanded(
-                  child: Text(
-                    _string(
-                      ride['destination_address'],
-                      'Destination unavailable',
+          );
+        },
+        child: _surface(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Ride type, ID and status
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: primaryPurple.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    style: const TextStyle(fontSize: 12),
+                    child: const Icon(
+                      Icons.directions_car_outlined,
+                      color: primaryPurple,
+                      size: 22,
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                Icon(
-                  Icons.calendar_today_outlined,
-                  size: 14,
-                  color: Colors.grey.shade600,
-                ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    formatDateTime(ride['created_at']),
-                    style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                  const SizedBox(width: 11),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          serviceType.replaceAll('_', ' ').toUpperCase(),
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Ride ID: $rideId',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                Text(
-                  fare,
-                  style: TextStyle(
-                    color: color,
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
+                  const SizedBox(width: 8),
+                  _statusBadge(status),
+                ],
+              ),
+
+              const SizedBox(height: 14),
+              Divider(height: 1, color: Colors.grey.withValues(alpha: 0.15)),
+
+              // Pickup
+              const SizedBox(height: 12),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.circle, size: 10, color: Colors.green),
+                  const SizedBox(width: 9),
+                  Expanded(
+                    child: Text(
+                      _string(ride['pickup_address'], 'Pickup unavailable'),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 12),
+                    ),
                   ),
+                ],
+              ),
+
+              Padding(
+                padding: const EdgeInsets.only(left: 3, top: 5, bottom: 5),
+                child: Container(
+                  height: 15,
+                  width: 1,
+                  color: Colors.grey.withValues(alpha: 0.5),
                 ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Icon(
-                  Icons.payment_outlined,
-                  size: 15,
-                  color: Colors.grey.shade600,
-                ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    'Payment: ${_string(ride['payment_method'], 'N/A')}',
-                    style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+              ),
+
+              // Destination
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(
+                    Icons.location_on,
+                    size: 15,
+                    color: Colors.redAccent,
                   ),
+                  const SizedBox(width: 7),
+                  Expanded(
+                    child: Text(
+                      _string(
+                        ride['destination_address'],
+                        'Destination unavailable',
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 14),
+              Divider(height: 1, color: Colors.grey.withValues(alpha: 0.15)),
+
+              // Minimal fare and date summary
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  const Icon(
+                    Icons.payments_outlined,
+                    color: primaryPurple,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 7),
+                  Expanded(
+                    child: Text(
+                      formatMoney(ride['fare']),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    Icons.calendar_today_outlined,
+                    size: 13,
+                    color: Colors.grey.shade600,
+                  ),
+                  const SizedBox(width: 5),
+                  Flexible(
+                    child: Text(
+                      formatDate(ride['created_at']),
+                      textAlign: TextAlign.end,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 12),
+              Align(
+                alignment: Alignment.centerRight,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    Text(
+                      'View ride details',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: primaryPurple,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    SizedBox(width: 4),
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      size: 12,
+                      color: primaryPurple,
+                    ),
+                  ],
                 ),
-                _statusBadge(_string(ride['payment_status'], 'Unknown')),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1125,15 +1029,6 @@ class _RideAdminCustomerDetailsScreenState
             const SizedBox(height: 24),
 
             // Map
-            _sectionTitle('Ride map'),
-            _mapCard(),
-            if (refreshError != null) ...[
-              const SizedBox(height: 12),
-              Text(
-                'Last refresh failed: $refreshError',
-                style: const TextStyle(color: Colors.redAccent, fontSize: 12),
-              ),
-            ],
           ],
         ),
       ),

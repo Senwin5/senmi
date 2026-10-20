@@ -10,20 +10,36 @@ class RideAdminDetailsScreen extends StatelessWidget {
 
   static const Color purple = Color(0xFF7C3AED);
 
-  double? _number(dynamic value) {
+  double? _number(dynamic value, {required bool isLatitude}) {
     if (value == null) return null;
 
-    final number = double.tryParse(value.toString());
+    final number = value is num
+        ? value.toDouble()
+        : double.tryParse(value.toString().trim());
 
-    if (number == null || !number.isFinite || number < -180 || number > 180) {
+    if (number == null || !number.isFinite) return null;
+
+    if (isLatitude && (number < -90 || number > 90)) {
       return null;
     }
+
+    if (!isLatitude && (number < -180 || number > 180)) {
+      return null;
+    }
+
+    // Reject placeholder coordinates.
+    if (number == 0) return null;
 
     return number;
   }
 
   double _moneyValue(String key) {
-    final value = ride[key];
+    final aliases = <String, String>{
+      'serviceFee': 'service_fee',
+      'driverEarning': 'driver_earning',
+    };
+
+    final value = ride[key] ?? ride[aliases[key]];
 
     if (value is num) return value.toDouble();
 
@@ -35,7 +51,18 @@ class RideAdminDetailsScreen extends StatelessWidget {
   }
 
   String _value(String key, [String fallback = 'Not available']) {
-    final value = ride[key];
+    final aliases = <String, String>{
+      'pickup': 'pickup_address',
+      'destination': 'destination_address',
+      'passengerPhone': 'passenger_phone',
+      'driverPhone': 'driver_phone',
+      'serviceType': 'service_type',
+      'paymentMethod': 'payment_method',
+      'paymentStatus': 'payment_status',
+      'createdAt': 'created_at',
+    };
+
+    final value = ride[key] ?? ride[aliases[key]];
 
     if (value == null || value.toString().trim().isEmpty) {
       return fallback;
@@ -249,13 +276,47 @@ class RideAdminDetailsScreen extends StatelessWidget {
     final cardColor = isDark ? const Color(0xFF211C2B) : Colors.white;
 
     final textColor = isDark ? Colors.white : const Color(0xFF211633);
+    // TEMPORARY DEBUG CODE
+    debugPrint('========== RIDE MAP DEBUG ==========');
+    debugPrint('Ride ID: ${ride['id']}');
+    debugPrint('Ride keys: ${ride.keys.toList()}');
+    debugPrint('Pickup lat: ${ride['pickup_lat']}');
+    debugPrint('Pickup lng: ${ride['pickup_lng']}');
+    debugPrint('Destination lat: ${ride['destination_lat']}');
+    debugPrint('Destination lng: ${ride['destination_lng']}');
+    debugPrint('Driver lat: ${ride['driver_lat']}');
+    debugPrint('Driver lng: ${ride['driver_lng']}');
+    debugPrint('====================================');
 
-    final pickupLat = _number(ride['pickupLat']);
-    final pickupLng = _number(ride['pickupLng']);
-    final destinationLat = _number(ride['destinationLat']);
-    final destinationLng = _number(ride['destinationLng']);
-    final driverLat = _number(ride['driverLat']);
-    final driverLng = _number(ride['driverLng']);
+    final pickupLat = _number(
+      ride['pickupLat'] ?? ride['pickup_lat'],
+      isLatitude: true,
+    );
+
+    final pickupLng = _number(
+      ride['pickupLng'] ?? ride['pickup_lng'],
+      isLatitude: false,
+    );
+
+    final destinationLat = _number(
+      ride['destinationLat'] ?? ride['destination_lat'],
+      isLatitude: true,
+    );
+
+    final destinationLng = _number(
+      ride['destinationLng'] ?? ride['destination_lng'],
+      isLatitude: false,
+    );
+
+    final driverLat = _number(
+      ride['driverLat'] ?? ride['driver_lat'],
+      isLatitude: true,
+    );
+
+    final driverLng = _number(
+      ride['driverLng'] ?? ride['driver_lng'],
+      isLatitude: false,
+    );
 
     final pickup = pickupLat != null && pickupLng != null
         ? LatLng(pickupLat, pickupLng)
