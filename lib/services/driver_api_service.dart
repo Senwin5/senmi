@@ -948,4 +948,46 @@ static Future<Map<String, dynamic>> getAdminDriverActivity(
   return data;
 }
 
+
+  // ============================================================
+  // ADMIN: DRIVER COMMISSION PAYMENTS TO SENMI
+  // ============================================================
+
+  static Future<List<dynamic>> getAdminCommissionPayments() async {
+    final response = await http
+        .get(
+          Uri.parse("$baseUrl/ride/admin/commission-payments/"),
+          headers: await headers(),
+        )
+        .timeout(const Duration(seconds: 30));
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      final data = decodeResponse(response);
+
+      throw Exception(
+        data["detail"]?.toString() ??
+            "Unable to load commission payments "
+                "(HTTP ${response.statusCode}).",
+      );
+    }
+
+    try {
+      final decoded = jsonDecode(response.body);
+
+      if (decoded is List) {
+        return decoded;
+      }
+
+      // Also support paginated Django REST Framework responses.
+      if (decoded is Map && decoded["results"] is List) {
+        return List<dynamic>.from(decoded["results"]);
+      }
+    } catch (_) {
+      throw Exception("Invalid response while loading commission payments.");
+    }
+
+    return [];
+  }
+
+
 }
