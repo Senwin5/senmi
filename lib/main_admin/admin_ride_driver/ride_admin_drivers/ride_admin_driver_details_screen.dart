@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:senmi/main_admin/admin_ride_driver/ride_admin_drivers/ride_admin_driver_activity_screen.dart';
+import 'package:senmi/main_admin/admin_ride_driver/ride_admin_drivers/ride_admin_driver_activity.dart';
 import 'package:senmi/services/driver_api_service.dart';
 
 class RideAdminDriverDetailsScreen extends StatefulWidget {
@@ -621,6 +621,31 @@ class _RideAdminDriverDetailsScreenState
 
                     manageDriverSection(d, cardColor),
 
+                    section('Emergency Contact', [
+                      detailRow('Contact name', d['emergency_contact_name']),
+                      detailRow('Contact phone', d['emergency_contact_phone']),
+                      detailRow(
+                        'Relationship',
+                        d['emergency_contact_relationship'],
+                      ),
+                    ], cardColor),
+
+                    photoCard(
+                      'Profile Photo',
+                      d['profile_photo'],
+                      Icons.person_outline,
+                    ),
+                    photoCard(
+                      'Driver Licence Photo',
+                      d['driver_license_photo'],
+                      Icons.badge_outlined,
+                    ),
+                    photoCard(
+                      'Vehicle Photo',
+                      d['vehicle_photo'],
+                      Icons.directions_car_outlined,
+                    ),
+
                     section('Driver Activity', [
                       const Text(
                         'View the driver’s complete ride history, earnings, '
@@ -654,31 +679,6 @@ class _RideAdminDriverDetailsScreenState
                         ),
                       ),
                     ], cardColor),
-
-                    section('Emergency Contact', [
-                      detailRow('Contact name', d['emergency_contact_name']),
-                      detailRow('Contact phone', d['emergency_contact_phone']),
-                      detailRow(
-                        'Relationship',
-                        d['emergency_contact_relationship'],
-                      ),
-                    ], cardColor),
-
-                    photoCard(
-                      'Profile Photo',
-                      d['profile_photo'],
-                      Icons.person_outline,
-                    ),
-                    photoCard(
-                      'Driver Licence Photo',
-                      d['driver_license_photo'],
-                      Icons.badge_outlined,
-                    ),
-                    photoCard(
-                      'Vehicle Photo',
-                      d['vehicle_photo'],
-                      Icons.directions_car_outlined,
-                    ),
                   ],
                 ),
               ),
