@@ -71,9 +71,6 @@ void main() async {
     _firebaseMessagingBackgroundHandler,
   );
 
-  /// access to the SAME navigatorKey used
-  /// by MaterialApp.
-
   FirebaseNotificationService.setNavigatorKey(
     navigatorKey,
   );
