@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:senmi/services/package_api_service.dart';
 
@@ -920,34 +921,32 @@ class RideService {
   }
 
   // ============================
-// ADMIN: DRIVER ACTIVITY
-// ============================
+  // ADMIN: DRIVER ACTIVITY
+  // ============================
 
-static Future<Map<String, dynamic>> getAdminDriverActivity(
-  String driverId,
-) async {
-  final response = await http
-      .get(
-        Uri.parse(
-          "$baseUrl/ride/admin/drivers/"
-          "${Uri.encodeComponent(driverId)}/activity/",
-        ),
-        headers: await headers(),
-      )
-      .timeout(const Duration(seconds: 30));
+  static Future<Map<String, dynamic>> getAdminDriverActivity(
+    String driverId,
+  ) async {
+    final response = await http
+        .get(
+          Uri.parse(
+            "$baseUrl/ride/admin/drivers/"
+            "${Uri.encodeComponent(driverId)}/activity/",
+          ),
+          headers: await headers(),
+        )
+        .timeout(const Duration(seconds: 30));
 
-  final data = decodeResponse(response);
+    final data = decodeResponse(response);
 
-  if (response.statusCode < 200 || response.statusCode >= 300) {
-    throw Exception(
-      data["detail"]?.toString() ??
-          "Unable to load driver activity.",
-    );
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(
+        data["detail"]?.toString() ?? "Unable to load driver activity.",
+      );
+    }
+
+    return data;
   }
-
-  return data;
-}
-
 
   // ============================================================
   // ADMIN: DRIVER COMMISSION PAYMENTS TO SENMI
@@ -989,5 +988,89 @@ static Future<Map<String, dynamic>> getAdminDriverActivity(
     return [];
   }
 
+  // ADMIN: DAILY RIDE ANALYTICS
+  static Future<Map<String, dynamic>> getAdminDailyAnalytics({
+    int days = 7,
+  }) async {
+    if (![1, 7, 30, 90].contains(days)) {
+      throw ArgumentError.value(
+        days,
+        'days',
+        'Supported values are 1, 7, 30, and 90.',
+      );
+    }
 
+    final uri = Uri.parse(
+      '$baseUrl/ride/admin/analytics/',
+    ).replace(queryParameters: {'days': days.toString(), 'group_by': 'day'});
+
+    try {
+      final requestHeaders = await headers();
+
+      debugPrint('Analytics URL: $uri');
+      debugPrint(
+        'Analytics auth token present: '
+        '${(ApiService.token ?? '').isNotEmpty}',
+      );
+
+      final response = await http
+          .get(uri, headers: requestHeaders)
+          .timeout(const Duration(seconds: 30));
+
+      debugPrint('Analytics HTTP status: ${response.statusCode}');
+
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        final body = response.body.trim();
+
+        // Handle HTML error pages, such as production HTTP 404.
+        if (body.startsWith('<')) {
+          throw Exception(
+            'Analytics API returned HTTP ${response.statusCode}. '
+            'The server returned HTML instead of JSON. '
+            'Check the production Django route and deployment.',
+          );
+        }
+
+        try {
+          final decoded = jsonDecode(body);
+
+          if (decoded is Map) {
+            final data = Map<String, dynamic>.from(decoded);
+
+            throw Exception(
+              data['detail']?.toString() ??
+                  data['error']?.toString() ??
+                  'Analytics request failed with HTTP '
+                      '${response.statusCode}.',
+            );
+          }
+        } on FormatException {
+          // Fall through to the HTTP error below.
+        }
+
+        throw Exception(
+          'Analytics request failed with HTTP '
+          '${response.statusCode}: $body',
+        );
+      }
+
+      final decoded = jsonDecode(response.body);
+
+      if (decoded is! Map) {
+        throw Exception(
+          'Expected a JSON object from the analytics API, '
+          'received ${decoded.runtimeType}.',
+        );
+      }
+
+      final data = Map<String, dynamic>.from(decoded);
+
+      debugPrint('Analytics loaded successfully for $days day(s).');
+
+      return data;
+    } catch (e) {
+      debugPrint('getAdminDailyAnalytics failed: $e');
+      rethrow;
+    }
+  }
 }
