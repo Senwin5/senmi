@@ -1,4 +1,9 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:senmi/services/driver_api_service.dart';
+import 'ride_admin_ride_details_screen.dart';
 
 class RideAdminAvailableRidesScreen extends StatefulWidget {
   const RideAdminAvailableRidesScreen({super.key});
@@ -10,162 +15,768 @@ class RideAdminAvailableRidesScreen extends StatefulWidget {
 
 class _RideAdminAvailableRidesScreenState
     extends State<RideAdminAvailableRidesScreen> {
-  static const Color purple = Color(0xFF7C3AED);
+  List<Map<String, dynamic>> rides = [];
 
-  final TextEditingController searchController = TextEditingController();
+  bool isLoading = true;
+  String? loadError;
 
+  String searchQuery = '';
   String selectedFilter = 'All';
 
-  final List<Map<String, dynamic>> rides = [
-    {
-      'id': 'REQ-3001',
-      'passenger': 'Amaka Johnson',
-      'phone': '08012345678',
-      'pickup': 'Ikeja City Mall, Lagos',
-      'destination': 'Murtala Muhammed Airport',
-      'fare': 7500,
-      'distance': '12.4 km',
-      'time': '25 min',
-      'requested': '5 min ago',
-      'status': 'Waiting for Driver',
-    },
-    {
-      'id': 'REQ-3002',
-      'passenger': 'Tunde Bakare',
-      'phone': '08023456789',
-      'pickup': 'Lekki Phase 1',
-      'destination': 'Victoria Island',
-      'fare': 4500,
-      'distance': '7.2 km',
-      'time': '18 min',
-      'requested': '8 min ago',
-      'status': 'Waiting for Driver',
-    },
-    {
-      'id': 'REQ-3003',
-      'passenger': 'Ngozi Eze',
-      'phone': '08034567890',
-      'pickup': 'Yaba Bus Stop',
-      'destination': 'Surulere',
-      'fare': 3200,
-      'distance': '5.6 km',
-      'time': '15 min',
-      'requested': '2 min ago',
-      'status': 'Waiting for Driver',
-    },
-    {
-      'id': 'REQ-3004',
-      'passenger': 'David Musa',
-      'phone': '08045678901',
-      'pickup': 'Ajah Roundabout',
-      'destination': 'Lekki Conservation Centre',
-      'fare': 2800,
-      'distance': '4.1 km',
-      'time': '12 min',
-      'requested': '12 min ago',
-      'status': 'Driver Assigned',
-    },
-  ];
+  final TextEditingController _searchController = TextEditingController();
 
-  final List<String> filters = const [
-    'All',
-    'Waiting for Driver',
-    'Driver Assigned',
-  ];
+  static const Color primaryColor = Color(0xFF1565C0);
+  static const Color backgroundColor = Color(0xFFF5F7FB);
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRides();
+  }
 
   @override
   void dispose() {
-    searchController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
+  Future<String> _resolveAddress({
+    required dynamic latitude,
+    required dynamic longitude,
+    required String fallback,
+  }) async {
+    final lat = double.tryParse(latitude?.toString() ?? '');
+    final lng = double.tryParse(longitude?.toString() ?? '');
+
+    if (lat == null || lng == null) return fallback;
+
+    try {
+      final placemarks = await placemarkFromCoordinates(lat, lng);
+      if (placemarks.isEmpty) return fallback;
+
+      final place = placemarks.first;
+      final parts = <String>[
+        if ((place.name ?? '').trim().isNotEmpty && place.name!.trim() != '+')
+          place.name!.trim(),
+        if ((place.street ?? '').trim().isNotEmpty &&
+            place.street!.trim() != place.name?.trim())
+          place.street!.trim(),
+        if ((place.subLocality ?? '').trim().isNotEmpty)
+          place.subLocality!.trim(),
+        if ((place.locality ?? '').trim().isNotEmpty) place.locality!.trim(),
+        if ((place.administrativeArea ?? '').trim().isNotEmpty)
+          place.administrativeArea!.trim(),
+      ];
+
+      final uniqueParts = <String>[];
+      for (final part in parts) {
+        if (!uniqueParts.contains(part)) uniqueParts.add(part);
+      }
+
+      return uniqueParts.isEmpty ? fallback : uniqueParts.join(', ');
+    } catch (_) {
+      return fallback;
+    }
+  }
+
+  bool _isPlusCodeAddress(String? address) {
+    if (address == null || address.trim().isEmpty) return false;
+
+    final firstPart = address.trim().split(',').first.trim();
+
+    return RegExp(
+      r'^[23456789CFGHJMPQRVWX]{2,8}\+[23456789CFGHJMPQRVWX]{2,}',
+      caseSensitive: false,
+    ).hasMatch(firstPart);
+  }
+
+  // =========================================
+  // LOAD RIDES FROM DJANGO BACKEND
+  // =========================================
+
+  Future<void> _loadRides() async {
+    if (!mounted) return;
+
+    setState(() {
+      isLoading = true;
+      loadError = null;
+    });
+
+    try {
+      final dynamic response = await RideService.getAdminRides();
+      dynamic rawList;
+
+      if (response is List) {
+        rawList = response;
+      } else if (response is Map) {
+        if (response['rides'] is List) {
+          rawList = response['rides'];
+        } else if (response['results'] is List) {
+          rawList = response['results'];
+        } else if (response['data'] is List) {
+          rawList = response['data'];
+        } else if (response['requests'] is List) {
+          rawList = response['requests'];
+        } else if (response['data'] is Map) {
+          final data = Map<String, dynamic>.from(response['data'] as Map);
+          rawList = data['rides'] ?? data['results'] ?? data['requests'];
+        }
+      }
+
+      if (rawList is! List) {
+        throw Exception(
+          'The server response does not contain a list of rides.',
+        );
+      }
+
+      final List<Map<String, dynamic>> loadedRides = [];
+
+      for (final item in rawList.whereType<Map>()) {
+        final ride = _normalizeRide(Map<String, dynamic>.from(item));
+        final status = ride['status'].toString();
+
+        if (status != 'Waiting for Driver' && status != 'Driver Assigned') {
+          continue;
+        }
+
+        final pickup = ride['pickup']?.toString();
+
+        if (pickup == 'Address needs to be resolved' ||
+            _isPlusCodeAddress(pickup)) {
+          ride['pickup'] = await _resolveAddress(
+            latitude: ride['pickup_latitude'],
+            longitude: ride['pickup_longitude'],
+            fallback: 'Pickup address unavailable',
+          );
+        }
+
+        final destination = ride['destination']?.toString();
+
+        if (destination == 'Address needs to be resolved' ||
+            _isPlusCodeAddress(destination)) {
+          ride['destination'] = await _resolveAddress(
+            latitude: ride['destination_latitude'],
+            longitude: ride['destination_longitude'],
+            fallback: 'Destination address unavailable',
+          );
+        }
+
+        loadedRides.add(ride);
+      }
+
+      if (!mounted) return;
+
+      setState(() {
+        rides = loadedRides;
+        isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        loadError = e.toString().replaceFirst('Exception: ', '');
+        isLoading = false;
+      });
+    }
+  }
+
+  // =========================================
+  // NORMALIZE BACKEND FIELDS
+  // =========================================
+
+  Map<String, dynamic> _normalizeRide(Map<String, dynamic> ride) {
+    final dynamic rawId =
+        ride['id'] ?? ride['ride_id'] ?? ride['request_id'] ?? '';
+
+    final dynamic rawStatus =
+        ride['status'] ?? ride['ride_status'] ?? 'pending';
+
+    final dynamic rawPassenger =
+        ride['passenger'] ??
+        ride['customer'] ??
+        ride['rider'] ??
+        ride['passenger_name'] ??
+        'Unknown Passenger';
+
+    final dynamic rawPickup = _firstReadableAddress([
+      ride['pickup_formatted_address'],
+      ride['pickup_address'],
+      ride['pickup_name'],
+      ride['pickup_location_name'],
+      ride['pickup_location'],
+      ride['pickup'],
+      ride['origin_address'],
+      ride['origin'],
+    ]);
+
+    final dynamic rawDestination = _firstReadableAddress([
+      ride['destination_formatted_address'],
+      ride['destination_address'],
+      ride['destination_name'],
+      ride['dropoff_address'],
+      ride['dropoff_location_name'],
+      ride['dropoff_location'],
+      ride['destination'],
+      ride['dropoff'],
+    ]);
+
+    final dynamic rawFare =
+        ride['fare'] ??
+        ride['price'] ??
+        ride['estimated_fare'] ??
+        ride['total_fare'] ??
+        0;
+
+    final dynamic rawPhone =
+        ride['passenger_phone'] ??
+        ride['customer_phone'] ??
+        ride['phone'] ??
+        '';
+
+    final dynamic rawServiceType =
+        ride['service_type'] ??
+        ride['vehicle_type'] ??
+        ride['ride_type'] ??
+        'Standard';
+
+    final dynamic rawCreatedAt =
+        ride['created_at'] ?? ride['requested_at'] ?? ride['date'] ?? '';
+
+    return {
+      ...ride,
+      'id': rawId.toString(),
+      'status': _normalizeStatus(rawStatus.toString()),
+      'passenger': rawPassenger.toString(),
+      'passenger_phone': rawPhone.toString(),
+      'pickup': rawPickup,
+      'destination': rawDestination,
+      'fare': _parseFare(rawFare),
+      'service_type': rawServiceType.toString(),
+      'created_at': rawCreatedAt.toString(),
+      'pickup_latitude':
+          ride['pickup_latitude'] ??
+          ride['pickup_lat'] ??
+          ride['origin_latitude'] ??
+          ride['origin_lat'],
+      'pickup_longitude':
+          ride['pickup_longitude'] ??
+          ride['pickup_lng'] ??
+          ride['origin_longitude'] ??
+          ride['origin_lng'],
+      'destination_latitude':
+          ride['destination_latitude'] ??
+          ride['destination_lat'] ??
+          ride['dropoff_latitude'] ??
+          ride['dropoff_lat'],
+      'destination_longitude':
+          ride['destination_longitude'] ??
+          ride['destination_lng'] ??
+          ride['dropoff_longitude'] ??
+          ride['dropoff_lng'],
+    };
+  }
+
+  String _firstReadableAddress(List<dynamic> candidates) {
+    String? plusCodeFallback;
+
+    for (final candidate in candidates) {
+      if (candidate == null) continue;
+
+      final address = candidate.toString().trim();
+
+      if (address.isEmpty || address.toLowerCase() == 'null') continue;
+
+      if (_looksLikePlusCode(address)) {
+        plusCodeFallback ??= address;
+        continue;
+      }
+
+      return address;
+    }
+
+    if (plusCodeFallback != null) return 'Address needs to be resolved';
+
+    return 'Address not available';
+  }
+
+  bool _looksLikePlusCode(String address) {
+    final firstPart = address.split(',').first.trim();
+
+    return RegExp(
+      r'^(?:[23456789CFGHJMPQRVWX]{4,8}\+'
+      r'[23456789CFGHJMPQRVWX]{2,3})$',
+      caseSensitive: false,
+    ).hasMatch(firstPart);
+  }
+
+  String _normalizeStatus(String value) {
+    final status = value
+        .trim()
+        .toLowerCase()
+        .replaceAll('_', ' ')
+        .replaceAll('-', ' ');
+
+    if (status == 'pending' ||
+        status == 'waiting' ||
+        status == 'requested' ||
+        status == 'waiting for driver' ||
+        status == 'searching for driver') {
+      return 'Waiting for Driver';
+    }
+
+    if (status == 'assigned' ||
+        status == 'accepted' ||
+        status == 'driver assigned' ||
+        status == 'accepted by driver') {
+      return 'Driver Assigned';
+    }
+
+    if (status == 'in progress' || status == 'ongoing' || status == 'started') {
+      return 'In Progress';
+    }
+
+    if (status == 'completed' || status == 'complete') {
+      return 'Completed';
+    }
+
+    if (status == 'cancelled' || status == 'canceled') {
+      return 'Cancelled';
+    }
+
+    return value.trim().isEmpty ? 'Unknown' : value.trim();
+  }
+
+  double _parseFare(dynamic value) {
+    if (value is num) return value.toDouble();
+
+    final cleaned = value
+        .toString()
+        .replaceAll(',', '')
+        .replaceAll(RegExp(r'[^0-9.]'), '');
+
+    return double.tryParse(cleaned) ?? 0;
+  }
+
+  // =========================================
+  // NAVIGATE TO FULL-PAGE RIDE DETAILS
+  // =========================================
+
+  void _openRideDetails(Map<String, dynamic> ride) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => RideAdminRideDetailsScreen(ride: ride),
+      ),
+    );
+  }
+
+  // =========================================
+  // FILTER AND SEARCH
+  // =========================================
+
   List<Map<String, dynamic>> get filteredRides {
-    final query = searchController.text.trim().toLowerCase();
+    final query = searchQuery.trim().toLowerCase();
 
     return rides.where((ride) {
-      final matchesFilter =
-          selectedFilter == 'All' || ride['status'] == selectedFilter;
+      final status = ride['status'].toString();
+      final matchesFilter = selectedFilter == 'All' || status == selectedFilter;
 
-      final matchesSearch = [
+      final searchable = [
         ride['id'],
         ride['passenger'],
+        ride['passenger_phone'],
         ride['pickup'],
         ride['destination'],
-      ].any((value) => value.toString().toLowerCase().contains(query));
+        ride['service_type'],
+        ride['status'],
+      ].join(' ').toLowerCase();
 
-      return matchesFilter && matchesSearch;
+      return matchesFilter && (query.isEmpty || searchable.contains(query));
     }).toList();
   }
 
-  void showRideDetails(Map<String, dynamic> ride) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : const Color(0xFF211633);
+  int get waitingCount =>
+      rides.where((ride) => ride['status'] == 'Waiting for Driver').length;
 
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      backgroundColor: isDark ? const Color(0xFF211C2B) : Colors.white,
-      builder: (sheetContext) => SafeArea(
+  int get assignedCount =>
+      rides.where((ride) => ride['status'] == 'Driver Assigned').length;
+
+  // =========================================
+  // FORMATTING HELPERS
+  // =========================================
+
+  String _formatFare(dynamic fare) {
+    final amount = _parseFare(fare);
+
+    final formatted = amount
+        .toStringAsFixed(2)
+        .replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (match) => ',');
+
+    return '₦$formatted';
+  }
+
+  String _formatDate(dynamic value) {
+    if (value == null || value.toString().trim().isEmpty) {
+      return 'Date unavailable';
+    }
+
+    final date = DateTime.tryParse(value.toString());
+    if (date == null) return value.toString();
+
+    final local = date.toLocal();
+    final day = local.day.toString().padLeft(2, '0');
+    final month = local.month.toString().padLeft(2, '0');
+    final year = local.year.toString();
+
+    final hour = (local.hour % 12 == 0 ? 12 : local.hour % 12)
+        .toString()
+        .padLeft(2, '0');
+    final minute = local.minute.toString().padLeft(2, '0');
+    final period = local.hour >= 12 ? 'PM' : 'AM';
+
+    return '$day/$month/$year  $hour:$minute $period';
+  }
+
+  Color _statusColor(String status) {
+    switch (status) {
+      case 'Waiting for Driver':
+        return Colors.orange.shade800;
+      case 'Driver Assigned':
+        return Colors.blue.shade700;
+      case 'In Progress':
+        return Colors.purple.shade700;
+      case 'Completed':
+        return Colors.green.shade700;
+      case 'Cancelled':
+        return Colors.red.shade700;
+      default:
+        return Colors.grey.shade700;
+    }
+  }
+
+  // =========================================
+  // SCREEN UI
+  // =========================================
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: backgroundColor,
+      appBar: AppBar(
+        title: const Text(
+          'Available Rides',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
+        elevation: 0,
+        actions: [
+          IconButton(
+            tooltip: 'Refresh rides',
+            onPressed: isLoading ? null : _loadRides,
+            icon: const Icon(Icons.refresh),
+          ),
+        ],
+      ),
+      body: RefreshIndicator(
+        onRefresh: _loadRides,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          children: [
+            _buildSummarySection(),
+            const SizedBox(height: 20),
+            _buildSearchField(),
+            const SizedBox(height: 12),
+            _buildFilters(),
+            const SizedBox(height: 16),
+            if (isLoading)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 60),
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else if (loadError != null)
+              _buildErrorState()
+            else if (filteredRides.isEmpty)
+              _buildEmptyState()
+            else ...[
+              Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'Ride Requests',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    '${filteredRides.length} found',
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              ...filteredRides.map(_buildRideCard),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSummarySection() {
+    return Row(
+      children: [
+        Expanded(
+          child: _SummaryCard(
+            title: 'Available',
+            count: waitingCount,
+            icon: Icons.hourglass_top,
+            color: Colors.orange,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _SummaryCard(
+            title: 'Assigned',
+            count: assignedCount,
+            icon: Icons.directions_car,
+            color: Colors.blue,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _SummaryCard(
+            title: 'Total',
+            count: rides.length,
+            icon: Icons.receipt_long,
+            color: Colors.green,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSearchField() {
+    return TextField(
+      controller: _searchController,
+      onChanged: (value) {
+        setState(() => searchQuery = value);
+      },
+      decoration: InputDecoration(
+        hintText: 'Search passenger, ride ID, pickup...',
+        prefixIcon: const Icon(Icons.search),
+        suffixIcon: searchQuery.isEmpty
+            ? null
+            : IconButton(
+                onPressed: () {
+                  _searchController.clear();
+                  setState(() => searchQuery = '');
+                },
+                icon: const Icon(Icons.clear),
+              ),
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide.none,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilters() {
+    const filters = ['All', 'Waiting for Driver', 'Driver Assigned'];
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: filters.map((filter) {
+          final selected = selectedFilter == filter;
+
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: ChoiceChip(
+              label: Text(filter),
+              selected: selected,
+              onSelected: (_) {
+                setState(() => selectedFilter = filter);
+              },
+              selectedColor: primaryColor.withOpacity(0.14),
+              labelStyle: TextStyle(
+                color: selected ? primaryColor : Colors.black87,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+              ),
+              side: BorderSide(
+                color: selected ? primaryColor : Colors.grey.shade300,
+              ),
+              backgroundColor: Colors.white,
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildRideCard(Map<String, dynamic> ride) {
+    final status = ride['status'].toString();
+    final color = _statusColor(status);
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 14),
+      elevation: 1,
+      color: Colors.white,
+      shadowColor: Colors.black12,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: () => _openRideDetails(ride),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(22, 8, 22, 24),
+          padding: const EdgeInsets.all(16),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Ride Request Details',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: textColor,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                ride['id'].toString(),
-                style: const TextStyle(color: purple),
-              ),
-              const SizedBox(height: 20),
-              _DetailRow(
-                label: 'Passenger',
-                value: ride['passenger'].toString(),
-              ),
-              _DetailRow(label: 'Phone', value: ride['phone'].toString()),
-              _DetailRow(label: 'Pickup', value: ride['pickup'].toString()),
-              _DetailRow(
-                label: 'Destination',
-                value: ride['destination'].toString(),
-              ),
-              _DetailRow(label: 'Distance', value: ride['distance'].toString()),
-              _DetailRow(
-                label: 'Estimated time',
-                value: ride['time'].toString(),
-              ),
-              _DetailRow(label: 'Estimated fare', value: '₦${ride['fare']}'),
-              _DetailRow(
-                label: 'Requested',
-                value: ride['requested'].toString(),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: primaryColor.withOpacity(0.09),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.directions_car_filled_outlined,
+                      color: primaryColor,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Ride ${ride['id']}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          ride['passenger'].toString(),
+                          style: TextStyle(color: Colors.grey.shade700),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 9,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.10),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      status,
+                      style: TextStyle(
+                        color: color,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 18),
+              _RouteRow(
+                icon: Icons.trip_origin,
+                iconColor: Colors.green.shade700,
+                label: 'PICKUP',
+                value: ride['pickup'].toString(),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 11),
+                child: Container(
+                  height: 18,
+                  width: 1,
+                  color: Colors.grey.shade300,
+                ),
+              ),
+              _RouteRow(
+                icon: Icons.location_on,
+                iconColor: Colors.red.shade600,
+                label: 'DESTINATION',
+                value: ride['destination'].toString(),
+              ),
+              const SizedBox(height: 16),
+              Divider(color: Colors.grey.shade200),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'ESTIMATED FARE',
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 10,
+                            letterSpacing: 0.7,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _formatFare(ride['fare']),
+                          style: const TextStyle(
+                            fontSize: 19,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Flexible(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          ride['service_type'].toString(),
+                          textAlign: TextAlign.end,
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          _formatDate(ride['created_at']),
+                          textAlign: TextAlign.end,
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
               SizedBox(
                 width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: () {
-                    Navigator.pop(sheetContext);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Driver assignment will be connected later.',
-                        ),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.person_add_alt_1),
-                  label: const Text('Assign Driver'),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: purple,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                child: OutlinedButton.icon(
+                  onPressed: () => _openRideDetails(ride),
+                  icon: const Icon(Icons.visibility_outlined),
+                  label: const Text('View Ride Details'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: primaryColor,
+                    side: BorderSide(color: primaryColor.withOpacity(0.45)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
                 ),
               ),
@@ -176,353 +787,62 @@ class _RideAdminAvailableRidesScreenState
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : const Color(0xFF211633);
-    final cardColor = isDark ? const Color(0xFF211C2B) : Colors.white;
-    final visibleRides = filteredRides;
-
-    final waitingCount = rides
-        .where((r) => r['status'] == 'Waiting for Driver')
-        .length;
-    final assignedCount = rides
-        .where((r) => r['status'] == 'Driver Assigned')
-        .length;
-
-    return Scaffold(
-      backgroundColor: isDark
-          ? const Color(0xFF121018)
-          : const Color(0xFFF8F7FC),
-      appBar: AppBar(
-        title: const Text(
-          'Available Rides',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: isDark ? const Color(0xFF1C1726) : Colors.white,
-        foregroundColor: textColor,
-        elevation: 0,
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _SummaryCard(
-                      title: 'Awaiting Driver',
-                      value: '$waitingCount',
-                      icon: Icons.person_search_rounded,
-                      color: const Color(0xFFD97706),
-                      isDark: isDark,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _SummaryCard(
-                      title: 'Driver Assigned',
-                      value: '$assignedCount',
-                      icon: Icons.check_circle_outline_rounded,
-                      color: const Color(0xFF059669),
-                      isDark: isDark,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: TextField(
-                controller: searchController,
-                onChanged: (_) => setState(() {}),
-                style: TextStyle(color: textColor),
-                decoration: InputDecoration(
-                  hintText: 'Search request, passenger or location',
-                  prefixIcon: const Icon(Icons.search),
-                  filled: true,
-                  fillColor: cardColor,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(15),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 10),
-            SizedBox(
-              height: 46,
-              child: ListView.separated(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 4,
-                ),
-                scrollDirection: Axis.horizontal,
-                itemCount: filters.length,
-                separatorBuilder: (_, _) => const SizedBox(width: 8),
-                itemBuilder: (context, index) {
-                  final filter = filters[index];
-                  final selected = selectedFilter == filter;
-
-                  return ChoiceChip(
-                    label: Text(filter),
-                    selected: selected,
-                    selectedColor: purple,
-                    showCheckmark: false,
-                    backgroundColor: cardColor,
-                    labelStyle: TextStyle(
-                      color: selected ? Colors.white : textColor,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    onSelected: (_) => setState(() => selectedFilter = filter),
-                  );
-                },
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-              child: Row(
-                children: [
-                  Text(
-                    'Ride Requests',
-                    style: TextStyle(
-                      color: textColor,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const Spacer(),
-                  Text(
-                    '${visibleRides.length} requests',
-                    style: TextStyle(
-                      color: isDark ? Colors.white60 : Colors.black54,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: visibleRides.isEmpty
-                  ? Center(
-                      child: Text(
-                        'No ride requests found.',
-                        style: TextStyle(color: textColor),
-                      ),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
-                      itemCount: visibleRides.length,
-                      itemBuilder: (context, index) {
-                        final ride = visibleRides[index];
-                        final assigned = ride['status'] == 'Driver Assigned';
-
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 14),
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: cardColor,
-                            borderRadius: BorderRadius.circular(18),
-                            border: Border.all(
-                              color: isDark
-                                  ? Colors.white12
-                                  : const Color(0xFFEDE8F5),
-                            ),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(11),
-                                    decoration: BoxDecoration(
-                                      color: purple.withValues(alpha: 0.12),
-                                      borderRadius: BorderRadius.circular(13),
-                                    ),
-                                    child: const Icon(
-                                      Icons.local_taxi_rounded,
-                                      color: purple,
-                                      size: 25,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          ride['id'].toString(),
-                                          style: TextStyle(
-                                            color: textColor,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          '${ride['requested']} • ${ride['passenger']}',
-                                          style: TextStyle(
-                                            color: isDark
-                                                ? Colors.white60
-                                                : Colors.black54,
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 18),
-                              _RouteRow(
-                                icon: Icons.trip_origin_rounded,
-                                label: 'Pickup',
-                                value: ride['pickup'].toString(),
-                                color: textColor,
-                              ),
-                              const SizedBox(height: 12),
-                              _RouteRow(
-                                icon: Icons.location_on_outlined,
-                                label: 'Destination',
-                                value: ride['destination'].toString(),
-                                color: textColor,
-                              ),
-                              const SizedBox(height: 16),
-                              Row(
-                                children: [
-                                  Icon(
-                                    Icons.route_rounded,
-                                    size: 16,
-                                    color: isDark
-                                        ? Colors.white60
-                                        : Colors.black54,
-                                  ),
-                                  const SizedBox(width: 5),
-                                  Text(
-                                    ride['distance'].toString(),
-                                    style: TextStyle(
-                                      color: isDark
-                                          ? Colors.white60
-                                          : Colors.black54,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Icon(
-                                    Icons.schedule_rounded,
-                                    size: 16,
-                                    color: isDark
-                                        ? Colors.white60
-                                        : Colors.black54,
-                                  ),
-                                  const SizedBox(width: 5),
-                                  Text(
-                                    ride['time'].toString(),
-                                    style: TextStyle(
-                                      color: isDark
-                                          ? Colors.white60
-                                          : Colors.black54,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                  const Spacer(),
-                                  Text(
-                                    '₦${ride['fare']}',
-                                    style: TextStyle(
-                                      color: textColor,
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const Divider(height: 26),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      assigned
-                                          ? 'Driver assigned'
-                                          : 'Waiting for a driver',
-                                      style: TextStyle(
-                                        color: assigned
-                                            ? const Color(0xFF059669)
-                                            : const Color(0xFFD97706),
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                  OutlinedButton(
-                                    onPressed: () => showRideDetails(ride),
-                                    style: OutlinedButton.styleFrom(
-                                      foregroundColor: purple,
-                                      side: const BorderSide(color: purple),
-                                    ),
-                                    child: const Text('View details'),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-            ),
-          ],
-        ),
+  Widget _buildErrorState() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 45),
+      child: Column(
+        children: [
+          Icon(Icons.cloud_off_outlined, size: 54, color: Colors.red.shade300),
+          const SizedBox(height: 14),
+          const Text(
+            'Could not load rides',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            loadError ?? 'An unexpected error occurred.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.grey.shade700),
+          ),
+          const SizedBox(height: 18),
+          ElevatedButton.icon(
+            onPressed: _loadRides,
+            icon: const Icon(Icons.refresh),
+            label: const Text('Try Again'),
+          ),
+        ],
       ),
     );
   }
-}
 
-class _SummaryCard extends StatelessWidget {
-  final String title;
-  final String value;
-  final IconData icon;
-  final Color color;
-  final bool isDark;
-
-  const _SummaryCard({
-    required this.title,
-    required this.value,
-    required this.icon,
-    required this.color,
-    required this.isDark,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF211C2B) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDark ? Colors.white12 : const Color(0xFFEDE8F5),
-        ),
-      ),
+  Widget _buildEmptyState() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 45),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: color, size: 23),
-          const SizedBox(height: 12),
-          Text(
-            value,
-            style: TextStyle(
-              color: isDark ? Colors.white : const Color(0xFF211633),
-              fontSize: 25,
-              fontWeight: FontWeight.bold,
-            ),
+          Icon(
+            Icons.directions_car_outlined,
+            size: 58,
+            color: Colors.grey.shade400,
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 14),
+          const Text(
+            'No rides found',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
           Text(
-            title,
-            style: TextStyle(
-              color: isDark ? Colors.white60 : Colors.black54,
-              fontSize: 11,
-            ),
+            searchQuery.isNotEmpty
+                ? 'Try a different search term.'
+                : 'There are currently no available or assigned rides.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.grey.shade600),
+          ),
+          const SizedBox(height: 16),
+          TextButton.icon(
+            onPressed: _loadRides,
+            icon: const Icon(Icons.refresh),
+            label: const Text('Refresh'),
           ),
         ],
       ),
@@ -530,17 +850,69 @@ class _SummaryCard extends StatelessWidget {
   }
 }
 
+// =========================================
+// SUMMARY CARD
+// =========================================
+
+class _SummaryCard extends StatelessWidget {
+  final String title;
+  final int count;
+  final IconData icon;
+  final Color color;
+
+  const _SummaryCard({
+    required this.title,
+    required this.count,
+    required this.icon,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade100),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: color, size: 22),
+          const SizedBox(height: 12),
+          Text(
+            count.toString(),
+            style: const TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// =========================================
+// PICKUP / DESTINATION ROW
+// =========================================
+
 class _RouteRow extends StatelessWidget {
   final IconData icon;
+  final Color iconColor;
   final String label;
   final String value;
-  final Color color;
 
   const _RouteRow({
     required this.icon,
+    required this.iconColor,
     required this.label,
     required this.value,
-    required this.color,
   });
 
   @override
@@ -548,61 +920,32 @@ class _RouteRow extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, color: const Color(0xFF8B5CF6), size: 19),
-        const SizedBox(width: 10),
-        SizedBox(
-          width: 82,
-          child: Text(
-            label,
-            style: TextStyle(
-              color: color.withValues(alpha: 0.65),
-              fontSize: 12,
-            ),
-          ),
-        ),
+        Icon(icon, color: iconColor, size: 20),
+        const SizedBox(width: 12),
         Expanded(
-          child: Text(
-            value,
-            style: TextStyle(
-              color: color,
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 10,
+                  letterSpacing: 0.7,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
           ),
         ),
       ],
-    );
-  }
-}
-
-class _DetailRow extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _DetailRow({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 13),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 125,
-            child: Text(
-              label,
-              style: const TextStyle(color: Colors.grey, fontSize: 13),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

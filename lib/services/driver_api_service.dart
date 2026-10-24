@@ -777,33 +777,82 @@ class RideService {
 
     return data;
   }
+  
+  
   // ============================
   // ADMIN: GET ALL RIDES
   // ============================
-
   static Future<List<dynamic>> getAdminRides() async {
+    final uri = Uri.parse('$baseUrl/ride/admin/rides/');
+
     final response = await http
-        .get(Uri.parse("$baseUrl/ride/admin/rides/"), headers: await headers())
+        .get(
+          uri,
+          headers: await headers(),
+        )
         .timeout(const Duration(seconds: 30));
 
+    // Handle HTTP errors
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      final data = decodeResponse(response);
+      String message = 'Unable to load all rides.';
+
+      try {
+        final decoded = jsonDecode(response.body);
+
+        if (decoded is Map) {
+          message = (
+            decoded['detail'] ??
+            decoded['error'] ??
+            decoded['message'] ??
+            message
+          ).toString();
+        }
+      } catch (_) {
+        if (response.body.isNotEmpty) {
+          message = response.body;
+        }
+      }
 
       throw Exception(
-        data["detail"]?.toString() ?? "Unable to load all rides.",
+        'HTTP ${response.statusCode}: $message',
       );
     }
 
-    final decoded = jsonDecode(response.body);
+    // Decode successful response
+    final dynamic decoded;
 
-    if (decoded is List) return decoded;
-
-    if (decoded is Map && decoded["rides"] is List) {
-      return List<dynamic>.from(decoded["rides"]);
+    try {
+      decoded = jsonDecode(response.body);
+    } catch (_) {
+      throw Exception('The server returned invalid JSON.');
     }
 
-    return [];
+    // API returns a direct list
+    if (decoded is List) {
+      return List<dynamic>.from(decoded);
+    }
+
+    // API returns a map containing the rides list
+    if (decoded is Map) {
+      for (final key in [
+        'rides',
+        'results',
+        'data',
+        'requests',
+      ]) {
+        final value = decoded[key];
+
+        if (value is List) {
+          return List<dynamic>.from(value);
+        }
+      }
+    }
+
+    throw Exception(
+      'Unexpected admin rides response format.',
+    );
   }
+
 
   // ============================
   // ADMIN: GET ALL DRIVERS
@@ -1073,4 +1122,5 @@ class RideService {
       rethrow;
     }
   }
+
 }
