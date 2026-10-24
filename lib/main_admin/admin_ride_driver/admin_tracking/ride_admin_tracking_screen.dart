@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:senmi/main_admin/admin_ride_driver/admin_tracking/ride_admin_details_screen.dart';
 import 'package:senmi/services/driver_api_service.dart';
 
@@ -56,6 +57,92 @@ class _RideAdminTrackingScreenState extends State<RideAdminTrackingScreen> {
     super.dispose();
   }
 
+  // CONVERT COORDINATES INTO READABLE ADDRESSES
+
+  final Map<String, String> _addressCache = {};
+
+  Future<String> _getFullAddress({
+    required dynamic latitude,
+    required dynamic longitude,
+    required String fallback,
+  }) async {
+    final lat = double.tryParse(latitude?.toString() ?? '');
+    final lng = double.tryParse(longitude?.toString() ?? '');
+
+    if (lat == null || lng == null) return fallback;
+
+    final cacheKey = '$lat,$lng';
+
+    if (_addressCache.containsKey(cacheKey)) {
+      return _addressCache[cacheKey]!;
+    }
+
+    try {
+      final placemarks = await placemarkFromCoordinates(lat, lng);
+
+      if (placemarks.isEmpty) return fallback;
+
+      final place = placemarks.first;
+
+      final parts = <String>[
+        if ((place.name ?? '').trim().isNotEmpty) place.name!.trim(),
+        if ((place.street ?? '').trim().isNotEmpty &&
+            place.street!.trim() != place.name?.trim())
+          place.street!.trim(),
+        if ((place.subLocality ?? '').trim().isNotEmpty)
+          place.subLocality!.trim(),
+        if ((place.locality ?? '').trim().isNotEmpty) place.locality!.trim(),
+        if ((place.administrativeArea ?? '').trim().isNotEmpty)
+          place.administrativeArea!.trim(),
+        if ((place.country ?? '').trim().isNotEmpty) place.country!.trim(),
+      ];
+
+      final uniqueParts = <String>[];
+
+      for (final part in parts) {
+        if (!uniqueParts.any(
+          (existing) => existing.toLowerCase() == part.toLowerCase(),
+        )) {
+          uniqueParts.add(part);
+        }
+      }
+
+      if (uniqueParts.isEmpty) return fallback;
+
+      final address = uniqueParts.join(', ');
+      _addressCache[cacheKey] = address;
+
+      return address;
+    } catch (e) {
+      debugPrint('Reverse geocoding failed: $e');
+      return fallback;
+    }
+  }
+
+  Future<Map<String, dynamic>> _resolveRideAddresses(
+    Map<String, dynamic> ride,
+  ) async {
+    final pickup = await _getFullAddress(
+      latitude: ride['pickup_lat'],
+      longitude: ride['pickup_lng'],
+      fallback:
+          (ride['pickup_address'] ?? ride['pickup'] ?? 'Pickup unavailable')
+              .toString(),
+    );
+
+    final destination = await _getFullAddress(
+      latitude: ride['destination_lat'],
+      longitude: ride['destination_lng'],
+      fallback:
+          (ride['destination_address'] ??
+                  ride['destination'] ??
+                  'Destination unavailable')
+              .toString(),
+    );
+
+    return {...ride, 'pickup': pickup, 'destination': destination};
+  }
+
   // LOAD RIDES
 
   Future<void> _loadRides({bool silent = false}) async {
@@ -74,11 +161,14 @@ class _RideAdminTrackingScreenState extends State<RideAdminTrackingScreen> {
       final dynamic response = await RideService.getAdminRides();
       final rawRides = _extractRideList(response);
 
-      final rides = rawRides
+      final normalizedRides = rawRides
           .whereType<Map>()
           .map((item) => _normalizeRide(Map<String, dynamic>.from(item)))
           .toList();
 
+      final rides = await Future.wait(
+        normalizedRides.map(_resolveRideAddresses),
+      );
       if (!mounted) return;
 
       setState(() {

@@ -31,7 +31,7 @@ class _RideAdminDetailsScreenState extends State<RideAdminDetailsScreen> {
     super.initState();
     _ride = Map<String, dynamic>.from(widget.ride);
 
-    // Check for updated GPS information every 10 seconds.
+    // Refresh ride information every 10 seconds.
     _trackingTimer = Timer.periodic(
       const Duration(seconds: 10),
       (_) => _refreshRideLocation(),
@@ -48,15 +48,18 @@ class _RideAdminDetailsScreenState extends State<RideAdminDetailsScreen> {
   dynamic _value(List<String> keys) {
     for (final key in keys) {
       final value = _ride[key];
+
       if (value != null && value.toString().trim().isNotEmpty) {
         return value;
       }
     }
+
     return null;
   }
 
   String _text(List<String> keys, {String fallback = 'Not available'}) {
     final value = _value(keys);
+
     if (value == null) return fallback;
 
     if (value is Map) {
@@ -67,7 +70,9 @@ class _RideAdminDetailsScreenState extends State<RideAdminDetailsScreen> {
         'phone_number',
         'phone',
       ]) {
-        if (value[key] != null) return value[key].toString();
+        if (value[key] != null) {
+          return value[key].toString();
+        }
       }
     }
 
@@ -76,7 +81,9 @@ class _RideAdminDetailsScreenState extends State<RideAdminDetailsScreen> {
 
   double? _number(List<String> keys) {
     final value = _value(keys);
+
     if (value is num) return value.toDouble();
+
     return double.tryParse(value?.toString() ?? '');
   }
 
@@ -101,6 +108,7 @@ class _RideAdminDetailsScreenState extends State<RideAdminDetailsScreen> {
     ]);
 
     if (lat == null || lng == null) return null;
+
     if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
       return null;
     }
@@ -110,9 +118,11 @@ class _RideAdminDetailsScreenState extends State<RideAdminDetailsScreen> {
 
   LatLng? get _pickupPosition {
     final lat = _number(['pickup_latitude', 'pickup_lat', 'origin_lat']);
+
     final lng = _number(['pickup_longitude', 'pickup_lng', 'origin_lng']);
 
     if (lat == null || lng == null) return null;
+
     if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
       return null;
     }
@@ -127,6 +137,7 @@ class _RideAdminDetailsScreenState extends State<RideAdminDetailsScreen> {
       'dropoff_latitude',
       'dropoff_lat',
     ]);
+
     final lng = _number([
       'destination_longitude',
       'destination_lng',
@@ -135,6 +146,7 @@ class _RideAdminDetailsScreenState extends State<RideAdminDetailsScreen> {
     ]);
 
     if (lat == null || lng == null) return null;
+
     if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
       return null;
     }
@@ -143,19 +155,71 @@ class _RideAdminDetailsScreenState extends State<RideAdminDetailsScreen> {
   }
 
   String get _rideId =>
-      _text(['id', 'ride_id', 'request_id', 'uuid', 'booking_id']);
+      _text(['ride_id', 'id', 'request_id', 'uuid', 'booking_id']);
 
   String get _status =>
       _text(['status', 'ride_status', 'state'], fallback: 'Unknown');
 
-  String get _plate => _text([
-    'plate_number',
-    'vehicle_plate',
-    'license_plate',
-    'registration_number',
-    'car_plate',
-    'vehicle_registration_number',
-  ]);
+  String get _plate {
+    final profile = _ride['driver_profile'];
+
+    if (profile is Map) {
+      final value = profile['plate_number']?.toString().trim();
+
+      if (value != null && value.isNotEmpty) {
+        return value;
+      }
+    }
+
+    final value = _text([
+      'plate_number',
+      'vehicle_plate',
+      'license_plate',
+      'registration_number',
+      'car_plate',
+      'vehicle_registration_number',
+    ], fallback: '');
+
+    return value.isNotEmpty ? value : 'Not available';
+  }
+
+  String get _vehicle {
+    final profile = _ride['driver_profile'];
+
+    if (profile is Map) {
+      final brand = profile['vehicle_brand']?.toString().trim() ?? '';
+      final model = profile['vehicle_model']?.toString().trim() ?? '';
+      final color = profile['vehicle_color']?.toString().trim() ?? '';
+      final year = profile['vehicle_year']?.toString().trim() ?? '';
+
+      final name = [brand, model].where((value) => value.isNotEmpty).join(' ');
+
+      final details = [
+        name,
+        color,
+        year,
+      ].where((value) => value.isNotEmpty).join(' • ');
+
+      if (details.isNotEmpty) {
+        return details;
+      }
+    }
+
+    return 'Not available';
+  }
+
+  String get _driverPhone {
+    final profile = _ride['driver_profile'];
+
+    if (profile is Map) {
+      final phone = profile['phone_number']?.toString().trim() ?? '';
+      if (phone.isNotEmpty) return phone;
+    }
+
+    final phone = _ride['driver_phone']?.toString().trim() ?? '';
+
+    return phone.isNotEmpty ? phone : 'Not available';
+  }
 
   String get _pickup => _text([
     'pickup',
@@ -201,7 +265,9 @@ class _RideAdminDetailsScreenState extends State<RideAdminDetailsScreen> {
       if (full.isNotEmpty) return full;
 
       for (final key in ['full_name', 'name', 'username', 'email']) {
-        if (value[key] != null) return value[key].toString();
+        if (value[key] != null) {
+          return value[key].toString();
+        }
       }
     }
 
@@ -213,12 +279,15 @@ class _RideAdminDetailsScreenState extends State<RideAdminDetailsScreen> {
 
     if (status.contains('cancel')) return Colors.red;
     if (status.contains('complete')) return Colors.green;
+
     if (status.contains('progress') || status.contains('started')) {
       return primary;
     }
+
     if (status.contains('arriv') || status.contains('accept')) {
       return Colors.blue;
     }
+
     if (status.contains('pending') || status.contains('finding')) {
       return Colors.orange;
     }
@@ -228,6 +297,7 @@ class _RideAdminDetailsScreenState extends State<RideAdminDetailsScreen> {
 
   Set<Marker> get _markers {
     final markers = <Marker>{};
+
     final driver = _driverPosition;
     final pickup = _pickupPosition;
     final destination = _destinationPosition;
@@ -274,68 +344,96 @@ class _RideAdminDetailsScreenState extends State<RideAdminDetailsScreen> {
 
   Future<void> _refreshRideLocation() async {
     if (_refreshing) return;
+
     _refreshing = true;
 
     try {
-      final dynamic response = await RideService.getAdminRides();
-      List<dynamic>? rides;
+      // getAdminRides() is expected to return a list of ride records.
+      final rides = await RideService.getAdminRides();
 
-      if (response is List) {
-        rides = response;
-      } else if (response is Map) {
-        for (final key in ['rides', 'results', 'data', 'requests']) {
-          final value = response[key];
-          if (value is List) {
-            rides = value;
-            break;
-          }
+      final selectedIds = <String>{};
+
+      for (final key in ['id', 'ride_id', 'request_id', 'uuid', 'booking_id']) {
+        final value = _ride[key]?.toString().trim();
+
+        if (value != null && value.isNotEmpty) {
+          selectedIds.add(value);
         }
       }
-
-      if (rides == null) return;
 
       Map<String, dynamic>? latest;
 
       for (final item in rides) {
         if (item is! Map) continue;
 
-        final map = Map<String, dynamic>.from(item);
-        final id =
-            (map['id'] ??
-                    map['ride_id'] ??
-                    map['request_id'] ??
-                    map['uuid'] ??
-                    map['booking_id'])
-                ?.toString();
+        final map = <String, dynamic>{};
 
-        if (id == _rideId) {
+        item.forEach((key, value) {
+          map[key.toString()] = value;
+        });
+
+        final itemIds = <String>{};
+
+        for (final key in [
+          'id',
+          'ride_id',
+          'request_id',
+          'uuid',
+          'booking_id',
+        ]) {
+          final value = map[key]?.toString().trim();
+
+          if (value != null && value.isNotEmpty) {
+            itemIds.add(value);
+          }
+        }
+
+        if (selectedIds.intersection(itemIds).isNotEmpty) {
           latest = map;
           break;
         }
       }
 
-      if (latest == null || !mounted) return;
+      if (!mounted) return;
+
+      if (latest == null) {
+        setState(() {
+          _trackingMessage =
+              'Could not find updated information for this ride.';
+        });
+        return;
+      }
+
+      final refreshedRide = <String, dynamic>{..._ride, ...latest};
+
+      // Keep existing driver profile information if omitted by the API.
+      if (refreshedRide['driver_profile'] == null &&
+          _ride['driver_profile'] != null) {
+        refreshedRide['driver_profile'] = _ride['driver_profile'];
+      }
 
       setState(() {
-        // Preserve existing normalized fields while accepting new API values.
-        _ride = {..._ride, ...latest!};
-        _trackingMessage = null;
+        _ride = refreshedRide;
+
+        _trackingMessage = _driverPosition == null
+            ? 'Waiting for driver GPS coordinates from the server.'
+            : null;
       });
 
       final driver = _driverPosition;
+      final controller = _mapController;
 
-      if (driver != null && _mapController != null) {
-        await _mapController!.animateCamera(CameraUpdate.newLatLng(driver));
-      } else if (mounted && driver == null) {
-        setState(() {
-          _trackingMessage =
-              'Waiting for driver GPS coordinates from the server.';
-        });
+      if (driver != null && controller != null) {
+        await controller.animateCamera(CameraUpdate.newLatLng(driver));
       }
-    } catch (_) {
+    } catch (error, stackTrace) {
+      debugPrint('Ride tracking refresh failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+
       if (mounted) {
         setState(() {
-          _trackingMessage = 'Could not refresh tracking information.';
+          _trackingMessage =
+              'Could not refresh tracking information. Check your connection.';
         });
       }
     } finally {
@@ -351,7 +449,6 @@ class _RideAdminDetailsScreenState extends State<RideAdminDetailsScreen> {
     String url;
 
     if (driver != null) {
-      // Open the latest reported driver position.
       url =
           'https://www.google.com/maps/search/?api=1'
           '&query=${driver.latitude},${driver.longitude}';
@@ -391,10 +488,11 @@ class _RideAdminDetailsScreenState extends State<RideAdminDetailsScreen> {
       }
     }
 
-    final uri = Uri.parse(url);
-
     try {
-      final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      final opened = await launchUrl(
+        Uri.parse(url),
+        mode: LaunchMode.externalApplication,
+      );
 
       if (!opened && mounted) {
         _showMessage('Could not open the map application.');
@@ -524,7 +622,12 @@ class _RideAdminDetailsScreenState extends State<RideAdminDetailsScreen> {
       );
     }
 
-    final points = <LatLng>[?driver, ?pickup, ?destination];
+    // Only include coordinates that exist.
+    final points = <LatLng>[];
+
+    if (driver != null) points.add(driver);
+    if (pickup != null) points.add(pickup);
+    if (destination != null) points.add(destination);
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
@@ -552,7 +655,9 @@ class _RideAdminDetailsScreenState extends State<RideAdminDetailsScreen> {
   }
 
   Future<void> _fitMapToPoints(List<LatLng> points) async {
-    if (points.isEmpty || _mapController == null) return;
+    final controller = _mapController;
+
+    if (points.isEmpty || controller == null) return;
 
     var minLat = points.first.latitude;
     var maxLat = points.first.latitude;
@@ -567,13 +672,13 @@ class _RideAdminDetailsScreenState extends State<RideAdminDetailsScreen> {
     }
 
     if (minLat == maxLat && minLng == maxLng) {
-      await _mapController!.animateCamera(
+      await controller.animateCamera(
         CameraUpdate.newLatLngZoom(points.first, 15),
       );
       return;
     }
 
-    await _mapController!.animateCamera(
+    await controller.animateCamera(
       CameraUpdate.newLatLngBounds(
         LatLngBounds(
           southwest: LatLng(minLat, minLng),
@@ -743,7 +848,6 @@ class _RideAdminDetailsScreenState extends State<RideAdminDetailsScreen> {
 
             const SizedBox(height: 18),
 
-            // Vehicle plate is intentionally prominent.
             _buildPlateCard(),
 
             const SizedBox(height: 24),
@@ -799,17 +903,8 @@ class _RideAdminDetailsScreenState extends State<RideAdminDetailsScreen> {
                 'Driver name',
                 _driver,
               ),
-              _infoRow(
-                Icons.directions_car_outlined,
-                'Vehicle',
-                _text([
-                  'vehicle_type',
-                  'vehicle',
-                  'car_model',
-                  'car_type',
-                  'ride_type',
-                ]),
-              ),
+              _infoRow(Icons.phone_outlined, 'Driver Phone', _driverPhone),
+              _infoRow(Icons.directions_car_outlined, 'Vehicle', _vehicle),
               _infoRow(
                 Icons.confirmation_number_outlined,
                 'Plate number',
