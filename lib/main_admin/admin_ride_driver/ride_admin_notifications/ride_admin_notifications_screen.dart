@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:senmi/services/driver_api_service.dart';
 
 class RideAdminNotificationsScreen extends StatefulWidget {
   const RideAdminNotificationsScreen({super.key});
@@ -10,198 +11,402 @@ class RideAdminNotificationsScreen extends StatefulWidget {
 
 class _RideAdminNotificationsScreenState
     extends State<RideAdminNotificationsScreen> {
-  static const Color purple = Color(0xFF7C3AED);
+  final _formKey = GlobalKey<FormState>();
+  final _titleController = TextEditingController();
+  final _messageController = TextEditingController();
+  final _userIdController = TextEditingController();
 
-  final TextEditingController searchController = TextEditingController();
+  String _target = 'all';
+  bool _sending = false;
+  bool _loadingHistory = false;
 
-  String selectedFilter = 'All';
+  List<dynamic> _history = [];
+  String? _historyError;
 
-  final List<Map<String, dynamic>> notifications = [
-    {
-      'id': 1,
-      'title': 'New ride request',
-      'message': 'A passenger is waiting for a driver in Lekki Phase 1.',
-      'category': 'Rides',
-      'time': '2 min ago',
-      'icon': Icons.local_taxi_rounded,
-      'color': Color(0xFF7C3AED),
-      'read': false,
-    },
-    {
-      'id': 2,
-      'title': 'Driver verification pending',
-      'message': 'Michael James has submitted documents for review.',
-      'category': 'Drivers',
-      'time': '15 min ago',
-      'icon': Icons.verified_user_outlined,
-      'color': Color(0xFFD97706),
-      'read': false,
-    },
-    {
-      'id': 3,
-      'title': 'Payment received',
-      'message': 'A sample ride payment of ₦8,500 has been recorded.',
-      'category': 'Payments',
-      'time': '35 min ago',
-      'icon': Icons.account_balance_wallet_outlined,
-      'color': Color(0xFF059669),
-      'read': true,
-    },
-    {
-      'id': 4,
-      'title': 'Ride cancelled',
-      'message': 'Ride RIDE-1004 was cancelled by the passenger.',
-      'category': 'Rides',
-      'time': '1 hour ago',
-      'icon': Icons.cancel_outlined,
-      'color': Color(0xFFDC2626),
-      'read': false,
-    },
-    {
-      'id': 5,
-      'title': 'Driver account updated',
-      'message': 'A driver profile has been updated for review.',
-      'category': 'Drivers',
-      'time': '3 hours ago',
-      'icon': Icons.person_outline_rounded,
-      'color': Color(0xFF2563EB),
-      'read': true,
-    },
-    {
-      'id': 6,
-      'title': 'Commission summary ready',
-      'message': 'The sample ride commission summary is ready to review.',
-      'category': 'Payments',
-      'time': 'Yesterday',
-      'icon': Icons.receipt_long_outlined,
-      'color': Color(0xFF0891B2),
-      'read': true,
-    },
-  ];
+  static const Color _primary = Color(0xFF176B52);
+  static const Color _background = Color(0xFFF5F7F6);
 
-  final List<String> filters = const [
-    'All',
-    'Unread',
-    'Rides',
-    'Drivers',
-    'Payments',
-  ];
-
-  int get unreadCount =>
-      notifications.where((item) => item['read'] == false).length;
-
-  List<Map<String, dynamic>> get filteredNotifications {
-    final query = searchController.text.trim().toLowerCase();
-
-    return notifications.where((item) {
-      final matchesFilter = switch (selectedFilter) {
-        'Unread' => item['read'] == false,
-        'Rides' => item['category'] == 'Rides',
-        'Drivers' => item['category'] == 'Drivers',
-        'Payments' => item['category'] == 'Payments',
-        _ => true,
-      };
-
-      final matchesSearch =
-          item['title'].toString().toLowerCase().contains(query) ||
-          item['message'].toString().toLowerCase().contains(query);
-
-      return matchesFilter && matchesSearch;
-    }).toList();
+  @override
+  void initState() {
+    super.initState();
+    _loadHistory();
   }
 
   @override
   void dispose() {
-    searchController.dispose();
+    _titleController.dispose();
+    _messageController.dispose();
+    _userIdController.dispose();
     super.dispose();
   }
 
-  void markAllAsRead() {
+  Future<void> _loadHistory() async {
+    if (_loadingHistory) return;
+
     setState(() {
-      for (final item in notifications) {
-        item['read'] = true;
-      }
+      _loadingHistory = true;
+      _historyError = null;
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('All notifications marked as read.')),
+    try {
+      final results = await RideService.getRideNotificationHistory();
+
+      if (!mounted) return;
+
+      setState(() {
+        _history = results;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _historyError = e.toString().replaceFirst('Exception: ', '');
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loadingHistory = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _sendNotification() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    int? userId;
+
+    if (_target == 'single') {
+      userId = int.tryParse(_userIdController.text.trim());
+
+      if (userId == null || userId <= 0) {
+        _showMessage('Enter a valid user ID.');
+        return;
+      }
+    }
+
+    FocusScope.of(context).unfocus();
+
+    setState(() {
+      _sending = true;
+    });
+
+    try {
+      final result = await RideService.sendRideNotification(
+        title: _titleController.text.trim(),
+        message: _messageController.text.trim(),
+        target: _target,
+        userId: userId,
+      );
+
+      if (!mounted) return;
+
+      final recipientCount = result['recipient_count'];
+
+      _showMessage(
+        recipientCount != null
+            ? 'Notification sent to $recipientCount recipient(s).'
+            : 'Notification sent successfully.',
+      );
+
+      _titleController.clear();
+      _messageController.clear();
+      _userIdController.clear();
+
+      await _loadHistory();
+    } catch (e) {
+      if (!mounted) return;
+
+      _showMessage(
+        'Failed to send notification: '
+        '${e.toString().replaceFirst('Exception: ', '')}',
+        error: true,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _sending = false;
+        });
+      }
+    }
+  }
+
+  void _showMessage(String message, {bool error = false}) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: error ? Colors.red.shade700 : _primary,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+  }
+
+  String _audienceLabel(dynamic value) {
+    switch (value?.toString()) {
+      case 'all':
+        return 'All users';
+      case 'drivers':
+        return 'Drivers';
+      case 'passengers':
+        return 'Passengers';
+      case 'single':
+        return 'Single user';
+      default:
+        return value?.toString() ?? 'Unknown audience';
+    }
+  }
+
+  String _formatDate(dynamic value) {
+    if (value == null) return 'Date unavailable';
+
+    final date = DateTime.tryParse(value.toString());
+    if (date == null) return value.toString();
+
+    final local = date.toLocal();
+
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+
+    return '${twoDigits(local.day)}/${twoDigits(local.month)}/'
+        '${local.year}  ${twoDigits(local.hour)}:'
+        '${twoDigits(local.minute)}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: _background,
+      appBar: AppBar(
+        title: const Text(
+          'Ride Notifications',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: _primary,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        actions: [
+          IconButton(
+            tooltip: 'Refresh history',
+            onPressed: _loadingHistory ? null : _loadHistory,
+            icon: const Icon(Icons.refresh),
+          ),
+        ],
+      ),
+      body: SafeArea(
+        child: RefreshIndicator(
+          onRefresh: _loadHistory,
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              _buildHeader(),
+              const SizedBox(height: 20),
+              _buildComposeCard(),
+              const SizedBox(height: 28),
+              _buildHistoryHeader(),
+              const SizedBox(height: 12),
+              _buildHistory(),
+              const SizedBox(height: 24),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
-  void showNotificationDetails(Map<String, dynamic> item) {
-    setState(() {
-      item['read'] = true;
-    });
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: _primary,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: const Row(
+        children: [
+          CircleAvatar(
+            radius: 25,
+            backgroundColor: Colors.white24,
+            child: Icon(
+              Icons.notifications_active_outlined,
+              color: Colors.white,
+              size: 28,
+            ),
+          ),
+          SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Ride announcements',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 5),
+                Text(
+                  'Send updates to your Ride users and track sent messages.',
+                  style: TextStyle(color: Colors.white70, height: 1.4),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : const Color(0xFF211633);
-
-    showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      backgroundColor: isDark ? const Color(0xFF211C2B) : Colors.white,
-      builder: (sheetContext) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
+  Widget _buildComposeCard() {
+    return Card(
+      elevation: 1,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Form(
+          key: _formKey,
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: (item['color'] as Color).withValues(alpha: 0.13),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Icon(
-                  item['icon'] as IconData,
-                  color: item['color'] as Color,
-                  size: 30,
-                ),
+              const Text(
+                'Compose notification',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 18),
-              Text(
-                item['title'].toString(),
-                style: TextStyle(
-                  color: textColor,
-                  fontSize: 21,
-                  fontWeight: FontWeight.bold,
-                ),
+              const SizedBox(height: 20),
+
+              const Text(
+                'Send to',
+                style: TextStyle(fontWeight: FontWeight.w600),
               ),
-              const SizedBox(height: 10),
-              Text(
-                item['message'].toString(),
-                style: TextStyle(
-                  color: textColor.withValues(alpha: 0.75),
-                  fontSize: 14,
-                  height: 1.6,
+              const SizedBox(height: 8),
+
+              DropdownButtonFormField<String>(
+                initialValue: _target,
+                isExpanded: true,
+                decoration: _inputDecoration(
+                  hint: 'Select audience',
+                  icon: Icons.groups_outlined,
                 ),
-              ),
-              const SizedBox(height: 18),
-              Row(
-                children: [
-                  const Icon(Icons.access_time, size: 17, color: Colors.grey),
-                  const SizedBox(width: 7),
-                  Text(
-                    item['time'].toString(),
-                    style: const TextStyle(color: Colors.grey),
+                items: const [
+                  DropdownMenuItem(value: 'all', child: Text('All users')),
+                  DropdownMenuItem(value: 'drivers', child: Text('Drivers')),
+                  DropdownMenuItem(
+                    value: 'passengers',
+                    child: Text('Passengers'),
                   ),
-                  const Spacer(),
-                  Text(
-                    item['category'].toString(),
-                    style: const TextStyle(
-                      color: purple,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  DropdownMenuItem(value: 'single', child: Text('One user')),
                 ],
+                onChanged: _sending
+                    ? null
+                    : (value) {
+                        if (value == null) return;
+
+                        setState(() {
+                          _target = value;
+                        });
+                      },
               ),
-              const SizedBox(height: 22),
+
+              if (_target == 'single') ...[
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _userIdController,
+                  keyboardType: TextInputType.number,
+                  enabled: !_sending,
+                  decoration: _inputDecoration(
+                    hint: 'Enter the user ID',
+                    icon: Icons.person_outline,
+                  ).copyWith(labelText: 'User ID'),
+                  validator: (value) {
+                    if (_target != 'single') return null;
+
+                    final id = int.tryParse(value?.trim() ?? '');
+
+                    if (id == null || id <= 0) {
+                      return 'Enter a valid user ID.';
+                    }
+
+                    return null;
+                  },
+                ),
+              ],
+
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _titleController,
+                enabled: !_sending,
+                maxLength: 200,
+                textCapitalization: TextCapitalization.sentences,
+                decoration: _inputDecoration(
+                  hint: 'e.g. Important Ride update',
+                  icon: Icons.title,
+                ).copyWith(labelText: 'Notification title'),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Enter a notification title.';
+                  }
+
+                  if (value.trim().length > 200) {
+                    return 'Title cannot exceed 200 characters.';
+                  }
+
+                  return null;
+                },
+              ),
+
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: _messageController,
+                enabled: !_sending,
+                minLines: 4,
+                maxLines: 6,
+                maxLength: 3000,
+                textCapitalization: TextCapitalization.sentences,
+                decoration: _inputDecoration(
+                  hint: 'Write your announcement here...',
+                  icon: Icons.message_outlined,
+                ).copyWith(labelText: 'Message', alignLabelWithHint: true),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Enter the notification message.';
+                  }
+
+                  return null;
+                },
+              ),
+
+              const SizedBox(height: 12),
               SizedBox(
                 width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: () => Navigator.pop(sheetContext),
-                  child: const Text('Close'),
+                height: 52,
+                child: FilledButton.icon(
+                  onPressed: _sending ? null : _sendNotification,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: _primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  icon: _sending
+                      ? const SizedBox(
+                          width: 19,
+                          height: 19,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Icon(Icons.send_outlined),
+                  label: Text(
+                    _sending ? 'Sending...' : 'Send notification',
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -211,347 +416,217 @@ class _RideAdminNotificationsScreenState
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : const Color(0xFF211633);
-    final cardColor = isDark ? const Color(0xFF211C2B) : Colors.white;
-    final visibleNotifications = filteredNotifications;
-
-    return Scaffold(
-      backgroundColor: isDark
-          ? const Color(0xFF121018)
-          : const Color(0xFFF8F7FC),
-      appBar: AppBar(
-        title: const Text(
-          'Notifications & Alerts',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: isDark ? const Color(0xFF1C1726) : Colors.white,
-        foregroundColor: textColor,
-        elevation: 0,
-        actions: [
-          if (unreadCount > 0)
-            TextButton(
-              onPressed: markAllAsRead,
-              child: const Text('Read all', style: TextStyle(color: purple)),
-            ),
-        ],
+  InputDecoration _inputDecoration({
+    required String hint,
+    required IconData icon,
+  }) {
+    return InputDecoration(
+      hintText: hint,
+      prefixIcon: Icon(icon, color: _primary),
+      filled: true,
+      fillColor: _background,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF7C3AED), Color(0xFF5B21B6)],
-                  ),
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: Row(
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.grey.shade200),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: _primary, width: 1.5),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Colors.red),
+      ),
+    );
+  }
+
+  Widget _buildHistoryHeader() {
+    return Row(
+      children: [
+        const Expanded(
+          child: Text(
+            'Sent notification history',
+            style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
+          ),
+        ),
+        Text(
+          '${_history.length} messages',
+          style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHistory() {
+    if (_loadingHistory && _history.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(30),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_historyError != null && _history.isEmpty) {
+      return _emptyState(
+        icon: Icons.cloud_off_outlined,
+        title: 'Unable to load history',
+        subtitle: _historyError!,
+        action: TextButton.icon(
+          onPressed: _loadHistory,
+          icon: const Icon(Icons.refresh),
+          label: const Text('Try again'),
+        ),
+      );
+    }
+
+    if (_history.isEmpty) {
+      return _emptyState(
+        icon: Icons.notifications_none,
+        title: 'No notifications yet',
+        subtitle: 'Notifications you send will appear here.',
+      );
+    }
+
+    return Column(
+      children: _history.map((item) {
+        final notification = item is Map
+            ? Map<String, dynamic>.from(item)
+            : <String, dynamic>{};
+
+        final title =
+            notification['title']?.toString() ?? 'Untitled notification';
+        final message = notification['message']?.toString() ?? '';
+        final target = notification['target'];
+        final recipientCount = notification['recipient_count'];
+
+        return Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          color: Colors.white,
+          elevation: 1,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(15),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(
-                      Icons.notifications_active_outlined,
-                      color: Colors.white,
-                      size: 34,
+                    const CircleAvatar(
+                      backgroundColor: Color(0xFFE3F1EB),
+                      child: Icon(
+                        Icons.notifications_outlined,
+                        color: _primary,
+                      ),
                     ),
-                    const SizedBox(width: 14),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Your notifications',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
+                          Text(
+                            title,
+                            style: const TextStyle(
+                              fontSize: 15,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           const SizedBox(height: 5),
                           Text(
-                            '$unreadCount unread notification${unreadCount == 1 ? '' : 's'}',
-                            style: const TextStyle(color: Colors.white70),
+                            _audienceLabel(target),
+                            style: const TextStyle(
+                              color: _primary,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ],
                       ),
                     ),
-                    Container(
-                      width: 42,
-                      height: 42,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.18),
-                        shape: BoxShape.circle,
-                      ),
+                  ],
+                ),
+                if (message.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    message,
+                    style: TextStyle(color: Colors.grey.shade800, height: 1.5),
+                  ),
+                ],
+                const Divider(height: 24),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.people_outline,
+                      size: 16,
+                      color: Colors.grey.shade600,
+                    ),
+                    const SizedBox(width: 5),
+                    Expanded(
                       child: Text(
-                        '$unreadCount',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
+                        recipientCount != null
+                            ? '$recipientCount recipient(s)'
+                            : 'Recipients not available',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ),
+                    Flexible(
+                      child: Text(
+                        _formatDate(notification['created_at']),
+                        textAlign: TextAlign.end,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey.shade600,
                         ),
                       ),
                     ),
                   ],
                 ),
-              ),
+              ],
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: TextField(
-                controller: searchController,
-                onChanged: (_) => setState(() {}),
-                style: TextStyle(color: textColor),
-                decoration: InputDecoration(
-                  hintText: 'Search notifications',
-                  prefixIcon: const Icon(Icons.search),
-                  filled: true,
-                  fillColor: cardColor,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(15),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 10),
-            SizedBox(
-              height: 48,
-              child: ListView.separated(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 4,
-                ),
-                scrollDirection: Axis.horizontal,
-                itemCount: filters.length,
-                separatorBuilder: (_, _) => const SizedBox(width: 8),
-                itemBuilder: (context, index) {
-                  final filter = filters[index];
-                  final selected = selectedFilter == filter;
+          ),
+        );
+      }).toList(),
+    );
+  }
 
-                  return ChoiceChip(
-                    label: Text(filter),
-                    selected: selected,
-                    selectedColor: purple,
-                    showCheckmark: false,
-                    backgroundColor: cardColor,
-                    labelStyle: TextStyle(
-                      color: selected ? Colors.white : textColor,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    onSelected: (_) => setState(() => selectedFilter = filter),
-                  );
-                },
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-              child: Row(
-                children: [
-                  Text(
-                    'Recent activity',
-                    style: TextStyle(
-                      color: textColor,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const Spacer(),
-                  Text(
-                    '${visibleNotifications.length} items',
-                    style: TextStyle(
-                      color: isDark ? Colors.white60 : Colors.black54,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: visibleNotifications.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.notifications_none_rounded,
-                            size: 54,
-                            color: isDark ? Colors.white38 : Colors.black26,
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            'No notifications found',
-                            style: TextStyle(
-                              color: textColor,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
-                      itemCount: visibleNotifications.length,
-                      itemBuilder: (context, index) {
-                        final item = visibleNotifications[index];
-                        final unread = item['read'] == false;
-                        final color = item['color'] as Color;
-
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 10),
-                          decoration: BoxDecoration(
-                            color: cardColor,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: unread
-                                  ? purple.withValues(alpha: 0.35)
-                                  : isDark
-                                  ? Colors.white12
-                                  : const Color(0xFFEDE8F5),
-                            ),
-                          ),
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(16),
-                            onTap: () => showNotificationDetails(item),
-                            child: Padding(
-                              padding: const EdgeInsets.all(14),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Container(
-                                    width: 46,
-                                    height: 46,
-                                    decoration: BoxDecoration(
-                                      color: color.withValues(alpha: 0.12),
-                                      borderRadius: BorderRadius.circular(14),
-                                    ),
-                                    child: Icon(
-                                      item['icon'] as IconData,
-                                      color: color,
-                                      size: 23,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: Text(
-                                                item['title'].toString(),
-                                                style: TextStyle(
-                                                  color: textColor,
-                                                  fontWeight: unread
-                                                      ? FontWeight.bold
-                                                      : FontWeight.w600,
-                                                  fontSize: 14,
-                                                ),
-                                              ),
-                                            ),
-                                            if (unread)
-                                              Container(
-                                                width: 8,
-                                                height: 8,
-                                                decoration: const BoxDecoration(
-                                                  color: purple,
-                                                  shape: BoxShape.circle,
-                                                ),
-                                              ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 6),
-                                        Text(
-                                          item['message'].toString(),
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(
-                                            color: isDark
-                                                ? Colors.white60
-                                                : Colors.black54,
-                                            fontSize: 12,
-                                            height: 1.4,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 9),
-                                        Row(
-                                          children: [
-                                            Text(
-                                              item['time'].toString(),
-                                              style: const TextStyle(
-                                                color: Colors.grey,
-                                                fontSize: 11,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 10),
-                                            Text(
-                                              item['category'].toString(),
-                                              style: TextStyle(
-                                                color: color,
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                            const Spacer(),
-                                            PopupMenuButton<String>(
-                                              padding: EdgeInsets.zero,
-                                              iconSize: 20,
-                                              onSelected: (action) {
-                                                setState(() {
-                                                  if (action == 'read') {
-                                                    item['read'] = true;
-                                                  } else if (action ==
-                                                      'unread') {
-                                                    item['read'] = false;
-                                                  } else if (action ==
-                                                      'delete') {
-                                                    notifications.removeWhere(
-                                                      (n) =>
-                                                          n['id'] == item['id'],
-                                                    );
-                                                  }
-                                                });
-                                              },
-                                              itemBuilder: (_) => [
-                                                if (unread)
-                                                  const PopupMenuItem(
-                                                    value: 'read',
-                                                    child: Text('Mark as read'),
-                                                  ),
-                                                if (!unread)
-                                                  const PopupMenuItem(
-                                                    value: 'unread',
-                                                    child: Text(
-                                                      'Mark as unread',
-                                                    ),
-                                                  ),
-                                                const PopupMenuItem(
-                                                  value: 'delete',
-                                                  child: Text('Delete'),
-                                                ),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-            ),
-          ],
-        ),
+  Widget _emptyState({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    Widget? action,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, size: 42, color: Colors.grey.shade400),
+          const SizedBox(height: 12),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            subtitle,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.grey.shade600, height: 1.4),
+          ),
+          if (action != null) ...[const SizedBox(height: 8), action],
+        ],
       ),
     );
   }

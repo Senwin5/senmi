@@ -14,6 +14,7 @@ import 'package:senmi/senmi_shared_account/pending_rider_review/rider_pending_sc
 import 'package:senmi/senmi_package_screens/package_features/rider/rider_home_bottom/rider_bottom_nav.dart';
 import 'package:senmi/senmi_shared_account/registration/forgotten/forgot_password.dart';
 import 'package:senmi/service_firebase/firebase_service.dart';
+import 'package:senmi/service_firebase/ride_firebase_service.dart';
 import 'package:senmi/services/package_api_service.dart';
 import 'package:senmi/widgets/custom_buttom.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -71,9 +72,14 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
 
     if (res.containsKey("access")) {
-      // Start FCM registration in the background.
-
+      // Register Package FCM token.
       await FirebaseService.init();
+
+      // Register Ride FCM token separately.
+      await RideFirebaseService.init();
+
+      // Ask once if the user wants Face ID/Fingerprint login.
+      await askToEnableBiometric();
 
       // Ask once if the user wants Face ID/Fingerprint login
       await askToEnableBiometric();
@@ -300,7 +306,11 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
       // Register FCM token after successful auto-login.
+
       await FirebaseService.init();
+
+      // Register Ride FCM token separately.
+      await RideFirebaseService.init();
 
       try {
         // ADMIN

@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import 'package:senmi/services/package_api_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class RideService {
   static const String baseUrl = "https://www.senmi.com.ng/api";
@@ -12,12 +12,15 @@ class RideService {
   // ============================================================
 
   static Future<Map<String, String>> headers() async {
+    final prefs = await SharedPreferences.getInstance();
+    final accessToken = prefs.getString('token');
+
     return {
-      "Content-Type": "application/json",
-      "Authorization": "Bearer ${ApiService.token ?? ""}",
+      'Content-Type': 'application/json',
+      if (accessToken != null && accessToken.isNotEmpty)
+        'Authorization': 'Bearer $accessToken',
     };
   }
-
   // ============================================================
   // RESPONSE DECODER
   // ============================================================
@@ -777,8 +780,7 @@ class RideService {
 
     return data;
   }
-  
-  
+
   // ============================
   // ADMIN: GET ALL RIDES
   // ============================
@@ -786,10 +788,7 @@ class RideService {
     final uri = Uri.parse('$baseUrl/ride/admin/rides/');
 
     final response = await http
-        .get(
-          uri,
-          headers: await headers(),
-        )
+        .get(uri, headers: await headers())
         .timeout(const Duration(seconds: 30));
 
     // Handle HTTP errors
@@ -800,12 +799,12 @@ class RideService {
         final decoded = jsonDecode(response.body);
 
         if (decoded is Map) {
-          message = (
-            decoded['detail'] ??
-            decoded['error'] ??
-            decoded['message'] ??
-            message
-          ).toString();
+          message =
+              (decoded['detail'] ??
+                      decoded['error'] ??
+                      decoded['message'] ??
+                      message)
+                  .toString();
         }
       } catch (_) {
         if (response.body.isNotEmpty) {
@@ -813,9 +812,7 @@ class RideService {
         }
       }
 
-      throw Exception(
-        'HTTP ${response.statusCode}: $message',
-      );
+      throw Exception('HTTP ${response.statusCode}: $message');
     }
 
     // Decode successful response
@@ -834,12 +831,7 @@ class RideService {
 
     // API returns a map containing the rides list
     if (decoded is Map) {
-      for (final key in [
-        'rides',
-        'results',
-        'data',
-        'requests',
-      ]) {
+      for (final key in ['rides', 'results', 'data', 'requests']) {
         final value = decoded[key];
 
         if (value is List) {
@@ -848,11 +840,8 @@ class RideService {
       }
     }
 
-    throw Exception(
-      'Unexpected admin rides response format.',
-    );
+    throw Exception('Unexpected admin rides response format.');
   }
-
 
   // ============================
   // ADMIN: GET ALL DRIVERS
@@ -1059,7 +1048,7 @@ class RideService {
       debugPrint('Analytics URL: $uri');
       debugPrint(
         'Analytics auth token present: '
-        '${(ApiService.token ?? '').isNotEmpty}',
+        '${(requestHeaders['Authorization'] ?? '').isNotEmpty}',
       );
 
       final response = await http
@@ -1123,4 +1112,214 @@ class RideService {
     }
   }
 
+  // ============================================================
+  // ADMIN: SEND RIDE NOTIFICATION
+  // ============================================================
+
+  static Future<Map<String, dynamic>> sendRideNotification({
+    required String title,
+    required String message,
+    required String target,
+    int? userId,
+  }) async {
+    const allowedTargets = {'all', 'drivers', 'passengers', 'single'};
+
+    if (!allowedTargets.contains(target)) {
+      throw ArgumentError('Invalid Ride notification target.');
+    }
+
+    if (title.trim().isEmpty || message.trim().isEmpty) {
+      throw ArgumentError('Title and message are required.');
+    }
+
+    if (target == 'single' && userId == null) {
+      throw ArgumentError('A user ID is required for a single user.');
+    }
+
+    final body = <String, dynamic>{
+      'title': title.trim(),
+      'message': message.trim(),
+      'target': target,
+    };
+
+    if (target == 'single') {
+      body['user_id'] = userId;
+    }
+
+    final response = await http
+        .post(
+          Uri.parse('$baseUrl/ride/admin/notifications/'),
+          headers: await headers(),
+          body: jsonEncode(body),
+        )
+        .timeout(const Duration(seconds: 30));
+
+    final data = decodeResponse(response);
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(
+        data['detail']?.toString() ??
+            data['error']?.toString() ??
+            data['message']?.toString() ??
+            'Unable to send Ride notification '
+                '(HTTP ${response.statusCode}).',
+      );
+    }
+
+    return data;
+  }
+
+  // ============================================================
+  // ADMIN: GET RIDE NOTIFICATION HISTORY
+  // ============================================================
+
+  static Future<List<dynamic>> getRideNotificationHistory() async {
+    final response = await http
+        .get(
+          Uri.parse('$baseUrl/ride/admin/notifications/'),
+          headers: await headers(),
+        )
+        .timeout(const Duration(seconds: 30));
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      final data = decodeResponse(response);
+
+      throw Exception(
+        data['detail']?.toString() ??
+            data['error']?.toString() ??
+            'Unable to load Ride notification history '
+                '(HTTP ${response.statusCode}).',
+      );
+    }
+
+    final dynamic decoded;
+
+    try {
+      decoded = jsonDecode(response.body);
+    } catch (_) {
+      throw Exception('Invalid response loading Ride notification history.');
+    }
+
+    if (decoded is List) {
+      return List<dynamic>.from(decoded);
+    }
+
+    if (decoded is Map) {
+      for (final key in ['notifications', 'results', 'data']) {
+        if (decoded[key] is List) {
+          return List<dynamic>.from(decoded[key] as List);
+        }
+      }
+    }
+
+    throw Exception('Unexpected Ride notification history response.');
+  }
+
+  // ============================================================
+  // USER: GET MY RIDE NOTIFICATIONS
+  // ============================================================
+
+  static Future<List<dynamic>> getMyRideNotifications() async {
+    final response = await http
+        .get(
+          Uri.parse('$baseUrl/ride/notifications/'),
+          headers: await headers(),
+        )
+        .timeout(const Duration(seconds: 30));
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      final data = decodeResponse(response);
+
+      throw Exception(
+        data['detail']?.toString() ??
+            data['error']?.toString() ??
+            'Unable to load your Ride notifications '
+                '(HTTP ${response.statusCode}).',
+      );
+    }
+
+    final dynamic decoded;
+
+    try {
+      decoded = jsonDecode(response.body);
+    } catch (_) {
+      throw Exception('Invalid response loading Ride notifications.');
+    }
+
+    if (decoded is List) {
+      return List<dynamic>.from(decoded);
+    }
+
+    if (decoded is Map) {
+      for (final key in ['notifications', 'results', 'data']) {
+        if (decoded[key] is List) {
+          return List<dynamic>.from(decoded[key] as List);
+        }
+      }
+    }
+
+    throw Exception('Unexpected Ride notifications response.');
+  }
+
+  // ============================================================
+  // USER: MARK RIDE NOTIFICATION AS READ
+  // recipientId is the recipient record ID, not the campaign ID.
+  // ============================================================
+
+  static Future<Map<String, dynamic>> markRideNotificationAsRead(
+    int recipientId,
+  ) async {
+    final response = await http
+        .patch(
+          Uri.parse('$baseUrl/ride/notifications/$recipientId/read/'),
+          headers: await headers(),
+        )
+        .timeout(const Duration(seconds: 30));
+
+    final data = decodeResponse(response);
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(
+        data['detail']?.toString() ??
+            data['error']?.toString() ??
+            'Unable to mark Ride notification as read '
+                '(HTTP ${response.statusCode}).',
+      );
+    }
+
+    return data;
+  }
+
+  // ============================================================
+  // RIDE: REGISTER FCM DEVICE TOKEN
+  // ============================================================
+
+  static Future<void> registerRideFcmToken(String token) async {
+    final cleanToken = token.trim();
+
+    if (cleanToken.isEmpty) {
+      throw ArgumentError('FCM token cannot be empty.');
+    }
+
+    final response = await http
+        .post(
+          Uri.parse('$baseUrl/ride/device/register/'),
+          headers: await headers(),
+          body: jsonEncode({'token': cleanToken}),
+        )
+        .timeout(const Duration(seconds: 30));
+
+    final data = decodeResponse(response);
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(
+        data['detail']?.toString() ??
+            data['error']?.toString() ??
+            'Unable to register Ride FCM token '
+                '(HTTP ${response.statusCode}).',
+      );
+    }
+
+    debugPrint('RIDE FCM TOKEN REGISTERED');
+  }
 }
