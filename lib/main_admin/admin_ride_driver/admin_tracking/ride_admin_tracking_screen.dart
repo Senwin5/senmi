@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
-import 'package:senmi/main_admin/admin_ride_driver/admin_tracking/ride_admin_details_screen.dart';
+import 'package:senmi/main_admin/admin_ride_driver/admin_tracking/ride_admin_tracking_details_screen.dart';
 import 'package:senmi/services/driver_api_service.dart';
 
 class RideAdminTrackingScreen extends StatefulWidget {
@@ -14,6 +14,18 @@ class RideAdminTrackingScreen extends StatefulWidget {
 }
 
 class _RideAdminTrackingScreenState extends State<RideAdminTrackingScreen> {
+  String _getRideId(Map<String, dynamic> ride) {
+    for (final key in ['ride_id', 'id', 'request_id', 'uuid', 'booking_id']) {
+      final value = ride[key];
+
+      if (value != null && value.toString().trim().isNotEmpty) {
+        return value.toString().trim();
+      }
+    }
+
+    return 'unknown-${ride.hashCode}';
+  }
+
   final TextEditingController _searchController = TextEditingController();
 
   static const Color _primary = Color(0xFF176B5B);
@@ -401,13 +413,7 @@ class _RideAdminTrackingScreenState extends State<RideAdminTrackingScreen> {
   }
 
   Map<String, dynamic> _normalizeRide(Map<String, dynamic> ride) {
-    final id = _stringValue(ride, [
-      'id',
-      'ride_id',
-      'request_id',
-      'uuid',
-      'booking_id',
-    ], fallback: 'unknown-${ride.hashCode}');
+    final id = _getRideId(ride);
 
     final status = _normalizeStatus(
       _firstValue(ride, ['status', 'ride_status', 'state']),
@@ -496,13 +502,6 @@ class _RideAdminTrackingScreenState extends State<RideAdminTrackingScreen> {
 
   String _formatMoney(dynamic amount) {
     return '₦${_parseFare(amount).toStringAsFixed(2)}';
-  }
-
-  String _shortId(dynamic id) {
-    final value = id.toString();
-    return value.length <= 8
-        ? value.toUpperCase()
-        : value.substring(0, 8).toUpperCase();
   }
 
   List<Map<String, dynamic>> get _filteredRides {
@@ -929,10 +928,13 @@ class _RideAdminTrackingScreenState extends State<RideAdminTrackingScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'Ride #${_shortId(ride['id'])}',
+                              'Ride #${ride['id']}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
                                 color: Colors.black45,
                                 fontSize: 11,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ],
