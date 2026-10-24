@@ -33,6 +33,19 @@ class _RideAdminPaymentsScreenState extends State<RideAdminPaymentsScreen> {
     'Cancelled',
   ];
 
+  bool get isDark => Theme.of(context).brightness == Brightness.dark;
+
+  Color get pageColor =>
+      isDark ? const Color(0xFF121018) : const Color(0xFFF8F7FC);
+
+  Color get cardColor => isDark ? const Color(0xFF211C2B) : Colors.white;
+
+  Color get primaryTextColor => isDark ? Colors.white : const Color(0xFF211633);
+
+  Color get secondaryTextColor => isDark ? Colors.white60 : Colors.black54;
+
+  Color get borderColor => isDark ? Colors.white12 : const Color(0xFFEDE8F5);
+
   @override
   void initState() {
     super.initState();
@@ -92,7 +105,14 @@ class _RideAdminPaymentsScreenState extends State<RideAdminPaymentsScreen> {
 
     final rawStatus = (json['status'] ?? 'pending').toString().toLowerCase();
 
-    final driverName = (json['driver_name'] ?? '').toString().trim();
+    final profile = json['driver_profile'];
+
+    final driverName =
+        (json['driver_name'] ??
+                (profile is Map ? profile['full_name'] : null) ??
+                '')
+            .toString()
+            .trim();
 
     final driverEmail = (json['driver_email'] ?? '').toString().trim();
 
@@ -101,7 +121,6 @@ class _RideAdminPaymentsScreenState extends State<RideAdminPaymentsScreen> {
     final rawDate = json['paid_at'] ?? json['created_at'];
 
     return {
-      // Prefer the Paystack reference as the visible payment ID.
       'id': reference.isNotEmpty ? reference : 'PAY-$databaseId',
       'databaseId': databaseId,
       'reference': reference,
@@ -236,7 +255,7 @@ class _RideAdminPaymentsScreenState extends State<RideAdminPaymentsScreen> {
   }
 
   // ============================================================
-  // SUMMARY VALUES FROM THE REAL RESPONSE
+  // SUMMARY VALUES
   // ============================================================
 
   double get totalPaid {
@@ -290,82 +309,18 @@ class _RideAdminPaymentsScreenState extends State<RideAdminPaymentsScreen> {
   }
 
   // ============================================================
-  // PAYMENT DETAILS
+  // FULL-SCREEN PAYMENT DETAILS
   // ============================================================
 
   void showPaymentDetails(Map<String, dynamic> payment) {
-    final details = <String, String>{
-      'Payment reference': payment['reference'].toString(),
-      'Database ID': payment['databaseId'].toString(),
-      'Driver': payment['driver'].toString(),
-      'Driver email': payment['driverEmail'].toString().isEmpty
-          ? 'Not available'
-          : payment['driverEmail'].toString(),
-      'Ride ID': payment['rideId'].toString().isEmpty
-          ? 'Account settlement (not ride-specific)'
-          : payment['rideId'].toString(),
-      'Amount': money(payment['amount']),
-      'Payment method': payment['method'].toString(),
-      'Status': payment['status'].toString(),
-      'Created at': payment['createdAt'].toString(),
-      'Paid at': payment['paidAt'].toString(),
-    };
-
-    showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      isScrollControlled: true,
-      builder: (context) {
-        final isDark = Theme.of(context).brightness == Brightness.dark;
-
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Commission Payment Details',
-                    style: TextStyle(fontSize: 21, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 20),
-                  ...details.entries.map((entry) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 14),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(
-                            width: 115,
-                            child: Text(
-                              entry.key.toUpperCase(),
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: isDark ? Colors.white60 : Colors.black54,
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              entry.value,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => RideAdminPaymentDetailsScreen(
+          payment: payment,
+          money: money,
+          statusColor: statusColor,
+        ),
+      ),
     );
   }
 
@@ -375,25 +330,17 @@ class _RideAdminPaymentsScreenState extends State<RideAdminPaymentsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    final textColor = isDark ? Colors.white : const Color(0xFF211633);
-
-    final cardColor = isDark ? const Color(0xFF211C2B) : Colors.white;
-
     final visiblePayments = filteredPayments;
 
     return Scaffold(
-      backgroundColor: isDark
-          ? const Color(0xFF121018)
-          : const Color(0xFFF8F7FC),
+      backgroundColor: pageColor,
       appBar: AppBar(
         title: const Text(
           'Commission Payments',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: isDark ? const Color(0xFF1C1726) : Colors.white,
-        foregroundColor: textColor,
+        backgroundColor: cardColor,
+        foregroundColor: primaryTextColor,
         elevation: 0,
         actions: [
           IconButton(
@@ -417,7 +364,7 @@ class _RideAdminPaymentsScreenState extends State<RideAdminPaymentsScreen> {
                 Center(
                   child: Text(
                     'Loading commission payments...',
-                    style: TextStyle(color: textColor),
+                    style: TextStyle(color: primaryTextColor),
                   ),
                 ),
                 const SizedBox(height: 100),
@@ -443,7 +390,10 @@ class _RideAdminPaymentsScreenState extends State<RideAdminPaymentsScreen> {
                           ),
                         ),
                         const SizedBox(height: 6),
-                        Text(errorMessage!, style: TextStyle(color: textColor)),
+                        Text(
+                          errorMessage!,
+                          style: TextStyle(color: primaryTextColor),
+                        ),
                         const SizedBox(height: 10),
                         Align(
                           alignment: Alignment.centerRight,
@@ -505,7 +455,7 @@ class _RideAdminPaymentsScreenState extends State<RideAdminPaymentsScreen> {
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: textColor,
+                    color: primaryTextColor,
                   ),
                 ),
 
@@ -514,15 +464,24 @@ class _RideAdminPaymentsScreenState extends State<RideAdminPaymentsScreen> {
                 TextField(
                   controller: searchController,
                   onChanged: (_) => setState(() {}),
-                  style: TextStyle(color: textColor),
+                  style: TextStyle(color: primaryTextColor),
                   decoration: InputDecoration(
                     hintText: 'Search reference, ride or driver',
-                    prefixIcon: const Icon(Icons.search),
+                    hintStyle: TextStyle(color: secondaryTextColor),
+                    prefixIcon: Icon(Icons.search, color: secondaryTextColor),
                     filled: true,
                     fillColor: cardColor,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(15),
                       borderSide: BorderSide.none,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(15),
+                      borderSide: BorderSide(color: borderColor),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(15),
+                      borderSide: const BorderSide(color: purple, width: 1.4),
                     ),
                   ),
                 ),
@@ -548,8 +507,11 @@ class _RideAdminPaymentsScreenState extends State<RideAdminPaymentsScreen> {
                         selectedColor: purple,
                         backgroundColor: cardColor,
                         showCheckmark: false,
+                        side: BorderSide(
+                          color: selected ? purple : borderColor,
+                        ),
                         labelStyle: TextStyle(
-                          color: selected ? Colors.white : textColor,
+                          color: selected ? Colors.white : primaryTextColor,
                           fontWeight: FontWeight.w600,
                         ),
                       );
@@ -566,15 +528,13 @@ class _RideAdminPaymentsScreenState extends State<RideAdminPaymentsScreen> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: textColor,
+                        color: primaryTextColor,
                       ),
                     ),
                     const Spacer(),
                     Text(
                       '${visiblePayments.length} records',
-                      style: TextStyle(
-                        color: isDark ? Colors.white60 : Colors.black54,
-                      ),
+                      style: TextStyle(color: secondaryTextColor),
                     ),
                   ],
                 ),
@@ -597,15 +557,16 @@ class _RideAdminPaymentsScreenState extends State<RideAdminPaymentsScreen> {
                               ? 'No commission payments found'
                               : 'No matching payments',
                           style: TextStyle(
-                            color: textColor,
+                            color: primaryTextColor,
                             fontWeight: FontWeight.bold,
                             fontSize: 17,
                           ),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 6),
-                        const Text(
+                        Text(
                           'Pull down to refresh or try another filter.',
+                          style: TextStyle(color: secondaryTextColor),
                           textAlign: TextAlign.center,
                         ),
                       ],
@@ -615,9 +576,7 @@ class _RideAdminPaymentsScreenState extends State<RideAdminPaymentsScreen> {
                   ...visiblePayments.map((payment) {
                     final status = payment['status'].toString();
                     final color = statusColor(status);
-
                     final rideId = payment['rideId'].toString();
-
                     final driverEmail = payment['driverEmail'].toString();
 
                     return Container(
@@ -626,11 +585,16 @@ class _RideAdminPaymentsScreenState extends State<RideAdminPaymentsScreen> {
                       decoration: BoxDecoration(
                         color: cardColor,
                         borderRadius: BorderRadius.circular(18),
-                        border: Border.all(
-                          color: isDark
-                              ? Colors.white12
-                              : const Color(0xFFEDE8F5),
-                        ),
+                        border: Border.all(color: borderColor),
+                        boxShadow: isDark
+                            ? []
+                            : [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.025),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -656,9 +620,11 @@ class _RideAdminPaymentsScreenState extends State<RideAdminPaymentsScreen> {
                                   children: [
                                     Text(
                                       payment['id'].toString(),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
-                                        color: textColor,
+                                        color: primaryTextColor,
                                       ),
                                     ),
                                     const SizedBox(height: 4),
@@ -666,32 +632,14 @@ class _RideAdminPaymentsScreenState extends State<RideAdminPaymentsScreen> {
                                       payment['date'].toString(),
                                       style: TextStyle(
                                         fontSize: 12,
-                                        color: isDark
-                                            ? Colors.white60
-                                            : Colors.black54,
+                                        color: secondaryTextColor,
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 9,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: color.withValues(alpha: 0.12),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text(
-                                  status,
-                                  style: TextStyle(
-                                    color: color,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 11,
-                                  ),
-                                ),
-                              ),
+                              const SizedBox(width: 6),
+                              _PaymentStatusBadge(status: status, color: color),
                             ],
                           ),
 
@@ -702,13 +650,15 @@ class _RideAdminPaymentsScreenState extends State<RideAdminPaymentsScreen> {
                             value: rideId.isEmpty
                                 ? 'Account settlement'
                                 : rideId,
-                            textColor: textColor,
+                            textColor: primaryTextColor,
                           ),
+
                           const SizedBox(height: 8),
+
                           _PaymentInfoRow(
                             label: 'Driver',
                             value: payment['driver'].toString(),
-                            textColor: textColor,
+                            textColor: primaryTextColor,
                           ),
 
                           if (driverEmail.isNotEmpty) ...[
@@ -716,45 +666,45 @@ class _RideAdminPaymentsScreenState extends State<RideAdminPaymentsScreen> {
                             _PaymentInfoRow(
                               label: 'Email',
                               value: driverEmail,
-                              textColor: textColor,
+                              textColor: primaryTextColor,
                             ),
                           ],
 
                           const SizedBox(height: 8),
+
                           _PaymentInfoRow(
                             label: 'Method',
                             value: payment['method'].toString(),
-                            textColor: textColor,
+                            textColor: primaryTextColor,
                           ),
 
-                          const Divider(height: 26),
+                          Divider(height: 26, color: borderColor),
 
                           Row(
                             children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Commission Amount',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: isDark
-                                          ? Colors.white60
-                                          : Colors.black54,
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Commission Amount',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: secondaryTextColor,
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    money(payment['amount']),
-                                    style: TextStyle(
-                                      fontSize: 19,
-                                      fontWeight: FontWeight.bold,
-                                      color: textColor,
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      money(payment['amount']),
+                                      style: TextStyle(
+                                        fontSize: 19,
+                                        fontWeight: FontWeight.bold,
+                                        color: primaryTextColor,
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                              const Spacer(),
                               OutlinedButton.icon(
                                 onPressed: () => showPaymentDetails(payment),
                                 icon: const Icon(
@@ -779,6 +729,241 @@ class _RideAdminPaymentsScreenState extends State<RideAdminPaymentsScreen> {
               ],
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+// ============================================================
+// SEPARATE FULL-SCREEN PAYMENT DETAILS PAGE
+// ============================================================
+
+class RideAdminPaymentDetailsScreen extends StatelessWidget {
+  final Map<String, dynamic> payment;
+  final String Function(dynamic) money;
+  final Color Function(String) statusColor;
+
+  const RideAdminPaymentDetailsScreen({
+    super.key,
+    required this.payment,
+    required this.money,
+    required this.statusColor,
+  });
+
+  static const Color purple = Color(0xFF7C3AED);
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final backgroundColor = isDark
+        ? const Color(0xFF121018)
+        : const Color(0xFFF8F7FC);
+
+    final cardColor = isDark ? const Color(0xFF211C2B) : Colors.white;
+
+    final textColor = isDark ? Colors.white : const Color(0xFF211633);
+
+    final mutedColor = isDark ? Colors.white60 : Colors.black54;
+
+    final borderColor = isDark ? Colors.white12 : const Color(0xFFEDE8F5);
+
+    final status = payment['status'].toString();
+    final color = statusColor(status);
+
+    final rideId = payment['rideId'].toString();
+
+    final details = <Map<String, String>>[
+      {
+        'label': 'Payment reference',
+        'value': _displayValue(payment['reference']),
+      },
+      {'label': 'Database ID', 'value': _displayValue(payment['databaseId'])},
+      {'label': 'Driver', 'value': _displayValue(payment['driver'])},
+      {'label': 'Driver email', 'value': _displayValue(payment['driverEmail'])},
+      {
+        'label': 'Ride ID',
+        'value': rideId.isEmpty
+            ? 'Account settlement (not ride-specific)'
+            : rideId,
+      },
+      {'label': 'Amount', 'value': money(payment['amount'])},
+      {'label': 'Payment method', 'value': _displayValue(payment['method'])},
+      {'label': 'Status', 'value': status},
+      {'label': 'Created at', 'value': _displayValue(payment['createdAt'])},
+      {'label': 'Paid at', 'value': _displayValue(payment['paidAt'])},
+    ];
+
+    return Scaffold(
+      backgroundColor: backgroundColor,
+      appBar: AppBar(
+        title: const Text(
+          'Payment Details',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: cardColor,
+        foregroundColor: textColor,
+        elevation: 0,
+      ),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            // Payment overview
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: cardColor,
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(color: borderColor),
+                boxShadow: isDark
+                    ? []
+                    : [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.025),
+                          blurRadius: 14,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      color: purple.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Icon(
+                      Icons.receipt_long_rounded,
+                      color: purple,
+                      size: 32,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Commission Payment',
+                    style: TextStyle(fontSize: 15, color: mutedColor),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    money(payment['amount']),
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  _PaymentStatusBadge(status: status, color: color),
+                  const SizedBox(height: 14),
+                  Text(
+                    _displayValue(payment['reference']),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 12, color: mutedColor),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            Text(
+              'Transaction Information',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: textColor,
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              decoration: BoxDecoration(
+                color: cardColor,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: borderColor),
+              ),
+              child: Column(
+                children: details.map((detail) {
+                  return _PaymentDetailRow(
+                    label: detail['label']!,
+                    value: detail['value']!,
+                    textColor: textColor,
+                    mutedColor: mutedColor,
+                    dividerColor: borderColor,
+                  );
+                }).toList(),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            SizedBox(
+              height: 52,
+              child: OutlinedButton.icon(
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.arrow_back),
+                label: const Text('Back to Payments'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: purple,
+                  side: const BorderSide(color: purple),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _displayValue(dynamic value) {
+    if (value == null) return 'Not available';
+
+    final text = value.toString().trim();
+
+    if (text.isEmpty || text.toLowerCase() == 'null') {
+      return 'Not available';
+    }
+
+    return text;
+  }
+}
+
+// ============================================================
+// PAYMENT STATUS BADGE
+// ============================================================
+
+class _PaymentStatusBadge extends StatelessWidget {
+  final String status;
+  final Color color;
+
+  const _PaymentStatusBadge({required this.status, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        status,
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.bold,
+          fontSize: 12,
         ),
       ),
     );
@@ -814,6 +999,15 @@ class _PaymentSummaryCard extends StatelessWidget {
         border: Border.all(
           color: isDark ? Colors.white12 : const Color(0xFFEDE8F5),
         ),
+        boxShadow: isDark
+            ? []
+            : [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.025),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -885,6 +1079,61 @@ class _PaymentInfoRow extends StatelessWidget {
             ),
           ),
         ),
+      ],
+    );
+  }
+}
+
+// ============================================================
+// DETAILS INFORMATION ROW
+// ============================================================
+
+class _PaymentDetailRow extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color textColor;
+  final Color mutedColor;
+  final Color dividerColor;
+
+  const _PaymentDetailRow({
+    required this.label,
+    required this.value,
+    required this.textColor,
+    required this.mutedColor,
+    required this.dividerColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 125,
+                child: Text(
+                  label,
+                  style: TextStyle(fontSize: 12, color: mutedColor),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: SelectableText(
+                  value,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: textColor,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Divider(height: 1, color: dividerColor),
       ],
     );
   }
