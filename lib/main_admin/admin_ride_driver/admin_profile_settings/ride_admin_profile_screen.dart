@@ -605,24 +605,6 @@ class _RideAdminProfileScreenState extends State<RideAdminProfileScreen> {
                       },
                     ),
 
-                    profileOption(
-                      icon: Icons.notifications_none_rounded,
-                      title: 'Notifications',
-                      subtitle: 'Ride administration alerts',
-                      color: const Color(0xFFD97706),
-                      cardColor: cardColor,
-                      textColor: textColor,
-                      mutedColor: mutedColor,
-                      onTap: () {
-                        showInfoDialog(
-                          'Notifications',
-                          'Your Ride Admin notification preferences '
-                              'can be connected here when their settings '
-                              'API is available.',
-                        );
-                      },
-                    ),
-
                     const SizedBox(height: 24),
                     sectionTitle('Connect with Senmi', textColor),
                     const SizedBox(height: 12),
