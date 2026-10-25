@@ -35,6 +35,7 @@ class _RideAdminAnalyticsScreenState extends State<RideAdminAnalyticsScreen> {
 
     return {};
   }
+  
 
   List<Map<String, dynamic>> get _dailyActivity {
     final value =
