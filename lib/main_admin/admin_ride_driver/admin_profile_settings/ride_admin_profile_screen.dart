@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:senmi/main.dart' show isDarkMode;
 import 'package:senmi/services/package_api_service.dart';
 import 'package:senmi/senmi_shared_account/registration/auth/login.dart';
@@ -15,7 +17,8 @@ class RideAdminProfileScreen extends StatefulWidget {
   final String description;
   final IconData icon;
 
-  static const Color purple = Color(0xFF7C3AED);
+  static const Color purple = Color(0xFF673AB7);
+  static const Color green = Color(0xFF008000);
 
   @override
   State<RideAdminProfileScreen> createState() => _RideAdminProfileScreenState();
@@ -23,19 +26,43 @@ class RideAdminProfileScreen extends StatefulWidget {
 
 class _RideAdminProfileScreenState extends State<RideAdminProfileScreen> {
   static const Color purple = RideAdminProfileScreen.purple;
+  static const Color green = RideAdminProfileScreen.green;
 
   bool isLoading = true;
   bool isLoggingOut = false;
   String? errorMessage;
   Map<String, dynamic>? profile;
 
+  // Automatically retrieved from the installed app's package metadata.
+  String appVersion = 'Loading...';
+
   @override
   void initState() {
     super.initState();
     loadProfile();
+    loadAppVersion();
   }
 
-  // Load the saved authentication token and fetch the logged-in user's profile.
+  // Automatically gets the app version and build number.
+  Future<void> loadAppVersion() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
+
+      if (!mounted) return;
+
+      setState(() {
+        appVersion = '${info.version}+${info.buildNumber}';
+      });
+    } catch (_) {
+      if (!mounted) return;
+
+      setState(() {
+        appVersion = 'Unavailable';
+      });
+    }
+  }
+
+  // Existing profile-loading and authentication logic.
   Future<void> loadProfile() async {
     if (mounted) {
       setState(() {
@@ -127,13 +154,65 @@ class _RideAdminProfileScreenState extends State<RideAdminProfileScreen> {
         return image;
       }
 
-      // Resolve relative image paths against the existing API server.
       return Uri.parse(ApiService.baseUrl).resolve(image).toString();
     } catch (_) {
       return null;
     }
   }
 
+  // Opens websites, email, phone numbers, and WhatsApp externally.
+  Future<void> openExternalLink(Uri uri) async {
+    try {
+      final launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+
+      if (!launched && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Unable to open this link. Please try again.'),
+          ),
+        );
+      }
+    } catch (_) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Unable to open this link. Please try again.'),
+        ),
+      );
+    }
+  }
+
+  void openWhatsApp() {
+    final message = Uri.encodeComponent(
+      'Hello Senmi Support, I need help with Ride Admin.',
+    );
+
+    openExternalLink(Uri.parse('https://wa.me/2349117341739?text=$message'));
+  }
+
+  void openWebsite() {
+    openExternalLink(Uri.parse('https://www.senmi.com.ng/'));
+  }
+
+  void openSupportEmail() {
+    openExternalLink(
+      Uri(
+        scheme: 'mailto',
+        path: 'senmisupport@gmail.com',
+        queryParameters: {'subject': 'Senmi Ride Admin Support'},
+      ),
+    );
+  }
+
+  void callSupport() {
+    openExternalLink(Uri.parse('tel:+2349117341739'));
+  }
+
+  // Existing logout logic.
   Future<void> logout() async {
     if (isLoggingOut) return;
 
@@ -219,6 +298,8 @@ class _RideAdminProfileScreenState extends State<RideAdminProfileScreen> {
     required Color mutedColor,
     required VoidCallback onTap,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Card(
       color: cardColor,
       elevation: 0,
@@ -226,9 +307,7 @@ class _RideAdminProfileScreenState extends State<RideAdminProfileScreen> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
-          color: Theme.of(context).brightness == Brightness.dark
-              ? Colors.white12
-              : const Color(0xFFEDE8F5),
+          color: isDark ? Colors.white12 : const Color(0xFFE6EAF0),
         ),
       ),
       child: ListTile(
@@ -265,19 +344,20 @@ class _RideAdminProfileScreenState extends State<RideAdminProfileScreen> {
 
   Widget profileHeader() {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF7C3AED), Color(0xFF5B21B6)],
+          colors: [Color(0xFF008000), Color(0xFF006400), Color(0xFF673AB7)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
-            color: purple.withValues(alpha: 0.18),
-            blurRadius: 15,
-            offset: const Offset(0, 6),
+            color: green.withValues(alpha: 0.15),
+            blurRadius: 18,
+            offset: const Offset(0, 7),
           ),
         ],
       ),
@@ -406,14 +486,14 @@ class _RideAdminProfileScreenState extends State<RideAdminProfileScreen> {
       valueListenable: isDarkMode,
       builder: (context, darkMode, child) {
         final isDark = darkMode;
-        final textColor = isDark ? Colors.white : const Color(0xFF211633);
+        final textColor = isDark ? Colors.white : const Color(0xFF172033);
         final cardColor = isDark ? const Color(0xFF211C2B) : Colors.white;
-        final mutedColor = isDark ? Colors.white60 : Colors.black54;
+        final mutedColor = isDark ? Colors.white60 : const Color(0xFF64748B);
 
         return Scaffold(
           backgroundColor: isDark
               ? const Color(0xFF121018)
-              : const Color(0xFFF8F7FC),
+              : const Color(0xFFF5F7FA),
           appBar: AppBar(
             title: Text(
               widget.title,
@@ -543,21 +623,52 @@ class _RideAdminProfileScreenState extends State<RideAdminProfileScreen> {
                       },
                     ),
 
+                    const SizedBox(height: 24),
+                    sectionTitle('Connect with Senmi', textColor),
+                    const SizedBox(height: 12),
+
                     profileOption(
-                      icon: Icons.help_outline_rounded,
-                      title: 'Help and Support',
-                      subtitle: 'Get help with Ride Admin',
-                      color: const Color(0xFF059669),
+                      icon: Icons.chat_rounded,
+                      title: 'WhatsApp Support',
+                      subtitle: 'Chat with the Senmi support team',
+                      color: const Color(0xFF16A34A),
                       cardColor: cardColor,
                       textColor: textColor,
                       mutedColor: mutedColor,
-                      onTap: () {
-                        showInfoDialog(
-                          'Help and Support',
-                          'Contact your Senmi support team for help '
-                              'with ride operations, drivers, and payments.',
-                        );
-                      },
+                      onTap: openWhatsApp,
+                    ),
+
+                    profileOption(
+                      icon: Icons.language_rounded,
+                      title: 'Official Website',
+                      subtitle: 'Visit www.senmi.com.ng',
+                      color: purple,
+                      cardColor: cardColor,
+                      textColor: textColor,
+                      mutedColor: mutedColor,
+                      onTap: openWebsite,
+                    ),
+
+                    profileOption(
+                      icon: Icons.email_outlined,
+                      title: 'Email Support',
+                      subtitle: 'senmisupport@gmail.com',
+                      color: const Color(0xFF2563EB),
+                      cardColor: cardColor,
+                      textColor: textColor,
+                      mutedColor: mutedColor,
+                      onTap: openSupportEmail,
+                    ),
+
+                    profileOption(
+                      icon: Icons.phone_outlined,
+                      title: 'Call Support',
+                      subtitle: '+234 911 734 1739',
+                      color: green,
+                      cardColor: cardColor,
+                      textColor: textColor,
+                      mutedColor: mutedColor,
+                      onTap: callSupport,
                     ),
 
                     const SizedBox(height: 24),
@@ -572,7 +683,7 @@ class _RideAdminProfileScreenState extends State<RideAdminProfileScreen> {
                         side: BorderSide(
                           color: isDark
                               ? Colors.white12
-                              : const Color(0xFFEDE8F5),
+                              : const Color(0xFFE6EAF0),
                         ),
                       ),
                       child: SwitchListTile(
@@ -626,7 +737,7 @@ class _RideAdminProfileScreenState extends State<RideAdminProfileScreen> {
                           'Senmi Ride Administration\n\n'
                               'A dedicated interface for managing ride '
                               'operations, drivers, passengers, and payments.\n\n'
-                              'Version 1.0.0',
+                              'Version $appVersion',
                         );
                       },
                     ),
@@ -667,7 +778,8 @@ class _RideAdminProfileScreenState extends State<RideAdminProfileScreen> {
                     const SizedBox(height: 20),
                     Center(
                       child: Text(
-                        'Senmi Ride Admin • Version 1.0.0',
+                        'Senmi Ride Admin • Version $appVersion',
+                        textAlign: TextAlign.center,
                         style: TextStyle(color: mutedColor, fontSize: 12),
                       ),
                     ),

@@ -647,8 +647,10 @@ class _RideDriverCompleteProfileState extends State<RideDriverCompleteProfile> {
       );
 
       final response = await request.send();
-
       final responseBody = await response.stream.bytesToString();
+
+      debugPrint('DRIVER PROFILE STATUS: ${response.statusCode}');
+      debugPrint('DRIVER PROFILE RESPONSE: $responseBody');
 
       dynamic decodedBody;
 

@@ -82,8 +82,8 @@ class ChooseCourierType extends StatelessWidget {
                     children: [
                       Expanded(
                         child: _CourierTypeCard(
-                          icon: Icons.two_wheeler_rounded,
-                          title: 'Ride Driver',
+                          icon: Icons.directions_car_rounded,
+                          title: 'Senmi Driver',
                           subtitle:
                               'Drive passengers and provide ride services through Senmi.',
                           textColor: textColor,
@@ -100,14 +100,14 @@ class ChooseCourierType extends StatelessWidget {
 
                       Expanded(
                         child: _CourierTypeCard(
-                          icon: Icons.inventory_2_rounded,
+                          icon: Icons.two_wheeler_rounded,
                           title: 'Package Courier',
                           subtitle:
                               'Deliver packages to customers and earn from completed deliveries.',
                           textColor: textColor,
                           secondaryTextColor: secondaryTextColor,
                           borderColor: borderColor,
-                          accentColor: Colors.deepPurple,
+                          accentColor: Colors.green,
                           onTap: () {
                             Navigator.pop(context, 'rider');
                           },
