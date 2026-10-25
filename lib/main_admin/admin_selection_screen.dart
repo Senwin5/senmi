@@ -1,4 +1,3 @@
-
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
@@ -10,8 +9,8 @@ class AdminSelectionScreen extends StatelessWidget {
 
   static const Color navy = Color(0xFF111827);
   static const Color muted = Color(0xFF64748B);
-  static const Color rideBlue = Color(0xFF2563EB);
-  static const Color packagePurple = Color(0xFF7C3AED);
+  static const Color rideGreen = Color(0xFF008000);
+  static const Color packageDeepPurple = Color(0xFF673AB7);
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +52,7 @@ class AdminSelectionScreen extends StatelessWidget {
                 child: const Icon(
                   Icons.admin_panel_settings_rounded,
                   size: 48,
-                  color: packagePurple,
+                  color: packageDeepPurple,
                 ),
               ),
             ),
@@ -91,15 +90,13 @@ class AdminSelectionScreen extends StatelessWidget {
               subtitle:
                   'Manage ride bookings, ride drivers, payments and ride operations.',
               icon: Icons.local_taxi_rounded,
-              color: rideBlue,
+              color: rideGreen,
               iconBackground: const Color(0xFFEAF2FF),
               isDark: isDark,
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (_) => const RideAdminBottomNav(),
-                  ),
+                  MaterialPageRoute(builder: (_) => const RideAdminBottomNav()),
                 );
               },
             ),
@@ -111,15 +108,13 @@ class AdminSelectionScreen extends StatelessWidget {
               subtitle:
                   'Manage packages, delivery riders, customers and package operations.',
               icon: Icons.inventory_2_rounded,
-              color: packagePurple,
+              color: packageDeepPurple,
               iconBackground: const Color(0xFFF3E8FF),
               isDark: isDark,
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (_) => const AdminBottomNav(),
-                  ),
+                  MaterialPageRoute(builder: (_) => const AdminBottomNav()),
                 );
               },
             ),
@@ -151,11 +146,9 @@ class _AdminOptionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cardColor =
-        isDark ? const Color(0xFF1C1D25) : Colors.white;
+    final cardColor = isDark ? const Color(0xFF1C1D25) : Colors.white;
     final primaryText = isDark ? Colors.white : const Color(0xFF111827);
-    final secondaryText =
-        isDark ? Colors.white70 : const Color(0xFF64748B);
+    final secondaryText = isDark ? Colors.white70 : const Color(0xFF64748B);
 
     return Card(
       color: cardColor,
@@ -177,10 +170,7 @@ class _AdminOptionCard extends StatelessWidget {
         child: IntrinsicHeight(
           child: Row(
             children: [
-              Container(
-                width: 5,
-                color: color,
-              ),
+              Container(width: 5, color: color),
 
               Expanded(
                 child: Padding(
@@ -196,11 +186,7 @@ class _AdminOptionCard extends StatelessWidget {
                               : iconBackground,
                           borderRadius: BorderRadius.circular(16),
                         ),
-                        child: Icon(
-                          icon,
-                          size: 30,
-                          color: color,
-                        ),
+                        child: Icon(icon, size: 30, color: color),
                       ),
 
                       const SizedBox(width: 15),
@@ -210,7 +196,6 @@ class _AdminOptionCard extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-
                             Text(
                               title,
                               style: TextStyle(
@@ -230,7 +215,6 @@ class _AdminOptionCard extends StatelessWidget {
                                 color: secondaryText,
                               ),
                             ),
-                            
                           ],
                         ),
                       ),

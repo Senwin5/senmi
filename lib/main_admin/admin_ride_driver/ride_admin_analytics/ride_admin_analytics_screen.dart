@@ -255,7 +255,7 @@ class _RideAdminAnalyticsScreenState extends State<RideAdminAnalyticsScreen> {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFF172B4D),
+        color: const Color(0xFF673AB7),
         borderRadius: BorderRadius.circular(18),
       ),
       child: Row(
@@ -331,7 +331,7 @@ class _RideAdminAnalyticsScreenState extends State<RideAdminAnalyticsScreen> {
           duration: const Duration(milliseconds: 180),
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: selected ? const Color(0xFF2457D6) : Colors.transparent,
+            color: selected ? const Color(0xFF673AB7) : Colors.transparent,
             borderRadius: BorderRadius.circular(9),
           ),
           child: Center(
@@ -365,7 +365,7 @@ class _RideAdminAnalyticsScreenState extends State<RideAdminAnalyticsScreen> {
         title: 'Total rides',
         value: _integer(total),
         icon: Icons.local_taxi_rounded,
-        color: const Color(0xFF2457D6),
+        color: const Color(0xFF673AB7),
       ),
       _MetricData(
         title: 'Completed',
@@ -480,7 +480,7 @@ class _RideAdminAnalyticsScreenState extends State<RideAdminAnalyticsScreen> {
                       labels: rows
                           .map((row) => _formatDate(row['date']))
                           .toList(),
-                      barColor: const Color(0xFF2457D6),
+                      barColor: const Color(0xFF673AB7),
                     ),
                   ),
                 ),
@@ -506,7 +506,7 @@ class _RideAdminAnalyticsScreenState extends State<RideAdminAnalyticsScreen> {
               style: const TextStyle(color: Color(0xFF59657A), fontSize: 13),
             ),
           ),
-          _smallCount('Total', row['total'], const Color(0xFF2457D6)),
+          _smallCount('Total', row['total'], const Color(0xFF673AB7)),
           const SizedBox(width: 12),
           _smallCount('Done', row['completed'], const Color(0xFF16865B)),
           const SizedBox(width: 12),
@@ -585,7 +585,7 @@ class _RideAdminAnalyticsScreenState extends State<RideAdminAnalyticsScreen> {
                 Text(
                   _money(fares),
                   style: const TextStyle(
-                    color: Color(0xFF2457D6),
+                    color: Color(0xFF673AB7),
                     fontSize: 26,
                     fontWeight: FontWeight.w800,
                   ),
@@ -651,7 +651,7 @@ class _RideAdminAnalyticsScreenState extends State<RideAdminAnalyticsScreen> {
       _StatusData(
         'Accepted',
         _metric(['accepted', 'accepted_rides']),
-        const Color(0xFF2457D6),
+        const Color(0xFF673AB7),
       ),
       _StatusData(
         'Arrived',
@@ -1001,7 +1001,7 @@ class _RideAdminAnalyticsScreenState extends State<RideAdminAnalyticsScreen> {
                               ? name.toString()[0].toUpperCase()
                               : 'D',
                           style: const TextStyle(
-                            color: Color(0xFF2457D6),
+                            color: Color(0xFF673AB7),
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -1105,10 +1105,10 @@ class _RideAdminAnalyticsScreenState extends State<RideAdminAnalyticsScreen> {
                 width: 41,
                 height: 41,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF2457D6).withValues(alpha: 0.09),
+                  color: const Color(0xFF673AB7).withValues(alpha: 0.09),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: const Color(0xFF2457D6), size: 22),
+                child: Icon(icon, color: const Color(0xFF673AB7), size: 22),
               ),
               const SizedBox(width: 12),
               Expanded(

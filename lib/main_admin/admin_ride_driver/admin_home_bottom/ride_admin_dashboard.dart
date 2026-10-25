@@ -23,7 +23,7 @@ class RideAdminDashboard extends StatefulWidget {
 }
 
 class _RideAdminDashboardState extends State<RideAdminDashboard> {
-  static const Color primary = Color(0xFF2563EB);
+  static const Color primary = Color(0xFF673AB7);
   static const Color navy = Color(0xFF111827);
   static const Color muted = Color(0xFF64748B);
   static const Color background = Color(0xFFF7F9FC);
@@ -240,7 +240,7 @@ class _RideAdminDashboardState extends State<RideAdminDashboard> {
       case 'Finding Driver':
         return const Color(0xFFD97706);
       case 'Driver Arriving':
-        return const Color(0xFF2563EB);
+        return const Color(0xFF673AB7);
       case 'In Progress':
         return const Color(0xFF059669);
       case 'Completed':
@@ -395,7 +395,7 @@ class _RideAdminDashboardState extends State<RideAdminDashboard> {
         'title': 'All Rides',
         'description': 'View and manage rides',
         'icon': Icons.local_taxi_rounded,
-        'color': const Color(0xFF2563EB),
+        'color': const Color(0xFF673AB7),
         'light': const Color(0xFFEAF2FF),
       },
       {
@@ -506,7 +506,7 @@ class _RideAdminDashboardState extends State<RideAdminDashboard> {
                 padding: const EdgeInsets.all(22),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF2563EB), Color(0xFF1D4ED8)],
+                    colors: [Color(0xFF673AB7), Color(0xFF673AB7)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -1355,7 +1355,7 @@ class _LinkAction extends StatelessWidget {
       child: ListTile(
         contentPadding: EdgeInsets.zero,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        leading: Icon(icon, color: const Color(0xFF2563EB), size: 22),
+        leading: Icon(icon, color: const Color(0xFF673AB7), size: 22),
         title: Text(
           title,
           style: TextStyle(
