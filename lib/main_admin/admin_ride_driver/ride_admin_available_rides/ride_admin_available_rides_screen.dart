@@ -185,8 +185,9 @@ class _RideAdminAvailableRidesScreenState
   // =========================================
 
   Map<String, dynamic> _normalizeRide(Map<String, dynamic> ride) {
-    final dynamic rawId =
-        ride['id'] ?? ride['ride_id'] ?? ride['request_id'] ?? '';
+    final dynamic rawId = ride['ride_id']?.toString().trim().isNotEmpty == true
+        ? ride['ride_id']
+        : ride['id'] ?? ride['request_id'] ?? '';
 
     final dynamic rawStatus =
         ride['status'] ?? ride['ride_status'] ?? 'pending';
@@ -658,7 +659,7 @@ class _RideAdminAvailableRidesScreenState
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Ride ${ride['id']}',
+                          '${ride['id']}',
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,

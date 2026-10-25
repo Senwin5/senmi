@@ -88,7 +88,7 @@ class RideAdminDriverActivityDetailScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Ride ${_text(ride['ride_id'] ?? ride['id'])}',
+                  'Ride${_text(ride['ride_id'] ?? ride['id'])}',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 21,
