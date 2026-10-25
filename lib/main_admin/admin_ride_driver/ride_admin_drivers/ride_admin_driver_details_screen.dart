@@ -391,6 +391,7 @@ class _RideAdminDriverDetailsScreenState
             ),
           ),
         ),
+        const SizedBox(height: 15),
         if (currentStatus != 'rejected')
           SizedBox(
             width: double.infinity,

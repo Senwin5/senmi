@@ -901,32 +901,6 @@ class RideService {
     return data;
   }
 
-  static Future<void> updateAdminDriverStatus(
-    String driverId,
-    String status, {
-    String rejectionReason = '',
-  }) async {
-    final response = await http
-        .patch(
-          Uri.parse(
-            '$baseUrl/ride/admin/drivers/${Uri.encodeComponent(driverId)}/status/',
-          ),
-          headers: await headers(),
-          body: jsonEncode({
-            'status': status,
-            'rejection_reason': rejectionReason,
-          }),
-        )
-        .timeout(const Duration(seconds: 30));
-
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      final data = decodeResponse(response);
-      throw Exception(
-        data['detail']?.toString() ?? 'Failed to update driver status.',
-      );
-    }
-  }
-
   // ============================
   // ADMIN: GET ALL CUSTOMERS
   // ============================
@@ -1321,5 +1295,44 @@ class RideService {
     }
 
     debugPrint('RIDE FCM TOKEN REGISTERED');
+  }
+
+  // ============================
+  // ADMIN: UPDATE DRIVER STATUS
+  // ============================
+
+  static Future<Map<String, dynamic>> updateAdminDriverStatus(
+    String driverId,
+    String status, {
+    String rejectionReason = '',
+  }) async {
+    final response = await http
+        .patch(
+          Uri.parse(
+            '$baseUrl/ride/admin/drivers/'
+            '${Uri.encodeComponent(driverId)}/status/',
+          ),
+          headers: await headers(),
+          body: jsonEncode({
+            'status': status,
+            if (rejectionReason.trim().isNotEmpty)
+              'rejection_reason': rejectionReason.trim(),
+          }),
+        )
+        .timeout(const Duration(seconds: 30));
+
+    final data = decodeResponse(response);
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(
+        data['detail']?.toString() ??
+            data['error']?.toString() ??
+            data['message']?.toString() ??
+            'Failed to update driver status '
+                '(HTTP ${response.statusCode}).',
+      );
+    }
+
+    return data;
   }
 }
