@@ -33,16 +33,20 @@ class _RideAdminDashboardState extends State<RideAdminDashboard> {
   String? _rideError;
   Timer? _refreshTimer;
 
+  int _pendingDriverCount = 0;
+  bool _isLoadingPendingDrivers = true;
+
   @override
   void initState() {
     super.initState();
 
     _loadRecentRides();
+    _loadPendingDrivers();
 
-    // Refresh dashboard data periodically.
     _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
       if (mounted && !_isLoadingRides) {
         _loadRecentRides(silent: true);
+        _loadPendingDrivers();
       }
     });
   }
@@ -94,6 +98,50 @@ class _RideAdminDashboardState extends State<RideAdminDashboard> {
         _isLoadingRides = false;
       });
     }
+  }
+
+  Future<void> _loadPendingDrivers() async {
+    try {
+      final response = await RideService.getAdminDrivers();
+
+      dynamic drivers = response;
+
+      if (drivers is Map) {
+        for (final key in ['drivers', 'results', 'data']) {
+          if (drivers[key] is List) {
+            drivers = drivers[key];
+            break;
+          }
+        }
+      }
+
+      if (drivers is! List) {
+        throw Exception('Driver response does not contain a list.');
+      }
+
+      final count = drivers.whereType<Map>().where((driver) {
+        final status = (driver['status'] ?? '').toString().trim().toLowerCase();
+
+        return status == 'pending';
+      }).length;
+
+      if (!mounted) return;
+
+      setState(() {
+        _pendingDriverCount = count;
+        _isLoadingPendingDrivers = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+
+      setState(() {
+        _isLoadingPendingDrivers = false;
+      });
+    }
+  }
+
+  Future<void> _refreshDashboard() async {
+    await Future.wait([_loadRecentRides(), _loadPendingDrivers()]);
   }
 
   List<Map<String, dynamic>> _extractRideList(dynamic response) {
@@ -383,6 +431,83 @@ class _RideAdminDashboardState extends State<RideAdminDashboard> {
     }
   }
 
+  Widget _pendingDriversBox(BuildContext context, bool isDark) {
+    return Material(
+      color: isDark ? const Color(0xFF1C2029) : Colors.white,
+      borderRadius: BorderRadius.circular(18),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) =>
+                  const RideAdminDriversScreen(initialFilter: 'Pending'),
+            ),
+          );
+        },
+        child: Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: isDark ? Colors.white12 : const Color(0xFFFDE68A),
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(13),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEF3C7),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(
+                  Icons.pending_actions_rounded,
+                  color: Color(0xFFD97706),
+                  size: 28,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Pending Ride Drivers',
+                      style: TextStyle(
+                        color: isDark ? Colors.white : const Color(0xFF92400E),
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      _isLoadingPendingDrivers
+                          ? 'Loading pending drivers...'
+                          : '$_pendingDriverCount driver(s) awaiting approval',
+                      style: TextStyle(
+                        color: isDark
+                            ? Colors.white60
+                            : const Color(0xFF92400E),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 16,
+                color: Color(0xFFD97706),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -489,7 +614,7 @@ class _RideAdminDashboardState extends State<RideAdminDashboard> {
         actions: [
           IconButton(
             tooltip: 'Refresh dashboard',
-            onPressed: () => _loadRecentRides(),
+            onPressed: _refreshDashboard,
             icon: const Icon(Icons.refresh_rounded),
           ),
           const SizedBox(width: 6),
@@ -497,7 +622,7 @@ class _RideAdminDashboardState extends State<RideAdminDashboard> {
       ),
       body: SafeArea(
         child: RefreshIndicator(
-          onRefresh: _loadRecentRides,
+          onRefresh: _refreshDashboard,
           child: ListView(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
             children: [
@@ -615,6 +740,10 @@ class _RideAdminDashboardState extends State<RideAdminDashboard> {
                 ],
               ),
 
+              const SizedBox(height: 18),
+
+              _pendingDriversBox(context, isDark),
+
               const SizedBox(height: 28),
 
               _SectionHeading(
@@ -622,7 +751,6 @@ class _RideAdminDashboardState extends State<RideAdminDashboard> {
                 subtitle: 'Manage every part of your ride business',
                 isDark: isDark,
               ),
-
               const SizedBox(height: 14),
 
               GridView.builder(

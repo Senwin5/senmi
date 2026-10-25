@@ -3,7 +3,9 @@ import 'package:senmi/main_admin/admin_ride_driver/ride_admin_drivers/ride_admin
 import 'package:senmi/services/driver_api_service.dart';
 
 class RideAdminDriversScreen extends StatefulWidget {
-  const RideAdminDriversScreen({super.key});
+  final String initialFilter;
+
+  const RideAdminDriversScreen({super.key, this.initialFilter = 'All'});
 
   @override
   State<RideAdminDriversScreen> createState() => _RideAdminDriversScreenState();
@@ -25,6 +27,11 @@ class _RideAdminDriversScreenState extends State<RideAdminDriversScreen> {
   @override
   void initState() {
     super.initState();
+
+    if (filters.contains(widget.initialFilter)) {
+      selectedFilter = widget.initialFilter;
+    }
+
     fetchDrivers();
   }
 
