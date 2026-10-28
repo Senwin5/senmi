@@ -636,7 +636,7 @@ class _RideAdminTrackingScreenState extends State<RideAdminTrackingScreen> {
                     'Live Ride Overview',
                     style: TextStyle(
                       fontSize: 24,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w800, 
                       color: Color(0xFF1C2935),
                     ),
                   ),
