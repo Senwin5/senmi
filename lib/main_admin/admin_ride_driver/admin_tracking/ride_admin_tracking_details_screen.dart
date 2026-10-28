@@ -19,6 +19,26 @@ class RideAdminDetailsScreen extends StatefulWidget {
 class _RideAdminDetailsScreenState extends State<RideAdminDetailsScreen> {
   static const Color primary = Color(0xFF176B5B);
 
+  // Theme-aware colors. These only affect the screen's appearance.
+  bool get _isDark => Theme.of(context).brightness == Brightness.dark;
+
+  Color get _background =>
+      _isDark ? const Color(0xFF101116) : const Color(0xFFF5F7FA);
+
+  Color get _cardBackground => _isDark ? const Color(0xFF1C1D24) : Colors.white;
+
+  Color get _primaryText =>
+      _isDark ? const Color(0xFFF1F1F5) : const Color(0xFF263238);
+
+  Color get _secondaryText =>
+      _isDark ? const Color(0xFFB0B5C3) : Colors.black54;
+
+  Color get _borderColor =>
+      _isDark ? const Color(0xFF343640) : const Color(0xFFE7EBF0);
+
+  Color get _mapPlaceholderBackground =>
+      _isDark ? const Color(0xFF242831) : const Color(0xFFEAF0EC);
+
   late Map<String, dynamic> _ride;
   GoogleMapController? _mapController;
   Timer? _trackingTimer;
@@ -515,10 +535,10 @@ class _RideAdminDetailsScreenState extends State<RideAdminDetailsScreen> {
       padding: const EdgeInsets.only(bottom: 12),
       child: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 15,
           fontWeight: FontWeight.w800,
-          color: Color(0xFF263238),
+          color: _primaryText,
         ),
       ),
     );
@@ -551,15 +571,15 @@ class _RideAdminDetailsScreenState extends State<RideAdminDetailsScreen> {
               children: [
                 Text(
                   label,
-                  style: const TextStyle(color: Colors.black54, fontSize: 12),
+                  style: TextStyle(color: _secondaryText, fontSize: 12),
                 ),
                 const SizedBox(height: 4),
                 SelectableText(
                   value,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF263238),
+                    color: _primaryText,
                   ),
                 ),
               ],
@@ -582,8 +602,9 @@ class _RideAdminDetailsScreenState extends State<RideAdminDetailsScreen> {
         height: 280,
         width: double.infinity,
         decoration: BoxDecoration(
-          color: const Color(0xFFEAF0EC),
+          color: _mapPlaceholderBackground,
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: _borderColor),
         ),
         child: Padding(
           padding: const EdgeInsets.all(22),
@@ -596,24 +617,28 @@ class _RideAdminDetailsScreenState extends State<RideAdminDetailsScreen> {
                 color: primary,
               ),
               const SizedBox(height: 12),
-              const Text(
+              Text(
                 'Waiting for location data',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: _primaryText,
+                ),
               ),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 'Your backend must provide driver latitude and longitude '
                 'to display the vehicle moving on this map.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.black54, height: 1.5),
+                style: TextStyle(color: _secondaryText, height: 1.5),
               ),
               if (_trackingMessage != null) ...[
                 const SizedBox(height: 10),
                 Text(
                   _trackingMessage!,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.black54, fontSize: 12),
+                  style: TextStyle(color: _secondaryText, fontSize: 12),
                 ),
               ],
             ],
@@ -763,14 +788,14 @@ class _RideAdminDetailsScreenState extends State<RideAdminDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: _background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF17212B),
+        backgroundColor: _cardBackground,
+        foregroundColor: _primaryText,
         elevation: 0,
-        title: const Text(
+        title: Text(
           'Ride Details',
-          style: TextStyle(fontWeight: FontWeight.w800),
+          style: TextStyle(color: _primaryText, fontWeight: FontWeight.w800),
         ),
         actions: [
           IconButton(
@@ -781,6 +806,7 @@ class _RideAdminDetailsScreenState extends State<RideAdminDetailsScreen> {
         ],
       ),
       body: RefreshIndicator(
+        color: primary,
         onRefresh: _refreshRideLocation,
         child: ListView(
           padding: const EdgeInsets.all(18),
@@ -789,9 +815,9 @@ class _RideAdminDetailsScreenState extends State<RideAdminDetailsScreen> {
             Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: _cardBackground,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFE7EBF0)),
+                border: Border.all(color: _borderColor),
               ),
               child: Row(
                 children: [
@@ -815,7 +841,8 @@ class _RideAdminDetailsScreenState extends State<RideAdminDetailsScreen> {
                       children: [
                         Text(
                           'Ride #$_rideId',
-                          style: const TextStyle(
+                          style: TextStyle(
+                            color: _primaryText,
                             fontSize: 17,
                             fontWeight: FontWeight.w800,
                           ),
@@ -942,7 +969,7 @@ class _RideAdminDetailsScreenState extends State<RideAdminDetailsScreen> {
               const SizedBox(height: 10),
               Text(
                 _trackingMessage!,
-                style: const TextStyle(color: Colors.black54, fontSize: 12),
+                style: TextStyle(color: _secondaryText, fontSize: 12),
               ),
             ],
 
@@ -958,9 +985,9 @@ class _RideAdminDetailsScreenState extends State<RideAdminDetailsScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: _cardBackground,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE7EBF0)),
+        border: Border.all(color: _borderColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

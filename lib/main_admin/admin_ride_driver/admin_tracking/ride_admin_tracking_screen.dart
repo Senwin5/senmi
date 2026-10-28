@@ -29,7 +29,26 @@ class _RideAdminTrackingScreenState extends State<RideAdminTrackingScreen> {
   final TextEditingController _searchController = TextEditingController();
 
   static const Color _primary = Color(0xFF176B5B);
-  static const Color _background = Color(0xFFF5F7FA);
+
+  // DARK MODE COLORS
+  bool get _isDark => Theme.of(context).brightness == Brightness.dark;
+
+  Color get _background =>
+      _isDark ? const Color(0xFF101116) : const Color(0xFFF5F7FA);
+
+  Color get _cardBackground => _isDark ? const Color(0xFF1C1D24) : Colors.white;
+
+  Color get _primaryText =>
+      _isDark ? const Color(0xFFF1F1F5) : const Color(0xFF1C2935);
+
+  Color get _secondaryText =>
+      _isDark ? const Color(0xFFB0B5C3) : const Color(0xFF657087);
+
+  Color get _borderColor =>
+      _isDark ? const Color(0xFF343640) : const Color(0xFFE8ECF1);
+
+  Color get _softBackground =>
+      _isDark ? const Color(0xFF262832) : const Color(0xFFF7F9FB);
 
   static const List<String> _statuses = [
     'All',
@@ -589,16 +608,19 @@ class _RideAdminTrackingScreenState extends State<RideAdminTrackingScreen> {
     return Scaffold(
       backgroundColor: _background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF1C2935),
+        backgroundColor: _cardBackground,
+        foregroundColor: _primaryText,
         elevation: 0,
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.location_on_rounded, color: _primary, size: 27),
-            SizedBox(width: 10),
+            const Icon(Icons.location_on_rounded, color: _primary, size: 27),
+            const SizedBox(width: 10),
             Text(
               'Ride Tracking',
-              style: TextStyle(fontWeight: FontWeight.w800),
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                color: _primaryText,
+              ),
             ),
           ],
         ),
@@ -632,18 +654,18 @@ class _RideAdminTrackingScreenState extends State<RideAdminTrackingScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(18),
                 children: [
-                  const Text(
+                  Text(
                     'Live Ride Overview',
                     style: TextStyle(
                       fontSize: 24,
-                      fontWeight: FontWeight.w800, 
-                      color: Color(0xFF1C2935),
+                      fontWeight: FontWeight.w800,
+                      color: _primaryText,
                     ),
                   ),
                   const SizedBox(height: 6),
-                  const Text(
+                  Text(
                     'Select a ride category to open its details.',
-                    style: TextStyle(color: Colors.black54),
+                    style: TextStyle(color: _secondaryText),
                   ),
                   const SizedBox(height: 20),
                   _buildSummaryCards(),
@@ -690,9 +712,9 @@ class _RideAdminTrackingScreenState extends State<RideAdminTrackingScreen> {
         return Container(
           padding: const EdgeInsets.all(13),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: _cardBackground,
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFE8ECF1)),
+            border: Border.all(color: _borderColor),
           ),
           child: Row(
             children: [
@@ -707,15 +729,13 @@ class _RideAdminTrackingScreenState extends State<RideAdminTrackingScreen> {
                       card.$1,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.black54,
-                        fontSize: 11,
-                      ),
+                      style: TextStyle(color: _secondaryText, fontSize: 11),
                     ),
                     const SizedBox(height: 5),
                     Text(
                       '${card.$2}',
-                      style: const TextStyle(
+                      style: TextStyle(
+                        color: _primaryText,
                         fontSize: 22,
                         fontWeight: FontWeight.w800,
                       ),
@@ -735,9 +755,9 @@ class _RideAdminTrackingScreenState extends State<RideAdminTrackingScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: _cardBackground,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE8ECF1)),
+        border: Border.all(color: _borderColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -749,7 +769,8 @@ class _RideAdminTrackingScreenState extends State<RideAdminTrackingScreen> {
                 Expanded(
                   child: Text(
                     _statusFilter == 'All' ? 'All Rides' : _statusFilter,
-                    style: const TextStyle(
+                    style: TextStyle(
+                      color: _primaryText,
                       fontSize: 17,
                       fontWeight: FontWeight.w800,
                     ),
@@ -757,8 +778,8 @@ class _RideAdminTrackingScreenState extends State<RideAdminTrackingScreen> {
                 ),
                 Text(
                   '${rides.length} rides',
-                  style: const TextStyle(
-                    color: Colors.black54,
+                  style: TextStyle(
+                    color: _secondaryText,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -770,9 +791,11 @@ class _RideAdminTrackingScreenState extends State<RideAdminTrackingScreen> {
             child: TextField(
               controller: _searchController,
               onChanged: _updateSearch,
+              style: TextStyle(color: _primaryText),
               decoration: InputDecoration(
                 hintText: 'Search passenger, driver, location...',
-                prefixIcon: const Icon(Icons.search),
+                hintStyle: TextStyle(color: _secondaryText),
+                prefixIcon: Icon(Icons.search, color: _secondaryText),
                 suffixIcon: _search.isEmpty
                     ? null
                     : IconButton(
@@ -780,10 +803,10 @@ class _RideAdminTrackingScreenState extends State<RideAdminTrackingScreen> {
                           _searchController.clear();
                           _updateSearch('');
                         },
-                        icon: const Icon(Icons.close),
+                        icon: Icon(Icons.close, color: _secondaryText),
                       ),
                 filled: true,
-                fillColor: const Color(0xFFF7F9FB),
+                fillColor: _softBackground,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                   borderSide: BorderSide.none,
@@ -793,28 +816,31 @@ class _RideAdminTrackingScreenState extends State<RideAdminTrackingScreen> {
           ),
           const SizedBox(height: 12),
           _buildFilters(),
-          const Divider(height: 1),
+          Divider(height: 1, color: _borderColor),
           if (rides.isEmpty)
             Padding(
               padding: const EdgeInsets.all(28),
               child: Center(
                 child: Column(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.search_off_rounded,
                       size: 42,
-                      color: Colors.grey,
+                      color: _secondaryText,
                     ),
                     const SizedBox(height: 10),
-                    const Text(
+                    Text(
                       'No rides found',
-                      style: TextStyle(fontWeight: FontWeight.w800),
+                      style: TextStyle(
+                        color: _primaryText,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                     const SizedBox(height: 6),
                     Text(
                       'No rides match "$_statusFilter" and your search.',
                       textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.black54),
+                      style: TextStyle(color: _secondaryText),
                     ),
                     TextButton(
                       onPressed: () {
@@ -862,13 +888,13 @@ class _RideAdminTrackingScreenState extends State<RideAdminTrackingScreen> {
                 alignment: Alignment.center,
                 padding: const EdgeInsets.symmetric(horizontal: 13),
                 decoration: BoxDecoration(
-                  color: selected ? _primary : const Color(0xFFF1F3F6),
+                  color: selected ? _primary : _softBackground,
                   borderRadius: BorderRadius.circular(22),
                 ),
                 child: Text(
                   '$status ($count)',
                   style: TextStyle(
-                    color: selected ? Colors.white : Colors.black54,
+                    color: selected ? Colors.white : _secondaryText,
                     fontSize: 11,
                     fontWeight: FontWeight.w800,
                   ),
@@ -921,7 +947,8 @@ class _RideAdminTrackingScreenState extends State<RideAdminTrackingScreen> {
                               ride['passenger'].toString(),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
+                              style: TextStyle(
+                                color: _primaryText,
                                 fontWeight: FontWeight.w800,
                                 fontSize: 14,
                               ),
@@ -931,8 +958,8 @@ class _RideAdminTrackingScreenState extends State<RideAdminTrackingScreen> {
                               'Ride #${ride['id']}',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: Colors.black45,
+                              style: TextStyle(
+                                color: _secondaryText,
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -980,10 +1007,10 @@ class _RideAdminTrackingScreenState extends State<RideAdminTrackingScreen> {
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.person_outline,
                         size: 16,
-                        color: Colors.black45,
+                        color: _secondaryText,
                       ),
                       const SizedBox(width: 5),
                       Expanded(
@@ -991,10 +1018,7 @@ class _RideAdminTrackingScreenState extends State<RideAdminTrackingScreen> {
                           'Driver: ${ride['driver']}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Colors.black54,
-                            fontSize: 11,
-                          ),
+                          style: TextStyle(color: _secondaryText, fontSize: 11),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -1006,10 +1030,7 @@ class _RideAdminTrackingScreenState extends State<RideAdminTrackingScreen> {
                         ),
                       ),
                       const SizedBox(width: 5),
-                      const Icon(
-                        Icons.chevron_right_rounded,
-                        color: Colors.black38,
-                      ),
+                      Icon(Icons.chevron_right_rounded, color: _secondaryText),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -1026,7 +1047,7 @@ class _RideAdminTrackingScreenState extends State<RideAdminTrackingScreen> {
             ),
           ),
         ),
-        const Divider(height: 1, indent: 16, endIndent: 16),
+        Divider(height: 1, indent: 16, endIndent: 16, color: _borderColor),
       ],
     );
   }
@@ -1042,11 +1063,7 @@ class _RideAdminTrackingScreenState extends State<RideAdminTrackingScreen> {
             address,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: Color(0xFF475467),
-              fontSize: 12,
-              height: 1.4,
-            ),
+            style: TextStyle(color: _secondaryText, fontSize: 12, height: 1.4),
           ),
         ),
       ],
@@ -1062,15 +1079,19 @@ class _RideAdminTrackingScreenState extends State<RideAdminTrackingScreen> {
           children: [
             const Icon(Icons.cloud_off_rounded, size: 54, color: Colors.red),
             const SizedBox(height: 14),
-            const Text(
+            Text(
               'Could not load rides',
-              style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800),
+              style: TextStyle(
+                color: _primaryText,
+                fontSize: 19,
+                fontWeight: FontWeight.w800,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
               _loadError ?? 'Something went wrong.',
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.black54),
+              style: TextStyle(color: _secondaryText),
             ),
             const SizedBox(height: 18),
             ElevatedButton.icon(
@@ -1093,8 +1114,11 @@ class _RideAdminTrackingScreenState extends State<RideAdminTrackingScreen> {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF4E5),
+        color: _isDark ? const Color(0xFF382522) : const Color(0xFFFFF4E5),
         borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: _isDark ? const Color(0xFF654039) : const Color(0xFFF2D5A9),
+        ),
       ),
       child: Row(
         children: [
@@ -1103,12 +1127,12 @@ class _RideAdminTrackingScreenState extends State<RideAdminTrackingScreen> {
           Expanded(
             child: Text(
               'Refresh failed: $_loadError',
-              style: const TextStyle(fontSize: 12),
+              style: TextStyle(color: _primaryText, fontSize: 12),
             ),
           ),
           IconButton(
             onPressed: () => _loadRides(),
-            icon: const Icon(Icons.refresh),
+            icon: Icon(Icons.refresh, color: _primaryText),
           ),
         ],
       ),
