@@ -10,6 +10,24 @@ class RideAdminRideDetailsScreen extends StatelessWidget {
   static const Color primaryColor = Color(0xFF1565C0);
   static const Color backgroundColor = Color(0xFFF5F7FB);
 
+  bool _isDark(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark;
+
+  Color _screenBackground(BuildContext context) =>
+      _isDark(context) ? const Color(0xFF101116) : backgroundColor;
+
+  Color _cardBackground(BuildContext context) =>
+      _isDark(context) ? const Color(0xFF1C1D24) : Colors.white;
+
+  Color _primaryText(BuildContext context) =>
+      _isDark(context) ? const Color(0xFFF1F1F5) : Colors.black87;
+
+  Color _secondaryText(BuildContext context) =>
+      _isDark(context) ? const Color(0xFFB0B5C3) : Colors.grey.shade700;
+
+  Color _borderColor(BuildContext context) =>
+      _isDark(context) ? const Color(0xFF343640) : Colors.grey.shade200;
+
   String _value(dynamic value, {String fallback = 'Not provided'}) {
     if (value == null) return fallback;
 
@@ -88,14 +106,17 @@ class RideAdminRideDetailsScreen extends StatelessWidget {
     final statusColor = _statusColor(status);
 
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: _screenBackground(context),
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Ride Details',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: _primaryText(context),
+          ),
         ),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
+        backgroundColor: _cardBackground(context),
+        foregroundColor: _primaryText(context),
         elevation: 0,
       ),
       body: SafeArea(
@@ -106,8 +127,9 @@ class RideAdminRideDetailsScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: _cardBackground(context),
                 borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: _borderColor(context)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -133,19 +155,20 @@ class RideAdminRideDetailsScreen extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               'Ride reference',
                               style: TextStyle(
-                                color: Colors.grey,
+                                color: _secondaryText(context),
                                 fontSize: 12,
                               ),
                             ),
                             const SizedBox(height: 5),
                             Text(
                               _value(ride['id'], fallback: 'Unknown'),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
+                                color: _primaryText(context),
                               ),
                             ),
                             const SizedBox(height: 10),
@@ -173,11 +196,14 @@ class RideAdminRideDetailsScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 24),
-                  const Divider(),
+                  Divider(color: _borderColor(context)),
                   const SizedBox(height: 12),
-                  const Text(
+                  Text(
                     'Estimated fare',
-                    style: TextStyle(color: Colors.grey, fontSize: 13),
+                    style: TextStyle(
+                      color: _secondaryText(context),
+                      fontSize: 13,
+                    ),
                   ),
                   const SizedBox(height: 5),
                   Text(
@@ -196,10 +222,12 @@ class RideAdminRideDetailsScreen extends StatelessWidget {
 
             // Journey information.
             _sectionCard(
+              context: context,
               title: 'Journey Information',
               icon: Icons.route_outlined,
               children: [
                 _locationRow(
+                  context: context,
                   icon: Icons.trip_origin,
                   color: Colors.green,
                   label: 'Pickup location',
@@ -210,22 +238,25 @@ class RideAdminRideDetailsScreen extends StatelessWidget {
                   child: Container(
                     height: 24,
                     width: 2,
-                    color: Colors.grey.shade300,
+                    color: _borderColor(context),
                   ),
                 ),
                 _locationRow(
+                  context: context,
                   icon: Icons.location_on,
                   color: Colors.red,
                   label: 'Destination',
                   value: _value(ride['destination']),
                 ),
-                const Divider(height: 30),
+                Divider(height: 30, color: _borderColor(context)),
                 _informationRow(
+                  context: context,
                   icon: Icons.directions_car_outlined,
                   label: 'Service type',
                   value: _value(ride['service_type'], fallback: 'Standard'),
                 ),
                 _informationRow(
+                  context: context,
                   icon: Icons.calendar_today_outlined,
                   label: 'Requested on',
                   value: _formatDate(ride['created_at']),
@@ -237,10 +268,12 @@ class RideAdminRideDetailsScreen extends StatelessWidget {
 
             // Passenger information.
             _sectionCard(
+              context: context,
               title: 'Passenger Information',
               icon: Icons.person_outline,
               children: [
                 _informationRow(
+                  context: context,
                   icon: Icons.person_outline,
                   label: 'Passenger name',
                   value: _value(
@@ -249,6 +282,7 @@ class RideAdminRideDetailsScreen extends StatelessWidget {
                   ),
                 ),
                 _informationRow(
+                  context: context,
                   icon: Icons.phone_outlined,
                   label: 'Phone number',
                   value: _value(ride['passenger_phone']),
@@ -260,20 +294,24 @@ class RideAdminRideDetailsScreen extends StatelessWidget {
 
             // Additional ride information.
             _sectionCard(
+              context: context,
               title: 'Additional Information',
               icon: Icons.info_outline,
               children: [
                 _informationRow(
+                  context: context,
                   icon: Icons.confirmation_number_outlined,
                   label: 'Ride ID',
                   value: _value(ride['id'], fallback: 'Unknown'),
                 ),
                 _informationRow(
+                  context: context,
                   icon: Icons.info_outline,
                   label: 'Current status',
                   value: status,
                 ),
                 _informationRow(
+                  context: context,
                   icon: Icons.payments_outlined,
                   label: 'Estimated fare',
                   value: _formatFare(ride['fare']),
@@ -308,6 +346,7 @@ class RideAdminRideDetailsScreen extends StatelessWidget {
   }
 
   Widget _sectionCard({
+    required BuildContext context,
     required String title,
     required IconData icon,
     required List<Widget> children,
@@ -315,8 +354,9 @@ class RideAdminRideDetailsScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: _cardBackground(context),
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: _borderColor(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -328,9 +368,10 @@ class RideAdminRideDetailsScreen extends StatelessWidget {
               Expanded(
                 child: Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
+                    color: _primaryText(context),
                   ),
                 ),
               ),
@@ -344,6 +385,7 @@ class RideAdminRideDetailsScreen extends StatelessWidget {
   }
 
   Widget _locationRow({
+    required BuildContext context,
     required IconData icon,
     required Color color,
     required String label,
@@ -360,15 +402,16 @@ class RideAdminRideDetailsScreen extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: const TextStyle(color: Colors.grey, fontSize: 12),
+                style: TextStyle(color: _secondaryText(context), fontSize: 12),
               ),
               const SizedBox(height: 5),
               Text(
                 value,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                   height: 1.4,
+                  color: _primaryText(context),
                 ),
               ),
             ],
@@ -379,6 +422,7 @@ class RideAdminRideDetailsScreen extends StatelessWidget {
   }
 
   Widget _informationRow({
+    required BuildContext context,
     required IconData icon,
     required String label,
     required String value,
@@ -388,23 +432,28 @@ class RideAdminRideDetailsScreen extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 20, color: Colors.blueGrey),
+          Icon(
+            icon,
+            size: 20,
+            color: _isDark(context) ? const Color(0xFF9CAAC0) : Colors.blueGrey,
+          ),
           const SizedBox(width: 12),
           SizedBox(
             width: 115,
             child: Text(
               label,
-              style: const TextStyle(fontSize: 13, color: Colors.grey),
+              style: TextStyle(fontSize: 13, color: _secondaryText(context)),
             ),
           ),
           Expanded(
             child: Text(
               value,
               textAlign: TextAlign.end,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
                 height: 1.4,
+                color: _primaryText(context),
               ),
             ),
           ),

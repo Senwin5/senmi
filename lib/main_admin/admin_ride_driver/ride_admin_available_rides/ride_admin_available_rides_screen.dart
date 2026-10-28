@@ -28,6 +28,22 @@ class _RideAdminAvailableRidesScreenState
   static const Color primaryColor = Color(0xFF1565C0);
   static const Color backgroundColor = Color(0xFFF5F7FB);
 
+  // Theme-aware colors. These only affect the UI.
+  bool get _isDark => Theme.of(context).brightness == Brightness.dark;
+
+  Color get _screenBackground =>
+      _isDark ? const Color(0xFF101116) : backgroundColor;
+
+  Color get _cardBackground => _isDark ? const Color(0xFF1C1D24) : Colors.white;
+
+  Color get _primaryText => _isDark ? const Color(0xFFF1F1F5) : Colors.black87;
+
+  Color get _secondaryText =>
+      _isDark ? const Color(0xFFB0B5C3) : Colors.grey.shade700;
+
+  Color get _borderColor =>
+      _isDark ? const Color(0xFF343640) : Colors.grey.shade200;
+
   @override
   void initState() {
     super.initState();
@@ -461,14 +477,14 @@ class _RideAdminAvailableRidesScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: _screenBackground,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Available Rides',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold, color: _primaryText),
         ),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
+        backgroundColor: _cardBackground,
+        foregroundColor: _primaryText,
         elevation: 0,
         actions: [
           IconButton(
@@ -502,18 +518,19 @@ class _RideAdminAvailableRidesScreenState
             else ...[
               Row(
                 children: [
-                  const Expanded(
+                  Expanded(
                     child: Text(
                       'Ride Requests',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
+                        color: _primaryText,
                       ),
                     ),
                   ),
                   Text(
                     '${filteredRides.length} found',
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                    style: TextStyle(color: _secondaryText, fontSize: 13),
                   ),
                 ],
               ),
@@ -562,12 +579,14 @@ class _RideAdminAvailableRidesScreenState
   Widget _buildSearchField() {
     return TextField(
       controller: _searchController,
+      style: TextStyle(color: _primaryText),
       onChanged: (value) {
         setState(() => searchQuery = value);
       },
       decoration: InputDecoration(
         hintText: 'Search passenger, ride ID, pickup...',
-        prefixIcon: const Icon(Icons.search),
+        hintStyle: TextStyle(color: _secondaryText),
+        prefixIcon: Icon(Icons.search, color: _secondaryText),
         suffixIcon: searchQuery.isEmpty
             ? null
             : IconButton(
@@ -575,10 +594,10 @@ class _RideAdminAvailableRidesScreenState
                   _searchController.clear();
                   setState(() => searchQuery = '');
                 },
-                icon: const Icon(Icons.clear),
+                icon: Icon(Icons.clear, color: _secondaryText),
               ),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: _cardBackground,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide.none,
@@ -606,13 +625,11 @@ class _RideAdminAvailableRidesScreenState
               },
               selectedColor: primaryColor.withOpacity(0.14),
               labelStyle: TextStyle(
-                color: selected ? primaryColor : Colors.black87,
+                color: selected ? primaryColor : _primaryText,
                 fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
               ),
-              side: BorderSide(
-                color: selected ? primaryColor : Colors.grey.shade300,
-              ),
-              backgroundColor: Colors.white,
+              side: BorderSide(color: selected ? primaryColor : _borderColor),
+              backgroundColor: _cardBackground,
             ),
           );
         }).toList(),
@@ -627,7 +644,7 @@ class _RideAdminAvailableRidesScreenState
     return Card(
       margin: const EdgeInsets.only(bottom: 14),
       elevation: 1,
-      color: Colors.white,
+      color: _cardBackground,
       shadowColor: Colors.black12,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: InkWell(
@@ -660,15 +677,16 @@ class _RideAdminAvailableRidesScreenState
                       children: [
                         Text(
                           '${ride['id']}',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
+                            color: _primaryText,
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           ride['passenger'].toString(),
-                          style: TextStyle(color: Colors.grey.shade700),
+                          style: TextStyle(color: _secondaryText),
                         ),
                       ],
                     ),
@@ -702,11 +720,7 @@ class _RideAdminAvailableRidesScreenState
               ),
               Padding(
                 padding: const EdgeInsets.only(left: 11),
-                child: Container(
-                  height: 18,
-                  width: 1,
-                  color: Colors.grey.shade300,
-                ),
+                child: Container(height: 18, width: 1, color: _borderColor),
               ),
               _RouteRow(
                 icon: Icons.location_on,
@@ -715,7 +729,7 @@ class _RideAdminAvailableRidesScreenState
                 value: ride['destination'].toString(),
               ),
               const SizedBox(height: 16),
-              Divider(color: Colors.grey.shade200),
+              Divider(color: _borderColor),
               const SizedBox(height: 8),
               Row(
                 children: [
@@ -726,7 +740,7 @@ class _RideAdminAvailableRidesScreenState
                         Text(
                           'ESTIMATED FARE',
                           style: TextStyle(
-                            color: Colors.grey.shade600,
+                            color: _secondaryText,
                             fontSize: 10,
                             letterSpacing: 0.7,
                           ),
@@ -734,9 +748,10 @@ class _RideAdminAvailableRidesScreenState
                         const SizedBox(height: 4),
                         Text(
                           _formatFare(ride['fare']),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 19,
                             fontWeight: FontWeight.bold,
+                            color: _primaryText,
                           ),
                         ),
                       ],
@@ -749,16 +764,16 @@ class _RideAdminAvailableRidesScreenState
                         Text(
                           ride['service_type'].toString(),
                           textAlign: TextAlign.end,
-                          style: const TextStyle(fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: _primaryText,
+                          ),
                         ),
                         const SizedBox(height: 5),
                         Text(
                           _formatDate(ride['created_at']),
                           textAlign: TextAlign.end,
-                          style: TextStyle(
-                            color: Colors.grey.shade600,
-                            fontSize: 11,
-                          ),
+                          style: TextStyle(color: _secondaryText, fontSize: 11),
                         ),
                       ],
                     ),
@@ -795,15 +810,19 @@ class _RideAdminAvailableRidesScreenState
         children: [
           Icon(Icons.cloud_off_outlined, size: 54, color: Colors.red.shade300),
           const SizedBox(height: 14),
-          const Text(
+          Text(
             'Could not load rides',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: _primaryText,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
             loadError ?? 'An unexpected error occurred.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey.shade700),
+            style: TextStyle(color: _secondaryText),
           ),
           const SizedBox(height: 18),
           ElevatedButton.icon(
@@ -827,9 +846,13 @@ class _RideAdminAvailableRidesScreenState
             color: Colors.grey.shade400,
           ),
           const SizedBox(height: 14),
-          const Text(
+          Text(
             'No rides found',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: _primaryText,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
@@ -837,7 +860,7 @@ class _RideAdminAvailableRidesScreenState
                 ? 'Try a different search term.'
                 : 'There are currently no available or assigned rides.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey.shade600),
+            style: TextStyle(color: _secondaryText),
           ),
           const SizedBox(height: 16),
           TextButton.icon(
@@ -870,12 +893,24 @@ class _SummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final cardBackground = isDark ? const Color(0xFF1C1D24) : Colors.white;
+
+    final primaryText = isDark ? const Color(0xFFF1F1F5) : Colors.black87;
+
+    final secondaryText = isDark
+        ? const Color(0xFFB0B5C3)
+        : Colors.grey.shade600;
+
+    final borderColor = isDark ? const Color(0xFF343640) : Colors.grey.shade100;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardBackground,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade100),
+        border: Border.all(color: borderColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -884,14 +919,18 @@ class _SummaryCard extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             count.toString(),
-            style: const TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 23,
+              fontWeight: FontWeight.bold,
+              color: primaryText,
+            ),
           ),
           const SizedBox(height: 3),
           Text(
             title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+            style: TextStyle(fontSize: 11, color: secondaryText),
           ),
         ],
       ),
@@ -918,6 +957,14 @@ class _RouteRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final primaryText = isDark ? const Color(0xFFF1F1F5) : Colors.black87;
+
+    final secondaryText = isDark
+        ? const Color(0xFFB0B5C3)
+        : Colors.grey.shade600;
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -932,15 +979,16 @@ class _RouteRow extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 10,
                   letterSpacing: 0.7,
-                  color: Colors.grey.shade600,
+                  color: secondaryText,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 value,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
+                  color: primaryText,
                 ),
               ),
             ],
