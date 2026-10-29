@@ -188,7 +188,7 @@ class _RideAdminProfileScreenState extends State<RideAdminProfileScreen> {
 
   void openWhatsApp() {
     final message = Uri.encodeComponent(
-      'Hello Senmi Support, I need help with Ride Admin.',
+      'Hello Senmi Support.',
     );
 
     openExternalLink(Uri.parse('https://wa.me/2349117341739?text=$message'));

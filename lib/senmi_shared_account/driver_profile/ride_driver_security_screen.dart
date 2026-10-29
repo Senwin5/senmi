@@ -148,7 +148,7 @@ class _RideDriverSecurityScreenState
 
   Future<void> contactAdmin() async {
     final whatsappUrl = Uri.parse(
-      'https://wa.me/2349117341739?text=${Uri.encodeComponent('Hello Senmi Admin, I need help with my ride driver account.')}',
+      'https://wa.me/2349117341739?text=${Uri.encodeComponent('Hello Senmi.')}',
     );
 
     try {

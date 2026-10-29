@@ -1,6 +1,8 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+
 import 'package:senmi/main.dart';
 import 'package:senmi/main_admin/admin_package_app/screen/admin_notifications/notifications.dart';
 import 'package:senmi/main_admin/admin_package_app/screen/admin_prrofile/security_screen.dart';
@@ -19,10 +21,37 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
 
   Map<String, dynamic>? profile;
 
+  String appVersion = '';
+  String buildNumber = '';
+  bool isLoadingVersion = true;
+
   @override
   void initState() {
     super.initState();
     loadProfile();
+    loadAppVersion();
+  }
+
+  Future<void> loadAppVersion() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
+
+      if (!mounted) return;
+
+      setState(() {
+        appVersion = info.version;
+        buildNumber = info.buildNumber;
+        isLoadingVersion = false;    
+      });
+    } catch (_) {
+      if (!mounted) return;                
+
+      setState(() {
+        appVersion = '';
+        buildNumber = '';
+        isLoadingVersion = false;               
+      });
+    }
   }
 
   Future<void> loadProfile() async {
@@ -30,14 +59,22 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
       isLoading = true;
     });
 
-    final data = await ApiService.getUserProfile();
+    try {
+      final data = await ApiService.getUserProfile();
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    setState(() {
-      profile = data;
-      isLoading = false;
-    });
+      setState(() {
+        profile = data;
+        isLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   Future<void> logout() async {
@@ -72,7 +109,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: Colors.deepPurple.withOpacity(0.10),
-          child: const Icon(Icons.person, color: Colors.deepPurple),
+          child: Icon(icon, color: Colors.deepPurple),
         ),
         title: Text(
           title,
@@ -84,7 +121,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
         subtitle: Padding(
           padding: const EdgeInsets.only(top: 4),
           child: Text(
-            value.isEmpty ? "Not available" : value,
+            value.isEmpty ? 'Not available' : value,
             style: TextStyle(
               fontSize: 15,
               color: theme.colorScheme.onSurface.withOpacity(0.65),
@@ -152,14 +189,14 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
             borderRadius: BorderRadius.circular(20),
           ),
           title: Text(
-            "Logout",
+            'Logout',
             style: TextStyle(
               fontWeight: FontWeight.bold,
               color: theme.colorScheme.onSurface,
             ),
           ),
           content: Text(
-            "Are you sure you want to logout?",
+            'Are you sure you want to logout?',
             style: TextStyle(
               color: theme.colorScheme.onSurface.withOpacity(0.65),
             ),
@@ -170,7 +207,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                 Navigator.pop(context);
               },
               child: const Text(
-                "Cancel",
+                'Cancel',
                 style: TextStyle(color: Colors.deepPurple),
               ),
             ),
@@ -183,7 +220,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                 Navigator.pop(context);
                 await logout();
               },
-              child: const Text("Logout"),
+              child: const Text('Logout'),
             ),
           ],
         );
@@ -199,34 +236,26 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    final username = profile?['username'] ?? "Admin";
-    final email = profile?['email'] ?? "";
-    final role = profile?['role'] ?? "Administrator";
+    final username = profile?['username'] ?? 'Admin';
+    final email = profile?['email'] ?? '';
+    final role = profile?['role'] ?? 'Administrator';
     final profileImage = profile?['profile_picture'];
 
     return Scaffold(
-      // ========================================================
-      // BACKGROUND SUPPORTS DARK MODE
-      // ========================================================
       backgroundColor: theme.scaffoldBackgroundColor,
 
-      // ========================================================
-      // APP BAR SUPPORTS DARK MODE
-      // ========================================================
       appBar: AppBar(
         backgroundColor: theme.scaffoldBackgroundColor,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
-
         title: Text(
-          "Admin Profile",
+          'Admin Profile',
           style: TextStyle(
             color: theme.colorScheme.onSurface,
             fontWeight: FontWeight.bold,
           ),
         ),
-
         iconTheme: IconThemeData(color: theme.colorScheme.onSurface),
       ),
 
@@ -236,34 +265,27 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
             )
           : RefreshIndicator(
               color: Colors.deepPurple,
-
               backgroundColor: theme.cardColor,
-
-              onRefresh: loadProfile,
-
+              onRefresh: () async {
+                await Future.wait([loadProfile(), loadAppVersion()]);
+              },
               child: ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
-
                 padding: const EdgeInsets.all(16),
-
                 children: [
                   // ==================================================
-                  // PURPLE PROFILE HEADER
-                  //
-                  // THIS STAYS PURPLE IN LIGHT AND DARK MODE
+                  // PROFILE HEADER
                   // ==================================================
+
                   Container(
                     padding: const EdgeInsets.all(24),
-
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(24),
-
                       gradient: const LinearGradient(
                         colors: [Colors.deepPurple, Color(0xFF7E57C2)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
-
                       boxShadow: [
                         BoxShadow(
                           color: Colors.deepPurple.withOpacity(0.20),
@@ -272,23 +294,16 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                         ),
                       ],
                     ),
-
                     child: Column(
                       children: [
-                        // ==================================================
-                        // PROFILE IMAGE
-                        // ==================================================
                         CircleAvatar(
                           radius: 50,
-
                           backgroundColor: Colors.white,
-
                           backgroundImage:
                               profileImage != null &&
                                   profileImage.toString().isNotEmpty
                               ? NetworkImage(profileImage.toString())
                               : null,
-
                           child:
                               profileImage == null ||
                                   profileImage.toString().isEmpty
@@ -302,12 +317,8 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
 
                         const SizedBox(height: 16),
 
-                        // ==================================================
-                        // USERNAME
-                        // ==================================================
                         Text(
                           username.toString(),
-
                           style: const TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
@@ -317,12 +328,8 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
 
                         const SizedBox(height: 8),
 
-                        // ==================================================
-                        // EMAIL
-                        // ==================================================
                         Text(
                           email.toString(),
-
                           style: const TextStyle(
                             color: Colors.white70,
                             fontSize: 16,
@@ -331,23 +338,17 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
 
                         const SizedBox(height: 12),
 
-                        // ==================================================
-                        // ROLE
-                        // ==================================================
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 18,
                             vertical: 8,
                           ),
-
                           decoration: BoxDecoration(
                             color: Colors.white24,
                             borderRadius: BorderRadius.circular(30),
                           ),
-
                           child: Text(
                             role.toString().toUpperCase(),
-
                             style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -364,8 +365,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                   // ACCOUNT INFORMATION
                   // ==================================================
                   Text(
-                    "Account Information",
-
+                    'Account Information',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -377,19 +377,19 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
 
                   infoCard(
                     icon: Icons.person,
-                    title: "Username",
+                    title: 'Username',
                     value: username.toString(),
                   ),
 
                   infoCard(
                     icon: Icons.email,
-                    title: "Email",
+                    title: 'Email',
                     value: email.toString(),
                   ),
 
                   infoCard(
                     icon: Icons.admin_panel_settings,
-                    title: "Role",
+                    title: 'Role',
                     value: role.toString(),
                   ),
 
@@ -399,8 +399,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                   // SETTINGS
                   // ==================================================
                   Text(
-                    "Settings",
-
+                    'Settings',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -410,25 +409,19 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
 
                   const SizedBox(height: 14),
 
-                  // ==================================================
                   // DARK MODE
-                  // ==================================================
                   settingsTile(
                     icon: Icons.dark_mode,
-                    title: "Dark Mode",
-
+                    title: 'Dark Mode',
                     onTap: () {
                       isDarkMode.value = !isDarkMode.value;
                     },
                   ),
 
-                  // ==================================================
                   // NOTIFICATIONS
-                  // ==================================================
                   settingsTile(
                     icon: Icons.notifications,
-                    title: "Notifications",
-
+                    title: 'Notifications',
                     onTap: () {
                       Navigator.push(
                         context,
@@ -439,13 +432,10 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                     },
                   ),
 
-                  // ==================================================
                   // SECURITY
-                  // ==================================================
                   settingsTile(
                     icon: Icons.security,
-                    title: "Security",
-
+                    title: 'Security',
                     onTap: () {
                       Navigator.push(
                         context,
@@ -459,11 +449,26 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                   const SizedBox(height: 20),
 
                   // ==================================================
+                  // APP VERSION
+                  // ==================================================
+                  infoCard(
+                    icon: Icons.info_outline,
+                    title: 'App Version',
+                    value: isLoadingVersion
+                        ? 'Loading version...'
+                        : appVersion.isNotEmpty
+                        ? '$appVersion (Build $buildNumber)'
+                        : 'Version unavailable',
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  // ==================================================
                   // LOGOUT
                   // ==================================================
                   settingsTile(
                     icon: Icons.logout,
-                    title: "Logout",
+                    title: 'Logout',
                     color: Colors.red,
                     onTap: showLogoutDialog,
                   ),
