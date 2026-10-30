@@ -1174,7 +1174,7 @@ class RideMapPicker extends StatelessWidget {
 
                         Text(
                           isPickup
-                              ? "Move the pin to where you want to be picked up."
+                              ? "Move the pin to picked up."
                               : "Move the pin to where you want to go.",
                           style: TextStyle(
                             fontSize: 11.5,

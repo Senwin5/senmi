@@ -493,15 +493,21 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: Theme.of(context).brightness == Brightness.dark
+            ? const Color(0xFF121212)
+            : Colors.white,
+        foregroundColor: Theme.of(context).brightness == Brightness.dark
+            ? Colors.white
+            : Colors.black,
         elevation: 0,
-        surfaceTintColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
         centerTitle: false,
-        title: const Text(
+        title: Text(
           "Waypoint",
           style: TextStyle(
-            color: Colors.black,
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.white
+                : Colors.black,
             fontSize: 18,
             fontWeight: FontWeight.w600,
           ),
@@ -570,10 +576,9 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                     isLatLngRequired: false,
 
                     boxDecoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).cardColor,
                       borderRadius: BorderRadius.circular(12),
                     ),
-
                     getPlaceDetailWithLatLng: (prediction) {},
 
                     itemClick: (Prediction prediction) async {
@@ -594,18 +599,22 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                         ) {
                           return Container(
                             padding: const EdgeInsets.all(10),
-                            color: Colors.white,
+                            color: Theme.of(context).cardColor,
                             child: Row(
                               children: [
-                                const Icon(
+                                Icon(
                                   Icons.location_on,
-                                  color: Colors.black87,
+                                  color: Theme.of(context).iconTheme.color,
                                 ),
                                 const SizedBox(width: 10),
                                 Expanded(
                                   child: Text(
                                     prediction.description ?? "",
-                                    style: const TextStyle(color: Colors.black),
+                                    style: TextStyle(
+                                      color: Theme.of(
+                                        context,
+                                      ).textTheme.bodyLarge?.color,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -620,10 +629,14 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
 
                     isCrossBtnShown: true,
 
-                    inputDecoration: const InputDecoration(
+                    inputDecoration: InputDecoration(
                       hintText: "Search location...",
+                      hintStyle: TextStyle(color: Theme.of(context).hintColor),
                       border: InputBorder.none,
-                      prefixIcon: Icon(Icons.search, color: Colors.black87),
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: Theme.of(context).iconTheme.color,
+                      ),
                     ),
 
                     focusNode: searchFocusNode,
@@ -651,7 +664,10 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                       padding: EdgeInsets.zero,
                       itemCount: recentLocations.length,
                       separatorBuilder: (context, index) {
-                        return const Divider(height: 1);
+                        return Divider(
+                          height: 1,
+                          color: Theme.of(context).dividerColor,
+                        );
                       },
                       itemBuilder: (context, index) {
                         final recent = recentLocations[index];
@@ -661,14 +677,19 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
 
                         return ListTile(
                           dense: true,
-                          leading: const Icon(
+                          leading: Icon(
                             Icons.history,
-                            color: Colors.grey,
+                            color: Theme.of(context).iconTheme.color,
                           ),
                           title: Text(
                             recentAddress,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: Theme.of(
+                                context,
+                              ).textTheme.bodyLarge?.color,
+                            ),
                           ),
                           onTap: () {
                             _selectRecentLocation(recent);
@@ -697,13 +718,17 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
             child: Container(
               padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(18),
-                boxShadow: const [
+                boxShadow: [
                   BoxShadow(
-                    color: Colors.black12,
+                    color: Colors.black.withValues(
+                      alpha: Theme.of(context).brightness == Brightness.dark
+                          ? 0.30
+                          : 0.08,
+                    ),
                     blurRadius: 20,
-                    offset: Offset(0, -4),
+                    offset: const Offset(0, -4),
                   ),
                 ],
               ),

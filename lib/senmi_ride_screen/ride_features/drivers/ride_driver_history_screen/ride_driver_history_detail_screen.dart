@@ -351,6 +351,19 @@ class _RideDriverHistoryDetailScreenState
       fallback: "Destination unavailable",
     );
 
+    final passengerName = _value(
+      ride["passenger_name"] ?? ride["rider_name"] ?? ride["customer_name"],
+      fallback: "Passenger name unavailable",
+    );
+
+    final passengerPhone = _value(
+      ride["passenger_phone"] ??
+          ride["passenger_phone_number"] ??
+          ride["rider_phone"] ??
+          ride["customer_phone"],
+      fallback: "Phone number unavailable",
+    );
+
     final distance = _value(ride["estimated_distance_km"], fallback: "0");
 
     final duration = _value(ride["estimated_duration_minutes"], fallback: "0");
@@ -552,6 +565,24 @@ class _RideDriverHistoryDetailScreenState
                 value: destination,
                 isDark: isDark,
               ),
+
+              _detailRow(
+                icon: Icons.person_outline,
+                title: "Passenger Name",
+                value: passengerName,
+                isDark: isDark,
+              ),
+
+              const Divider(),
+
+              _detailRow(
+                icon: Icons.phone_outlined,
+                title: "Passenger Phone",
+                value: passengerPhone,
+                isDark: isDark,
+              ),
+
+              const Divider(),
 
               const Divider(),
 
