@@ -13,8 +13,13 @@ const Color senmiRideLightPurple = Color(0xFF7C3AED);
 
 class RideDriverTrackingScreen extends StatefulWidget {
   final Map<String, dynamic> ride;
+  final VoidCallback? onRideCompleted;
 
-  const RideDriverTrackingScreen({super.key, required this.ride});
+  const RideDriverTrackingScreen({
+    super.key,
+    required this.ride,
+    this.onRideCompleted,
+  });
 
   @override
   State<RideDriverTrackingScreen> createState() =>
@@ -56,6 +61,7 @@ class _RideDriverTrackingScreenState extends State<RideDriverTrackingScreen> {
     );
   }
 
+  late final VoidCallback? onRideCompleted;
   @override
   void dispose() {
     _trackingTimer?.cancel();
@@ -598,64 +604,60 @@ class _RideDriverTrackingScreenState extends State<RideDriverTrackingScreen> {
       return;
     }
 
-    if (currentStatus == "accepted" && newStatus != "arrived") {
-      return;
-    }
-
-    if (currentStatus == "arrived" && newStatus != "started") {
-      return;
-    }
-
-    if (currentStatus == "started" && newStatus != "completed") {
-      return;
-    }
+    if (currentStatus == "accepted" && newStatus != "arrived") return;
+    if (currentStatus == "arrived" && newStatus != "started") return;
+    if (currentStatus == "started" && newStatus != "completed") return;
 
     setState(() {
       statusUpdating = true;
     });
 
     try {
-      await RideService.updateRideStatus(rideId: _rideId(), status: newStatus);
+      final rideId = _rideId();
+
+      if (rideId.isEmpty) {
+        throw Exception("Ride ID is missing.");
+      }
+
+      await RideService.updateRideStatus(rideId: rideId, status: newStatus);
 
       if (!mounted) return;
-
-      // COMPLETED → immediately close tracking screen
       if (newStatus == "completed") {
         _trackingTimer?.cancel();
+
         await _positionStream?.cancel();
         _positionStream = null;
 
         if (!mounted) return;
 
-        Navigator.pop(context, true);
+        if (widget.onRideCompleted != null) {
+          widget.onRideCompleted!();
+        } else {
+          Navigator.pop(context, true);
+        }
+
         return;
       }
 
       _showMessage(_statusMessage(newStatus));
 
       await _loadTracking();
-    } catch (e) {
+    } catch (e, stackTrace) {
       debugPrint("UPDATE RIDE STATUS ERROR: $e");
+      debugPrintStack(stackTrace: stackTrace);
 
       if (!mounted) return;
 
-      if (e.toString().toLowerCase().contains("completed")) {
-        _trackingTimer?.cancel();
-        await _positionStream?.cancel();
-        _positionStream = null;
-
-        Navigator.pop(context, true);
-        return;
-      }
-
-      _showMessage("Unable to update ride status.", error: true);
+      _showMessage(
+        "Unable to update ride status: ${e.toString()}",
+        error: true,
+      );
     } finally {
-      // ignore: control_flow_in_finally
-      if (!mounted) return;
-
-      setState(() {
-        statusUpdating = false;
-      });
+      if (mounted) {
+        setState(() {
+          statusUpdating = false;
+        });
+      }
     }
   }
 

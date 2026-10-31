@@ -11,7 +11,8 @@ const Color senmiRidePurple = Color(0xFF581C87);
 const Color senmiRideLightPurple = Color(0xFF7C3AED);
 
 class RideDriverRidesScreen extends StatefulWidget {
-  const RideDriverRidesScreen({super.key});
+  final VoidCallback? onRideCompleted;
+  const RideDriverRidesScreen({super.key, this.onRideCompleted});
 
   @override
   State<RideDriverRidesScreen> createState() => _RideDriverRidesScreenState();
@@ -199,7 +200,7 @@ class _RideDriverRidesScreenState extends State<RideDriverRidesScreen>
   Future<void> _openTracking(Map<String, dynamic> ride) async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => RideDriverTrackingScreen(ride: ride)),
+      MaterialPageRoute(builder: (_) => RideDriverTrackingScreen(ride: ride, onRideCompleted: () {  },)),
     );
 
     // Tracking screen returns true after the ride is completed.

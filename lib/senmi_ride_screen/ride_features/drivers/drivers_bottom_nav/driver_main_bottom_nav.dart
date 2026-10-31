@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:senmi/main.dart';
 import 'package:senmi/services/driver_api_service.dart';
@@ -19,10 +20,20 @@ class DriverMainBottomNav extends StatefulWidget {
 class _DriverMainBottomNavState extends State<DriverMainBottomNav> {
   int _currentIndex = 0;
 
+  void _goToHomeAfterRideCompleted() {
+    if (!mounted) return;
+
+    setState(() {
+      _currentIndex = 0;
+    });
+  }
+
   late final List<Widget> _screens = [
     const RideDriverHome(),
     const RideDriverRidesScreen(),
-    const DriverTrackingTab(),
+    DriverTrackingTab(
+      onRideCompleted: _goToHomeAfterRideCompleted,
+    ),
     const RideDriverCommissionScreen(),
     RideDriverSettingsScreen(darkModeNotifier: isDarkMode),
   ];
@@ -36,13 +47,16 @@ class _DriverMainBottomNavState extends State<DriverMainBottomNav> {
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
 
-      body: IndexedStack(index: _currentIndex, children: _screens),
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _screens,
+      ),
 
       bottomNavigationBar: NavigationBar(
-        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        backgroundColor:
+            isDark ? const Color(0xFF1E1E1E) : Colors.white,
         surfaceTintColor: Colors.transparent,
         elevation: 3,
-
         selectedIndex: _currentIndex,
 
         onDestinationSelected: (index) {
@@ -56,10 +70,13 @@ class _DriverMainBottomNavState extends State<DriverMainBottomNav> {
             // ignore: deprecated_member_use
             : senmiRidePurple.withOpacity(0.12),
 
-        labelTextStyle: WidgetStateProperty.resolveWith<TextStyle?>((states) {
+        labelTextStyle:
+            WidgetStateProperty.resolveWith<TextStyle?>((states) {
           if (states.contains(WidgetState.selected)) {
             return TextStyle(
-              color: isDark ? colorScheme.onSurface : senmiRidePurple,
+              color: isDark
+                  ? colorScheme.onSurface
+                  : senmiRidePurple,
               fontWeight: FontWeight.w600,
             );
           }
@@ -76,25 +93,21 @@ class _DriverMainBottomNavState extends State<DriverMainBottomNav> {
             selectedIcon: Icon(Icons.home_rounded),
             label: "Home",
           ),
-
           NavigationDestination(
             icon: Icon(Icons.directions_car_outlined),
             selectedIcon: Icon(Icons.directions_car_rounded),
             label: "Rides",
           ),
-
           NavigationDestination(
             icon: Icon(Icons.map_outlined),
             selectedIcon: Icon(Icons.map_rounded),
             label: "Tracking",
           ),
-
           NavigationDestination(
             icon: Icon(Icons.account_balance_wallet_outlined),
             selectedIcon: Icon(Icons.account_balance_wallet_rounded),
             label: "Dues",
           ),
-
           NavigationDestination(
             icon: Icon(Icons.person_outline_rounded),
             selectedIcon: Icon(Icons.person_rounded),
@@ -111,10 +124,16 @@ class _DriverMainBottomNavState extends State<DriverMainBottomNav> {
 // ============================================================
 
 class DriverTrackingTab extends StatefulWidget {
-  const DriverTrackingTab({super.key});
+  final VoidCallback? onRideCompleted;
+
+  const DriverTrackingTab({
+    super.key,
+    this.onRideCompleted,
+  });
 
   @override
-  State<DriverTrackingTab> createState() => _DriverTrackingTabState();
+  State<DriverTrackingTab> createState() =>
+      _DriverTrackingTabState();
 }
 
 class _DriverTrackingTabState extends State<DriverTrackingTab> {
@@ -164,14 +183,14 @@ class _DriverTrackingTabState extends State<DriverTrackingTab> {
       return Scaffold(
         backgroundColor: theme.scaffoldBackgroundColor,
         body: Center(
-          child: CircularProgressIndicator(color: colorScheme.primary),
+          child: CircularProgressIndicator(
+            color: colorScheme.primary,
+          ),
         ),
       );
     }
 
-    // ========================================================
     // NO ACTIVE RIDE
-    // ========================================================
 
     if (activeRide == null) {
       return Scaffold(
@@ -186,10 +205,8 @@ class _DriverTrackingTabState extends State<DriverTrackingTab> {
 
         body: RefreshIndicator(
           onRefresh: _loadActiveRide,
-
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
-
             children: [
               const SizedBox(height: 180),
 
@@ -245,10 +262,19 @@ class _DriverTrackingTabState extends State<DriverTrackingTab> {
       );
     }
 
-    // ========================================================
     // ACTIVE RIDE
-    // ========================================================
 
-    return RideDriverTrackingScreen(ride: activeRide!);
+    return RideDriverTrackingScreen(
+      ride: activeRide!,
+      onRideCompleted: () {
+        if (!mounted) return;
+
+        setState(() {
+          activeRide = null;
+        });
+
+        widget.onRideCompleted?.call();
+      },
+    );
   }
 }

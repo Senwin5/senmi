@@ -655,9 +655,9 @@ class _RideDriverRideDetailsScreenState
                 child: OutlinedButton.icon(
                   onPressed: accepting ? null : _callPassenger,
                   icon: const Icon(Icons.phone_outlined),
-                  label: const Text("Call Passenger"),
+                  label: const Text("Call Passenger Before"),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white,
+                    foregroundColor: Colors.green,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     side: BorderSide(color: senmiRidePurple.withOpacity(0.30)),
                     shape: RoundedRectangleBorder(
@@ -667,7 +667,7 @@ class _RideDriverRideDetailsScreenState
                 ),
               ),
 
-              const SizedBox(height: 10),
+              const SizedBox(height: 15),
 
               // ==================================================
               // ACCEPT RIDE

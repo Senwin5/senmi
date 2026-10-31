@@ -229,6 +229,29 @@ class _RideDriverHomeState extends State<RideDriverHome> {
   }
 
   // ============================================================
+// OPEN TRACKING SCREEN AND REFRESH AFTER COMPLETION
+// ============================================================
+
+Future<void> _openTrackingScreen() async {
+  if (currentRide == null) return;
+
+  final result = await Navigator.push<bool>(
+    context,
+    MaterialPageRoute(
+      builder: (_) => RideDriverTrackingScreen(
+        ride: Map<String, dynamic>.from(currentRide!), onRideCompleted: () {  },
+      ),
+    ),
+  );
+
+  if (!mounted) return;
+
+  if (result == true) {
+    await _refreshDashboard();
+  }
+}
+
+  // ============================================================
   // TOGGLE ONLINE
   // ============================================================
 
@@ -542,14 +565,7 @@ class _RideDriverHomeState extends State<RideDriverHome> {
       color: Colors.transparent,
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => RideDriverTrackingScreen(ride: currentRide!),
-            ),
-          );
-        },
+        onTap: _openTrackingScreen,
         child: Container(
           width: double.infinity,
           padding: const EdgeInsets.all(18),
@@ -646,15 +662,7 @@ class _RideDriverHomeState extends State<RideDriverHome> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            RideDriverTrackingScreen(ride: currentRide!),
-                      ),
-                    );
-                  },
+                  onPressed: _openTrackingScreen,
                   icon: const Icon(Icons.map_outlined),
                   label: const Text("Track Ride"),
                   style: ElevatedButton.styleFrom(
