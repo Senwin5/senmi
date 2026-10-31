@@ -669,9 +669,9 @@ class _RideDriverRideDetailsScreenState
 
               const SizedBox(height: 15),
 
-              // ==================================================
+              // ====================================
               // ACCEPT RIDE
-              // ==================================================
+              // ====================================
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(

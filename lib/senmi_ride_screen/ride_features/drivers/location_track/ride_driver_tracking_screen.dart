@@ -35,6 +35,7 @@ class _RideDriverTrackingScreenState extends State<RideDriverTrackingScreen> {
   bool refreshing = false;
   bool locationSharing = false;
   bool statusUpdating = false;
+  bool rideCompleted = false;
 
   Map<String, dynamic>? activeRide;
 
@@ -55,13 +56,13 @@ class _RideDriverTrackingScreenState extends State<RideDriverTrackingScreen> {
 
     _startLocationTracking();
 
-    _trackingTimer = Timer.periodic(
-      const Duration(seconds: 5),
-      (_) => _loadTracking(silent: true),
-    );
+    _trackingTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+      if (!rideCompleted && mounted) {
+        _loadTracking(silent: true);
+      }
+    });
   }
 
-  late final VoidCallback? onRideCompleted;
   @override
   void dispose() {
     _trackingTimer?.cancel();
@@ -595,7 +596,7 @@ class _RideDriverTrackingScreenState extends State<RideDriverTrackingScreen> {
   // ============================================================
 
   Future<void> _changeRideStatus(String newStatus) async {
-    if (statusUpdating) return;
+    if (statusUpdating || rideCompleted) return;
 
     final currentStatus = _status();
 
@@ -623,7 +624,10 @@ class _RideDriverTrackingScreenState extends State<RideDriverTrackingScreen> {
 
       if (!mounted) return;
       if (newStatus == "completed") {
+        rideCompleted = true;
+
         _trackingTimer?.cancel();
+        _trackingTimer = null;
 
         await _positionStream?.cancel();
         _positionStream = null;

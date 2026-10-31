@@ -17,6 +17,119 @@ class _RideDriverHistoryScreenState extends State<RideDriverHistoryScreen> {
   bool loading = true;
   String? errorMessage;
 
+  int selectedPeriod = 0;
+
+  final List<String> periods = ['Today', 'Yesterday', 'This Week', 'All Time'];
+
+  // ============================================================
+  // RIDE DATE
+  // ============================================================
+
+  DateTime? _rideDate(Map<String, dynamic> ride) {
+    final date =
+        ride["completed_at"] ?? ride["cancelled_at"] ?? ride["created_at"];
+
+    if (date == null) return null;
+
+    return DateTime.tryParse(date.toString())?.toLocal();
+  }
+
+  // ============================================================
+  // FILTER HISTORY BY PERIOD
+  // ============================================================
+
+  List<dynamic> _filteredRides() {
+    if (selectedPeriod == 3) {
+      return rides;
+    }
+
+    final now = DateTime.now();
+
+    final todayStart = DateTime(now.year, now.month, now.day);
+    final yesterdayStart = todayStart.subtract(const Duration(days: 1));
+
+    final weekStart = todayStart.subtract(Duration(days: now.weekday - 1));
+
+    return rides.where((item) {
+      if (item is! Map) return false;
+
+      final ride = Map<String, dynamic>.from(item);
+      final date = _rideDate(ride);
+
+      if (date == null) return false;
+
+      if (selectedPeriod == 0) {
+        return !date.isBefore(todayStart);
+      }
+
+      if (selectedPeriod == 1) {
+        return !date.isBefore(yesterdayStart) && date.isBefore(todayStart);
+      }
+
+      if (selectedPeriod == 2) {
+        return !date.isBefore(weekStart);
+      }
+
+      return true;
+    }).toList();
+  }
+
+  // ============================================================
+  // PERIOD SELECTOR
+  // ============================================================
+
+  Widget _buildPeriodSelector(bool isDark) {
+    return SizedBox(
+      height: 45,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: periods.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final selected = selectedPeriod == index;
+
+          return GestureDetector(
+            onTap: () {
+              setState(() {
+                selectedPeriod = index;
+              });
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 18),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: selected
+                    ? senmiRidePurple
+                    : isDark
+                    ? const Color(0xFF242424)
+                    : Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: selected
+                      ? senmiRidePurple
+                      : isDark
+                      ? Colors.grey.shade700
+                      : Colors.grey.shade300,
+                ),
+              ),
+              child: Text(
+                periods[index],
+                style: TextStyle(
+                  color: selected
+                      ? Colors.white
+                      : isDark
+                      ? Colors.white
+                      : Colors.black87,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -470,29 +583,63 @@ class _RideDriverHistoryScreenState extends State<RideDriverHistoryScreen> {
           : RefreshIndicator(
               onRefresh: loadHistory,
               color: senmiRidePurple,
-              child: ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: rides.length,
-                itemBuilder: (context, index) {
-                  final item = rides[index];
+              child: Builder(
+                builder: (context) {
+                  final filteredRides = _filteredRides();
 
-                  if (item is! Map) {
-                    return const SizedBox.shrink();
-                  }
+                  return ListView(
+                    padding: const EdgeInsets.all(16),
+                    children: [
+                      // PERIOD FILTER
+                      _buildPeriodSelector(isDark),
 
-                  final ride = Map<String, dynamic>.from(item);
+                      const SizedBox(height: 20),
 
-                  return GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              RideDriverHistoryDetailScreen(ride: ride),
-                        ),
-                      );
-                    },
-                    child: buildRideCard(ride, isDark),
+                      // NO RIDES FOR SELECTED PERIOD
+                      if (filteredRides.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 70),
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.history_outlined,
+                                size: 60,
+                                color: isDark ? Colors.white38 : Colors.black26,
+                              ),
+                              const SizedBox(height: 14),
+                              Text(
+                                'No rides for ${periods[selectedPeriod]}',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark ? Colors.white : Colors.black87,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      else
+                        ...filteredRides.map((item) {
+                          if (item is! Map) {
+                            return const SizedBox.shrink();
+                          }
+
+                          final ride = Map<String, dynamic>.from(item);
+
+                          return GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      RideDriverHistoryDetailScreen(ride: ride),
+                                ),
+                              );
+                            },
+                            child: buildRideCard(ride, isDark),
+                          );
+                        }),
+                    ],
                   );
                 },
               ),

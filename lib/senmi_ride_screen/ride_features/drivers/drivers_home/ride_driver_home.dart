@@ -21,10 +21,10 @@ class RideDriverHome extends StatefulWidget {
   const RideDriverHome({super.key});
 
   @override
-  State<RideDriverHome> createState() => _RideDriverHomeState();
+  State<RideDriverHome> createState() => RideDriverHomeState();
 }
 
-class _RideDriverHomeState extends State<RideDriverHome> {
+class RideDriverHomeState extends State<RideDriverHome> {
   bool isOnline = false;
   bool isUpdatingOnline = false;
 
@@ -228,28 +228,31 @@ class _RideDriverHomeState extends State<RideDriverHome> {
     await Future.wait([_loadCurrentRide(), _loadDriverStats()]);
   }
 
-  // ============================================================
-// OPEN TRACKING SCREEN AND REFRESH AFTER COMPLETION
-// ============================================================
-
-Future<void> _openTrackingScreen() async {
-  if (currentRide == null) return;
-
-  final result = await Navigator.push<bool>(
-    context,
-    MaterialPageRoute(
-      builder: (_) => RideDriverTrackingScreen(
-        ride: Map<String, dynamic>.from(currentRide!), onRideCompleted: () {  },
-      ),
-    ),
-  );
-
-  if (!mounted) return;
-
-  if (result == true) {
+  Future<void> refreshDashboard() async {
     await _refreshDashboard();
   }
-}
+
+  // ============================================================
+  // OPEN TRACKING SCREEN AND REFRESH AFTER COMPLETION
+  // ============================================================
+
+  Future<void> _openTrackingScreen() async {
+    if (currentRide == null) return;
+
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => RideDriverTrackingScreen(
+          ride: Map<String, dynamic>.from(currentRide!),
+        ),
+      ),
+    );
+    if (!mounted) return;
+
+    if (result == true) {
+      await _refreshDashboard();
+    }
+  }
 
   // ============================================================
   // TOGGLE ONLINE
