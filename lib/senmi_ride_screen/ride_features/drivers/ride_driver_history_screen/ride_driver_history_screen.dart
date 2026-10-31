@@ -46,6 +46,7 @@ class _RideDriverHistoryScreenState extends State<RideDriverHistoryScreen> {
     final now = DateTime.now();
 
     final todayStart = DateTime(now.year, now.month, now.day);
+    final tomorrowStart = todayStart.add(const Duration(days: 1));
     final yesterdayStart = todayStart.subtract(const Duration(days: 1));
 
     final weekStart = todayStart.subtract(Duration(days: now.weekday - 1));
@@ -59,7 +60,7 @@ class _RideDriverHistoryScreenState extends State<RideDriverHistoryScreen> {
       if (date == null) return false;
 
       if (selectedPeriod == 0) {
-        return !date.isBefore(todayStart);
+        return !date.isBefore(todayStart) && date.isBefore(tomorrowStart);
       }
 
       if (selectedPeriod == 1) {
@@ -126,6 +127,38 @@ class _RideDriverHistoryScreenState extends State<RideDriverHistoryScreen> {
             ),
           );
         },
+      ),
+    );
+  }
+
+  // ============================================================
+  // RIDE HISTORY COUNT
+  // ============================================================
+
+  Widget _buildRideCount(int count, bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      child: Row(
+        children: [
+          Icon(Icons.history_rounded, color: senmiRidePurple, size: 20),
+          const SizedBox(width: 8),
+          Text(
+            "$count ${count == 1 ? 'Ride' : 'Rides'}",
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Colors.black87,
+            ),
+          ),
+          const Spacer(),
+          Text(
+            periods[selectedPeriod],
+            style: TextStyle(
+              fontSize: 12,
+              color: isDark ? Colors.white60 : Colors.black54,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -593,7 +626,8 @@ class _RideDriverHistoryScreenState extends State<RideDriverHistoryScreen> {
                       // PERIOD FILTER
                       _buildPeriodSelector(isDark),
 
-                      const SizedBox(height: 20),
+                      // RIDE COUNT
+                      _buildRideCount(filteredRides.length, isDark),
 
                       // NO RIDES FOR SELECTED PERIOD
                       if (filteredRides.isEmpty)
