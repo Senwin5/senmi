@@ -933,9 +933,9 @@ class _RideDriverRidesScreenState extends State<RideDriverRidesScreen>
 
                   const SizedBox(height: 24),
 
-                  // ==================================================
+                  // ==================================   
                   // AVAILABLE RIDES
-                  // ==================================================
+                  // ================================== 
                   Text(
                     "Available Rides",
                     style: TextStyle(
