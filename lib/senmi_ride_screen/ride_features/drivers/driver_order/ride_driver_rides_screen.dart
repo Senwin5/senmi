@@ -200,13 +200,13 @@ class _RideDriverRidesScreenState extends State<RideDriverRidesScreen>
   Future<void> _openTracking(Map<String, dynamic> ride) async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => RideDriverTrackingScreen(ride: ride, onRideCompleted: () {  },)),
+      MaterialPageRoute(builder: (_) => RideDriverTrackingScreen(ride: ride)),
     );
 
-    // Tracking screen returns true after the ride is completed.
-    // Reload active rides so the completed ride disappears.
+    // Refresh rides after successful completion.
     if (result == true && mounted) {
       await _loadRides(silent: true);
+      widget.onRideCompleted?.call();
     }
   }
 
@@ -796,6 +796,28 @@ class _RideDriverRidesScreenState extends State<RideDriverRidesScreen>
   }
 
   // ============================================================
+  // RIDE COUNT BADGE
+  // ============================================================
+
+  Widget _rideCountBadge(int count) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: senmiRidePurple.withOpacity(0.10),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        count.toString(),
+        style: const TextStyle(
+          color: senmiRidePurple,
+          fontSize: 13,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+
+  // ============================================================
   // EMPTY STATE
   // ============================================================
 
@@ -910,13 +932,19 @@ class _RideDriverRidesScreenState extends State<RideDriverRidesScreen>
                   // ==================================================
                   // ACTIVE RIDES
                   // ==================================================
-                  Text(
-                    "Active Ride",
-                    style: TextStyle(
-                      fontSize: 19,
-                      fontWeight: FontWeight.w800,
-                      color: isDark ? Colors.white : Colors.black87,
-                    ),
+                  Row(
+                    children: [
+                      Text(
+                        "Active Rides",
+                        style: TextStyle(
+                          fontSize: 19,
+                          fontWeight: FontWeight.w800,
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      _rideCountBadge(activeRides.length),
+                    ],
                   ),
 
                   const SizedBox(height: 10),
@@ -933,16 +961,22 @@ class _RideDriverRidesScreenState extends State<RideDriverRidesScreen>
 
                   const SizedBox(height: 24),
 
-                  // ==================================   
+                  // ==================================
                   // AVAILABLE RIDES
-                  // ================================== 
-                  Text(
-                    "Available Rides",
-                    style: TextStyle(
-                      fontSize: 19,
-                      fontWeight: FontWeight.w800,
-                      color: isDark ? Colors.white : Colors.black87,
-                    ),
+                  // ==================================
+                  Row(
+                    children: [
+                      Text(
+                        "Available Rides",
+                        style: TextStyle(
+                          fontSize: 19,
+                          fontWeight: FontWeight.w800,
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      _rideCountBadge(availableRides.length),
+                    ],
                   ),
 
                   const SizedBox(height: 10),
