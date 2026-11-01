@@ -2,12 +2,13 @@
 
 import 'dart:async';
 import 'dart:convert';
-
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:geocoding/geocoding.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:senmi/config/google_maps_api_key.dart';
 import 'package:senmi/senmi_shared_account/driver_rate/rate_driver_screen.dart';
 import 'package:senmi/services/driver_api_service.dart';
 import 'package:senmi/senmi_shared_account/map/map_picker_screen.dart';
@@ -28,8 +29,7 @@ class RideTrackingScreen extends StatefulWidget {
 }
 
 class _RideTrackingScreenState extends State<RideTrackingScreen> {
-  static const String googleMapsApiKey =
-      "AIzaSyANfJatY_6y8gzmUrvV2_n2aR9ms7Xe_ZY";
+  final polylinePoints = PolylinePoints(apiKey: googleMapsApiKey);
 
   String status = "pending";
 
@@ -58,11 +58,15 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
 
   Set<Marker> markers = {};
   Set<Polyline> polylines = {};
-
   List<LatLng> routePoints = [];
+
+  LatLng? _lastRouteOrigin;
+  LatLng? _lastRouteDestination;
+  bool _routeRequestInProgress = false;
 
   WebSocketChannel? channel;
   StreamSubscription? wsSubscription;
+  BitmapDescriptor? driverCarIcon;
 
   Timer? refreshTimer;
 
@@ -93,13 +97,13 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
   void initState() {
     super.initState();
 
+    _loadDriverCarIcon();
     _loadRide();
 
-    refreshTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+    refreshTimer = Timer.periodic(const Duration(seconds: 2), (_) {
       _refreshRide();
     });
   }
-
   // ============================================================
   // SHARE LIVE RIDE
   // ============================================================
@@ -172,6 +176,51 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
     }
   }
 
+  Future<void> _loadDriverCarIcon() async {
+    const size = 100.0;
+
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+
+    final painter = TextPainter(
+      textDirection: TextDirection.ltr,
+      text: TextSpan(
+        text: String.fromCharCode(Icons.directions_car_rounded.codePoint),
+        style: const TextStyle(
+          fontSize: 85,
+          fontFamily: 'MaterialIcons',
+
+          color: Colors.green,
+        ),
+      ),
+    );
+
+    painter.layout();
+
+    painter.paint(
+      canvas,
+      Offset((size - painter.width) / 2, (size - painter.height) / 2),
+    );
+
+    final picture = recorder.endRecording();
+    final image = await picture.toImage(100, 100);
+    final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+
+    if (byteData == null || !mounted) return;
+
+    setState(() {
+      driverCarIcon = BitmapDescriptor.bytes(
+        byteData.buffer.asUint8List(),
+        width: 42,
+        height: 42,
+      );
+    });
+
+    image.dispose();
+    picture.dispose();
+
+    _updateMarkers();
+  }
   // ============================================================
   // LOAD RIDE
   // ============================================================
@@ -241,9 +290,12 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
       );
 
       if (pickupChanged || destinationChanged) {
-        await _getRoute();
         await _loadAddresses(data);
       }
+
+      await _getRoute(
+        force: oldStatus != status || pickupChanged || destinationChanged,
+      );
 
       if (mounted) {
         setState(() {});
@@ -641,15 +693,54 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
   // ROUTE
   // ============================================================
 
-  Future<void> _getRoute() async {
-    if (pickupLocation == null || destinationLocation == null) {
+  Future<void> _getRoute({bool force = false}) async {
+    LatLng? origin;
+    LatLng? destination;
+
+    // Once the ride starts, route from the driver's location
+    // to the passenger's destination.
+    if (status == "started") {
+      origin = driverLocation ?? pickupLocation;
+      destination = destinationLocation;
+    }
+    // Before the ride starts, route from the driver to pickup.
+    else if (status == "accepted" || status == "arrived") {
+      origin = driverLocation;
+      destination = pickupLocation;
+    }
+    // While searching, show the planned trip route.
+    else {
+      origin = pickupLocation;
+      destination = destinationLocation;
+    }
+
+    if (origin == null || destination == null) {
       return;
     }
 
-    if (googleMapsApiKey.isEmpty ||
-        googleMapsApiKey == "YOUR_EXISTING_GOOGLE_MAPS_API_KEY") {
+    if (_routeRequestInProgress) {
       return;
     }
+
+    // Avoid requesting a new route every five seconds
+    // when the driver has barely moved.
+    if (!force &&
+        _lastRouteOrigin != null &&
+        _lastRouteDestination != null &&
+        _lastRouteDestination!.latitude == destination.latitude &&
+        _lastRouteDestination!.longitude == destination.longitude) {
+      final latitudeDifference = (origin.latitude - _lastRouteOrigin!.latitude)
+          .abs();
+
+      final longitudeDifference =
+          (origin.longitude - _lastRouteOrigin!.longitude).abs();
+
+      if (latitudeDifference < 0.001 && longitudeDifference < 0.001) {
+        return;
+      }
+    }
+
+    _routeRequestInProgress = true;
 
     if (mounted) {
       setState(() {
@@ -662,50 +753,51 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
 
       final result = await polylinePoints.getRouteBetweenCoordinates(
         request: PolylineRequest(
-          origin: PointLatLng(
-            pickupLocation!.latitude,
-            pickupLocation!.longitude,
-          ),
-          destination: PointLatLng(
-            destinationLocation!.latitude,
-            destinationLocation!.longitude,
-          ),
+          origin: PointLatLng(origin.latitude, origin.longitude),
+          destination: PointLatLng(destination.latitude, destination.longitude),
           mode: TravelMode.driving,
         ),
       );
 
-      if (result.points.isNotEmpty) {
-        routePoints = result.points
-            .map((point) => LatLng(point.latitude, point.longitude))
-            .toList();
+      if (!mounted) return;
 
-        polylines = {
-          Polyline(
-            polylineId: const PolylineId("ride_route"),
-            points: routePoints,
-            color: senmiRidePurple,
-            width: 6,
-            startCap: Cap.roundCap,
-            endCap: Cap.roundCap,
-            jointType: JointType.round,
-          ),
-        };
-
-        if (mounted) {
-          setState(() {});
-        }
-
-        // Wait for Google Maps to render the new polyline,
-        // then fit the entire route on screen.
-        await Future.delayed(const Duration(milliseconds: 300));
-
-        if (mounted) {
-          await _fitRouteOnMap();
-        }
+      if (result.points.isEmpty) {
+        debugPrint("ROUTE ERROR: Google returned no route points.");
+        debugPrint("ROUTE ERROR: ${result.errorMessage}");
+        return;
       }
-    } catch (_) {
-      // Keep ride usable if route calculation fails.
+
+      routePoints = result.points
+          .map((point) => LatLng(point.latitude, point.longitude))
+          .toList();
+
+      polylines = {
+        Polyline(
+          polylineId: const PolylineId("ride_route"),
+          points: routePoints,
+          color: senmiRidePurple,
+          width: 6,
+          startCap: Cap.roundCap,
+          endCap: Cap.roundCap,
+          jointType: JointType.round,
+        ),
+      };
+
+      _lastRouteOrigin = origin;
+      _lastRouteDestination = destination;
+
+      setState(() {});
+
+      await Future.delayed(const Duration(milliseconds: 300));
+
+      if (mounted) {
+        await _fitRouteOnMap();
+      }
+    } catch (e) {
+      debugPrint("ROUTE CALCULATION ERROR: $e");
     } finally {
+      _routeRequestInProgress = false;
+
       if (mounted) {
         setState(() {
           loadingRoute = false;
@@ -955,6 +1047,8 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
 
       if (driverLocation != null) {
         _moveCameraToDriver();
+
+        await _getRoute();
       }
 
       return;
@@ -1048,16 +1142,19 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
         ),
       );
     }
-
     if (driverLocation != null) {
       newMarkers.add(
         Marker(
           markerId: const MarkerId("driver"),
           position: driverLocation!,
-          icon: BitmapDescriptor.defaultMarkerWithHue(
-            BitmapDescriptor.hueViolet,
+          icon:
+              driverCarIcon ??
+              BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+          anchor: const Offset(0.5, 0.5),
+          infoWindow: InfoWindow(
+            title: driverName ?? "Driver",
+            snippet: vehicleNumber ?? "",
           ),
-          infoWindow: InfoWindow(title: driverName ?? "Driver"),
         ),
       );
     }
