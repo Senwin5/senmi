@@ -32,8 +32,8 @@ class _RideDriverCompleteProfileState extends State<RideDriverCompleteProfile> {
   final fullNameController = TextEditingController();
   final phoneController = TextEditingController();
   final addressController = TextEditingController();
-  final cityController = TextEditingController();
   final stateController = TextEditingController();
+  final cityController = TextEditingController();
   final countryController = TextEditingController(text: "Nigeria");
 
   final vehicleBrandController = TextEditingController();
@@ -1104,6 +1104,73 @@ class _RideDriverCompleteProfileState extends State<RideDriverCompleteProfile> {
 
           const SizedBox(height: 16),
 
+          DropdownButtonFormField<String>(
+            value: stateController.text.isEmpty ? null : stateController.text,
+            decoration: _inputDecoration(
+              label: "State",
+              icon: Icons.map_outlined,
+            ),
+            isExpanded: true,
+            items:
+                [
+                  "Abia",
+                  "Adamawa",
+                  "Akwa Ibom",
+                  "Anambra",
+                  "Bauchi",
+                  "Bayelsa",
+                  "Benue",
+                  "Borno",
+                  "Cross River",
+                  "Delta",
+                  "Ebonyi",
+                  "Edo",
+                  "Ekiti",
+                  "Enugu",
+                  "Gombe",
+                  "Imo",
+                  "Jigawa",
+                  "Kaduna",
+                  "Kano",
+                  "Katsina",
+                  "Kebbi",
+                  "Kogi",
+                  "Kwara",
+                  "Lagos",
+                  "Nasarawa",
+                  "Niger",
+                  "Ogun",
+                  "Ondo",
+                  "Osun",
+                  "Oyo",
+                  "Plateau",
+                  "Rivers",
+                  "Sokoto",
+                  "Taraba",
+                  "Yobe",
+                  "Zamfara",
+                  "FCT (Abuja)",
+                ].map((state) {
+                  return DropdownMenuItem(value: state, child: Text(state));
+                }).toList(),
+            onChanged: (value) {
+              if (value == null) return;
+
+              setState(() {
+                stateController.text = value;
+              });
+
+              _saveTextProgress();
+            },
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return "Please select your state";
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 16),
+
           TextFormField(
             controller: cityController,
             textInputAction: TextInputAction.next,
@@ -1118,27 +1185,6 @@ class _RideDriverCompleteProfileState extends State<RideDriverCompleteProfile> {
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
                 return "City is required";
-              }
-              return null;
-            },
-          ),
-
-          const SizedBox(height: 16),
-
-          TextFormField(
-            controller: stateController,
-            textInputAction: TextInputAction.next,
-            onChanged: (_) {
-              _saveTextProgress();
-            },
-            decoration: _inputDecoration(
-              label: "State",
-              icon: Icons.map_outlined,
-              hint: "e.g. Lagos",
-            ),
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return "State is required";
               }
               return null;
             },
@@ -1350,6 +1396,12 @@ class _RideDriverCompleteProfileState extends State<RideDriverCompleteProfile> {
           TextFormField(
             controller: emergencyNameController,
             textInputAction: TextInputAction.next,
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return "Emergency contact name is required";
+              }
+              return null;
+            },
             onChanged: (_) {
               _saveTextProgress();
             },
@@ -1366,6 +1418,12 @@ class _RideDriverCompleteProfileState extends State<RideDriverCompleteProfile> {
             controller: emergencyPhoneController,
             keyboardType: TextInputType.phone,
             textInputAction: TextInputAction.next,
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return "Emergency contact phone is required";
+              }
+              return null;
+            },
             onChanged: (_) {
               _saveTextProgress();
             },
@@ -1381,6 +1439,12 @@ class _RideDriverCompleteProfileState extends State<RideDriverCompleteProfile> {
           TextFormField(
             controller: emergencyRelationshipController,
             textInputAction: TextInputAction.next,
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return "Emergency contact relationship is required";
+              }
+              return null;
+            },
             onChanged: (_) {
               _saveTextProgress();
             },
@@ -1396,6 +1460,12 @@ class _RideDriverCompleteProfileState extends State<RideDriverCompleteProfile> {
           TextFormField(
             controller: emergencyAddressController,
             maxLines: 3,
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return "Emergency contact address is required";
+              }
+              return null;
+            },
             onChanged: (_) {
               _saveTextProgress();
             },
