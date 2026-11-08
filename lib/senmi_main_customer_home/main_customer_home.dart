@@ -39,10 +39,6 @@ class _MainCustomerHomeState extends State<MainCustomerHome> {
 
       if (!mounted) return;
 
-      // --------------------------------------------------------
-      // NO ACTIVE RIDE
-      // --------------------------------------------------------
-
       if (activeRides.isEmpty) {
         setState(() {
           checkingActiveRide = false;
@@ -50,17 +46,9 @@ class _MainCustomerHomeState extends State<MainCustomerHome> {
         return;
       }
 
-      // --------------------------------------------------------
-      // PREVENT DUPLICATE NAVIGATION
-      // --------------------------------------------------------
-
       if (_openedActiveRide) {
         return;
       }
-
-      // --------------------------------------------------------
-      // GET MOST RECENT ACTIVE RIDE
-      // --------------------------------------------------------
 
       final firstRide = activeRides.first;
 
@@ -84,10 +72,6 @@ class _MainCustomerHomeState extends State<MainCustomerHome> {
 
       _openedActiveRide = true;
 
-      // --------------------------------------------------------
-      // OPEN TRACKING DIRECTLY
-      // --------------------------------------------------------
-
       await Navigator.of(context).push(
         MaterialPageRoute(builder: (_) => RideTrackingScreen(rideId: rideId)),
       );
@@ -98,11 +82,6 @@ class _MainCustomerHomeState extends State<MainCustomerHome> {
         checkingActiveRide = false;
       });
     } catch (_) {
-      // --------------------------------------------------------
-      // IF ACTIVE-RIDE CHECK FAILS,
-      // LET CUSTOMER CONTINUE NORMALLY.
-      // --------------------------------------------------------
-
       if (!mounted) return;
 
       setState(() {
@@ -133,12 +112,12 @@ class _MainCustomerHomeState extends State<MainCustomerHome> {
               // ==================================================
               // TOP BRAND / HERO
               // ==================================================
+
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.fromLTRB(22, 22, 22, 25),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(28),
-
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -154,11 +133,9 @@ class _MainCustomerHomeState extends State<MainCustomerHome> {
                             Color(0xFF7C3AED),
                           ],
                   ),
-
                   border: Border.all(
                     color: Colors.white.withOpacity(isDark ? 0.08 : 0.10),
                   ),
-
                   boxShadow: [
                     BoxShadow(
                       color: senmiPurple.withOpacity(isDark ? 0.22 : 0.18),
@@ -168,13 +145,11 @@ class _MainCustomerHomeState extends State<MainCustomerHome> {
                     ),
                   ],
                 ),
-
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // ==================================================
                     // BRAND
-                    // ==================================================
+
                     Row(
                       children: [
                         Container(
@@ -193,9 +168,7 @@ class _MainCustomerHomeState extends State<MainCustomerHome> {
                             size: 23,
                           ),
                         ),
-
                         const SizedBox(width: 12),
-
                         const Text(
                           "Senmi",
                           style: TextStyle(
@@ -210,9 +183,7 @@ class _MainCustomerHomeState extends State<MainCustomerHome> {
 
                     const SizedBox(height: 25),
 
-                    // ==================================================
                     // HERO TITLE
-                    // ==================================================
                     const Text(
                       "Move what matters.",
                       style: TextStyle(
@@ -226,9 +197,7 @@ class _MainCustomerHomeState extends State<MainCustomerHome> {
 
                     const SizedBox(height: 10),
 
-                    // ==================================================
                     // HERO SUBTITLE
-                    // ==================================================
                     Text(
                       "Choose a Senmi service to get started.",
                       style: TextStyle(
@@ -262,57 +231,51 @@ class _MainCustomerHomeState extends State<MainCustomerHome> {
 
               // ==================================================
               // SERVICES
-              // RIDE FIRST
-              // PACKAGE SECOND
+              // RIDE FIRST - PACKAGE SECOND
               // ==================================================
-              IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // ==================================================
-                    // RIDE
-                    // ==================================================
-                    Expanded(
-                      child: _ServiceCard(
-                        image: "assets/mainhome/senmi_ride.png",
-                        title: "Book a Ride",
-                        description: "Get where you need to go.",
-                        iconColor: senmiPurple,
-                        isPrimary: true,
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => const RideCustomerBottomNav(),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // RIDE
 
-                    const SizedBox(width: 14),
-
-                    // ==================================================
-                    // PACKAGE DELIVERY
-                    // ==================================================
-                    Expanded(
-                      child: _ServiceCard(
-                        image: "assets/mainhome/senmi_package.png",
-                        title: "Send a Package",
-                        description: "Send packages safely across Lagos.",
-                        iconColor: senmiPurple,
-                        isPrimary: false,
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  const CustomerBottomNav(initialIndex: 0),
-                            ),
-                          );
-                        },
-                      ),
+                  Expanded(
+                    child: _ServiceCard(
+                      image: "assets/mainhome/senmi_ride.png",
+                      title: "Book a Ride",
+                      description: "Get where you need to go.",
+                      iconColor: senmiPurple,
+                      isPrimary: true,
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const RideCustomerBottomNav(),
+                          ),
+                        );
+                      },
                     ),
-                  ],
-                ),
+                  ),
+
+                  const SizedBox(width: 14),
+
+                  // PACKAGE DELIVERY
+                  Expanded(
+                    child: _ServiceCard(
+                      image: "assets/mainhome/senmi_package.png",
+                      title: "Send a Package",
+                      description: "Send packages safely across Lagos.",
+                      iconColor: senmiPurple,
+                      isPrimary: false,
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                const CustomerBottomNav(initialIndex: 0),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
 
               const SizedBox(height: 20),
@@ -346,10 +309,6 @@ class _MainCustomerHomeState extends State<MainCustomerHome> {
 
   @override
   Widget build(BuildContext context) {
-    // ----------------------------------------------------------
-    // WHILE WE CHECK THE SERVER FOR AN ACTIVE RIDE
-    // ----------------------------------------------------------
-
     if (checkingActiveRide) {
       final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -445,9 +404,7 @@ class _ServiceCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: cardColor,
             borderRadius: BorderRadius.circular(23),
-
             border: Border.all(color: borderColor, width: 1),
-
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(isDark ? 0.24 : 0.055),
@@ -457,69 +414,54 @@ class _ServiceCard extends StatelessWidget {
               ),
             ],
           ),
-
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ==================================================
-              // IMAGE ROW
+              // IMAGE - USE AVAILABLE CARD WIDTH
               // ==================================================
-              Row(
-                children: [
-                  Container(
-                    width: 140,
-                    height: 108,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          iconColor.withOpacity(isDark ? 0.20 : 0.15),
-                          iconColor.withOpacity(isDark ? 0.055 : 0.045),
-                        ],
-                      ),
 
-                      borderRadius: BorderRadius.circular(16),
-
-                      border: Border.all(color: iconColor.withOpacity(0.075)),
-
-                      boxShadow: [
-                        BoxShadow(
-                          color: iconColor.withOpacity(isDark ? 0.10 : 0.06),
-                          blurRadius: 12,
-                          spreadRadius: -4,
-                        ),
-                      ],
-                    ),
-
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(14),
-                      child: Image.asset(
-                        image,
-                        width: 108,
-                        height: 108,
-                        fit: BoxFit.contain,
-
-                        // If the image path is wrong,
-                        // show a fallback icon instead.
-                        errorBuilder: (context, error, stackTrace) {
-                          return Icon(
-                            Icons.image_not_supported_outlined,
-                            size: 25,
-                            color: isDark ? senmiLightPurple : iconColor,
-                          );
-                        },
-                      ),
-                    ),
+              Container(
+                width: double.infinity,
+                height: 108,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      iconColor.withOpacity(isDark ? 0.20 : 0.15),
+                      iconColor.withOpacity(isDark ? 0.055 : 0.045),
+                    ],
                   ),
-                ],
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: iconColor.withOpacity(0.075)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: iconColor.withOpacity(isDark ? 0.10 : 0.06),
+                      blurRadius: 12,
+                      spreadRadius: -4,
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: Image.asset(
+                    image,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Icon(
+                        Icons.image_not_supported_outlined,
+                        size: 25,
+                        color: isDark ? senmiLightPurple : iconColor,
+                      );
+                    },
+                  ),
+                ),
               ),
 
               const SizedBox(height: 17),
 
-              // ==================================================
               // TITLE
-              // ==================================================
               Text(
                 title,
                 maxLines: 2,
@@ -535,9 +477,7 @@ class _ServiceCard extends StatelessWidget {
 
               const SizedBox(height: 7),
 
-              // ==================================================
               // DESCRIPTION
-              // ==================================================
               Text(
                 description,
                 maxLines: 2,
@@ -552,9 +492,7 @@ class _ServiceCard extends StatelessWidget {
 
               const SizedBox(height: 14),
 
-              // ==================================================
               // ACTION
-              // ==================================================
               Row(
                 children: [
                   Expanded(

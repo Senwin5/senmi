@@ -16,6 +16,9 @@ class CustomerSecurityScreen extends StatelessWidget {
     required this.darkModeNotifier,
   });
 
+  static const Color primaryColor = Color(0xFF673AB7);
+  static const Color secondaryColor = Color(0xFF9575CD);
+
   Future<void> logout(BuildContext context) async {
     await ApiService.logout();
 
@@ -94,32 +97,74 @@ class CustomerSecurityScreen extends StatelessWidget {
     required bool isDark,
     required IconData icon,
     required String title,
-    required String subtitle,
     required VoidCallback onTap,
     Color? iconColor,
+    Color? titleColor,
   }) {
-    return Card(
-      color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-      elevation: 2,
-      margin: const EdgeInsets.only(bottom: 14),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 18,
-          vertical: 10,
+    final effectiveIconColor = iconColor ?? primaryColor;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1C1C1C) : Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withOpacity(0.06)
+              : const Color(0xFFECE7F4),
         ),
-        leading: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: (iconColor ?? Colors.deepPurple).withOpacity(.12),
-            borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.08 : 0.035),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
-          child: Icon(icon, color: iconColor ?? Colors.deepPurple),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(18),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 16),
+            child: Row(
+              children: [
+                Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    color: effectiveIconColor.withOpacity(0.10),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(icon, color: effectiveIconColor, size: 22),
+                ),
+
+                const SizedBox(width: 15),
+
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color:
+                          titleColor ??
+                          (isDark ? Colors.white : const Color(0xFF25212B)),
+                    ),
+                  ),
+                ),
+
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 15,
+                  color: isDark ? Colors.white38 : Colors.grey.shade400,
+                ),
+              ],
+            ),
+          ),
         ),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text(subtitle),
-        trailing: const Icon(Icons.arrow_forward_ios, size: 18),
-        onTap: onTap,
       ),
     );
   }
@@ -129,69 +174,105 @@ class CustomerSecurityScreen extends StatelessWidget {
     return ValueListenableBuilder<bool>(
       valueListenable: darkModeNotifier,
       builder: (context, isDark, _) {
+        final backgroundColor = isDark
+            ? const Color(0xFF101014)
+            : const Color(0xFFF8F7FB);
+
+        final textColor = isDark ? Colors.white : const Color(0xFF25212B);
+
+        final mutedColor = isDark ? Colors.white60 : Colors.grey.shade600;
+
         return Scaffold(
-          // WHITE in light mode
-          // DARK in dark mode
-          backgroundColor: isDark ? const Color(0xFF111111) : Colors.white,
+          backgroundColor: backgroundColor,
 
           appBar: AppBar(
-            backgroundColor: Colors.white,
-            surfaceTintColor: Colors.white,
-            foregroundColor: Colors.black,
+            backgroundColor: backgroundColor,
+            surfaceTintColor: Colors.transparent,
+            foregroundColor: textColor,
             elevation: 0,
             centerTitle: true,
-            title: const Text(
+            title: Text(
               "Security",
               style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
+                fontSize: 19,
+                fontWeight: FontWeight.w700,
+                color: textColor,
+                letterSpacing: 0.2,
               ),
             ),
           ),
 
           body: ListView(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 30),
             children: [
+              // SECURITY HEADER
               Container(
-                padding: const EdgeInsets.all(28),
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 30,
+                ),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(28),
+                  borderRadius: BorderRadius.circular(25),
                   gradient: const LinearGradient(
-                    colors: [Colors.deepPurple, Color(0xFF7E57C2)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFF512DA8),
+                      Color(0xFF673AB7),
+                      Color(0xFF9575CD),
+                    ],
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.deepPurple.withOpacity(.25),
-                      blurRadius: 25,
-                      offset: const Offset(0, 10),
+                      color: primaryColor.withOpacity(0.22),
+                      blurRadius: 22,
+                      offset: const Offset(0, 9),
                     ),
                   ],
                 ),
-                child: const Column(
+                child: Column(
                   children: [
-                    CircleAvatar(
-                      radius: 36,
-                      backgroundColor: Colors.white,
-                      child: Icon(
-                        Icons.security,
-                        color: Colors.deepPurple,
-                        size: 36,
+                    Container(
+                      width: 76,
+                      height: 76,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.16),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.25),
+                          width: 1.5,
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.shield_outlined,
+                        color: Colors.white,
+                        size: 38,
                       ),
                     ),
-                    SizedBox(height: 16),
-                    Text(
-                      "Security",
+
+                    const SizedBox(height: 18),
+
+                    const Text(
+                      "Account Security",
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 23,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.3,
                       ),
                     ),
-                    SizedBox(height: 8),
+
+                    const SizedBox(height: 8),
+
                     Text(
-                      "Manage your password, security settings and account.",
+                      "Manage your account and security preferences.",
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.white70),
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.82),
+                        fontSize: 13,
+                        height: 1.5,
+                      ),
                     ),
                   ],
                 ),
@@ -199,17 +280,24 @@ class CustomerSecurityScreen extends StatelessWidget {
 
               const SizedBox(height: 30),
 
-              const Text(
-                "Security",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              // GENERAL SETTINGS
+              Text(
+                "ACCOUNT SETTINGS",
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.2,
+                  color: mutedColor,
+                ),
               ),
+
+              const SizedBox(height: 14),
 
               buildTile(
                 context: context,
                 isDark: isDark,
-                icon: Icons.edit_outlined,
+                icon: Icons.person_outline_rounded,
                 title: "Edit Profile",
-                subtitle: "Update username, email and phone",
                 onTap: () async {
                   final updatedUser = await Navigator.push(
                     context,
@@ -226,14 +314,11 @@ class CustomerSecurityScreen extends StatelessWidget {
                 },
               ),
 
-              const SizedBox(height: 15),
-
               buildTile(
                 context: context,
                 isDark: isDark,
-                icon: Icons.lock_outline,
+                icon: Icons.lock_outline_rounded,
                 title: "Change Password",
-                subtitle: "Update your account password",
                 onTap: () {
                   Navigator.push(
                     context,
@@ -244,29 +329,69 @@ class CustomerSecurityScreen extends StatelessWidget {
                 },
               ),
 
-              Card(
-                color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-                elevation: 2,
-                shape: RoundedRectangleBorder(
+              // APPEARANCE
+              const SizedBox(height: 18),
+
+              Text(
+                "APPEARANCE",
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.2,
+                  color: mutedColor,
+                ),
+              ),
+
+              const SizedBox(height: 14),
+
+              Container(
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1C1C1C) : Colors.white,
                   borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: isDark
+                        ? Colors.white.withOpacity(0.06)
+                        : const Color(0xFFECE7F4),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(isDark ? 0.08 : 0.035),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: SwitchListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 17,
+                    vertical: 8,
+                  ),
                   secondary: Container(
-                    padding: const EdgeInsets.all(12),
+                    width: 46,
+                    height: 46,
                     decoration: BoxDecoration(
-                      color: Colors.deepPurple.withOpacity(.12),
+                      color: primaryColor.withOpacity(0.10),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: const Icon(
                       Icons.dark_mode_outlined,
-                      color: Colors.deepPurple,
+                      color: primaryColor,
+                      size: 22,
                     ),
                   ),
-                  title: const Text(
+                  title: Text(
                     "Dark Mode",
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: textColor,
+                    ),
                   ),
-                  subtitle: const Text("Switch app appearance"),
+                  subtitle: Text(
+                    "Switch app appearance",
+                    style: TextStyle(fontSize: 12, color: mutedColor),
+                  ),
+                  activeColor: primaryColor,
                   value: isDark,
                   onChanged: (value) {
                     darkModeNotifier.value = value;
@@ -274,42 +399,66 @@ class CustomerSecurityScreen extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(height: 15),
+              // SESSION
+              const SizedBox(height: 30),
 
-              buildTile(
-                context: context,
-                isDark: isDark,
-                icon: Icons.logout,
-                iconColor: Colors.orange,
-                title: "Sign Out",
-                subtitle: "Log out from this device",
-                onTap: () => logout(context),
-              ),
-
-              const SizedBox(height: 35),
-
-              const Text(
-                "Danger Zone",
+              Text(
+                "SESSION",
                 style: TextStyle(
-                  fontSize: 18,
-                  color: Colors.red,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.2,
+                  color: mutedColor,
                 ),
               ),
 
-              const SizedBox(height: 15),
+              const SizedBox(height: 14),
 
               buildTile(
                 context: context,
                 isDark: isDark,
-                icon: Icons.delete_forever,
+                icon: Icons.logout_rounded,
+                iconColor: Colors.orange.shade700,
+                title: "Sign Out",
+                onTap: () => logout(context),
+              ),
+
+              // DANGER ZONE
+              const SizedBox(height: 18),
+
+              Row(
+                children: [
+                  const Icon(
+                    Icons.warning_amber_rounded,
+                    color: Colors.red,
+                    size: 19,
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    "DANGER ZONE",
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.2,
+                      color: Colors.red,
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 14),
+
+              buildTile(
+                context: context,
+                isDark: isDark,
+                icon: Icons.delete_outline_rounded,
                 iconColor: Colors.red,
                 title: "Delete Account",
-                subtitle: "Permanently remove your account",
+                titleColor: Colors.red,
                 onTap: () => deleteAccount(context),
               ),
 
-              const SizedBox(height: 30),
+              const SizedBox(height: 15),
             ],
           ),
         );
