@@ -21,8 +21,13 @@ const Color senmiRideLightPurple = Color(0xFF7C3AED);
 
 class RideTrackingScreen extends StatefulWidget {
   final String rideId;
+  final VoidCallback onRideEnded;
 
-  const RideTrackingScreen({super.key, required this.rideId});
+  const RideTrackingScreen({
+    super.key,
+    required this.rideId,
+    required this.onRideEnded,
+  });
 
   @override
   State<RideTrackingScreen> createState() => _RideTrackingScreenState();
@@ -40,6 +45,7 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
   double? driverRating;
   int? driverRatingCount;
   bool hasRating = false;
+  bool _rideEndedHandled = false;
   bool _openingRating = false;
 
   double? fare;
@@ -281,6 +287,25 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
       final oldDestination = destinationLocation;
 
       _applyRideData(data);
+      final normalizedStatus = status.toLowerCase().trim();
+
+      final rideHasEnded =
+          normalizedStatus == "cancelled" ||
+          normalizedStatus == "canceled" ||
+          normalizedStatus == "completed" ||
+          normalizedStatus == "completed_ride";
+
+      if (rideHasEnded && !_rideEndedHandled) {
+        _rideEndedHandled = true;
+
+        debugPrint("RIDE ENDED: $normalizedStatus");
+
+        if (mounted) {
+          widget.onRideEnded();
+        }
+
+        return;
+      }
 
       final pickupChanged = !_sameLocation(oldPickup, pickupLocation);
 
@@ -1952,17 +1977,6 @@ class _RideTrackingScreenState extends State<RideTrackingScreen> {
                 padding: const EdgeInsets.symmetric(
                   horizontal: 17,
                   vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF1E1E22) : Colors.white,
-                  borderRadius: BorderRadius.circular(26),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.12),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
                 ),
               ),
             ),

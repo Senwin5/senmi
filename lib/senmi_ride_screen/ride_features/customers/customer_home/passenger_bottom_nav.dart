@@ -1,3 +1,4 @@
+
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
@@ -12,29 +13,41 @@ class RideCustomerBottomNav extends StatefulWidget {
   const RideCustomerBottomNav({super.key});
 
   @override
-  State<RideCustomerBottomNav> createState() => _RideCustomerBottomNavState();
+  State<RideCustomerBottomNav> createState() =>
+      _RideCustomerBottomNavState();
 }
 
 class _RideCustomerBottomNavState extends State<RideCustomerBottomNav> {
   int currentIndex = 0;
 
-  final List<Widget> pages = const [
-    RideHome(),
-    _MapTrackPage(),
-    RideHistoryScreen(),
+  final GlobalKey<_MapTrackPageState> _mapTrackKey =
+      GlobalKey<_MapTrackPageState>();
+
+  late final List<Widget> pages = [
+    const RideHome(),
+    _MapTrackPage(
+      key: _mapTrackKey,
+      onReturnToHome: goToRideHome,
+    ),
+    const RideHistoryScreen(),
   ];
+
+  // Return the customer to the Ride Home tab.
+  void goToRideHome() {
+    if (!mounted) return;
+
+    setState(() {
+      currentIndex = 0;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isDark =
+        Theme.of(context).brightness == Brightness.dark;
 
     return WillPopScope(
       onWillPop: () async {
-        // --------------------------------------------------------
-        // If user is on Map & Track or History,
-        // return to Ride tab first.
-        // --------------------------------------------------------
-
         if (currentIndex != 0) {
           setState(() {
             currentIndex = 0;
@@ -43,36 +56,33 @@ class _RideCustomerBottomNavState extends State<RideCustomerBottomNav> {
           return false;
         }
 
-        // --------------------------------------------------------
-        // Already on Ride tab.
-        // Allow normal back behavior.
-        // --------------------------------------------------------
-
         return true;
       },
-
       child: Scaffold(
-        body: IndexedStack(index: currentIndex, children: pages),
-
+        body: IndexedStack(
+          index: currentIndex,
+          children: pages,
+        ),
         bottomNavigationBar: NavigationBar(
           selectedIndex: currentIndex,
-
           onDestinationSelected: (index) {
             setState(() {
               currentIndex = index;
             });
+
+            if (index == 1) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
+                  _mapTrackKey.currentState?._findActiveRide();
+                }
+              });
+            }
           },
-
-          backgroundColor: isDark ? const Color(0xFF15151A) : Colors.white,
-
+          backgroundColor:
+              isDark ? const Color(0xFF15151A) : Colors.white,
           indicatorColor: senmiRidePurple.withOpacity(0.12),
-
           elevation: 8,
-
           destinations: const [
-            // ======================================================
-            // RIDE
-            // ======================================================
             NavigationDestination(
               icon: Icon(Icons.local_taxi_outlined),
               selectedIcon: Icon(
@@ -81,22 +91,20 @@ class _RideCustomerBottomNavState extends State<RideCustomerBottomNav> {
               ),
               label: "Ride",
             ),
-
-            // ======================================================
-            // MAP & TRACK
-            // ======================================================
             NavigationDestination(
               icon: Icon(Icons.map_outlined),
-              selectedIcon: Icon(Icons.map_rounded, color: senmiRidePurple),
+              selectedIcon: Icon(
+                Icons.map_rounded,
+                color: senmiRidePurple,
+              ),
               label: "Map & Track",
             ),
-
-            // ======================================================
-            // HISTORY
-            // ======================================================
             NavigationDestination(
               icon: Icon(Icons.history_outlined),
-              selectedIcon: Icon(Icons.history_rounded, color: senmiRidePurple),
+              selectedIcon: Icon(
+                Icons.history_rounded,
+                color: senmiRidePurple,
+              ),
               label: "History",
             ),
           ],
@@ -111,7 +119,12 @@ class _RideCustomerBottomNavState extends State<RideCustomerBottomNav> {
 // ================================================================
 
 class _MapTrackPage extends StatefulWidget {
-  const _MapTrackPage();
+  final VoidCallback onReturnToHome;
+
+  const _MapTrackPage({
+    super.key,
+    required this.onReturnToHome,
+  });
 
   @override
   State<_MapTrackPage> createState() => _MapTrackPageState();
@@ -126,6 +139,23 @@ class _MapTrackPageState extends State<_MapTrackPage> {
   void initState() {
     super.initState();
     _findActiveRide();
+  }
+
+  // ==============================================================
+  // RIDE ENDED
+  // ==============================================================
+
+  void _onRideEnded() {
+    if (!mounted) return;
+
+    setState(() {
+      activeRideId = null;
+      loading = false;
+      errorMessage = "Your ride has ended.";
+    });
+
+    // Automatically select Ride Home.
+    widget.onReturnToHome();
   }
 
   // ==============================================================
@@ -155,10 +185,6 @@ class _MapTrackPageState extends State<_MapTrackPage> {
         return;
       }
 
-      // ----------------------------------------------------------
-      // GET FIRST ACTIVE RIDE
-      // ----------------------------------------------------------
-
       final firstRide = activeRides.first;
 
       if (firstRide is! Map) {
@@ -171,10 +197,11 @@ class _MapTrackPageState extends State<_MapTrackPage> {
       }
 
       final ride = Map<String, dynamic>.from(firstRide);
-
       final rideId = ride["ride_id"]?.toString();
 
-      if (rideId == null || rideId.isEmpty || rideId == "null") {
+      if (rideId == null ||
+          rideId.isEmpty ||
+          rideId == "null") {
         setState(() {
           loading = false;
           errorMessage = "Your active ride ID could not be found.";
@@ -192,7 +219,8 @@ class _MapTrackPageState extends State<_MapTrackPage> {
 
       setState(() {
         loading = false;
-        errorMessage = e.toString().replaceFirst("Exception: ", "");
+        errorMessage =
+            e.toString().replaceFirst("Exception: ", "");
       });
     }
   }
@@ -203,15 +231,13 @@ class _MapTrackPageState extends State<_MapTrackPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    // ------------------------------------------------------------
-    // LOADING
-    // ------------------------------------------------------------
+    final isDark =
+        Theme.of(context).brightness == Brightness.dark;
 
     if (loading) {
       return Scaffold(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        backgroundColor:
+            Theme.of(context).scaffoldBackgroundColor,
         body: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -223,16 +249,16 @@ class _MapTrackPageState extends State<_MapTrackPage> {
                       ? Colors.white.withOpacity(0.045)
                       : senmiRidePurple.withOpacity(0.055),
                   shape: BoxShape.circle,
-                  border: Border.all(color: senmiRidePurple.withOpacity(0.12)),
+                  border: Border.all(
+                    color: senmiRidePurple.withOpacity(0.12),
+                  ),
                 ),
                 child: const CircularProgressIndicator(
                   strokeWidth: 2.5,
                   color: senmiRidePurple,
                 ),
               ),
-
               const SizedBox(height: 16),
-
               Text(
                 "Finding your active ride...",
                 style: TextStyle(
@@ -249,21 +275,19 @@ class _MapTrackPageState extends State<_MapTrackPage> {
       );
     }
 
-    // ------------------------------------------------------------
-    // ACTIVE RIDE FOUND
-    // ------------------------------------------------------------
-
+    // Active ride found.
     if (activeRideId != null) {
-      return RideTrackingScreen(rideId: activeRideId!);
+      return RideTrackingScreen(
+        key: ValueKey(activeRideId),
+        rideId: activeRideId!,
+        onRideEnded: _onRideEnded,
+      );
     }
 
-    // ------------------------------------------------------------
-    // NO ACTIVE RIDE
-    // ------------------------------------------------------------
-
+    // No active ride.
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-
+      backgroundColor:
+          Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
@@ -271,11 +295,13 @@ class _MapTrackPageState extends State<_MapTrackPage> {
         elevation: 0,
         title: const Text(
           "Map & Track",
-          style: TextStyle(fontWeight: FontWeight.w800, color: Colors.black),
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            color: Colors.black,
+          ),
         ),
         centerTitle: true,
       ),
-
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(30),
@@ -295,9 +321,7 @@ class _MapTrackPageState extends State<_MapTrackPage> {
                   size: 38,
                 ),
               ),
-
               const SizedBox(height: 20),
-
               Text(
                 "No active ride",
                 style: TextStyle(
@@ -306,9 +330,7 @@ class _MapTrackPageState extends State<_MapTrackPage> {
                   color: isDark ? Colors.white : Colors.black87,
                 ),
               ),
-
               const SizedBox(height: 8),
-
               Text(
                 errorMessage.isNotEmpty
                     ? errorMessage
@@ -322,9 +344,7 @@ class _MapTrackPageState extends State<_MapTrackPage> {
                       : Colors.black.withOpacity(0.55),
                 ),
               ),
-
               const SizedBox(height: 22),
-
               ElevatedButton.icon(
                 onPressed: _findActiveRide,
                 icon: const Icon(Icons.refresh_rounded),

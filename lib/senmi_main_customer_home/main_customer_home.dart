@@ -73,7 +73,7 @@ class _MainCustomerHomeState extends State<MainCustomerHome> {
       _openedActiveRide = true;
 
       await Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => RideTrackingScreen(rideId: rideId)),
+        MaterialPageRoute(builder: (_) => RideTrackingScreen(rideId: rideId, onRideEnded: () {  },)),
       );
 
       if (!mounted) return;

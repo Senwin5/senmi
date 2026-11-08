@@ -239,7 +239,8 @@ class _RideHomeState extends State<RideHome> {
 
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (_) => RideTrackingScreen(rideId: activeRideId),
+              builder: (_) =>
+                  RideTrackingScreen(rideId: activeRideId, onRideEnded: () {}),
             ),
           );
 
@@ -282,7 +283,10 @@ class _RideHomeState extends State<RideHome> {
       }
 
       Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => RideTrackingScreen(rideId: rideId)),
+        MaterialPageRoute(
+          builder: (_) =>
+              RideTrackingScreen(rideId: rideId, onRideEnded: () {}),
+        ),
       );
     } catch (e) {
       if (!mounted) return;
