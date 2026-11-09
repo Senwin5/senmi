@@ -573,7 +573,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         onPressed: loading ? () {} : register,
                         fullWidth: true,
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        color: Colors.blue,
+                        color: Colors.deepPurple,
                       ),
 
                       const SizedBox(height: 16),

@@ -626,7 +626,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         onPressed: login,
                         fullWidth: true,
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        color: Colors.green,
+                        color: Colors.deepPurple,
                       ),
                       const SizedBox(height: 16),
                       Row(
